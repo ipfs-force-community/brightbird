@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: venus-miner-{{.UniqueId}}-service
+spec:
+  type: ClusterIP
+  selector:
+    app: venus-miner-{{.UniqueId}}-pod
+  ports:
+    - protocol: TCP
+      port: 12308
+      name: api
+

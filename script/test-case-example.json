@@ -1,0 +1,109 @@
+{
+  "Nodes": [
+    {
+      "Name"   : "venus-auth-ha",
+      "Type"   : "venus-auth",
+      "Params" : {
+        "Replicas": 2
+      }
+    },
+    {
+      "Name"   : "venus-daemon-ha",
+      "Type"   : "venus",
+      "Params" : {
+        "Replicas": 2
+      }
+    },
+    {
+      "Name"   : "chain-co",
+      "Type"   : "chain-co",
+      "Params" : {
+        "Replicas": 2
+      }
+    },
+    {
+      "Name"   : "market-client",
+      "Type"   : "market-client",
+      "Params" : {
+        "SvcMap": {
+          "Wallet": "wallet1"
+        }
+      }
+    },
+    {
+      "Name"   : "venus-market",
+      "Type"   : "venus-market",
+      "Params" : {
+        "UseMysql": true
+      }
+    },
+    {
+      "Name": "venus-gateway",
+      "Type": "venus-gateway",
+      "Params": {
+        "Replicas": 2
+      }
+    },
+    {
+      "Name"   : "venus-message-ha",
+      "Type"   : "venus-message",
+      "Params" : {
+        "Replicas": 2
+      }
+    },
+    {
+      "Name"   : "venus-miner",
+      "Type"   : "venus-miner",
+      "Params" : {
+        "UseMysql": true
+      }
+    },
+    {
+      "Name"   : "venus-wallet",
+      "Type"   : "venus-wallet",
+      "Params" : {
+        "SvcMap": {
+          "Out": "wallet1"
+        }
+      }
+    },
+    {
+      "Name"   : "venus-wallet",
+      "Type"   : "venus-wallet",
+      "Params" : {
+        "SvcMap": {
+          "Out": "wallet_new"
+        }
+      }
+    }
+  ],
+  "Cases": [
+    {
+      "Name"   : "set_password",
+      "Params" : {
+        "Password": "123",
+        "SvcMap": {
+          "Wallet": "wallet1"
+        }
+      }
+    },
+    {
+      "Name"   : "import_key",
+      "Params" : {
+        "PrivKey": "7b2254797065223a22626c73222c22507269766174654b6579223a223959796a636c2b6b736e4f6a2b6c4b386877465a616c4e4838623633626277614e5a4f37623071534456383d227d",
+        "SvcMap": {
+          "Wallet": "wallet1"
+        }
+      }
+    },
+    {
+      "Name"   : "test_deploy",
+      "Params" : {
+        "SvcMap": {
+          "Wallet": "wallet1",
+          "WalletNew": "wallet_new"
+        }
+      }
+    }
+  ]
+}

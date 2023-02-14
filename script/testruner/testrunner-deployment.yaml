@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-market-{{.UniqueId}}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-market-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-market-{{.UniqueId}}-pod
+        apptype: testrunner
+    spec:
+      initContainers:
+      containers:
+        - name: venus-market-{{.UniqueId}}
+          image: "filvenus/venus-market:0e3ce38882a9322e3c19fc36cfd765360ed86398"
+          args: ["--config=/shared-dir/k8stest/testrunner/config-template.toml", "--testfile=/shared-dir/k8stest/testrunner/cases/test-case-example.json"]
+          ports:
+            - containerPort: 41235
+              protocol: TCP
+            - containerPort: 58418
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+      volumes:
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: testnet-shared-dir

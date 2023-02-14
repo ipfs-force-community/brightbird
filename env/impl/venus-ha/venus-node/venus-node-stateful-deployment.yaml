@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: venus-{{.UniqueId}}-statefulset
+spec:
+  replicas: {{.Replicas}}
+  serviceName: venus-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: venus-{{.UniqueId}}-pod
+  template:
+    metadata:
+      name: venus-{{.UniqueId}}-pod
+      labels:
+        app: venus-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-{{.UniqueId}}
+          image: "filvenus/venus:629cb1f74da31db80e2b08edfeb887fcf670ece3"
+          args: [ "daemon","--cmdapiaddr=/ip4/0.0.0.0/tcp/3453", "--genesisfile=/shared-dir/k8stest/devgen.car", "--import-snapshot=/shared-dir/k8stest/dev-snapshot.car", "--network=2k"{{if gt (len .BootstrapPeers) 0}}{{range $i, $a := .BootstrapPeers}},--bootstrap-peers={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
+          ports:
+            - containerPort: 3453
+              protocol: TCP
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
+            - name: IPFS_GATEWAY
+              value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+      volumes:
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: testnet-shared-dir

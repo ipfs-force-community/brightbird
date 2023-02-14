@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  config.toml: |
+    # Default config:
+    SimultaneousTransfersForRetrieval = 20
+    SimultaneousTransfersForStorage = 20
+    DefaultMarketAddress = "{{.ClientAddr}}"
+
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/41231/ws"
+      RemoteListenAddress = ""
+      Timeout = "30s"
+      PrivateKey = "25203f9bd774cd21e15a327dff9605b3c7615bbe60866f7def2a01bf96e08ff0"
+
+    [Libp2p]
+      ListenAddresses = ["/ip4/0.0.0.0/tcp/34123", "/ip6/::/tcp/0"]
+      AnnounceAddresses = []
+      NoAnnounceAddresses = []
+      PrivateKey = "080112400039a0d5d9b064d0aa78748421d9ed6d8fd0622b4818430041424f1efdb9090418071841c1625ed43fceb8b87aa40273e0308d6a0d1393bca53398c7fa114dba"
+
+    [Node]
+      Url = "{{.NodeUrl}}"
+      Token = "{{.NodeToken}}"
+
+    [Signer]
+      Type = "wallet"
+      Url = "{{.WalletUrl}}"
+      Token = "{{.WalletToken}}"
+kind: ConfigMap
+metadata:
+  name: venus-market-client-cfg-{{.UniqueId}}
+  namespace: default

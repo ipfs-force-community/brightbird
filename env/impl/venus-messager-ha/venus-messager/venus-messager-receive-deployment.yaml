@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-messager-receive-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  selector:
+    matchLabels:
+      app: venus-messager-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-messager-{{.UniqueId}}-pod
+        rule: receive
+    spec:
+      containers:
+        - name: venus-messager-{{.UniqueId}}
+          image: "filvenus/venus-messager:4282c9eae01af6a8871771bf9e21e73247b158a0"
+          args: ["run", "--listen=/ip4/0.0.0.0/tcp/39812", "--disable-push", --node-url={{.NodeUrl}}, --gateway-url={{.GatewayUrl}} {{if gt (len .AuthToken) 0}}, --auth-token={{.AuthToken}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}{{if gt (len .MysqlDSN) 0}}, "--mysql-dsn={{.MysqlDSN}}"{{end}}]
+          ports:
+            - containerPort: 39812
+              protocol: TCP

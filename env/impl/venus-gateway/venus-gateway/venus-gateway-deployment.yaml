@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-gateway-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  selector:
+    matchLabels:
+      app: venus-gateway-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-gateway-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-gateway-{{.UniqueId}}
+          image: "filvenus/venus-gateway:be069e22d2cc251f1f9db70baca75fae1cf0f0ea"
+          args: ["--listen /ip4/0.0.0.0/tcp/45132", "run"{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
+          ports:
+            - containerPort: 45132
+              protocol: TCP

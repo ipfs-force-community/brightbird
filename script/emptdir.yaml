@@ -1,0 +1,21 @@
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shared-dir
+spec:
+  containers:
+    - image: alpine
+      imagePullPolicy: IfNotPresent
+      name: shared-dir
+      command: ['sh', '-c', 'echo The Bench Container 1 is Running ; sleep 3600']
+      volumeMounts:
+        - mountPath: /shared-dir
+          name: shared-dir-v
+        - mountPath: /shared-vk
+          name: shared-vk-v
+  volumes:
+    - name: shared-dir-v
+      emptyDir: { }
+    - name: shared-vk-v
+      emptyDir: { }

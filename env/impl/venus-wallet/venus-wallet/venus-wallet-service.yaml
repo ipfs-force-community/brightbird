@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: venus-wallet-{{.UniqueId}}-service
+spec:
+  type: ClusterIP
+  selector:
+    app: venus-wallet-{{.UniqueId}}-pod
+  ports:
+    - protocol: TCP
+      port: 5678
+      name: api
+

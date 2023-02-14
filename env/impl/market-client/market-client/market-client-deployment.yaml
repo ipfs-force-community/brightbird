@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-market-client-{{.UniqueId}}-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-market-client-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-market-client-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-market-client-{{.UniqueId}}
+          image: "filvenus/market-client:0e3ce38882a9322e3c19fc36cfd765360ed86398"
+          args: ["run"]
+          ports:
+            - containerPort: 41231
+              protocol: TCP
+            - containerPort: 34123
+              protocol: TCP
+          volumeMounts:
+            - name: market-cfg-vol
+              mountPath: "/root/.marketclient/config.toml"
+              subPath: "config.toml"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+      volumes:
+        - name: market-cfg-vol
+          configMap:
+            name: venus-market-client-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: testnet-shared-dir

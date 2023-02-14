@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-wallet-{{.UniqueId}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-wallet-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-wallet-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-wallet-{{.UniqueId}}
+          image: "filvenus/venus-wallet:ce182a1637fc1d2ef850cbc58e7cdf49883bdaa7"
+          args: ["run"]
+          ports:
+            - containerPort: 5678
+              protocol: TCP
+          volumeMounts:
+            - name: venus-wallet-vol
+              mountPath: "/root/.venus_wallet/config.toml"
+              subPath: "config.toml"
+      volumes:
+        - name: venus-wallet-vol
+          configMap:
+            name: venus-wallet-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml

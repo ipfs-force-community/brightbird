@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-miner-{{.UniqueId}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-miner-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-miner-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-miner-{{.UniqueId}}
+          image: "filvenus/venus-miner:54ca88320ac61bd195005dfc6ab444850ab50c14"
+          args: ["run"]
+          ports:
+            - containerPort: 12308
+              protocol: TCP
+          volumeMounts:
+            - name: marketcfg
+              mountPath: "/root/.venusminer/config.toml"
+              subPath: "config.toml"
+      volumes:
+        - name: marketcfg
+          configMap:
+            name: venus-miner-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml

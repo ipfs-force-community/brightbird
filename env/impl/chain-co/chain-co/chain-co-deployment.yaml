@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-chain-co-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  selector:
+    matchLabels:
+      app: venus-chain-co-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-chain-co-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-chain-co-{{.UniqueId}}
+          image: "filvenus/chain-co:a3d8c56a903c344df58efdbe90741777b5d21676"
+          args: ["run" {{if gt (len .Nodes) 0}}{{range $i, $a := .Nodes}},--node={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
+          ports:
+            - containerPort: 1234
+              protocol: TCP

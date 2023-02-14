@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-auth-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  selector:
+    matchLabels:
+      app: venus-auth-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-auth-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-auth-{{.UniqueId}}
+          image: "filvenus/venus-auth:5fb2656ce8710470957e9a5cf7b7c09f21dd2d5a"
+          args: ["run"]
+          ports:
+            - containerPort: 8989
+              protocol: TCP
