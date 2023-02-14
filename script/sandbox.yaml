@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-case-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: test-case--pod
+  template:
+    metadata:
+      labels:
+        app: test-case--pod
+    spec:
+      containers:
+        - name: test-case-pod
+          image: "golang:1.18.10"
+          args: ["exec"]
+          ports:
+            - containerPort: 8989
+              protocol: TCP
