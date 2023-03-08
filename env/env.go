@@ -6,14 +6,25 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io"
+	"io/fs"
+	"net"
+	"net/http"
+	"net/url"
+	"os"
+	"path/filepath"
+	"strconv"
+	"time"
+
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
 	"google.golang.org/appengine"
-	"io"
-	"io/fs"
+	"gopkg.in/yaml.v2"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
@@ -24,13 +35,6 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/client-go/util/homedir"
-	"net"
-	"net/http"
-	"net/url"
-	"os"
-	"path/filepath"
-	"strconv"
-	"time"
 )
 
 var log = logging.Logger("env")
@@ -112,17 +116,25 @@ func NewK8sEnvDeployer(namespace string, testID string) (*K8sEnvDeployer, error)
 	}, nil
 }
 
-// Debug return a unique test id
+// TestID return a unique test id
 func (env *K8sEnvDeployer) TestID() string {
 	return env.testID
 }
 
-// Debug return a unique test id
+// UniqueId return a unique id for all deployer
 func (env *K8sEnvDeployer) UniqueId(outName string) string {
 	if len(outName) > 0 {
 		return env.testID + hex.EncodeToString(utils.Blake256([]byte(outName))[:4])
 	}
 	return env.testID
+}
+
+func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
+	if objectMeta.Labels == nil {
+		objectMeta.Labels = map[string]string{}
+	}
+	objectMeta.Labels["testid"] = env.TestID()
+	objectMeta.Labels["apptype"] = "venus"
 }
 
 // RunDeployment deploy k8s's deployment from specific yaml config
@@ -132,20 +144,18 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 		return nil, err
 	}
 
-	log.Debug("deployment yaml", string(data))
 	deployment := &appv1.Deployment{}
 	err = yaml_k8s.Unmarshal(data, deployment)
 	if err != nil {
 		return nil, err
 	}
 
-	if deployment.ObjectMeta.Labels == nil {
-		deployment.ObjectMeta.Labels = map[string]string{"testid": env.TestID()}
-		deployment.ObjectMeta.Labels = map[string]string{"apptype": "venus"}
-	} else {
-		deployment.ObjectMeta.Labels["testid"] = env.TestID()
-		deployment.ObjectMeta.Labels["apptype"] = "venus"
+	env.setCommonLabels(&deployment.ObjectMeta)
+	cfgData, err := yaml.Marshal(deployment)
+	if err != nil {
+		return nil, err
 	}
+	log.Debug("deployment(%s) yaml config", deployment.GetName(), string(cfgData))
 
 	name := deployment.Name
 	deploymentClient := env.k8sClient.AppsV1().Deployments(env.namespace)
@@ -156,13 +166,19 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 	}
 	log.Infof("Created deployment %s.", name)
 
+	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("context cancel when deploy %s", name)
-		default:
+		case <-ticker.C:
 			dep, err := deploymentClient.Get(ctx, deployment.GetName(), metav1.GetOptions{})
 			if err != nil {
+				if errors2.IsNotFound(err) {
+					continue
+				}
 				return nil, err
 			}
 
@@ -173,8 +189,6 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 			if dep.Status.ReadyReplicas == replicas {
 				return dep, nil
 			}
-
-			time.Sleep(time.Second * 5)
 		}
 	}
 }
@@ -186,20 +200,18 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 		return nil, err
 	}
 
-	log.Debug("statefulset yaml", string(data))
 	statefulSet := &appv1.StatefulSet{}
 	err = yaml_k8s.Unmarshal(data, statefulSet)
 	if err != nil {
 		return nil, err
 	}
 
-	if statefulSet.ObjectMeta.Labels == nil {
-		statefulSet.ObjectMeta.Labels = map[string]string{"testid": env.TestID()}
-		statefulSet.ObjectMeta.Labels = map[string]string{"apptype": "venus"}
-	} else {
-		statefulSet.ObjectMeta.Labels["testid"] = env.TestID()
-		statefulSet.ObjectMeta.Labels["apptype"] = "venus"
+	env.setCommonLabels(&statefulSet.ObjectMeta)
+	cfgData, err := yaml.Marshal(statefulSet)
+	if err != nil {
+		return nil, err
 	}
+	log.Debug("statefulset(%s) yaml config", statefulSet.GetName(), string(cfgData))
 
 	name := statefulSet.Name
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
@@ -210,13 +222,19 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	}
 	log.Infof("Created statefulSet %s.\n", name)
 
+	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
+
 	for {
 		select {
 		case <-ctx.Done():
 			return nil, fmt.Errorf("context cancel when deploy %s", name)
-		default:
+		case <-ticker.C:
 			dep, err := statefulSetClient.Get(ctx, statefulSet.GetName(), metav1.GetOptions{})
 			if err != nil {
+				if errors2.IsNotFound(err) {
+					continue
+				}
 				return nil, err
 			}
 
@@ -229,6 +247,36 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	}
 }
 
+// CreateConfigMap create config map for app
+func (env *K8sEnvDeployer) CreateConfigMap(ctx context.Context, f fs.File, args any) (*corev1.ConfigMap, error) {
+	data, err := QuickRender(f, args)
+	if err != nil {
+		return nil, err
+	}
+
+	configMap := &corev1.ConfigMap{}
+	err = yaml_k8s.Unmarshal(data, configMap)
+	if err != nil {
+		return nil, err
+	}
+
+	env.setCommonLabels(&configMap.ObjectMeta)
+	cfgData, err := yaml.Marshal(configMap)
+	if err != nil {
+		return nil, err
+	}
+	log.Debug("configmap(%s) yaml config", configMap.GetName(), string(cfgData))
+
+	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
+	log.Infof("Creating configmap %s ...", configMap.GetName())
+	result, err := configMapClient.Create(ctx, configMap, metav1.CreateOptions{})
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("Created configmap %s.", result.GetObjectMeta().GetName())
+	return configMap, nil
+}
+
 // RunService deploy k8s's service from specific yaml config
 func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any) (*corev1.Service, error) {
 	data, err := QuickRender(fs, args)
@@ -236,33 +284,35 @@ func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any)
 		return nil, err
 	}
 
-	log.Debug("service yaml", string(data))
 	serviceCfg := &corev1.Service{}
 	err = yaml_k8s.Unmarshal(data, serviceCfg)
 	if err != nil {
 		return nil, err
 	}
 
-	if serviceCfg.ObjectMeta.Labels == nil {
-		serviceCfg.ObjectMeta.Labels = map[string]string{"testid": env.TestID()}
-		serviceCfg.ObjectMeta.Labels = map[string]string{"apptype": "venus"}
-	} else {
-		serviceCfg.ObjectMeta.Labels["testid"] = env.TestID()
-		serviceCfg.ObjectMeta.Labels["apptype"] = "venus"
+	env.setCommonLabels(&serviceCfg.ObjectMeta)
+	cfgData, err := yaml.Marshal(serviceCfg)
+	if err != nil {
+		return nil, err
 	}
+	log.Debug("service(%s) yaml config", serviceCfg.GetName(), string(cfgData))
+
 	serviceClient := env.k8sClient.CoreV1().Services(env.namespace)
 	log.Infof("Creating service %s ...", serviceCfg.GetName())
 	result, err := serviceClient.Create(ctx, serviceCfg, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	log.Info("Created service %s", result.GetObjectMeta().GetName())
+	log.Infof("Created service %s", result.GetObjectMeta().GetName())
 	return serviceClient.Get(ctx, serviceCfg.GetName(), metav1.GetOptions{})
 }
 
 func (env *K8sEnvDeployer) WaitForServiceReady(ctx context.Context, dep IDeployer) (types.Endpoint, error) {
 	serviceClient := env.k8sClient.CoreV1().Services(env.namespace)
-	name := dep.Svc().Name
+	name := dep.Svc().GetName()
+
+	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
 
 	var endpoint types.Endpoint
 LOOP:
@@ -270,16 +320,23 @@ LOOP:
 		select {
 		case <-ctx.Done():
 			return "", fmt.Errorf("context cancel when deploy %s", name)
-		default:
+		case <-ticker.C:
 			service, err := serviceClient.Get(ctx, name, metav1.GetOptions{})
 			if err != nil {
+				if errors2.IsNotFound(err) {
+					continue
+				}
 				return "", err
 			}
 
-			endpoints, err := env.k8sClient.CoreV1().Endpoints(env.namespace).Get(ctx, service.GetName(), metav1.GetOptions{})
+			endpoints, err := env.k8sClient.CoreV1().Endpoints(env.namespace).Get(ctx, name, metav1.GetOptions{})
 			if err != nil {
+				if errors2.IsNotFound(err) {
+					continue
+				}
 				return "", err
 			}
+			log.Infof("service %v", service.Spec)
 			if len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0 {
 				if service.Spec.Type == corev1.ServiceTypeClusterIP {
 					if service.Spec.ClusterIP == "None" {
@@ -306,10 +363,9 @@ LOOP:
 	if Debug {
 		//forward a pod to local machine
 		for {
-			//pod network may not be ready
+			//todo pord forward failed for unknown rease
 			forwardPort, err := env.PortForwardPod(ctx, dep.Pods()[0].GetName(), int(dep.Svc().Spec.Ports[0].Port))
 			if err != nil {
-
 				return "", err
 			}
 			err = env.WaitForAPIReady(ctx, forwardPort)
@@ -323,79 +379,39 @@ LOOP:
 			break
 		}
 	} else {
-		for {
-			err = env.WaitEndpointRead(ctx, endpoint)
-			if err != nil {
-				return "", err
-			}
-			err = env.WaitForAPIReady(ctx, endpoint)
-			if err != nil {
-				if errors.Is(err, io.EOF) {
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				return "", err
-			}
+		log.Infof("use cluster ip %s", endpoint)
+
+		err = env.WaitEndpointReady(ctx, endpoint)
+		if err != nil {
+			return "", err
+		}
+		err = env.WaitForAPIReady(ctx, endpoint)
+		if err != nil {
+			return "", err
 		}
 	}
 
 	return endpoint, nil
 }
 
-func (env *K8sEnvDeployer) CreateConfigMap(ctx context.Context, f fs.File, args any) (*corev1.ConfigMap, error) {
-	data, err := QuickRender(f, args)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Debug("configmap yaml", string(data))
-	configMap := &corev1.ConfigMap{}
-	err = yaml_k8s.Unmarshal(data, configMap)
-	if err != nil {
-		return nil, err
-	}
-
-	if configMap.ObjectMeta.Labels == nil {
-		configMap.ObjectMeta.Labels = map[string]string{"testid": env.TestID()}
-		configMap.ObjectMeta.Labels = map[string]string{"apptype": "venus"}
-	} else {
-		configMap.ObjectMeta.Labels["testid"] = env.TestID()
-		configMap.ObjectMeta.Labels["apptype"] = "venus"
-	}
-
-	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
-	log.Infof("Creating configmap %s ...", configMap.GetName())
-	result, err := configMapClient.Create(ctx, configMap, metav1.CreateOptions{})
-	if err != nil {
-		return nil, err
-	}
-	log.Infof("Created configmap %s.", result.GetObjectMeta().GetName())
-	return configMap, nil
-}
-
 func (env *K8sEnvDeployer) WaitForAPIReady(ctx context.Context, endpoint types.Endpoint) error {
-	for {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context cancel")
-		default:
-			tCtx, _ := context.WithTimeout(ctx, time.Second*5)
-			req, err := http.NewRequestWithContext(tCtx, "GET", "http://"+string(endpoint)+"/healthcheck", nil)
-			if err != nil {
-				return err
-			}
-			resp, err := http.DefaultClient.Do(req)
-			if err != nil {
-				return err
-			}
-			if resp.StatusCode == http.StatusOK {
-				return nil
-			}
-			log.Debugf("track status %s %d", resp.Status, resp.StatusCode)
-			time.Sleep(time.Second * 5)
-			continue
-		}
+	req, err := retryablehttp.NewRequest("GET", fmt.Sprintf("http://%s/healthcheck", endpoint), nil)
+	if err != nil {
+		return err
 	}
+
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 5
+
+	resp, err := retryClient.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode == http.StatusOK {
+		return nil
+	}
+	log.Debugf("track status %s %d", resp.Status, resp.StatusCode)
+	return fmt.Errorf("receive health %s", resp.Status)
 }
 
 func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
@@ -470,7 +486,7 @@ func (env *K8sEnvDeployer) CreateDatabase(dsn string) error {
 	return err
 }
 
-func (env *K8sEnvDeployer) WaitEndpointRead(ctx context.Context, endpoint types.Endpoint) error {
+func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
 	for {
 		select {
 		case <-ctx.Done():
@@ -517,10 +533,8 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 	}()
 
 	go func() {
-		select {
-		case <-ctx.Done():
-			stopCh <- struct{}{}
-		}
+		<-ctx.Done()
+		stopCh <- struct{}{}
 	}()
 
 	select {

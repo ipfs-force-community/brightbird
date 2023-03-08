@@ -10,15 +10,19 @@ debug: $(subst debug,,${MAKECMDGOALS})
 
 exec-plugin:
 	for i in $$(ls exec/plugins); do \
-   		go build --buildmode=plugin -o ./plugins/exec/$$i.so $(GOFLAGS) ./exec/plugins/$$i; \
+   		go build -trimpath --buildmode=plugin -o ./plugins/exec/$$i.so $(GOFLAGS) ./exec/plugins/$$i; \
 	done
 
 deploy-plugin:
 	for i in $$(ls env/impl); do \
-   		go build --buildmode=plugin -o ./plugins/deploy/$$i.so $(GOFLAGS) ./env/impl/$$i/plugin; \
+   		go build -trimpath --buildmode=plugin -o ./plugins/deploy/$$i.so $(GOFLAGS) ./env/impl/$$i/plugin; \
 	done
 
 runner:
-	go build -o testrunner  $(GOFLAGS) ./test_runner
+	go build -trimpath -o testrunner  $(GOFLAGS) ./test_runner
 
 build-all:exec-plugin deploy-plugin runner
+
+docker:
+	docker build -t testrunner  .
+	docker tag testrunner:latest filvenus/testrunner:$(TAG)

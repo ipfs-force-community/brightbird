@@ -2,9 +2,10 @@ package env
 
 import (
 	"context"
+	"time"
+
 	v1 "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
-	"time"
 )
 
 // SyncWait returns when ChainHead is within 20 epochs of the expected height
@@ -48,10 +49,10 @@ func SyncWait(ctx context.Context, k8sEnv *K8sEnvDeployer, venusDep IVenusDeploy
 		for i, ss := range state.ActiveSyncs {
 			switch ss.Stage {
 			case vTypes.StageSyncComplete:
-			default:
-				working = i
 			case vTypes.StageIdle:
 				// not complete, not actively working
+			default:
+				working = i
 			}
 		}
 
@@ -62,13 +63,13 @@ func SyncWait(ctx context.Context, k8sEnv *K8sEnvDeployer, venusDep IVenusDeploy
 		ss := state.ActiveSyncs[working]
 
 		if ss.Base == nil || ss.Target == nil {
-			log.Infof(
+			log.Info(
 				"syncing",
 				"height", ss.Height,
 				"stage", ss.Stage.String(),
 			)
 		} else {
-			log.Infof(
+			log.Info(
 				"syncing",
 				"base", ss.Base.Key(),
 				"target", ss.Target.Key(),

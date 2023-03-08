@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: testrunner-debug
+  labels:
+    app: ubuntu
+spec:
+  containers:
+  - image: "ubuntu:22.04"
+    command: 
+      - "sleep"
+      - "604800"
+    imagePullPolicy: IfNotPresent
+    name: testrunner
+    volumeMounts:
+      - mountPath: /shared-dir
+        name: shared-dir-v
+  restartPolicy: Always
+  volumes:
+  - name: shared-dir-v
+    persistentVolumeClaim:
+      claimName: testnet-shared-dir
