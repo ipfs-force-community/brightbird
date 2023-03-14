@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	venus_gateway "github.com/hunjixin/brightbird/env/impl/venus-gateway"
 	"github.com/hunjixin/brightbird/types"
@@ -11,7 +10,7 @@ import (
 var Info = venus_gateway.PluginInfo
 
 type DepParams struct {
-	Params     json.RawMessage `optional:"true"`
+	Params     venus_gateway.Config `optional:"true"`
 	K8sEnv     *env.K8sEnvDeployer
 	VenusAuth  env.IVenusAuthDeployer
 	AdminToken types.AdminToken

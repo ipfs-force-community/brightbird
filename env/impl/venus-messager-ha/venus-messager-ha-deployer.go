@@ -3,7 +3,6 @@ package venus_messager_ha
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -14,12 +13,15 @@ import (
 )
 
 type Config struct {
-	Replicas   int
-	NodeUrl    string
-	GatewayUrl string
-	AuthUrl    string
-	AuthToken  string
-	MysqlDSN   string
+	env.BaseConfig
+
+	NodeUrl    string `json:"-"`
+	GatewayUrl string `json:"-"`
+	AuthUrl    string `json:"-"`
+	AuthToken  string `json:"-"`
+	MysqlDSN   string `json:"-"`
+
+	Replicas int
 }
 
 type RenderParams struct {
@@ -66,10 +68,10 @@ func NewVenusMessagerHADeployer(env *env.K8sEnvDeployer, replicas int, nodeUrl, 
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
 	defaultCfg.MysqlDSN = "root:123456@tcp(192.168.200.103:3306)/venus-auth-" + env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local"
-	cfg, err := utils.MergeStructAndJson(defaultCfg, cfg, params)
+	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err
 	}

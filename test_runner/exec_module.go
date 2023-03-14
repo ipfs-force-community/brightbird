@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
 	"reflect"
+	"runtime/debug"
 )
 
 func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (interface{}, error) {
@@ -17,6 +19,12 @@ func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (inte
 	//paramsT can't be pointer type
 	fnT := reflect.FuncOf([]reflect.Type{types.CtxT, newInStruct}, []reflect.Type{types.ErrT}, false)
 	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
+		defer func() {
+			if r := recover(); r != nil {
+				mainLog.Info("stacktrace from panic:" + string(debug.Stack()))
+				results = []reflect.Value{reflect.ValueOf(fmt.Errorf("invoke exec plugin %v", r))}
+			}
+		}()
 		//json must use pointer,
 		//1. create a pointer value
 		//2. set injected values

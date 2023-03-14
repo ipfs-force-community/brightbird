@@ -3,7 +3,6 @@ package venus_wallet
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -14,11 +13,13 @@ import (
 )
 
 type Config struct {
-	GatewayUrl      string
-	AuthToken       string
-	SupportAccounts []string
-	//use for annotate service name
-	SvcMap map[string]string
+	env.BaseConfig
+
+	GatewayUrl string `json:"-"`
+	UserToken  string `json:"-"`
+
+	UserName        string
+	CreateIfNotExit bool
 }
 
 type RenderParams struct {
@@ -50,19 +51,18 @@ type VenusWalletDeployer struct {
 	svc        *corev1.Service
 }
 
-func NewVenusWalletDeployer(env *env.K8sEnvDeployer, gatewayUrl, authToken string, supportAccounts ...string) *VenusWalletDeployer {
+func NewVenusWalletDeployer(env *env.K8sEnvDeployer, gatewayUrl, userToken string, supportAccounts ...string) *VenusWalletDeployer {
 	return &VenusWalletDeployer{
 		env: env,
 		cfg: &Config{
-			GatewayUrl:      gatewayUrl,
-			AuthToken:       authToken,
-			SupportAccounts: supportAccounts,
+			GatewayUrl: gatewayUrl,
+			UserToken:  userToken,
 		},
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}
@@ -71,6 +71,7 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMess
 		cfg: &cfg,
 	}, nil
 }
+
 func (deployer *VenusWalletDeployer) Name() string {
 	return PluginInfo.Name
 }

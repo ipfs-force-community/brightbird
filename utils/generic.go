@@ -16,6 +16,18 @@ func MergeStructAndJson[T any](defaultCfg T, incomingCfg T, frontCfgBytes json.R
 	if err != nil {
 		return Default[T](), err
 	}
+	err = mergo.Merge(&defaultCfg, frontCfg, mergo.WithOverride)
+	if err != nil {
+		return Default[T](), err
+	}
+	return defaultCfg, nil
+}
+
+func MergeStructAndInterface[T any](defaultCfg T, incomingCfg T, frontCfg interface{}) (T, error) {
+	err := mergo.Merge(&defaultCfg, incomingCfg, mergo.WithOverride)
+	if err != nil {
+		return Default[T](), err
+	}
 
 	err = mergo.Merge(&defaultCfg, frontCfg, mergo.WithOverride)
 	if err != nil {

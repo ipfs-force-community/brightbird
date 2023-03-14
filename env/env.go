@@ -360,31 +360,31 @@ LOOP:
 	}
 
 	var err error
+	if !Debug {
+		err = env.WaitEndpointReady(ctx, endpoint)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	if Debug {
 		//forward a pod to local machine
 		for {
-			//todo pord forward failed for unknown rease
+			//todo port forward was quite unstable, try more
 			forwardPort, err := env.PortForwardPod(ctx, dep.Pods()[0].GetName(), int(dep.Svc().Spec.Ports[0].Port))
 			if err != nil {
 				return "", err
 			}
-			err = env.WaitForAPIReady(ctx, forwardPort)
+			err = env.WaitForAPIReady(ctx, forwardPort) // todo move this try logic to WaitForAPIReady
 			if err != nil {
-				if errors.Is(err, io.EOF) {
-					time.Sleep(time.Second * 5)
-					continue
-				}
-				return "", err
+				log.Infof("%s api return error %v", dep.Name(), err)
+				continue
 			}
 			break
 		}
 	} else {
 		log.Infof("use cluster ip %s", endpoint)
 
-		err = env.WaitEndpointReady(ctx, endpoint)
-		if err != nil {
-			return "", err
-		}
 		err = env.WaitForAPIReady(ctx, endpoint)
 		if err != nil {
 			return "", err

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	market_client "github.com/hunjixin/brightbird/env/impl/market-client"
 	"github.com/hunjixin/brightbird/types"
@@ -11,11 +10,12 @@ import (
 var Info = market_client.PluginInfo
 
 type DepParams struct {
-	Params       json.RawMessage `optional:"true"`
 	K8sEnv       *env.K8sEnvDeployer
 	VenusDep     env.IVenusDeployer
 	WalletDeploy env.IVenusWalletDeployer `svcname:"Wallet"`
 	AdminToken   types.AdminToken
+
+	Params market_client.Config `optional:"true"`
 
 	types.AnnotateOut
 }

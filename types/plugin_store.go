@@ -98,6 +98,7 @@ func (store *PluginStore) Addplugin(path string) error {
 
 var ErrT = reflect.TypeOf((*error)(nil)).Elem()
 var CtxT = reflect.TypeOf((*context.Context)(nil)).Elem()
+var NilVal = reflect.ValueOf(nil)
 
 func LoadPlugins(dir string) (*PluginStore, error) {
 	dirEntries, err := os.ReadDir(dir)

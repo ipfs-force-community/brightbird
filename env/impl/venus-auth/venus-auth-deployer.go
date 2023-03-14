@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	_ "embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -51,26 +50,14 @@ func NewVenusAuthDeployer(env *env.K8sEnvDeployer) *VenusAuthDeployer {
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}
 	return &VenusAuthDeployer{
 		env: env,
 		cfg: &cfg,
-	}, nil
-}
-
-func DeployerFromBytes(env *env.K8sEnvDeployer, data json.RawMessage) (env.IDeployer, error) {
-	cfg := &Config{}
-	err := json.Unmarshal(data, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &VenusAuthDeployer{
-		env: env,
-		cfg: cfg,
 	}, nil
 }
 

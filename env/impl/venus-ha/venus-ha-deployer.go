@@ -3,7 +3,6 @@ package venus_ha
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -14,10 +13,13 @@ import (
 )
 
 type Config struct {
-	Replicas       int
-	AuthUrl        string
-	AdminToken     string
-	BootstrapPeers []string
+	env.BaseConfig
+
+	AuthUrl        string   `json:"-"`
+	AdminToken     string   `json:"-"`
+	BootstrapPeers []string `json:"-"`
+
+	Replicas int
 }
 
 type RenderParams struct {
@@ -64,8 +66,8 @@ func NewVenusHADeployer(env *env.K8sEnvDeployer, replicas int, authUrl string, a
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}

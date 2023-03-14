@@ -3,7 +3,6 @@ package venus_gateway
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -14,8 +13,11 @@ import (
 )
 
 type Config struct {
+	env.BaseConfig
+
+	AuthUrl string `json:"-"`
+
 	Replicas int
-	AuthUrl  string
 }
 
 type RenderParams struct {
@@ -58,8 +60,8 @@ func NewVenusGatewayDeployer(env *env.K8sEnvDeployer, replicas int, authUrl stri
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}

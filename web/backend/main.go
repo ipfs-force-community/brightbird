@@ -1,3 +1,4 @@
-package backend
+package main
 
-func main() {}
+func main() {
+}

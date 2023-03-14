@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	venus_auth_ha "github.com/hunjixin/brightbird/env/impl/venus-auth-ha"
 )
@@ -10,7 +9,7 @@ import (
 var Info = venus_auth_ha.PluginInfo
 
 type DepParams struct {
-	Params json.RawMessage `optional:"true"`
+	Params venus_auth_ha.Config `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer
 }
 

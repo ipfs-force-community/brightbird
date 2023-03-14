@@ -14,8 +14,11 @@ import (
 )
 
 type Config struct {
+	env.BaseConfig
+
+	MysqlDSN string `json:"-"`
+
 	Replicas int
-	MysqlDSN string
 }
 
 type RenderParams struct {
@@ -59,10 +62,10 @@ func NewVenusAuthHADeployer(env *env.K8sEnvDeployer, replicas int) *VenusAuthHAD
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
 	defaultCfg.MysqlDSN = "root:123456@tcp(192.168.200.103:3306)/venus-auth-" + env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local"
-	cfg, err := utils.MergeStructAndJson(defaultCfg, cfg, params)
+	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err
 	}

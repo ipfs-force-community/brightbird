@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	venus_market "github.com/hunjixin/brightbird/env/impl/venus-market"
 	"github.com/hunjixin/brightbird/types"
@@ -11,7 +10,7 @@ import (
 var Info = venus_market.PluginInfo
 
 type DepParams struct {
-	Params     json.RawMessage `optional:"true"`
+	Params     venus_market.Config `optional:"true"`
 	K8sEnv     *env.K8sEnvDeployer
 	VenusAuth  env.IVenusAuthDeployer
 	Venus      env.IVenusDeployer

@@ -3,7 +3,6 @@ package venus_market
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -14,12 +13,15 @@ import (
 )
 
 type Config struct {
-	NodeUrl     string
-	GatewayUrl  string
-	MessagerUrl string
-	AuthUrl     string
-	AuthToken   string
-	UseMysql    bool
+	env.BaseConfig
+
+	NodeUrl     string `json:"-"`
+	GatewayUrl  string `json:"-"`
+	MessagerUrl string `json:"-"`
+	AuthUrl     string `json:"-"`
+	AuthToken   string `json:"-"`
+
+	UseMysql bool
 }
 
 type RenderParams struct {
@@ -65,8 +67,8 @@ func NewVenusMarketDeployer(env *env.K8sEnvDeployer, authUrl, nodeUrl, gatewayUr
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}

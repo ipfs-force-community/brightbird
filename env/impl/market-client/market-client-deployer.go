@@ -3,7 +3,6 @@ package market_client
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
@@ -15,15 +14,14 @@ import (
 )
 
 type Config struct {
-	NodeUrl     string
-	NodeToken   string
-	WalletUrl   string
-	WalletToken string
+	env.BaseConfig
+
+	NodeUrl     string `json:"-"`
+	NodeToken   string `json:"-"`
+	WalletUrl   string `json:"-"`
+	WalletToken string `json:"-"`
 
 	ClientAddr string
-
-	//use for annotate service name
-	SvcMap map[string]string
 }
 
 type RenderParams struct {
@@ -70,8 +68,8 @@ func NewMarketClientDeployer(env *env.K8sEnvDeployer, nodeUrl, nodeToken, wallet
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, depCfg Config, frontCfg Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), depCfg, frontCfg)
 	if err != nil {
 		return nil, err
 	}

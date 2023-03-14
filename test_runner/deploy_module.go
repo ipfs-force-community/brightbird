@@ -12,6 +12,7 @@ import (
 	"github.com/hunjixin/brightbird/utils"
 	"go.uber.org/fx"
 	"reflect"
+	"runtime/debug"
 )
 
 func DeployFLow(deployers []types.DeployNode, deployPlugin *types.PluginStore) fx_opt.Option {
@@ -79,6 +80,7 @@ func getSvcMap(jsonParams json.RawMessage) (map[string]string, error) {
 	}
 	return svcMap.SvcMap, nil
 }
+
 func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type {
 	fieldNum := in.NumField()
 	var inDepTypeFields []reflect.StructField
@@ -162,7 +164,16 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 	}
 
 	newFn := reflect.FuncOf([]reflect.Type{types.CtxT, newInStruct}, newOutArgs, false)
-	return reflect.MakeFunc(newFn, func(args []reflect.Value) []reflect.Value {
+	return reflect.MakeFunc(newFn, func(args []reflect.Value) (vals []reflect.Value) {
+		defer func() {
+			if r := recover(); r != nil {
+				vals = make([]reflect.Value, 2)
+				vals[0] = reflect.Zero(newOutArgs[0])
+				mainLog.Info("stacktrace from panic:" + string(debug.Stack()))
+				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %v", r))
+			}
+		}()
+
 		mainLog.Infof("start to deploy %s", depNode.Name)
 		//convert params
 		argT := fnT.In(1)
@@ -172,7 +183,13 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 			fieldName := field.Name
 			if !field.Anonymous && len(fieldName) != 0 {
 				if fieldName == "Params" {
-					dstVal.FieldByName(fieldName).Set(reflect.ValueOf(depNode.Params))
+					val := reflect.New(field.Type).Interface()
+					err = json.Unmarshal(depNode.Params, val)
+					if err != nil {
+						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
+					}
+					fmt.Println(reflect.ValueOf(val).Elem().Interface())
+					dstVal.FieldByName(fieldName).Set(reflect.ValueOf(val).Elem())
 				} else {
 					dstVal.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))
 				}
@@ -184,6 +201,9 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 		//convert result
 		if isAnnotateOut {
 			//todo check error result
+			if !results[1].IsNil() {
+				return []reflect.Value{reflect.Zero(newOutArgs[0]), results[1]}
+			}
 			destResultVal := reflect.New(newOutArgs[0]).Elem()
 			destResultVal.Field(0).Set(results[0])
 			return []reflect.Value{destResultVal, results[1]}

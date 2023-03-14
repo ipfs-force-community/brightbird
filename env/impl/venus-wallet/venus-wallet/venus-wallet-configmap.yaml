@@ -23,8 +23,7 @@ data:
 
     [APIRegisterHub]
       RegisterAPI = ["{{.GatewayUrl}}"]
-      Token = "{{.AuthToken}}"
-      SupportAccounts = [{{range $i, $a := .SupportAccounts}}"{{$a}}",{{end}}]
+      Token = "{{.UserToken}}"
 kind: ConfigMap
 metadata:
   name: venus-wallet-cfg-{{.UniqueId}}
