@@ -21,7 +21,7 @@ func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (inte
 	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
 		defer func() {
 			if r := recover(); r != nil {
-				mainLog.Info("stacktrace from panic:" + string(debug.Stack()))
+				log.Info("stacktrace from panic:" + string(debug.Stack()))
 				results = []reflect.Value{reflect.ValueOf(fmt.Errorf("invoke exec plugin %v", r))}
 			}
 		}()
@@ -29,7 +29,7 @@ func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (inte
 		//1. create a pointer value
 		//2. set injected values
 		//3. unmarshal pointer value
-		mainLog.Infof("start to exec %s", plugin.Name)
+		log.Infof("start to exec %s", plugin.Name)
 		ptrParams := reflect.New(plugin.Param)
 		//apply new struct values
 		for j := 0; j < newInStruct.NumField(); j++ {

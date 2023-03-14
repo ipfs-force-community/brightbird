@@ -88,7 +88,7 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 	for i := 0; i < fieldNum; i++ {
 		field := in.Field(i)
 		if !field.Anonymous {
-			svcNameKey := field.Tag.Get("svcname")
+			svcNameKey := field.Tag.Get(types.SvcName)
 			svcName := svcMap[svcNameKey]
 			tagVal := fmt.Sprintf(`name:"%s"`, svcName)
 			if field.Tag.Get("optional") == "true" {
@@ -128,7 +128,7 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 	var newOutArgs []reflect.Type
 	var outTag string
 	{
-		//todo opt for more return values
+		//todo opt for more return values ?
 		numOut := fnT.NumOut()
 		if numOut != 2 {
 			return nil, "", fmt.Errorf("return values must be (val, error) format")
@@ -169,12 +169,12 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 			if r := recover(); r != nil {
 				vals = make([]reflect.Value, 2)
 				vals[0] = reflect.Zero(newOutArgs[0])
-				mainLog.Info("stacktrace from panic:" + string(debug.Stack()))
+				log.Info("stacktrace from panic:" + string(debug.Stack()))
 				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %v", r))
 			}
 		}()
 
-		mainLog.Infof("start to deploy %s", depNode.Name)
+		log.Infof("start to deploy %s", depNode.Name)
 		//convert params
 		argT := fnT.In(1)
 		dstVal := reflect.New(argT).Elem()
@@ -188,7 +188,6 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 					if err != nil {
 						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
 					}
-					fmt.Println(reflect.ValueOf(val).Elem().Interface())
 					dstVal.FieldByName(fieldName).Set(reflect.ValueOf(val).Elem())
 				} else {
 					dstVal.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))

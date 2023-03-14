@@ -12,14 +12,15 @@ import (
 var Info = types.PluginInfo{
 	Name:        "test_deploy",
 	Version:     version.Version(),
+	Category:    types.TestExec,
 	Description: "generate admin token",
 }
 
 type TestCaseParams struct {
 	fx.In
-	MarketClient   env.IMarketClientDeployer
-	VenusWallet    env.IVenusWalletDeployer `svcname:"Wallet"`
-	VenusWalletNew env.IVenusWalletDeployer `svcname:"WalletNew"`
+	MarketClient   env.IMarketClientDeployer `json:"-"`
+	VenusWallet    env.IVenusWalletDeployer  `json:"-" svcname:"Wallet"`
+	VenusWalletNew env.IVenusWalletDeployer  `json:"-" svcname:"WalletNew"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

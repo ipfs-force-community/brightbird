@@ -1,4 +1,164 @@
+//go:generate swagger generate spec -m -o ./swagger.json
 package main
 
+import (
+	"context"
+	"github.com/BurntSushi/toml"
+	"github.com/gin-gonic/gin"
+	"github.com/hunjixin/brightbird/fx_opt"
+	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/utils"
+	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
+	"github.com/urfave/cli/v2"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+)
+
+var log = logging.Logger("main")
+
 func main() {
+	app := &cli.App{
+		Name:    "lotus-health",
+		Usage:   "Tools for monitoring lotus daemon health",
+		Version: version.Version(),
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:  "config",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "mongo",
+				Value: "mongodb://localhost:27017",
+			},
+			&cli.StringFlag{
+				Name:  "plugins",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "listen",
+				Value: "127.0.0.1:12356",
+			},
+		},
+		Action: func(c *cli.Context) error {
+			err := logging.SetLogLevel("*", c.String("log-level"))
+			if err != nil {
+				return err
+			}
+
+			cfg := DefaultConfig()
+			if c.IsSet("config") {
+				configPath := c.String("config")
+				configFileContent, err := os.ReadFile(configPath)
+				if err != nil {
+					return err
+				}
+				err = toml.Unmarshal(configFileContent, &cfg)
+				if err != nil {
+					return err
+				}
+			}
+
+			if c.IsSet("plugins") {
+				cfg.PluginStore = c.String("plugins")
+			}
+
+			if c.IsSet("listen") {
+				cfg.Listen = c.String("listen")
+			}
+
+			if c.IsSet("mongo") {
+				cfg.MongoUrl = c.String("mongo")
+			}
+			return run(c.Context, cfg)
+		},
+	}
+
+	if err := app.Run(os.Args); err != nil {
+		log.Error(err)
+		os.Exit(1)
+		return
+	}
+}
+
+func run(ctx context.Context, cfg Config) error {
+	e := gin.Default()
+	e.Use(corsMiddleWare())
+	e.Use(errorHandleMiddleWare())
+
+	shutdown := make(types.Shutdown)
+	stop, err := fx_opt.New(ctx,
+		fx_opt.Override(new(*gin.Engine), e),
+		fx_opt.Override(new(*V1RouterGroup), func(e *gin.Engine) *V1RouterGroup {
+			return (*V1RouterGroup)(e.Group("v1"))
+		}),
+		fx_opt.Override(new(context.Context), ctx),
+		fx_opt.Override(new(*mongo.Collection), func() (*mongo.Collection, error) {
+			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
+			if err != nil {
+				return nil, err
+			}
+			return client.Database("test-platform").Collection("cases"), nil
+		}),
+		fx_opt.Override(new(DeployPluginStore), func() (DeployPluginStore, error) {
+			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
+		}),
+		fx_opt.Override(new(ExecPluginStore), func() (ExecPluginStore, error) {
+			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
+		}),
+		fx_opt.Override(new(IPluginService), NewPlugin),
+		fx_opt.Override(new(ITestCaseService), NewCaseSvc),
+		fx_opt.Override(fx_opt.NextInvoke(), RegisterDeployRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), RegisterCasesRouter),
+	)
+	if err != nil {
+		return err
+	}
+	go utils.CatchSig(ctx, shutdown)
+
+	listener, err := net.Listen("tcp", cfg.Listen)
+	if err != nil {
+		return err
+	}
+	defer listener.Close() //nolint
+
+	log.Infof("Start listen api %s", listener.Addr())
+	go func() {
+		err = e.RunListener(listener)
+		if err != nil {
+			log.Errorf("listen address fail %s", err)
+		}
+	}()
+	<-shutdown
+	return stop(ctx)
+}
+
+func errorHandleMiddleWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Next()
+		if c.Errors != nil {
+			c.Writer.WriteHeader(http.StatusServiceUnavailable)
+			c.Writer.Write([]byte(c.Errors.String()))
+		}
+	}
+}
+
+func corsMiddleWare() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Header("Access-Control-Allow-Origin", "*")
+		c.Header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
+		c.Header("Access-Control-Allow-Headers",
+			"DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,"+
+				"If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Forwarded-For,Origin,"+
+				"X-Real-Ip,spanId,preHost,svcName")
+		c.Header("Content-Type", "application/json")
+		if c.Request.Method == "OPTIONS" {
+			c.JSON(http.StatusOK, "ok!")
+		}
+		c.Next()
+	}
 }

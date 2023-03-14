@@ -11,9 +11,23 @@ import (
 	"sync"
 )
 
+type Category string
+
+const (
+	Deploy   Category = "Deployer"
+	TestExec Category = "Exec"
+)
+
+type IPluginInfo interface {
+	Each(fn func(*PluginDetail) error) error
+	GetPlugin(name string) (*PluginDetail, error)
+	AddPlugin(path string) error
+}
+
 type PluginInfo struct {
 	Name        string
 	Version     string
+	Category    Category
 	Description string
 	Path        string
 }
@@ -23,6 +37,9 @@ type PluginDetail struct {
 	Fn    reflect.Value
 	Param reflect.Type
 }
+
+var _ IPluginInfo = (*PluginStore)(nil)
+
 type PluginStore struct {
 	lk      sync.Mutex
 	plugins map[string]*PluginDetail
@@ -35,6 +52,18 @@ func NewExecPluginStore() *PluginStore {
 	}
 }
 
+func (store *PluginStore) Each(fn func(*PluginDetail) error) error {
+	store.lk.Lock()
+	defer store.lk.Unlock()
+	for _, val := range store.plugins {
+		err := fn(val)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (store *PluginStore) GetPlugin(name string) (*PluginDetail, error) {
 	store.lk.Lock()
 	defer store.lk.Unlock()
@@ -45,7 +74,7 @@ func (store *PluginStore) GetPlugin(name string) (*PluginDetail, error) {
 	return plugin, nil
 }
 
-func (store *PluginStore) Addplugin(path string) error {
+func (store *PluginStore) AddPlugin(path string) error {
 	store.lk.Lock()
 	defer store.lk.Unlock()
 	p, err := plugin.Open(path)
@@ -110,7 +139,7 @@ func LoadPlugins(dir string) (*PluginStore, error) {
 	for _, entry := range dirEntries {
 		if !entry.IsDir() {
 			if strings.HasSuffix(entry.Name(), ".so") {
-				err = pluginStore.Addplugin(filepath.Join(dir, entry.Name()))
+				err = pluginStore.AddPlugin(filepath.Join(dir, entry.Name()))
 				if err != nil {
 					return nil, err
 				}

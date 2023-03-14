@@ -38,6 +38,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-message-ha",
 	Version:     version.Version(),
+	Category:    types.Deploy,
 	Description: "",
 }
 

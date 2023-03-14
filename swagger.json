@@ -1,0 +1,341 @@
+{
+  "consumes": [
+    "application/json",
+    "application/xml"
+  ],
+  "produces": [
+    "application/json",
+    "application/xml"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "BrightBird API.",
+    "contact": {
+      "email": "venus@ipfsconmmunity.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    },
+    "version": "0.0.1"
+  },
+  "host": "127.0.0.1:12356",
+  "basePath": "/v1",
+  "paths": {
+    "/cases": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific test case by name.",
+        "operationId": "saveCases",
+        "parameters": [
+          {
+            "description": "test flow json",
+            "name": "testflow",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "test flow json",
+              "type": "object",
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/cases/list": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all exec test flows.",
+        "operationId": "listTestFlows",
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/testFlow"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cases/plugins": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all exec plugins.",
+        "operationId": "listCasesPlugins",
+        "responses": {
+          "200": {
+            "description": "pluginOut",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginOut"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cases/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific test case by name.",
+        "operationId": "getTestFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "name of test flow",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        }
+      }
+    },
+    "/deploy/plugins": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all deploy plugin.",
+        "operationId": "listDeployPlugins",
+        "responses": {
+          "200": {
+            "description": "pluginOut",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginOut"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Category": {
+      "type": "string",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "DeployNode": {
+      "type": "object",
+      "required": [
+        "Name"
+      ],
+      "properties": {
+        "Name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3
+        },
+        "Params": {
+          "type": "object"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "PluginInfo": {
+      "type": "object",
+      "properties": {
+        "Category": {
+          "$ref": "#/definitions/Category"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Path": {
+          "type": "string"
+        },
+        "Version": {
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "TestItem": {
+      "type": "object",
+      "required": [
+        "Name"
+      ],
+      "properties": {
+        "Name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3
+        },
+        "Params": {
+          "type": "object"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "pluginOut": {
+      "description": "PluginOut",
+      "type": "object",
+      "properties": {
+        "Category": {
+          "$ref": "#/definitions/Category"
+        },
+        "Description": {
+          "type": "string"
+        },
+        "IsAnnotateOut": {
+          "type": "boolean"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Out": {
+          "$ref": "#/definitions/property"
+        },
+        "Path": {
+          "type": "string"
+        },
+        "Properties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/property"
+          }
+        },
+        "SvcProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/property"
+          }
+        },
+        "Version": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "PluginOut",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+    },
+    "property": {
+      "description": "Property Property",
+      "type": "object",
+      "properties": {
+        "Description": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        },
+        "Type": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "Property",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+    },
+    "testFlow": {
+      "description": "TestFlow",
+      "type": "object",
+      "required": [
+        "Name"
+      ],
+      "properties": {
+        "Cases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TestItem"
+          }
+        },
+        "Name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3
+        },
+        "Nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployNode"
+          }
+        }
+      },
+      "x-go-name": "TestFlow",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    }
+  },
+  "x-meta-array": [
+    "value1",
+    "value2"
+  ],
+  "x-meta-array-obj": [
+    {
+      "name": "obj",
+      "value": "field"
+    }
+  ],
+  "x-meta-value": "value"
+}

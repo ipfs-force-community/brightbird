@@ -2,29 +2,31 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/filecoin-project/venus-miner/build"
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/env"
 	fx_opt "github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/fx"
 )
 
-var mainLog = logging.Logger("main")
+var log = logging.Logger("main")
 
 func main() {
 	app := &cli.App{
 		Name:    "lotus-health",
 		Usage:   "Tools for monitoring lotus daemon health",
-		Version: build.UserVersion(),
+		Version: version.Version(),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:     "config",
@@ -32,12 +34,12 @@ func main() {
 				Required: true,
 			},
 			&cli.StringFlag{
-				Name:  "testfile",
+				Name:  "plugins",
 				Value: "",
 			},
 			&cli.StringFlag{
-				Name:  "plugins",
-				Value: "",
+				Name:  "mongo",
+				Value: "mongodb://localhost:27017",
 			},
 			&cli.IntFlag{
 				Name:  "timeout",
@@ -65,9 +67,6 @@ func main() {
 			if err != nil {
 				return err
 			}
-			if c.IsSet("testfile") {
-				cfg.TestFile = c.String("testfile")
-			}
 			if c.IsSet("plugins") {
 				cfg.PluginStore = c.String("plugins")
 			}
@@ -79,19 +78,20 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		mainLog.Error(err)
+		log.Error(err)
 		os.Exit(1)
 		return
 	}
 }
 
 func run(ctx context.Context, cfg Config) (err error) {
-	content, err := os.ReadFile(cfg.TestFile)
+	col, err := getMongoCaseCol(ctx, cfg.MongoUrl)
 	if err != nil {
 		return
 	}
+	
 	flow := &types.TestFlow{}
-	err = json.Unmarshal(content, flow)
+	err = col.FindOne(ctx, bson.D{{"Name", cfg.CaseName}}).Decode(flow)
 	if err != nil {
 		return
 	}
@@ -109,7 +109,7 @@ func run(ctx context.Context, cfg Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if err := cleaner.DoClean(); err != nil {
-			mainLog.Errorf("clean up failed %v", err)
+			log.Errorf("clean up failed %v", err)
 		}
 	}()
 
@@ -130,7 +130,7 @@ func run(ctx context.Context, cfg Config) (err error) {
 			}
 
 			cleaner.AddFunc(func() error {
-				mainLog.Infof("start to cleanup k8s resource")
+				log.Infof("start to cleanup k8s resource")
 				return k8sEnv.Clean(ctx)
 			})
 			return k8sEnv, nil
@@ -142,4 +142,13 @@ func run(ctx context.Context, cfg Config) (err error) {
 		return
 	}
 	return stop(ctx)
+}
+
+func getMongoCaseCol(ctx context.Context, mongoUrl string) (*mongo.Collection, error) {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
+	if err != nil {
+		return nil, err
+	}
+	db := client.Database("test-platform")
+	return db.Collection("cases"), nil
 }

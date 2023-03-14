@@ -11,7 +11,7 @@ import (
 var Info = chain_co.PluginInfo
 
 type DepParams struct {
-	Params          chain_co.Config `optional:"true"` //todo use params direct
+	Params          chain_co.Config `optional:"true"`
 	K8sEnv          *env.K8sEnvDeployer
 	VenusDep        env.IVenusDeployer
 	VenusAuthDeploy env.IVenusAuthDeployer
@@ -39,5 +39,4 @@ func Exec(ctx context.Context, depParams DepParams) (env.IChainCoDeployer, error
 		return nil, err
 	}
 	return deployer, nil
-
 }

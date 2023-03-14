@@ -15,13 +15,14 @@ import (
 var Info = types.PluginInfo{
 	Name:        "generate_token",
 	Version:     version.Version(),
+	Category:    types.TestExec,
 	Description: "generate admin token",
 }
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv    *env.K8sEnvDeployer
-	VenusAuth env.IVenusAuthDeployer
+	K8sEnv    *env.K8sEnvDeployer    `json:"-"`
+	VenusAuth env.IVenusAuthDeployer `json:"-"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

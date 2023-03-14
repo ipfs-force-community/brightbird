@@ -37,6 +37,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        string(env.VenusMarket),
 	Version:     version.Version(),
+	Category:    types.Deploy,
 	Description: "",
 }
 

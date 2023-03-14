@@ -16,13 +16,14 @@ import (
 var Info = types.PluginInfo{
 	Name:        "import_key",
 	Version:     version.Version(),
+	Category:    types.TestExec,
 	Description: "import private key to venus wallet",
 }
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv      *env.K8sEnvDeployer
-	VenusWallet env.IVenusWalletDeployer `svcname:"Wallet"`
+	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
+	VenusWallet env.IVenusWalletDeployer `json:"-" svcname:"Wallet"`
 	PrivKey     string                   `optional:"true"`
 }
 

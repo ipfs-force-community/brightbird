@@ -36,6 +36,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-auth-ha",
 	Version:     version.Version(),
+	Category:    types.Deploy,
 	Description: "",
 }
 
