@@ -9,12 +9,18 @@
               <span class="text">图形项目</span>
             </div>
           </router-link>
-          <router-link :to="{ name: 'create-project' }">
-            <div class="btn-item">
-              <button class="code"></button>
-              <span class="text">代码项目</span>
-            </div>
-          </router-link>
+          <!--          <router-link :to="{ name: 'create-project' }">-->
+          <!--            <div class="btn-item">-->
+          <!--              <button class="code"></button>-->
+          <!--              <span class="text">代码项目</span>-->
+          <!--            </div>-->
+          <!--          </router-link>-->
+          <!--          <router-link :to="{ name: 'import-project' }">-->
+          <!--            <div class="btn-item">-->
+          <!--              <button class="git"></button>-->
+          <!--              <span class="text">导入项目</span>-->
+          <!--            </div>-->
+          <!--          </router-link>-->
         </div>
         <div class="right-area">
           <router-link :to="{ name: 'node-library' }">

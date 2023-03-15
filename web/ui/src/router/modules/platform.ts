@@ -53,21 +53,4 @@ export default [
       },
     ],
   },
-  {
-    name: 'create-project',
-    path: 'project/editor',
-    component: () => import('@/views/project/editor.vue'),
-    meta: {
-      title: '新增项目',
-    },
-  },
-  {
-    name: 'update-project',
-    path: 'project/editor/:id',
-    component: () => import('@/views/project/editor.vue'),
-    props: ({ params: { id } }: RouteLocationNormalizedLoaded) => ({ id }),
-    meta: {
-      title: '编辑项目',
-    },
-  },
 ] as RouteRecordRaw[];

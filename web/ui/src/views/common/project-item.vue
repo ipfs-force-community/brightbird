@@ -542,7 +542,7 @@ export default defineComponent({
           });
       },
       edit: (id: string) => {
-        router.push({ name: 'update-project', params: { id } });
+        router.push({ name: 'update-pipeline', params: { id } });
       },
       sync: (id: string) => {
         if (synchronizing.value) {
