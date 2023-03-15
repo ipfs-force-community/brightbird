@@ -21,7 +21,7 @@ type Config struct {
 	AuthToken  string `json:"-"`
 	MysqlDSN   string `json:"-"`
 
-	Replicas int
+	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {

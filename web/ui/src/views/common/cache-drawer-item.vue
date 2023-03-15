@@ -10,9 +10,6 @@
       </div>
       <div class="clear-btn" @click="toClear"><i class="jm-icon-button-clear icon"></i>清理</div>
     </div>
-    <div class="worker" v-if="originData.workerId">
-      {{ originData.workerId }}
-    </div>
     <div class="divider"></div>
     <div class="mount-point-wrapper">
       <div class="head" @click="toggle = !toggle" v-if="originData.nodeCaches.length > 0">
@@ -191,20 +188,6 @@ export default defineComponent({
         margin-right: 2px;
       }
     }
-  }
-
-  .worker {
-    display: inline-block;
-    box-sizing: border-box;
-    margin-top: 12px;
-    padding: 4px 8px;
-    background: #f0f3f5;
-    border-radius: 1px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    color: #3f536e;
   }
 
   .divider {

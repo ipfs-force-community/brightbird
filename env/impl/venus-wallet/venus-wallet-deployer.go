@@ -18,8 +18,8 @@ type Config struct {
 	GatewayUrl string `json:"-"`
 	UserToken  string `json:"-"`
 
-	UserName        string
-	CreateIfNotExit bool
+	UserName        string `json:"userName"`
+	CreateIfNotExit bool   `json:"createIfNotExit"`
 }
 
 type RenderParams struct {

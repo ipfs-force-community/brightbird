@@ -6,28 +6,21 @@ import {
   IWorkflowExecutionRecordVo,
 } from '@/api/dto/workflow-execution-record';
 import { IProcessTemplateVo, IProjectDetailVo, IProjectQueryingDto, IProjectVo, IWorkflowVo } from '@/api/dto/project';
-import { INamespaceDetailVo, INamespacesVo } from '@/api/dto/secret-key';
-import { IHubNodePageVo, IPageDto, IPageVo, IVersionVo } from '@/api/dto/common';
+import { IPageDto, IPageVo } from '@/api/dto/common';
 import { INodeVo } from '@/api/dto/node-library';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
 import { IProjectGroupVo } from '@/api/dto/project-group';
-import { INodeDefinitionSearchingDto, INodeDefinitionVo } from '@/api/dto/node-definitions';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
 
 export const baseUrl = {
   projectGroup: '/view/projects/groups',
   project: '/view/projects',
-  // TODO 待改善，与/view/projects合并
-  projectV2: '/view/v2/projects',
   workflow: '/view/workflow_instances',
   asyncTasks: '/view/async_task_instances',
-  // tasks: '/view/task_instances',
-  tasksV2: '/view/v2/task_instances',
   task: '/view/task_instance',
   log: '/view/logs',
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
-  secretKey: '/view/namespaces',
   library: '/view/nodes',
   parameter: '/view/parameters',
   triggerEvent: '/view/trigger_events',
@@ -40,18 +33,6 @@ const baseHubUrl = {
   processTemplate: '/hub/view/workflow_templates',
   node_definitions: '/hub/view/node_definitions',
 };
-
-/**
- * 获取官方节点
- * @param dto
- */
-export function getOfficialNodes(dto: INodeDefinitionSearchingDto): Promise<IHubNodePageVo<INodeDefinitionVo>> {
-  return restProxy({
-    url: `${hubUrl}${baseHubUrl.node_definitions}/search`,
-    method: 'get',
-    payload: dto,
-  });
-}
 
 /**
  * 查询项目组列表
@@ -69,7 +50,7 @@ export function queryProjectGroup(): Promise<IProjectGroupVo[]> {
  */
 export function queryProject(dto: IProjectQueryingDto): Promise<IPageVo<IProjectVo>> {
   return restProxy({
-    url: baseUrl.projectV2,
+    url: baseUrl.project,
     method: 'get',
     payload: dto,
   });
@@ -125,7 +106,7 @@ export function listAsyncTaskInstance(triggerId: string): Promise<IAsyncTaskInst
  */
 export function listTaskInstance(businessId: string): Promise<ITaskExecutionRecordVo[]> {
   return restProxy<ITaskExecutionRecordVo[]>({
-    url: `${baseUrl.tasksV2}/${businessId}`,
+    url: `${baseUrl.task}/${businessId}`,
     method: 'get',
   });
 }
@@ -149,38 +130,6 @@ export function listTaskParam(taskId: string): Promise<ITaskParamVo[]> {
 export function fetchWorkflow(workflowRef: string, workflowVersion: string): Promise<IWorkflowVo> {
   return restProxy<IWorkflowVo>({
     url: `${baseUrl.dsl}/${workflowRef}/${workflowVersion}`,
-    method: 'get',
-  });
-}
-
-/**
- * 获取命名空间列表
- */
-export function listNamespace(): Promise<INamespacesVo> {
-  return restProxy<INamespacesVo>({
-    url: baseUrl.secretKey,
-    method: 'get',
-  });
-}
-
-/**
- * 获取命名空间详情
- * @param name
- */
-export function fetchNamespaceDetail(name: string): Promise<INamespaceDetailVo> {
-  return restProxy<INamespaceDetailVo>({
-    url: `${baseUrl.secretKey}/${name}`,
-    method: 'get',
-  });
-}
-
-/**
- * 获取密钥列表
- * @param namespace
- */
-export function listSecretKey(namespace: string): Promise<string[]> {
-  return restProxy<string[]>({
-    url: `${baseUrl.secretKey}/${namespace}/keys`,
     method: 'get',
   });
 }
@@ -232,8 +181,8 @@ export function fetchTriggerWebhook(projectId: string): Promise<ITriggerWebhookV
 /**
  * 获取版本列表
  */
-export function fetchVersion(): Promise<IVersionVo[]> {
-  return restProxy({
+export function fetchVersion(): Promise<string> {
+ return restProxy({
     url: `${baseUrl.version}`,
     method: 'get',
     timeout: 1000,

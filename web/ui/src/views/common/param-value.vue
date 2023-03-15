@@ -1,22 +1,14 @@
 <template>
   <div class="param-value">
     <div class="value" :style="{maxWidth:maxWidth}">
-      <span v-if="type===ParamTypeEnum.SECRET">**********</span>
-      <a :href="paramValue" target="_blank" download v-else-if="isLink">
-        <jm-text-viewer @loaded="({contentMaxWidth})=>getMaxWidth(contentMaxWidth)" :value="paramValue"
-                        :tip-append-to-body="tipAppendToBody" :tip-placement="tipPlacement" :threshold="0"/>
-      </a>
       <jm-text-viewer @loaded="({contentMaxWidth})=>getMaxWidth(contentMaxWidth)" :value="paramValue"
-                      :tip-append-to-body="tipAppendToBody" :tip-placement="tipPlacement" :threshold="0" v-else/>
+                      :tip-append-to-body="tipAppendToBody" :tip-placement="tipPlacement" :threshold="0"/>
     </div>
-    <jm-text-copy :value="paramValue"
-                  v-if="type!==ParamTypeEnum.SECRET && paramValue" class="copy-btn"/>
   </div>
 </template>
 
 <script lang='ts'>
-import { computed, defineComponent, PropType, ref } from 'vue';
-import { ParamTypeEnum } from '@/api/dto/enumeration';
+import { computed, defineComponent, ref } from 'vue';
 
 export default defineComponent({
   name: 'jm-param-value',
@@ -26,7 +18,7 @@ export default defineComponent({
       default: '',
     },
     type: {
-      type: String as PropType<ParamTypeEnum>,
+      type: String,
     },
     // tooltip 显示方向
     tipPlacement: {
@@ -58,7 +50,6 @@ export default defineComponent({
       maxWidth,
       getMaxWidth,
       isLink,
-      ParamTypeEnum,
     };
   },
 });
@@ -81,13 +72,6 @@ export default defineComponent({
 
   &:hover .copy-btn {
     visibility: visible;
-  }
-
-  .copy-btn {
-    font-size: 1.25em;
-    width: 16px;
-    margin-left: 10px;
-    visibility: hidden;
   }
 }
 </style>

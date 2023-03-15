@@ -11,7 +11,7 @@ import (
 type ITestCaseService interface {
 	Get(ctx context.Context, name string) (*types.TestFlow, error)
 	List(ctx context.Context) ([]*types.TestFlow, error)
-	Plugins(ctx context.Context) ([]PluginOut, error)
+	Plugins(ctx context.Context) ([]types.PluginOut, error)
 	Save(ctx context.Context, testcase types.TestFlow) error
 }
 
@@ -43,8 +43,8 @@ func (c *CaseSvc) Get(ctx context.Context, name string) (*types.TestFlow, error)
 	return tf, nil
 }
 
-func (c *CaseSvc) Plugins(ctx context.Context) ([]PluginOut, error) {
-	var deployPlugins []PluginOut
+func (c *CaseSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
+	var deployPlugins []types.PluginOut
 	err := c.execPluginStore.Each(func(detail *types.PluginDetail) error {
 		pluginOut, err := getPluginOutput(detail)
 		if err != nil {

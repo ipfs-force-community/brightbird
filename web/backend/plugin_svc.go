@@ -8,26 +8,8 @@ import (
 	"strings"
 )
 
-// PluginOut
-// swagger:model pluginOut
-type PluginOut struct {
-	types.PluginInfo
-	Properties    []Property
-	IsAnnotateOut bool
-	SvcProperties []Property
-	Out           *Property
-}
-
-// Property Property
-// swagger:model property
-type Property struct {
-	Name        string
-	Type        string
-	Description string
-}
-
 type IPluginService interface {
-	Plugins(context.Context) ([]PluginOut, error)
+	Plugins(context.Context) ([]types.PluginOut, error)
 }
 
 type PluginSvc struct {
@@ -38,8 +20,8 @@ func NewPluginSvc() IPluginService {
 	return &PluginSvc{}
 }
 
-func (p *PluginSvc) Plugins(ctx context.Context) ([]PluginOut, error) {
-	var deployPlugins []PluginOut
+func (p *PluginSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
+	var deployPlugins []types.PluginOut
 	err := p.deployPluginStore.Each(func(detail *types.PluginDetail) error {
 		pluginOut, err := getPluginOutput(detail)
 		if err != nil {
@@ -54,20 +36,20 @@ func (p *PluginSvc) Plugins(ctx context.Context) ([]PluginOut, error) {
 	return deployPlugins, nil
 }
 
-func getPluginOutput(detail *types.PluginDetail) (PluginOut, error) {
-	var pluginOut = PluginOut{}
+func getPluginOutput(detail *types.PluginDetail) (types.PluginOut, error) {
+	var pluginOut = types.PluginOut{}
 	isAnnotateOut := types.IsAnnotateOut(reflect.New(detail.Param).Elem().Interface())
 	pluginOut.IsAnnotateOut = isAnnotateOut
 	pluginOut.PluginInfo = *detail.PluginInfo
 	numFields := detail.Param.NumField()
 
-	var svcProperties []Property
+	var svcProperties []types.Property
 	for i := 0; i < numFields; i++ {
 		field := detail.Param.Field(i)
 		if field.Name == "Params" {
 			configProperties, err := parserProperties(field.Type)
 			if err != nil {
-				return PluginOut{}, err
+				return types.PluginOut{}, err
 			}
 			pluginOut.Properties = configProperties
 		} else {
@@ -76,7 +58,7 @@ func getPluginOutput(detail *types.PluginDetail) (PluginOut, error) {
 				continue
 			}
 			svcType := strings.TrimRight(strings.TrimLeft(field.Type.Name(), "I"), "Deployer")
-			svcProperties = append(svcProperties, Property{
+			svcProperties = append(svcProperties, types.Property{
 				Name:        svcName,
 				Type:        svcType,
 				Description: "",
@@ -86,7 +68,7 @@ func getPluginOutput(detail *types.PluginDetail) (PluginOut, error) {
 	pluginOut.SvcProperties = svcProperties
 	if isAnnotateOut {
 		outType := detail.Fn.Type().Out(0)
-		pluginOut.Out = &Property{
+		pluginOut.Out = &types.Property{
 			Name:        "Out",
 			Type:        strings.TrimRight(strings.TrimLeft(outType.Name(), "I"), "Deployer"),
 			Description: "",
@@ -95,9 +77,9 @@ func getPluginOutput(detail *types.PluginDetail) (PluginOut, error) {
 	return pluginOut, nil
 }
 
-func parserProperties(configT reflect.Type) ([]Property, error) {
+func parserProperties(configT reflect.Type) ([]types.Property, error) {
 	configFieldsNum := configT.NumField()
-	var properties []Property
+	var properties []types.Property
 	for j := 0; j < configFieldsNum; j++ {
 		field := configT.Field(j)
 		if field.Anonymous {
@@ -117,7 +99,7 @@ func parserProperties(configT reflect.Type) ([]Property, error) {
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
-		properties = append(properties, Property{
+		properties = append(properties, types.Property{
 			Name: fieldName,
 			Type: typeName,
 		})

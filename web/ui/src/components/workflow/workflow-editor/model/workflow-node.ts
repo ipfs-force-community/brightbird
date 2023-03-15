@@ -3,7 +3,7 @@ import { Cron } from './data/node/cron';
 import { Webhook } from './data/node/webhook';
 import { Shell } from './data/node/shell';
 import { AsyncTask } from './data/node/async-task';
-import { fetchNodeLibraryList, getOfficialNodes } from '@/api/view-no-auth';
+import { fetchNodeLibraryList } from '@/api/view-no-auth';
 import { NodeTypeEnum } from '@/api/dto/enumeration';
 import { INodeParameterVo } from '@/api/dto/node-definitions';
 import { ParamTypeEnum } from '@/components/workflow/workflow-editor/model/data/enumeration';
@@ -75,35 +75,6 @@ export class WorkflowNode {
       name: keyword,
     });
     const arr: IWorkflowNode[] = list.map(item => new AsyncTask(item.ownerRef, item.ref, item.name, item.icon));
-    return {
-      pageNum: currentPageNum,
-      totalPages,
-      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
-    };
-  }
-
-  async loadOfficialNodes(pageNum: number, pageSize: number, keyword?: string): Promise<IPageInfo> {
-    const { content, pageNum: currentPageNum, totalPages } = await getOfficialNodes({
-      pageNum,
-      pageSize,
-      name: keyword,
-    });
-    const arr: IWorkflowNode[] = content.map(item => new AsyncTask(item.ownerRef, item.ref, item.name, item.icon));
-    return {
-      pageNum: currentPageNum,
-      totalPages,
-      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
-    };
-  }
-
-  async loadCommunityNodes(pageNum: number, pageSize: number, keyword?: string): Promise<IPageInfo> {
-    const { content, pageNum: currentPageNum, totalPages } = await getOfficialNodes({
-      pageNum,
-      pageSize,
-      name: keyword,
-      type: NodeTypeEnum.COMMUNITY,
-    });
-    const arr: IWorkflowNode[] = content.map(item => new AsyncTask(item.ownerRef, item.ref, item.name, item.icon));
     return {
       pageNum: currentPageNum,
       totalPages,

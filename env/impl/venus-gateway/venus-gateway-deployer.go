@@ -17,7 +17,7 @@ type Config struct {
 
 	AuthUrl string `json:"-"`
 
-	Replicas int
+	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {

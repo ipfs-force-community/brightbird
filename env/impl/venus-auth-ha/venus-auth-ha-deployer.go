@@ -18,7 +18,7 @@ type Config struct {
 
 	MysqlDSN string `json:"-"`
 
-	Replicas int
+	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {

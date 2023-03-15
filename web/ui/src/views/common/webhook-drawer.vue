@@ -143,46 +143,6 @@
                 </jm-table-column>
                 <jm-table-column label="参数类型" width="200px" prop="type">
                 </jm-table-column>
-                <jm-table-column label="参数值" prop="value">
-                  <template #default="scope">
-                    <div v-if="scope.row.type === ParamTypeEnum.SECRET">
-                      <!-- 密钥类型切换 -->
-                      <div class="hide-container" v-if="secretVisible">
-                        <span>********************</span>
-                        <i
-                          class="hide-secret jm-icon-input-visible"
-                          @click="hideSecret"
-                        ></i>
-                      </div>
-                      <div class="display-container" v-else>
-                        <template v-if="scope.row.value">
-                          <div class="param-value"
-                               :style="{maxWidth:maxWidthRecord[scope.row.value]?`${maxWidthRecord[scope.row.value]}px`: '100%'}">
-                            <jm-text-viewer v-if="scope.row.valueType !== ParamTypeEnum.SECRET"
-                                            :value="scope.row.value"
-                                            @loaded="({contentMaxWidth})=>getTotalWidth(contentMaxWidth,scope.row.value)"
-                                            class="value"
-                            >
-                            </jm-text-viewer>
-                            <template v-else>
-                              {{ scope.row.value }}
-                            </template>
-                          </div>
-                        </template>
-                        <i
-                          class="display-secret jm-icon-input-invisible"
-                          @click="displaySecret"
-                        ></i>
-                      </div>
-                    </div>
-                    <template v-else>
-                      <param-value
-                        :value="scope.row.value"
-                        :type="scope.row.valueType"
-                      />
-                    </template>
-                  </template>
-                </jm-table-column>
               </jm-table>
               <!-- 认证 -->
               <div class="verify-title">认证</div>
@@ -215,7 +175,6 @@ import { DEFAULT_PAGE_SIZE, START_PAGE_NUM } from '@/utils/constants';
 import { fetchTriggerWebhook } from '@/api/view-no-auth';
 import { ElScrollbar } from 'element-plus';
 import { StateEnum } from '@/components/load-more/enumeration';
-import { ParamTypeEnum } from '@/api/dto/enumeration';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import ParamValue from '@/views/common/param-value.vue';
 
@@ -252,7 +211,6 @@ export default defineComponent({
     const webhookParamsDetail = ref<IWebhookParamVo>();
     const webhookAuth = ref<IWebhookAuthVo[]>([]);
     // 密钥类型显隐
-    const secretVisible = ref<boolean>(true);
     const maxWidthRecord = ref<Record<string, number>>({});
     // 刷新表格
     const refreshVisible = ref<boolean>(true);
@@ -484,15 +442,11 @@ export default defineComponent({
     // 触发器
     const toPayload = () => {
       payloadTab.value = true;
-      // 还原密钥显示
-      secretVisible.value = true;
     };
     // 弹窗关闭
     const dialogClose = () => {
       // 还原tab
       payloadTab.value = true;
-      // 还原密钥显示
-      secretVisible.value = true;
     };
     // 一键复制
     const copyParam = async (value: string) => {
@@ -550,13 +504,8 @@ export default defineComponent({
       webhookAuth,
       // 弹窗关闭
       dialogClose,
-      // 密钥类型显隐
-      secretVisible,
-      hideSecret: () => (secretVisible.value = false),
-      displaySecret: () => (secretVisible.value = true),
       // 当前项目名
       currentProject,
-      ParamTypeEnum,
       maxWidthRecord,
       getTotalWidth(width: number, ref: string) {
         maxWidthRecord.value[ref] = width;
@@ -887,37 +836,12 @@ export default defineComponent({
           }
         }
 
-        .hide-secret,
-        .display-secret {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 20px;
-          height: 20px;
-          border-radius: 4px;
-          cursor: pointer;
-          //margin-left: 10px;
-        }
-
         .hide-container {
           display: flex;
           align-items: center;
 
           span {
             margin-right: 5px;
-          }
-
-          .hide-secret {
-            position: relative;
-            top: -2px;
-
-            .jm-icon-input-visible::before {
-              content: '\e803';
-            }
-
-            &:hover {
-              background: #eff7ff;
-            }
           }
         }
 
@@ -932,16 +856,6 @@ export default defineComponent({
 
           .trigger-params-value {
             width: 280px;
-          }
-
-          .display-secret {
-            .jm-icon-input-invisible::before {
-              content: '\e800';
-            }
-
-            &:hover {
-              background: #eff7ff;
-            }
           }
         }
       }

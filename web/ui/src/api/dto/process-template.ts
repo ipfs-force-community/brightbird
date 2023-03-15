@@ -27,7 +27,6 @@ export interface IContentVo extends Readonly<{
     ownerRef: string;
     sourceLink?: string;
     documentLink?: string;
-    workerType: NodeTypeEnum;
   }[];
 }> {
 }

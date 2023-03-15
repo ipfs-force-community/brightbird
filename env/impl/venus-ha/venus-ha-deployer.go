@@ -19,7 +19,7 @@ type Config struct {
 	AdminToken     string   `json:"-"`
 	BootstrapPeers []string `json:"-"`
 
-	Replicas int
+	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {

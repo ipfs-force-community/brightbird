@@ -59,12 +59,6 @@ export default defineComponent({
         return '触发器';
       } else if (props.type === NodeGroupEnum.INNER) {
         return '内置节点';
-      } else if (props.type === NodeGroupEnum.LOCAL) {
-        return '本地节点';
-      } else if (props.type === NodeGroupEnum.OFFICIAL) {
-        return '官方节点';
-      } else if (props.type === NodeGroupEnum.COMMUNITY) {
-        return '社区节点';
       } else {
         return '';
       }
@@ -108,36 +102,6 @@ export default defineComponent({
           case NodeGroupEnum.INNER:
             nodes.value = workflowNode.loadInnerNodes(keyword);
             break;
-          // 本地节点
-          case NodeGroupEnum.LOCAL: {
-            const { content, totalPages } = await workflowNode.loadLocalNodes(currentPage, pageSize, keyword);
-            // 显示更多
-            totalPages <= currentPage ? (loadState.value = StateEnum.NONE) : (loadState.value = StateEnum.MORE);
-            currentPage > 1 ? nodes.value = [...nodes.value, ...content] : nodes.value = content;
-            break;
-          }
-          // 官方节点
-          case NodeGroupEnum.OFFICIAL: {
-            const {
-              content,
-              totalPages,
-            } = await workflowNode.loadOfficialNodes(currentPage ? currentPage : 1, pageSize, keyword);
-            // 显示更多
-            totalPages <= currentPage ? (loadState.value = StateEnum.NONE) : (loadState.value = StateEnum.MORE);
-            currentPage > 1 ? nodes.value = [...nodes.value, ...content] : nodes.value = content;
-            break;
-          }
-          // 社区节点
-          default: {
-            const {
-              content,
-              totalPages,
-            } = await workflowNode.loadCommunityNodes(currentPage ? currentPage : 1, pageSize, keyword);
-            // 显示更多
-            totalPages <= currentPage ? (loadState.value = StateEnum.NONE) : (loadState.value = StateEnum.MORE);
-            currentPage > 1 ? nodes.value = [...nodes.value, ...content] : nodes.value = content;
-            break;
-          }
         }
         // 传递当前分组已加载的节点数量
         emit('getNodeCount', nodes.value.length);

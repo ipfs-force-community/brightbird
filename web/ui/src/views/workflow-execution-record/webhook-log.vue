@@ -78,7 +78,7 @@ import { IState } from '@/model/modules/workflow-execution-record';
 import { datetimeFormatter } from '@/utils/formatter';
 import { fetchTriggerEvent } from '@/api/view-no-auth';
 import { IEventParameterVo } from '@/api/dto/trigger';
-import { ParamTypeEnum, TriggerTypeEnum } from '@/api/dto/enumeration';
+import { TriggerTypeEnum } from '@/api/dto/enumeration';
 import useClipboard from 'vue-clipboard3';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import ParamValue from '@/views/common/param-value.vue';
@@ -129,7 +129,6 @@ export default defineComponent({
       tabActiveName,
       webhookLog,
       webhookParams,
-      ParamTypeEnum,
       maxWidthRecord,
       getTotalWidth(width: number, ref: string) {
         maxWidthRecord.value[ref] = width;

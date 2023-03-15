@@ -2,8 +2,6 @@ import axios, { AxiosResponse, AxiosTransformer, Method } from 'axios';
 import qs from 'qs';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import _store from '@/store';
-import { namespace as sessionNs } from '@/store/modules/session';
-import { IState as ISessionState } from '@/model/modules/session';
 
 const instance = axios.create({
   // `baseURL` will be prepended to `url` unless `url` is absolute.
@@ -81,12 +79,6 @@ export default async function rest({
   }
 
   const store = _store as any;
-  const { session } = store.state[sessionNs] as ISessionState;
-
-  if (session) {
-    // 统一注入Authorization
-    headers['Authorization'] = `${session.type} ${session.token}`;
-  }
 
   let res;
 
@@ -110,13 +102,6 @@ export default async function rest({
     }
 
     throw new HttpError(err.response, err.message);
-  }
-
-  const newToken = res.headers['x-authorization-token'];
-
-  if (newToken) {
-    // 更新认证
-    store.commit(`${sessionNs}/mutateToken`, newToken);
   }
 
   if (m === 'head') {

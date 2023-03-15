@@ -1,9 +1,6 @@
 import { createRouter, createWebHistory, RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
 import _store from '@/store';
-import { AUTHORIZE_INDEX, LOGIN_INDEX, PLATFORM_INDEX } from '@/router/path-def';
-import { namespace as sessionNs } from '@/store/modules/session';
-import { IState as ISessionState } from '@/model/modules/session';
-import LoginVerify from '@/views/login/dialog.vue';
+import {PLATFORM_INDEX } from '@/router/path-def';
 import { AppContext } from 'vue';
 
 /**
@@ -39,30 +36,6 @@ export default (appContext: AppContext) => {
   const router = createRouter({
     history: createWebHistory(),
     routes: [
-      {
-        // 静默登录
-        name: 'authorize',
-        path: AUTHORIZE_INDEX,
-        component: () => import('@/views/login/page.vue'),
-        props: ({ query: { gitRepo, gitRepoOwner, code, error_description } }: RouteLocationNormalizedLoaded) => ({
-          gitRepo,
-          gitRepoOwner,
-          code,
-          error_description,
-        }),
-      },
-      {
-        // 登录
-        name: 'login',
-        path: LOGIN_INDEX,
-        component: () => import('@/views/login/page.vue'),
-        props: ({ query: { gitRepo, gitRepoOwner, code, error_description } }: RouteLocationNormalizedLoaded) => ({
-          gitRepo,
-          gitRepoOwner,
-          code,
-          error_description,
-        }),
-      },
       // platform模块
       loadModuleRoute(
         PLATFORM_INDEX,
@@ -111,28 +84,6 @@ export default (appContext: AppContext) => {
 
     const store = _store as any;
     store.commit('mutateFromRoute', { to, from });
-    const { session } = store.state[sessionNs] as ISessionState;
-
-    for (const m of to.matched) {
-      if (m.meta.auth && !session) {
-        // 处理认证
-        next(false);
-
-        if (from.matched.length === 0) {
-          await router.push({
-            name: 'login',
-            query: {
-              redirectUrl: to.path === LOGIN_INDEX ? undefined : to.fullPath,
-            },
-          });
-        } else {
-          // 登录弹框
-          await _store.dispatch(`${sessionNs}/openAuthDialog`, { appContext, LoginVerify });
-        }
-        return;
-      }
-    }
-
     next();
   });
   return router;

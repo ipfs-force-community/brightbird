@@ -21,7 +21,7 @@ type Config struct {
 	WalletUrl   string `json:"-"`
 	WalletToken string `json:"-"`
 
-	ClientAddr string
+	ClientAddr string `json:"clientAddr"`
 }
 
 type RenderParams struct {

@@ -15,12 +15,6 @@
               <span class="text">代码项目</span>
             </div>
           </router-link>
-          <!--          <router-link :to="{ name: 'import-project' }">-->
-          <!--            <div class="btn-item">-->
-          <!--              <button class="git"></button>-->
-          <!--              <span class="text">导入项目</span>-->
-          <!--            </div>-->
-          <!--          </router-link>-->
         </div>
         <div class="right-area">
           <router-link :to="{ name: 'node-library' }">
@@ -33,12 +27,6 @@
             <div class="btn-item">
               <button class="group"></button>
               <span class="text">分组管理</span>
-            </div>
-          </router-link>
-          <router-link :to="{ name: 'secret-key' }">
-            <div class="btn-item secret-key">
-              <button class="secret-key"></button>
-              <span class="text">密钥管理</span>
             </div>
           </router-link>
         </div>
@@ -136,10 +124,6 @@ export default defineComponent({
 
           &.group {
             background-image: url('@/assets/svgs/index/group-btn.svg');
-          }
-
-          &.secret-key {
-            background-image: url('@/assets/svgs/index/secret-key-btn.svg');
           }
         }
 

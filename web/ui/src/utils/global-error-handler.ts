@@ -4,9 +4,6 @@ import { Store } from 'vuex';
 import { IRootState } from '@/model';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { IErrorMessageVo } from '@/api/dto/common';
-import dynamicRender from '@/utils/dynamic-render';
-import { namespace as sessionNs } from '@/store/modules/session';
-import LoginVerify from '@/views/login/dialog.vue';
 import { checkLocation } from '@/utils/rest';
 
 /**
@@ -40,11 +37,7 @@ export async function globalErrorHandler(
         proxy.$error((data as IErrorMessageVo).message);
         break;
       case 401: {
-        // 清理token
-        store.commit(`${sessionNs}/mutateDeletion`);
-        // 动态渲染登录验证弹窗
-        const appContext = instance?.$.appContext as AppContext;
-        dynamicRender(LoginVerify, appContext);
+        // TODO  auth
         break;
       }
       case 403:

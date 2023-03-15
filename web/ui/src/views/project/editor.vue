@@ -49,9 +49,7 @@ import { IProcessTemplateVo, IProjectIdVo } from '@/api/dto/project';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { useStore } from 'vuex';
 import { IRootState } from '@/model';
-import { namespace } from '@/store/modules/session';
 import yaml from 'yaml';
-import LoginVerify from '@/views/login/dialog.vue';
 
 export default defineComponent({
   props: {
@@ -61,7 +59,6 @@ export default defineComponent({
     const { proxy, appContext } = getCurrentInstance() as any;
     const router = useRouter();
     const store = useStore();
-    const sessionState = { ...store.state[namespace] };
     const reloadMain = inject('reloadMain') as () => void;
     const route = useRoute();
     const editMode = !!props.id;
@@ -90,10 +87,7 @@ export default defineComponent({
     const rules = {
       projectGroupId: [{ required: true, message: '请选择项目组', trigger: 'change' }],
     };
-    // 没有登录时做的弹框判断
-    if (!sessionState.session) {
-      store.dispatch(`${namespace}/openAuthDialog`, { appContext, LoginVerify });
-    }
+
     if (route.query.templateId) {
       getProcessTemplate(route.query.templateId as unknown as number)
         .then((res: IProcessTemplateVo) => {

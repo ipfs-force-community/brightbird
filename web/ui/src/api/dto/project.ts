@@ -234,5 +234,4 @@ export interface INodeDefVo
     sourceLink?: string;
     documentLink?: string;
     type: string;
-    workerType: NodeTypeEnum;
   }> {}

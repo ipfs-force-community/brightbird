@@ -153,28 +153,23 @@ export class AsyncTask extends BaseNode {
     const fields: Record<string, CustomRule> = {};
     this.inputs.forEach((item, index) => {
       const { required } = item;
-      let value;
-      if (item.type === ParamTypeEnum.SECRET) {
-        value = { required, message: `请选择${item.name}`, trigger: 'change' };
-      } else {
-        value = [
-          { required, message: `请输入${item.name}`, trigger: 'blur' },
-          {
-            validator: (rule: any, value: any, callback: any) => {
-              if (value && this.validateParam) {
-                try {
-                  this.validateParam(value);
-                } catch ({ message }) {
-                  callback(message);
-                  return;
-                }
+      let value = [
+        { required, message: `请输入${item.name}`, trigger: 'blur' },
+        {
+          validator: (rule: any, value: any, callback: any) => {
+            if (value && this.validateParam) {
+              try {
+                this.validateParam(value);
+              } catch ({ message }) {
+                callback(message);
+                return;
               }
-              callback();
-            },
-            trigger: 'blur',
+            }
+            callback();
           },
-        ];
-      }
+          trigger: 'blur',
+        },
+      ];
       fields[index] = {
         type: 'object',
         required,

@@ -59,7 +59,7 @@
               </div>
               <div class="update-time">
                   <span>最后修改时间：</span
-                  ><span>{{ datetimeFormatter(i.lastModifiedTime) }}</span>
+                  ><span>{{ datetimeFormatter(i.modifiedTime) }}</span>
               </div>
               <div class="total">
                 共<span class="count"> {{ i.projectCount }} </span>条项目
@@ -102,7 +102,7 @@
             </div>
             <div class="update-time">
               <span>最后修改时间：</span
-              ><span>{{ datetimeFormatter(i.lastModifiedTime) }}</span>
+              ><span>{{ datetimeFormatter(i.modifiedTime) }}</span>
             </div>
             <div class="switch">
               <jm-switch

@@ -46,13 +46,7 @@
                 <i class="jm-icon-button-help"></i>
               </jm-tooltip>
             </template>
-            <secret-key-selector
-              v-if="item.type === ParamTypeEnum.SECRET"
-              v-model="item.value"
-              :placeholder="item.description ? item.description : '请选择' + item.name"
-            />
             <expression-editor
-              v-else
               v-model="item.value"
               :node-id="nodeId"
               :placeholder="item.description ? item.description : '请输入' + item.name"
@@ -144,7 +138,6 @@ import {
   getOfficialVersionList,
 } from '@/api/node-library';
 import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
-import SecretKeySelector from './form/secret-key-selector.vue';
 import ExpressionEditor from './form/expression-editor.vue';
 import CacheSelector from './form/cache-selector.vue';
 // eslint-disable-next-line no-redeclare
@@ -154,7 +147,7 @@ import { pushParams } from '../../model/workflow-node';
 import { v4 as uuidv4 } from 'uuid';
 
 export default defineComponent({
-  components: { SecretKeySelector, ExpressionEditor, CacheSelector },
+  components: { ExpressionEditor, CacheSelector },
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,

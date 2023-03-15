@@ -293,7 +293,7 @@ import TaskList from '@/views/workflow-execution-record/task-list.vue';
 import { datetimeFormatter } from '@/utils/formatter';
 import { fetchNodeCache, listTaskInstance, listTaskParam } from '@/api/view-no-auth';
 import sleep from '@/utils/sleep';
-import { ParamTypeEnum, TaskParamTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
+import { TaskParamTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { SHELL_NODE_TYPE } from '@/components/workflow/workflow-viewer/model/data/common';
 import { sortTasks } from '@/components/workflow/workflow-viewer/model/util';
@@ -539,7 +539,6 @@ export default defineComponent({
     return {
       showCache,
       nodeCaches,
-      ParamTypeEnum,
       maxWidthRecord,
       workflowName: state.recordDetail.record?.name,
       taskInstanceId,

@@ -22,7 +22,7 @@ type TestCaseParams struct {
 	fx.In
 	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
 	VenusWallet env.IVenusWalletDeployer `json:"-" svcname:"Wallet"`
-	Password    string                   `optional:"true"`
+	Password    string                   `json:"password" optional:"true"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

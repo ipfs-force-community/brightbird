@@ -25,11 +25,11 @@ type IPluginInfo interface {
 }
 
 type PluginInfo struct {
-	Name        string
-	Version     string
-	Category    Category
-	Description string
-	Path        string
+	Name        string   `json:"name"`
+	Version     string   `json:"version"`
+	Category    Category `json:"category"`
+	Description string   `json:"description"`
+	Path        string   `json:"path"`
 }
 
 type PluginDetail struct {

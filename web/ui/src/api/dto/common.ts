@@ -21,14 +21,9 @@ export interface BaseVo extends Readonly<{
   createdTime: string;
 
   /**
-   * 最后修改人
-   */
-  lastModifiedBy: string;
-
-  /**
    * 最后修改时间
    */
-  lastModifiedTime: string;
+  modifiedTime: string;
 }> {
 }
 
@@ -81,15 +76,6 @@ export interface IPageVo<T> extends Readonly<{
    * 当前页码
    */
   pageNum: number;
-}> {
-}
-
-/**
- * 版本
- */
-export interface IVersionVo extends Readonly<{
-  versionNo: string;
-  releaseUrl: string;
 }> {
 }
 

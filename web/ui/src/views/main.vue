@@ -3,9 +3,6 @@
     <div>
       <router-link to="/component-lib">组件库</router-link>
     </div>
-    <div>
-      <router-link to="/login">登录页</router-link>
-    </div>
     <div class="error">
       <div>错误页：</div>
       <div>
@@ -37,7 +34,6 @@ export default defineComponent({});
   margin: 50px auto;
   line-height: 50px;
   width: 200px;
-
   .error {
     display: flex;
   }

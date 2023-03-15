@@ -112,6 +112,7 @@ func run(ctx context.Context, cfg Config) error {
 		}),
 		fx_opt.Override(new(IPluginService), NewPlugin),
 		fx_opt.Override(new(ITestCaseService), NewCaseSvc),
+		fx_opt.Override(fx_opt.NextInvoke(), RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), RegisterDeployRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), RegisterCasesRouter),
 	)

@@ -114,13 +114,6 @@ export enum WebhookRequstStateEnum {
 }
 
 /**
- * 参数类型枚举
- */
-export enum ParamTypeEnum {
-  SECRET = 'SECRET'
-}
-
-/**
  * 项目排序枚举
  */
 export enum SortTypeEnum {

@@ -21,7 +21,7 @@ type Config struct {
 	AuthUrl     string `json:"-"`
 	AuthToken   string `json:"-"`
 
-	UseMysql bool
+	UseMysql bool `json:"useMysql"`
 }
 
 type RenderParams struct {

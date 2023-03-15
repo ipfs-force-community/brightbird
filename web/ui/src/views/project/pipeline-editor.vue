@@ -11,9 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { save as saveProject } from '@/api/project';
 import { fetchProjectDetail } from '@/api/view-no-auth';
 import yaml from 'yaml';
-import { namespace } from '@/store/modules/session';
 import { createNamespacedHelpers, useStore } from 'vuex';
-import LoginVerify from '@/views/login/dialog.vue';
 
 const { mapMutations, mapActions } = createNamespacedHelpers(namespace);
 export default defineComponent({
@@ -27,7 +25,6 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const store = useStore();
-    const sessionState = { ...store.state[namespace] };
     const { payload } = route.params;
     const loading = ref<boolean>(false);
     // workflow数据是否加载完成
@@ -43,13 +40,6 @@ export default defineComponent({
       },
       data: '',
     });
-    // 验证用户是否登录
-    const authLogin = () => {
-      if (sessionState.session) {
-        return;
-      }
-      proxy.openAuthDialog({ appContext, LoginVerify });
-    };
     onMounted(async () => {
       if (payload && editMode) {
         // 初始化走这里获取到的cache为空
@@ -60,13 +50,12 @@ export default defineComponent({
         return;
       }
       if (editMode) {
-        authLogin();
         try {
           loading.value = true;
           loaded.value = true;
-          const { dslText, projectGroupId } = await fetchProjectDetail(props.id as string);
+          const {dslText, projectGroupId} = await fetchProjectDetail(props.id as string);
           const rawData = yaml.parse(dslText)['raw-data'];
-          const { name, global, description } = yaml.parse(dslText);
+          const {name, global, description} = yaml.parse(dslText);
           workflow.value = {
             name,
             groupId: projectGroupId,
@@ -83,8 +72,6 @@ export default defineComponent({
           loading.value = false;
           loaded.value = false;
         }
-      } else {
-        authLogin();
       }
     });
     const close = async () => {
@@ -117,9 +104,6 @@ export default defineComponent({
           proxy.$throw(err, proxy);
         }
       },
-      ...mapMutations({
-        mutateSession: 'oauthMutate',
-      }),
       ...mapActions({
         openAuthDialog: 'openAuthDialog',
       }),

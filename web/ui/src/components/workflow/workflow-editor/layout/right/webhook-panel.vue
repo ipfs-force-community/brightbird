@@ -89,7 +89,6 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <secret-key-selector v-model="form.auth.value" :placeholder="'请选择value值'"/>
             </jm-form-item>
           </div>
           <jm-form-item class="only-container" prop="only" :rules="nodeData.getFormRules().only">
@@ -126,7 +125,6 @@
 import { defineComponent, inject, nextTick, onMounted, PropType, ref } from 'vue';
 import { Webhook } from '../../model/data/node/webhook';
 import WebhookParam from './form/webhook-param.vue';
-import SecretKeySelector from './form/secret-key-selector.vue';
 import ExpressionEditor from './form/expression-editor.vue';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -134,7 +132,7 @@ import { Node } from '@antv/x6';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
 
 export default defineComponent({
-  components: { WebhookParam, SecretKeySelector, ExpressionEditor },
+  components: { WebhookParam, ExpressionEditor },
   props: {
     nodeData: {
       type: Object as PropType<Webhook>,
