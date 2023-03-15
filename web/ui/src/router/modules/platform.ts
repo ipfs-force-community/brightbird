@@ -62,20 +62,6 @@ export default [
     },
   },
   {
-    name: 'process-template',
-    path: 'process-template',
-    component: () => import('@/views/process-template/manager.vue'),
-    props: ({
-      query: { processTemplatesName },
-    }: RouteLocationNormalizedLoaded) => ({
-      processTemplatesName,
-    }),
-    meta: {
-      title: '流程模版',
-      keepAlive: true,
-    },
-  },
-  {
     name: 'update-project',
     path: 'project/editor/:id',
     component: () => import('@/views/project/editor.vue'),
