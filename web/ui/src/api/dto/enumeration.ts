@@ -79,18 +79,6 @@ export enum TriggerTypeEnum {
  * 节点类型枚举
  */
 export enum NodeTypeEnum {
-  DOCKER = 'DOCKER',
-  SHELL = 'SHELL',
-  LOCAL = 'LOCAL',
-  COMMUNITY = 'COMMUNITY'
-}
-
-/**
- * 归属类型枚举
- */
-export enum OwnerTypeEnum {
-  PERSONAL = 'PERSONAL',
-  ORGANIZATION = 'ORGANIZATION',
   LOCAL = 'LOCAL',
 }
 

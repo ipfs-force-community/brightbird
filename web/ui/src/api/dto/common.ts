@@ -42,11 +42,6 @@ export interface IPageDto extends Readonly<{
   pageSize: number;
 
   /**
-   * 分页类型
-   */
-  type?: NodeTypeEnum;
-
-  /**
    * 节点名
    */
   name?: string;

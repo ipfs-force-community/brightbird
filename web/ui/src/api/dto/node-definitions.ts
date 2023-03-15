@@ -1,4 +1,4 @@
-import { OwnerTypeEnum, VisibleTypeEnum } from './enumeration';
+import { VisibleTypeEnum } from './enumeration';
 
 /**
  *  查看公开节点定义dto
@@ -26,7 +26,6 @@ export interface INodeDefinitionVo
     name: string;
     creatorRef?: string;
     ownerName: string;
-    ownerType: OwnerTypeEnum;
     ownerRef: string;
     description?: string;
     visibleType: VisibleTypeEnum;

@@ -64,21 +64,5 @@ export class WorkflowNode {
     const arr: IWorkflowNode[] = [new Shell()];
 
     return keyword ? arr.filter(item => item.getName().includes(keyword)) : arr;
-
-  }
-
-  async loadLocalNodes(pageNum: number, pageSize: number, keyword?: string): Promise<IPageInfo> {
-    const { list, pageNum: currentPageNum, pages: totalPages } = await fetchNodeLibraryList({
-      pageNum,
-      pageSize,
-      type: NodeTypeEnum.LOCAL,
-      name: keyword,
-    });
-    const arr: IWorkflowNode[] = list.map(item => new AsyncTask(item.ownerRef, item.ref, item.name, item.icon));
-    return {
-      pageNum: currentPageNum,
-      totalPages,
-      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
-    };
   }
 }

@@ -5,7 +5,6 @@ export interface ICreateNodeForm extends Mutable<INodeCreatingDto> {
 }
 
 export interface INode extends INodeVo {
-  isDirectionDown?: boolean;
   isSync?: boolean;
   isDel?: boolean;
 }

@@ -9,17 +9,12 @@
     >
       <div class="right-top-btn">
         <router-link :to="{ name: 'index' }">
-          <jm-button type="primary" class="jm-icon-button-cancel" size="small"
-          >关闭
-          </jm-button
-          >
+          <jm-button type="primary" class="jm-icon-button-cancel" size="small">
+            关闭
+          </jm-button>
         </router-link>
       </div>
-      <div class="menu-bar">
-        <button class="add" @click="creationActivated = true">
-          <div class="label">新增本地节点</div>
-        </button>
-      </div>
+
       <div class="title">
         <span>建木节点库</span>
         <span class="desc">（共有 {{ total }} 个节点定义）</span>
@@ -44,90 +39,15 @@
             </jm-tooltip>
           </div>
           <div class="item-t">
-            <span
-              class="item-t-t"
-              v-if="i.ownerType === OwnerTypeEnum.LOCAL"
-            >
+            <span class="item-t-t">
               <jm-text-viewer :value="i.name"/>
-            </span
-            >
-            <a
-              v-else
-              target="_blank"
-              class="item-t-t"
-              :href="`https://jianmuhub.com/${i.ownerRef}/${i.ref}`"
-            >
-              <jm-text-viewer :value="i.name"/>
-            </a
-            >
-            <p class="item-t-mid">
-              <jm-text-viewer :value="`${i.ownerName} / ${i.ref}`"/>
-            </p>
+            </span>
+
             <p class="item-t-btm">
               <jm-text-viewer :value="`${i.description || '无'}`"/>
             </p>
           </div>
-          <div
-            class="item-mid"
-            :class="{ 'is-background': !i.isDirectionDown }"
-          >
-            <i
-              @click="clickVersion(i)"
-              class="down"
-              :class="{ 'direction-down': i.isDirectionDown }"
-            ></i>
-            <jm-scrollbar max-height="75px">
-              <div
-                class="item-mid-items"
-                :class="{ 'is-scroll': i.isDirectionDown }"
-              >
-                <div
-                  v-for="(version, versionIdx) in i.versions"
-                  :key="versionIdx"
-                  class="item-mid-item"
-                >
-                  <span v-if="i.ownerType === OwnerTypeEnum.LOCAL">
-                   {{ version }}
-                  </span>
-                  <a
-                    v-else
-                    target="_blank"
-                    :href="`https://jianmuhub.com/${i.ownerRef}/${i.ref}/${version}`"
-                  >
-                    {{ version }}
-                  </a
-                  >
-                </div>
-              </div>
-            </jm-scrollbar>
-          </div>
-          <div v-show="!i.isDirectionDown" class="item-btm">
-            <div>
-              <jm-tooltip
-                v-if="i.ownerType !== OwnerTypeEnum.LOCAL"
-                content="同步"
-                placement="top"
-              >
-                <button
-                  @click="syncNode(i)"
-                  @keypress.enter.prevent
-                  class="sync"
-                  :class="{ doing: i.isSync }"
-                ></button>
-              </jm-tooltip>
-              <jm-tooltip content="删除" placement="top">
-                <button
-                  @click="deleteNode(i)"
-                  @keypress.enter.prevent
-                  class="del"
-                  :class="{ doing: i.isDel }"
-                ></button>
-              </jm-tooltip>
-            </div>
-            <div class="item-btm-r">
-              <jm-text-viewer :value="`by ${i.creatorName}`"/>
-            </div>
-          </div>
+
           <div
             class="item-pos"
             :class="{ 'node-definition-default-icon': !i.icon, 'deprecated-icon':i.deprecated}"
@@ -144,11 +64,6 @@
       <div class="load-more">
         <jm-load-more :state="loadState" :load-more="btnDown"></jm-load-more>
       </div>
-      <node-editor
-        v-if="creationActivated"
-        @closed="creationActivated = false"
-        @completed="handleCreation"
-      />
     </div>
   </jm-scrollbar>
 </template>
@@ -162,19 +77,14 @@ import {
   Ref,
   inject,
 } from 'vue';
-import { fetchNodeLibrary, fetchNodeLibraryList } from '@/api/view-no-auth';
-import { deleteNodeLibrary, syncNodeLibrary } from '@/api/node-library';
+import { fetchNodeLibraryList } from '@/api/view-no-auth';
 import { INode } from '@/model/modules/node-library';
-import NodeEditor from './node-editor.vue';
-import { OwnerTypeEnum } from '@/api/dto/enumeration';
 import { StateEnum } from '@/components/load-more/enumeration';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
 
 export default defineComponent({
-  components: {
-    NodeEditor,
-  },
+  components: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const nodeLibraryListParameter = reactive<{
@@ -248,108 +158,13 @@ export default defineComponent({
       };
     };
 
-    // 删除某一项
-    const deleteNodeLibraryListData = (i: INode) => {
-      const idx = nodeLibraryListData.indexOf(i);
-      nodeLibraryListData.splice(idx, 1);
-      total.value -= 1;
-    };
-
-    // 删除
-    const deleteNode = (i: INode) => {
-      if (i.isDel) {
-        return;
-      }
-
-      let msg = '<div>确定要删除节点吗?</div>';
-      msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${i.name}</div>`;
-
-      proxy
-        .$confirm(msg, '删除节点', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning',
-          dangerouslyUseHTMLString: true,
-        })
-        .then(() => {
-          i.isDel = true;
-          deleteNodeLibrary(i.ownerRef, i.ref)
-            .then(() => {
-              proxy.$success('删除成功');
-              deleteNodeLibraryListData(i);
-            })
-            .catch((err: Error) => {
-              proxy.$throw(err, proxy);
-            })
-            .finally(() => {
-              i.isDel = false;
-            });
-        });
-    };
-
-    // 点击版本
-    const clickVersion = (i: INode) => {
-      i.isDirectionDown = !i.isDirectionDown;
-    };
-
-    // 同步
-    const syncNode = (i: INode) => {
-      proxy
-        .$confirm('确定要同步吗?', '同步DSL', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'info',
-        })
-        .then(() => {
-          i.isSync = true;
-          syncNodeLibrary(i.ownerRef, i.ref)
-            .then(() => {
-              proxy.$success('同步成功');
-            })
-            .catch((err: Error) => {
-              proxy.$throw(err, proxy);
-            })
-            .finally(async () => {
-              i.isSync = false;
-              // 点击同步按钮后，重新获取该节点的信息。
-              try {
-                const { deprecated } = await fetchNodeLibrary(i.ownerRef, i.ref);
-                nodeLibraryListData.forEach(item => {
-                  if (item.ref === i.ref) {
-                    item.deprecated = deprecated;
-                  }
-                });
-              } catch (err) {
-                proxy.$throw(err, proxy);
-              }
-            });
-        });
-    };
     return {
       loadState,
       scrollableEl,
-      clickVersion,
       ...loadMore(),
-      deleteNode,
       firstLoading,
       nodeLibraryListData,
-      syncNode,
       total,
-      creationActivated,
-      handleCreation: () => {
-        nodeLibraryListData.length = 0;
-        nodeLibraryListParameter.pageNum = 1;
-        nodeLibraryListParameter.pageSize = 12;
-        firstLoading.value = true;
-        total.value = 0;
-        nodeListData(
-          nodeLibraryListData,
-          nodeLibraryListParameter,
-          firstLoading,
-          total,
-        );
-      },
-      OwnerTypeEnum,
     };
   },
 });
