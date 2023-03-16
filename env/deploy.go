@@ -16,6 +16,8 @@ type IVenusMarketDeployer IDeployer
 type IVenusMessageDeployer IDeployer
 type IVenusMinerDeployer IDeployer
 type IVenusWalletDeployer IDeployer
+type IVenusSectorManagerDeployer IDeployer
+type IVenusWorkerDeployer IDeployer
 
 type IDeployer interface {
 	Name() string

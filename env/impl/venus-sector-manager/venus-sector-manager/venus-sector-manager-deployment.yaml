@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-sector-manager-{{.TestID}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-sector-manager-{{.TestID}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-sector-manager-{{.TestID}}-pod
+    spec:
+      containers:
+        - name: venus-sector-manager-{{.TestID}}
+          image: "filvenus/venus-sector-manager:388e9682b97960dd46e201a7004c3ceead1e97a0"
+          args: ["run"]
+          ports:
+            - containerPort: 1789
+              protocol: TCP
+          volumeMounts:
+            - name: sector-manager-cfg
+              mountPath: "/root/.venus-sector-manager/sector-manager.cfg"
+              subPath: "sector-manager.cfg"
+            - mountPath: /shared-dir
+                name: shared-dir-v
+      volumes:
+        - name: sector-manager-cfg
+          configMap:
+            name: venus-sector-manager-cfg-{{.TestID}}
+            items:
+              - key: sector-manager.cfg
+                path: sector-manager.cfg
+        - name: shared-dir-v
+            persistentVolumeClaim:
+              claimName: testnet-shared-dir

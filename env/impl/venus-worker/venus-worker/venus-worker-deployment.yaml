@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venus-worker-{{.TestID}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venus-worker-{{.TestID}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-worker-{{.TestID}}-pod
+    spec:
+      containers:
+        - name: venus-worker-{{.TestID}}
+          image: "filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
+          args: ["run"]
+          ports:
+            - containerPort: 1789
+              protocol: TCP
+          volumeMounts:
+            - name: venus-worker.toml
+              mountPath: "/root/.venus-worker/venus-worker.toml"
+              subPath: "venus-worker.toml"
+            - mountPath: /shared-dir
+                name: shared-dir-v
+      volumes:
+        - name: sector-worker-cfg
+          configMap:
+            name: venus-worker-cfg-{{.TestID}}
+            items:
+              - key: venus-worker.toml
+                path: venus-worker.toml
+        - name: shared-dir-v
+            persistentVolumeClaim:
+              claimName: testnet-shared-dir

@@ -1,0 +1,157 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: venus-sector-manager-cfg-{{.TestID}}
+data:
+  sector-manager.cfg: |
+    # Default config:
+    [Common]
+    [Common.API]
+    Chain = "{{.NodeUrl}}"
+    Messager = "{{.MessagerUrl}}"
+    Market = "{{.MarketUrl}}"
+    Gateway = ["{{.GatewayUrl}}"]
+    Token = "{{.AuthToken}}"
+    #ChainEventInterval = "1m0s"
+    
+    [[Common.PieceStores]]
+    Name = "local"
+    Path = "/shared-dir/k8stest/piece-{{.TestID}}"
+    #Plugin = ""
+    #PluginName = "s3store"
+    [Common.PieceStores.Meta]
+    #SomeKey = "SomeValue"
+    
+    [[Common.PersistStores]]
+    Name = "storage"
+    Path = "/storage-nfs-4/{{.TestID}}/{{.MinerAddress}}"
+    Strict = false
+    ReadOnly = false
+    Weight = 0
+    AllowMiners = [{{.MinerAddress}}]
+    #DenyMiners = [3, 4]
+    #Plugin = ""
+    #PluginName = "s3store"
+    [Common.PersistStores.Meta]
+    #SomeKey = "SomeValue"
+
+    [Common.Plugins]
+    Dir = "/root/venus-cluster/dist/bin/dist/bin"
+    [Common.DB]
+    Driver = "plugin"
+    [Common.DB.Badger]
+    BaseDir = "/root/.venus-sector-manager"
+    [Common.DB.Plugin]
+    PluginName = "{{.DBPlugin}}"
+    [Common.DB.Plugin.Meta]
+    dsn = "{{.DNS}}"
+    [Common.Proving]
+    #ParallelCheckLimit = 128
+    #SingleCheckTimeout = "10m0s"
+    #PartitionCheckTimeout = "20m0s"
+    
+    [[Miners]]
+    Actor = {{.MinerAddress}}
+    
+    [Miners.Sector]
+    InitNumber = 0
+    MinNumber = 0
+    MaxNumber = 1000000
+    Enabled = true
+    EnableDeals = true
+    LifetimeDays = 540
+    Verbose = false
+    
+    [Miners.SnapUp]
+    Enabled = false
+    Sender = "{{.SenderAddress}}" 
+    SendFund = true
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    MessageConfidence = 15
+    ReleaseConfidence = 30
+    [Miners.SnapUp.Retry]
+    MaxAttempts = 10
+    PollInterval = "3m0s"
+    APIFailureWait = "3m0s"
+    LocalFailureWait = "3m0s"
+    
+    [Miners.Commitment]
+    Confidence = 10
+    [Miners.Commitment.Pre]
+    Sender = "{{.SenderAddress}}" 
+    SendFund = false
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    
+    [Miners.Commitment.Pre.Batch]
+    Enabled = false
+    Threshold = 16
+    MaxWait = "1h0m0s"
+    CheckInterval = "1m0s"
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    MaxFeeCap = ""
+    
+    [Miners.Commitment.Prove]
+    Sender = "{{.SenderAddress}}" 
+    SendFund = false
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    
+    [Miners.Commitment.Prove.Batch]
+    Enabled = true
+    Threshold = 16
+    MaxWait = "1h0m0s"
+    CheckInterval = "1m0s"
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    
+    [Miners.Commitment.Terminate]
+    Sender = "{{.SenderAddress}}"
+    SendFund = false
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    MaxFeeCap = ""
+    
+    [Miners.Commitment.Terminate.Batch]
+    Enabled = false
+    Threshold = 5
+    MaxWait = "1h0m0s"
+    CheckInterval = "1m0s"
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    
+    [Miners.PoSt]
+    Sender = "{{.SenderAddress}}" 
+    Enabled = true
+    StrictCheck = true
+    Parallel = false
+    GasOverEstimation = 1.2
+    GasOverPremium = 0.0
+    GasFeeCap = "5 nanoFIL"
+    #MaxFeeCap = ""
+    Confidence = 10
+    SubmitConfidence = 0
+    ChallengeConfidence = 0
+    MaxRecoverSectorLimit = 0
+    MaxPartitionsPerPoStMessage = 0
+    MaxPartitionsPerRecoveryMessage = 0
+    
+    [Miners.Proof]
+    Enabled = true
+    
+    [Miners.Sealing]
+    SealingEpochDuration = 0
