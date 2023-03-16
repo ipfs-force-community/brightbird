@@ -53,12 +53,12 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const {dslText, projectGroupId} = await fetchProjectDetail(props.id as string);
+          const {dslText, groupId} = await fetchProjectDetail(props.id as string);
           const rawData = yaml.parse(dslText)['raw-data'];
           const {name, global, description} = yaml.parse(dslText);
           workflow.value = {
             name,
-            groupId: projectGroupId,
+            groupId: groupId,
             description,
             global: {
               concurrent: global ? global.concurrent : 1,
@@ -85,7 +85,7 @@ export default defineComponent({
       save: async (back: boolean, dsl: string) => {
         try {
           const { id } = await saveProject({
-            projectGroupId: workflow.value.groupId,
+            groupId: workflow.value.groupId,
             dslText: dsl,
             id: editMode ? props.id : '',
           });

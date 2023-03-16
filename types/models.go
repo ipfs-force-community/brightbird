@@ -78,5 +78,6 @@ type Group struct {
 	// required: true
 	// min length: 3
 	Name        string `json:"name"`
+	IsShow      bool   `json:"isShow"`
 	Description string `json:"description"`
 }

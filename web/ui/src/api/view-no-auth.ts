@@ -14,7 +14,6 @@ import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
 
 export const baseUrl = {
   projectGroup: '/group',
-  project: '/view/projects',
   workflow: '/view/workflow_instances',
   asyncTasks: '/view/async_task_instances',
   task: '/view/task_instance',
@@ -22,7 +21,7 @@ export const baseUrl = {
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
   deployPlugin: '/deploy',
-  execPlugin: '/exec',
+  cases: '/cases',
   parameter: '/view/parameters',
   triggerEvent: '/view/trigger_events',
   trigger: '/view/trigger',
@@ -51,7 +50,7 @@ export function queryProjectGroup(): Promise<IProjectGroupVo[]> {
  */
 export function queryProject(dto: IProjectQueryingDto): Promise<IPageVo<IProjectVo>> {
   return restProxy({
-    url: baseUrl.project,
+    url: `${baseUrl.cases}/list`,
     method: 'get',
     payload: dto,
   });
@@ -74,7 +73,7 @@ export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
  */
 export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo> {
   return restProxy({
-    url: `${baseUrl.project}/${projectId}`,
+    url: `${baseUrl.cases}/id/${projectId}`,
     method: 'get',
   });
 }
@@ -191,9 +190,9 @@ export function listProjectGroup(): Promise<IProjectGroupVo[]> {
 /**
  * 查询项目组详情
  */
-export function getProjectGroupDetail(projectGroupId: string): Promise<IProjectGroupVo> {
+export function getProjectGroupDetail(groupId: string): Promise<IProjectGroupVo> {
   return restProxy({
-    url: `${baseUrl.projectGroup}/${projectGroupId}`,
+    url: `${baseUrl.projectGroup}/${groupId}`,
     method: 'get',
   });
 }
@@ -207,7 +206,7 @@ export function fetch_deploy_plugins(): Promise<INodeVo[]> {
 
 export function fetch_exec_plugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.execPlugin}/plugins`,
+    url: `${baseUrl.cases}/plugins`,
     method: 'get',
   });
 }

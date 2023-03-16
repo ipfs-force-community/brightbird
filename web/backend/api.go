@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
 
@@ -198,7 +199,7 @@ func RegisterCasesRouter(ctx context.Context, v1group *V1RouterGroup, service IT
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /cases/list listTestFlows
+	// swagger:route GET /cases/listall listAllTestFlows
 	//
 	// Lists all exec test flows.
 	//
@@ -215,7 +216,7 @@ func RegisterCasesRouter(ctx context.Context, v1group *V1RouterGroup, service IT
 	//
 	//     Responses:
 	//       200: []testFlow
-	group.GET("list", func(c *gin.Context) {
+	group.GET("listall", func(c *gin.Context) {
 		output, err := service.List(ctx)
 		if err != nil {
 			c.Error(err)
@@ -225,7 +226,57 @@ func RegisterCasesRouter(ctx context.Context, v1group *V1RouterGroup, service IT
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /cases/{name} getTestFlow
+	// swagger:route GET /cases/list/ listTestFlowsInGroup
+	//
+	// Lists exec test flows in specific group.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: groupId
+	//         in: query
+	//         description: group id  of test flow
+	//         required: true
+	//         type: string
+	//       + name: pageNum
+	//         in: query
+	//         description: page number  of test flow
+	//         required: false
+	//         type: integer
+	//       + name: pageSize
+	//         in: query
+	//         description: page size  of test flow
+	//         required: false
+	//         type: integer
+	//
+	//     Responses:
+	//       200: listInGroupRequestResp
+	group.GET("list", func(c *gin.Context) {
+		req := &ListInGroupRequest{}
+		err := c.ShouldBindQuery(req)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		output, err := service.ListInGroup(ctx, req)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.JSON(http.StatusOK, output)
+	})
+
+	// swagger:route GET /cases/name/{name} getTestFlowByName
 	//
 	// Get specific test case by name.
 	//
@@ -249,9 +300,49 @@ func RegisterCasesRouter(ctx context.Context, v1group *V1RouterGroup, service IT
 	//
 	//     Responses:
 	//       200: testFlow
-	group.GET(":name", func(c *gin.Context) {
+	group.GET("name/:name", func(c *gin.Context) {
 		name := c.Param("name")
-		output, err := service.Get(ctx, name)
+		output, err := service.GetByName(ctx, name)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.JSON(http.StatusOK, output)
+	})
+
+	// swagger:route GET /cases/id/{id} getTestFlowById
+	//
+	// Get specific test case by id.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: path
+	//         description: id of test flow
+	//         required: true
+	//         type: string
+	//
+	//     Responses:
+	//       200: testFlow
+	group.GET("id/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		output, err := service.GetById(ctx, id)
 		if err != nil {
 			c.Error(err)
 			return
@@ -262,7 +353,7 @@ func RegisterCasesRouter(ctx context.Context, v1group *V1RouterGroup, service IT
 
 	// swagger:route POST /cases saveCases
 	//
-	// Get specific test case by name.
+	// save test case, create if not exist
 	//
 	//     Consumes:
 	//     - application/json

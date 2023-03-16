@@ -44,7 +44,7 @@ export default defineComponent({
     searchName: {
       type: String,
     },
-    projectGroupId: {
+    groupId: {
       type: String,
     },
   },
@@ -55,7 +55,7 @@ export default defineComponent({
     // 搜索关键字
     const projectName = ref<string | undefined>(props.searchName);
     // 当前组id
-    const currentGroupId = ref<string | undefined>(props.projectGroupId);
+    const currentGroupId = ref<string | undefined>(props.groupId);
     // 当前搜索关键字-保证第一次搜索正常，传递值赋给当前搜索关键字
     const currentSearchName = ref<string>(props.searchName as string);
     // 项目组
@@ -87,7 +87,7 @@ export default defineComponent({
       await router.push({
         name: 'index',
         query: {
-          projectGroupId: selectValue.value,
+          groupId: selectValue.value,
           searchName: currentSearchName.value,
         },
       });
@@ -109,7 +109,7 @@ export default defineComponent({
         await router.push({
           name: 'index',
           query: {
-            projectGroupId: selectValue.value,
+            groupId: selectValue.value,
             searchName: currentSearchName.value,
           },
         });

@@ -10,10 +10,12 @@ import (
 )
 
 type ITestCaseService interface {
-	Get(ctx context.Context, name string) (*types.TestFlow, error)
-	List(ctx context.Context) ([]*types.TestFlow, error)
-	Plugins(ctx context.Context) ([]types.PluginOut, error)
-	Save(ctx context.Context, testcase types.TestFlow) error
+	GetByName(context.Context, string) (*types.TestFlow, error)
+	GetById(context.Context, primitive.ObjectID) (*types.TestFlow, error)
+	List(context.Context) (*ListRequestResp, error)
+	Plugins(context.Context) ([]types.PluginOut, error)
+	Save(context.Context, types.TestFlow) error
+	ListInGroup(context.Context, *ListInGroupRequest) (*ListInGroupRequestResp, error)
 }
 
 type CaseSvc struct {
@@ -21,23 +23,90 @@ type CaseSvc struct {
 	execPluginStore ExecPluginStore
 }
 
-func (c *CaseSvc) List(ctx context.Context) ([]*types.TestFlow, error) {
+type BasePage struct {
+	Total   int `json:"total"`
+	Pages   int `json:"pages"`
+	PageNum int `json:"pageNum"`
+}
+
+// ListInGroupRequest
+// swagger:model listInGroupRequest
+type ListInGroupRequest struct {
+	// the group id of test flow
+	// required: true
+	GroupId  string `form:"groupId" binding:"required"`
+	PageNum  int    `form:"pageNum"`
+	PageSize int    `form:"pageSize"`
+}
+
+// ListInGroupRequestResp
+// swagger:model listRequestResp
+type ListRequestResp struct {
+	BasePage
+	List []*types.TestFlow `json:"list"`
+}
+
+// ListInGroupRequestResp
+// swagger:model listInGroupRequestResp
+type ListInGroupRequestResp struct {
+	BasePage
+	List []*types.TestFlow `json:"list"`
+}
+
+func (c *CaseSvc) List(ctx context.Context) (*ListRequestResp, error) {
 	cur, err := c.caseCol.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 
-	var tf []*types.TestFlow
+	tf := []*types.TestFlow{}
 	err = cur.All(ctx, &tf)
+	if err != nil {
+		return nil, err
+	}
+	return &ListRequestResp{
+		BasePage: BasePage{
+			Total:   len(tf),
+			PageNum: 1,
+			Pages:   1,
+		},
+		List: tf,
+	}, nil
+}
+
+func (c *CaseSvc) ListInGroup(ctx context.Context, req *ListInGroupRequest) (*ListInGroupRequestResp, error) {
+	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": req.GroupId})
+	if err != nil {
+		return nil, err
+	}
+
+	tf := []*types.TestFlow{}
+	err = cur.All(ctx, &tf)
+	if err != nil {
+		return nil, err
+	}
+	return &ListInGroupRequestResp{
+		BasePage: BasePage{
+			Total:   len(tf),
+			PageNum: 1,
+			Pages:   1,
+		},
+		List: tf,
+	}, nil
+}
+
+func (c *CaseSvc) GetByName(ctx context.Context, name string) (*types.TestFlow, error) {
+	tf := &types.TestFlow{}
+	err := c.caseCol.FindOne(ctx, bson.D{{"Name", name}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
 	return tf, nil
 }
 
-func (c *CaseSvc) Get(ctx context.Context, name string) (*types.TestFlow, error) {
+func (c *CaseSvc) GetById(ctx context.Context, id primitive.ObjectID) (*types.TestFlow, error) {
 	tf := &types.TestFlow{}
-	err := c.caseCol.FindOne(ctx, bson.D{{"Name", name}}).Decode(tf)
+	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}

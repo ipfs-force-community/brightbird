@@ -128,7 +128,7 @@
         :name="groupName || ''"
         :description="groupDescription"
         :is-show="showInHomePage"
-        :id="projectGroupId || ''"
+        :id="groupId || ''"
         v-if="editionActivated"
         @closed="editionActivated = false"
         @completed="editCompleted"
@@ -195,7 +195,7 @@ export default defineComponent({
     const projectGroupList = ref<Mutable<IProjectGroupVo>[]>([]);
     const groupName = ref<string>();
     const groupDescription = ref<string>();
-    const projectGroupId = ref<string>();
+    const groupId = ref<string>();
     const defaultProjectGroup = ref<boolean>(false);
     const currentItem = ref<string>('-1');
     const currentSelected = ref<boolean>(false);
@@ -255,11 +255,11 @@ export default defineComponent({
       defaultProjectGroup.value = isDefault;
       groupName.value = name;
       groupDescription.value = description;
-      projectGroupId.value = id;
+      groupId.value = id;
       editionActivated.value = true;
       showInHomePage.value = isShow;
     };
-    const toDelete = async (name: string, projectGroupId: string) => {
+    const toDelete = async (name: string, groupId: string) => {
       let msg = '<div>确定要删除分组吗?</div>';
       msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${name}</div>`;
 
@@ -272,7 +272,7 @@ export default defineComponent({
         })
         .then(async () => {
           try {
-            await deleteProjectGroup(projectGroupId);
+            await deleteProjectGroup(groupId);
             proxy.$success('项目分组删除成功');
             await fetchProjectGroup();
           } catch (err) {
@@ -330,7 +330,7 @@ export default defineComponent({
       defaultProjectGroup,
       groupName,
       groupDescription,
-      projectGroupId,
+      groupId,
       addCompleted,
       editCompleted,
       datetimeFormatter,

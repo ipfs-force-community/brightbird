@@ -7,10 +7,10 @@ export default [
     path: '',
     component: () => import('@/views/index.vue'),
     props: ({
-      query: { searchName, projectGroupId },
+      query: { searchName, groupId },
     }: RouteLocationNormalizedLoaded) => ({
       searchName,
-      projectGroupId,
+      groupId,
     }),
     meta: {
       title: '首页',

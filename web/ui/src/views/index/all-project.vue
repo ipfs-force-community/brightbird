@@ -4,14 +4,6 @@
     <div class="project-operator">
       <div class="project-list">
         <div class="text">项目列表</div>
-        <jm-select @change="sortChange" :modelValue="sortType" popper-class="project-list-drop-down">
-          <jm-option
-            v-for="(item, index) in sortTypeList"
-            :key="index"
-            :label="item.label"
-            :value="item.value"
-          ></jm-option>
-        </jm-select>
       </div>
       <div class="search">
         <i class="jm-icon-button-search" @click="searchProject"></i>

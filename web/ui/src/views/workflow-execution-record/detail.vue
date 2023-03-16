@@ -21,7 +21,7 @@
           <span>{{ data.record?.name }}</span>
           <router-link
             :to="{
-              path: `/project-group/detail/${data.project?.projectGroupId}`,
+              path: `/project-group/detail/${data.project?.groupId}`,
             }"
           >
             <span class="project-group-name">{{ data.project?.projectGroupName }}</span>

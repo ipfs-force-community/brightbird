@@ -16,7 +16,7 @@ export interface IProjectSavingDto
   extends Readonly<{
     id?: string;
     dslText: string;
-    projectGroupId: string;
+      groupId: string;
   }> {}
 
 /**
@@ -25,7 +25,7 @@ export interface IProjectSavingDto
 export interface IGitCloningDto
   extends Readonly<{
     uri: string;
-    projectGroupId: string;
+      groupId: string;
     credential: {
       type?: ProjectImporterTypeEnum;
       namespace?: string;
@@ -63,7 +63,7 @@ export interface IProjectImportingDto
 export interface IProjectQueryingDto
   extends Readonly<
     IPageDto & {
-      projectGroupId?: string;
+      groupId?: string;
       name?: string;
       sortType?: SortTypeEnum;
     }
@@ -124,7 +124,7 @@ export interface IProjectDetailVo
       dslText: string;
       eventBridgeId?: string;
       triggerType: TriggerTypeEnum;
-      projectGroupId: string;
+      groupId: string;
       projectGroupName: string;
     }
   > {}

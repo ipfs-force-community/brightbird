@@ -25,11 +25,11 @@ export function createProjectGroup(
  * 编辑项目组
  */
 export function editProjectGroup(
-  projectGroupId: string,
+    groupId: string,
   dto: IProjectGroupEditingDto,
 ): Promise<void> {
   return restProxy({
-    url: `${baseUrl}/${projectGroupId}`,
+    url: `${baseUrl}/${groupId}`,
     method: 'put',
     payload: dto,
     auth: true,
@@ -38,11 +38,11 @@ export function editProjectGroup(
 
 /**
  * 删除项目组
- * @param projectGroupId 项目组id
+ * @param groupId 项目组id
  */
-export function deleteProjectGroup(projectGroupId: string): Promise<void> {
+export function deleteProjectGroup(groupId: string): Promise<void> {
   return restProxy({
-    url: `${baseUrl}/${projectGroupId}`,
+    url: `${baseUrl}/${groupId}`,
     method: 'delete',
     auth: true,
   });
@@ -82,11 +82,11 @@ export function projectGroupAddProject(
  * 修改项目组的项目排序
  */
 export function updateProjectGroupProjectSort(
-  projectGroupId: string,
+    groupId: string,
   dto: IProjectSortUpdatingDto,
 ): Promise<void> {
   return restProxy({
-    url: `${baseUrl}/${projectGroupId}/projects/sort`,
+    url: `${baseUrl}/${groupId}/projects/sort`,
     method: 'patch',
     payload: dto,
     auth: true,
@@ -109,9 +109,9 @@ export function deleteProjectGroupProject(
 /**
  * 修改项目组是否展示
  */
-export function updateProjectGroupShow(projectGroupId: string): Promise<void> {
+export function updateProjectGroupShow(groupId: string): Promise<void> {
   return restProxy({
-    url: `${baseUrl}/${projectGroupId}/is_show`,
+    url: `${baseUrl}/${groupId}/is_show`,
     method: 'put',
     auth: true,
   });

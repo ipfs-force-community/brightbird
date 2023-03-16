@@ -9,8 +9,8 @@
       </div>
     </template>
     <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
-      <jm-form-item label="选择项目组" label-position="top" class="project-group" prop="projectGroupId">
-        <jm-select @change="selectChange" v-model="createForm.projectGroupId" placeholder="请选择项目组">
+      <jm-form-item label="选择项目组" label-position="top" class="project-group" prop="groupId">
+        <jm-select @change="selectChange" v-model="createForm.groupId" placeholder="请选择项目组">
           <jm-option
             v-for="item in projectGroupList"
             :disabled="id === item.id"
@@ -105,7 +105,7 @@ export default defineComponent({
     const dialogVisible = ref<boolean>(true);
     const createFormRef = ref<any>(null);
     const createForm = ref<IProjectGroupAddingForm>({
-      projectGroupId: '',
+      groupId: '',
       projectIds: [],
     });
     const keyword = ref<string>();
@@ -113,7 +113,7 @@ export default defineComponent({
     const selectedList = ref<Mutable<IProjectVo[]>>([]);
     const compSelectedList = computed(() => selectedList.value);
     const editorRule = ref<Record<string, any>>({
-      projectGroupId: [{ required: true, message: '请选择项目组', trigger: 'change' }],
+      groupId: [{ required: true, message: '请选择项目组', trigger: 'change' }],
     });
     const projectGroupList = ref<IProjectGroupVo[]>([]);
     // 已选择的项目数组
@@ -123,9 +123,9 @@ export default defineComponent({
         : selectedList.value.push(item);
     };
     const projectList = ref<IPageVo<IProjectVo>>();
-    const selectChange = async (projectGroupId: string) => {
+    const selectChange = async (groupId: string) => {
       projectList.value = await queryProject({
-        projectGroupId,
+        groupId,
         pageNum: START_PAGE_NUM,
         pageSize: 8,
       });
@@ -133,19 +133,19 @@ export default defineComponent({
     };
     const pageChange = async (currentPage: number) => {
       projectList.value = await queryProject({
-        projectGroupId: createForm.value.projectGroupId,
+        groupId: createForm.value.groupId,
         pageNum: currentPage,
         pageSize: 8,
         name: keyword.value,
       });
     };
     const search = async () => {
-      if (!createForm.value.projectGroupId) {
+      if (!createForm.value.groupId) {
         proxy.$error('请选择项目组');
         return;
       }
       projectList.value = await queryProject({
-        projectGroupId: createForm.value.projectGroupId,
+        groupId: createForm.value.groupId,
         pageNum: START_PAGE_NUM,
         pageSize: 8,
         name: keyword.value,
@@ -173,7 +173,7 @@ export default defineComponent({
           }
           loading.value = true;
           await addProject({
-            projectGroupId: props.id,
+            groupId: props.id,
             projectIds,
           });
           proxy.$success('项目添加成功');

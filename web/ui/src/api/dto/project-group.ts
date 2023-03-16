@@ -7,6 +7,7 @@ export interface IProjectGroupVo
     BaseVo & {
       id: string;
       name: string;
+      isShow: boolean;
       description?: string;
     }
   > {}
@@ -55,7 +56,7 @@ export interface IProjectGroupSortUpdatingDto
  */
 export interface IProjectGroupAddingDto
   extends Readonly<{
-    projectGroupId: string;
+      groupId: string;
     projectIds: string[];
   }> {}
 

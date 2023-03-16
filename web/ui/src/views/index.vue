@@ -40,7 +40,7 @@
       <!-- 全部项目 -->
       <all-project v-if="searchResultFlag" />
       <!-- 搜索结果 -->
-      <search-project :searchName="searchName" :projectGroupId="projectGroupId" v-else />
+      <search-project :searchName="searchName" :groupId="groupId" v-else />
     </div>
     <bottom-nav />
   </div>
@@ -58,7 +58,7 @@ export default defineComponent({
     searchName: {
       type: String,
     },
-    projectGroupId: {
+    groupId: {
       type: String,
     },
   },
