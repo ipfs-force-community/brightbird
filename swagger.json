@@ -24,7 +24,7 @@
     "version": "0.0.1"
   },
   "host": "127.0.0.1:12356",
-  "basePath": "/v1",
+  "basePath": "/api/v1",
   "paths": {
     "/cases": {
       "post": {
@@ -178,9 +178,137 @@
           }
         }
       }
+    },
+    "/group": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific test case by name.",
+        "operationId": "saveCases",
+        "parameters": [
+          {
+            "description": "group json",
+            "name": "group",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "group json",
+              "type": "object",
+              "$ref": "#/definitions/group"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/group/list": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all group.",
+        "operationId": "listGroup",
+        "responses": {
+          "200": {
+            "description": "group",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/group"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/group/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific group by name.",
+        "operationId": "getTestFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "name of test flow",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "group",
+            "schema": {
+              "$ref": "#/definitions/group"
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "description": "get backend version",
+        "produces": [
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "getVersion"
+      }
     }
   },
   "definitions": {
+    "BaseTime": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
     "Category": {
       "type": "string",
       "x-go-package": "github.com/hunjixin/brightbird/types"
@@ -188,16 +316,18 @@
     "DeployNode": {
       "type": "object",
       "required": [
-        "Name"
+        "name"
       ],
       "properties": {
-        "Name": {
+        "name": {
           "description": "the name for this test flow",
           "type": "string",
-          "minLength": 3
+          "minLength": 3,
+          "x-go-name": "Name"
         },
-        "Params": {
-          "type": "object"
+        "params": {
+          "type": "object",
+          "x-go-name": "Params"
         }
       },
       "x-go-package": "github.com/hunjixin/brightbird/types"
@@ -205,20 +335,24 @@
     "PluginInfo": {
       "type": "object",
       "properties": {
-        "Category": {
+        "category": {
           "$ref": "#/definitions/Category"
         },
-        "Description": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "Name": {
-          "type": "string"
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
         },
-        "Path": {
-          "type": "string"
+        "path": {
+          "type": "string",
+          "x-go-name": "Path"
         },
-        "Version": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
       "x-go-package": "github.com/hunjixin/brightbird/types"
@@ -226,101 +360,195 @@
     "TestItem": {
       "type": "object",
       "required": [
-        "Name"
+        "name"
       ],
       "properties": {
-        "Name": {
+        "name": {
           "description": "the name for this test flow",
           "type": "string",
-          "minLength": 3
+          "minLength": 3,
+          "x-go-name": "Name"
         },
-        "Params": {
-          "type": "object"
+        "params": {
+          "type": "object",
+          "x-go-name": "Params"
         }
       },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "group": {
+      "description": "Group",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "Group",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "pluginOut": {
       "description": "PluginOut",
       "type": "object",
       "properties": {
-        "Category": {
+        "category": {
           "$ref": "#/definitions/Category"
         },
-        "Description": {
-          "type": "string"
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
         },
-        "IsAnnotateOut": {
-          "type": "boolean"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "Name": {
-          "type": "string"
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
         },
-        "Out": {
+        "isAnnotateOut": {
+          "type": "boolean",
+          "x-go-name": "IsAnnotateOut"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "out": {
           "$ref": "#/definitions/property"
         },
-        "Path": {
-          "type": "string"
+        "path": {
+          "type": "string",
+          "x-go-name": "Path"
         },
-        "Properties": {
+        "properties": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/property"
-          }
+          },
+          "x-go-name": "Properties"
         },
-        "SvcProperties": {
+        "svcProperties": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/property"
-          }
+          },
+          "x-go-name": "SvcProperties"
         },
-        "Version": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
       "x-go-name": "PluginOut",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "property": {
       "description": "Property Property",
       "type": "object",
       "properties": {
-        "Description": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "Name": {
-          "type": "string"
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
         },
-        "Type": {
-          "type": "string"
+        "require": {
+          "type": "boolean",
+          "x-go-name": "Require"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        },
+        "value": {
+          "x-go-name": "Value"
         }
       },
       "x-go-name": "Property",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "testFlow": {
       "description": "TestFlow",
       "type": "object",
       "required": [
-        "Name"
+        "name"
       ],
       "properties": {
-        "Cases": {
+        "GroupId": {
+          "type": "string"
+        },
+        "cases": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/TestItem"
-          }
+          },
+          "x-go-name": "Cases"
         },
-        "Name": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
           "description": "the name for this test flow",
           "type": "string",
-          "minLength": 3
+          "minLength": 3,
+          "x-go-name": "Name"
         },
-        "Nodes": {
+        "nodes": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/DeployNode"
-          }
+          },
+          "x-go-name": "Nodes"
         }
       },
       "x-go-name": "TestFlow",

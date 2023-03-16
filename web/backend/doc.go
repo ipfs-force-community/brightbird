@@ -4,7 +4,7 @@
 //
 //	Schemes: http, https
 //	Host: 127.0.0.1:12356
-//	BasePath: /v1
+//	BasePath: /api/v1
 //	Version: 0.0.1
 //	License: MIT http://opensource.org/licenses/MIT
 //	Contact: venus@ipfsconmmunity.com

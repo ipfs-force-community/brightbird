@@ -8,13 +8,8 @@ export interface IProjectGroupVo
       id: string;
       name: string;
       description?: string;
-      sort: number;
-      projectCount: number;
-      isDefaultGroup: boolean;
-      isShow: boolean;
     }
   > {}
-
 /**
  * 创建项目组dto
  */

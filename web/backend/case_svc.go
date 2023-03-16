@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -60,6 +61,10 @@ func (c *CaseSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 }
 
 func (c *CaseSvc) Save(ctx context.Context, tf types.TestFlow) error {
+	if tf.ID.IsZero() {
+		tf.ID = primitive.NewObjectID()
+	}
+
 	update := bson.M{
 		"$set": tf,
 	}

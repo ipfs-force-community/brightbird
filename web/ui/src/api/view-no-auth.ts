@@ -13,7 +13,7 @@ import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
 
 export const baseUrl = {
-  projectGroup: '/view/projects/groups',
+  projectGroup: '/group',
   project: '/view/projects',
   workflow: '/view/workflow_instances',
   asyncTasks: '/view/async_task_instances',
@@ -21,7 +21,8 @@ export const baseUrl = {
   log: '/view/logs',
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
-  library: '/view/nodes',
+  deployPlugin: '/deploy',
+  execPlugin: '/exec',
   parameter: '/view/parameters',
   triggerEvent: '/view/trigger_events',
   trigger: '/view/trigger',
@@ -135,18 +136,6 @@ export function fetchWorkflow(workflowRef: string, workflowVersion: string): Pro
 }
 
 /**
- * 获取节点库列表
- * @param dto
- */
-export function fetchNodeLibraryList(dto: IPageDto): Promise<IPageVo<INodeVo>> {
-  return restProxy<IPageVo<INodeVo>>({
-    url: `${baseUrl.library}`,
-    method: 'get',
-    payload: dto,
-  });
-}
-
-/**
  * 获取参数类型列表
  */
 export function fetchParameterType(): Promise<string[]> {
@@ -194,7 +183,7 @@ export function fetchVersion(): Promise<string> {
  */
 export function listProjectGroup(): Promise<IProjectGroupVo[]> {
   return restProxy<IProjectGroupVo[]>({
-    url: `${baseUrl.projectGroup}`,
+    url: `${baseUrl.projectGroup}/list`,
     method: 'get',
   });
 }
@@ -209,14 +198,16 @@ export function getProjectGroupDetail(projectGroupId: string): Promise<IProjectG
   });
 }
 
-/**
- * 获取节点详情
- * @param ownerRef
- * @param ref
- */
-export function fetchNodeLibrary(ownerRef: string, ref: string): Promise<INodeVo> {
-  return restProxy<INodeVo>({
-    url: `${baseUrl.library}/${ownerRef}/${ref}`,
+export function fetch_deploy_plugins(): Promise<INodeVo[]> {
+  return restProxy<INodeVo[]>({
+    url: `${baseUrl.deployPlugin}/plugins`,
+    method: 'get',
+  });
+}
+
+export function fetch_exec_plugins(): Promise<INodeVo[]> {
+  return restProxy<INodeVo[]>({
+    url: `${baseUrl.execPlugin}/plugins`,
     method: 'get',
   });
 }

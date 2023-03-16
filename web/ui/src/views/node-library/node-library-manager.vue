@@ -1,12 +1,6 @@
 <template>
   <jm-scrollbar>
-    <div
-      class="node-library-manager"
-      v-scroll="{
-        loadMore: btnDown,
-        scrollableEl,
-      }"
-    >
+    <div class="node-library-manager" v-scroll="{scrollableEl}">
       <div class="right-top-btn">
         <router-link :to="{ name: 'index' }">
           <jm-button type="primary" class="jm-icon-button-cancel" size="small">
@@ -20,7 +14,7 @@
         <span class="desc">（共有 {{ total }} 个节点定义）</span>
       </div>
 
-      <div v-loading="firstLoading" class="content">
+      <div class="content">
         <jm-empty v-if="nodeLibraryListData.length === 0"/>
         <div
           v-else
@@ -60,10 +54,6 @@
         </div>
       </div>
 
-      <!-- 显示更多 -->
-      <div class="load-more">
-        <jm-load-more :state="loadState" :load-more="btnDown"></jm-load-more>
-      </div>
     </div>
   </jm-scrollbar>
 </template>
@@ -77,92 +67,35 @@ import {
   Ref,
   inject,
 } from 'vue';
-import { fetchNodeLibraryList } from '@/api/view-no-auth';
 import { INode } from '@/model/modules/node-library';
-import { StateEnum } from '@/components/load-more/enumeration';
 import { Mutable } from '@/utils/lib';
-import { START_PAGE_NUM } from '@/utils/constants';
+import {fetch_deploy_plugins, fetch_exec_plugins} from "@/api/view-no-auth";
 
 export default defineComponent({
   components: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
-    const nodeLibraryListParameter = reactive<{
-      pageNum: number;
-      pageSize: number;
-    }>({
-      pageNum: START_PAGE_NUM,
-      pageSize: 12,
-    });
     const nodeLibraryListData = reactive<Mutable<INode>[]>([]);
-    const firstLoading = ref<boolean>(true);
     const total = ref<number>(0);
-    const creationActivated = ref<boolean>(false);
     const scrollableEl = inject('scrollableEl');
-    // 显示更多
-    const loadState = ref<StateEnum>(StateEnum.NONE);
-    // 总页数
-    const pages = ref<number>(0);
-    // 获取数据
-    const nodeListData = (
-      nodeLibraryListData: INode[],
-      nodeLibraryListParameter: { pageNum: number; pageSize: number },
-      loading: Ref<boolean>,
-      total: Ref<number>,
-    ) => {
-      fetchNodeLibraryList(nodeLibraryListParameter)
+
+    fetch_deploy_plugins()
         .then(res => {
-          pages.value = res.pages;
-          total.value = res.total;
-          loading.value = false;
-          nodeLibraryListData.push(...res.list);
-          if (pages.value > nodeLibraryListParameter.pageNum) {
-            loadState.value = StateEnum.MORE;
-          }
-          if (pages.value === nodeLibraryListParameter.pageNum) {
-            loadState.value = StateEnum.NO_MORE;
-          }
-          if (total.value === 0) {
-            loadState.value = StateEnum.NONE;
-          }
+          nodeLibraryListData.push(...res);
         })
         .catch((err: Error) => {
           proxy.$throw(err, proxy);
         });
-    };
-    nodeListData(
-      nodeLibraryListData,
-      nodeLibraryListParameter,
-      firstLoading,
-      total,
-    );
-
-    // 加载更多
-    const loadMore = () => {
-      const bottomLoading = ref<boolean>(false);
-      const btnDown = () => {
-        if (nodeLibraryListParameter.pageNum < pages.value) {
-          loadState.value = StateEnum.LOADING;
-          nodeLibraryListParameter.pageNum++;
-          bottomLoading.value = true;
-          nodeListData(
-            nodeLibraryListData,
-            nodeLibraryListParameter,
-            bottomLoading,
-            total,
-          );
-        }
-      };
-      return {
-        btnDown,
-      };
-    };
+    fetch_exec_plugins()
+        .then(res => {
+          nodeLibraryListData.push(...res);
+        })
+        .catch((err: Error) => {
+          proxy.$throw(err, proxy);
+        });
 
     return {
-      loadState,
       scrollableEl,
-      ...loadMore(),
-      firstLoading,
       nodeLibraryListData,
       total,
     };

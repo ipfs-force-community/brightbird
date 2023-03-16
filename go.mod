@@ -9,11 +9,6 @@ require (
 	github.com/filecoin-project/venus-auth v1.10.0-rc2
 	github.com/filecoin-project/venus-wallet v1.9.0
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-openapi/errors v0.20.3
-	github.com/go-openapi/runtime v0.25.0
-	github.com/go-openapi/strfmt v0.21.3
-	github.com/go-openapi/swag v0.22.3
-	github.com/go-openapi/validate v0.22.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
@@ -21,9 +16,6 @@ require (
 	github.com/imdario/mergo v0.3.13
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
-	github.com/mitchellh/go-homedir v1.1.0
-	github.com/spf13/cobra v1.6.1
-	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/cli/v2 v2.25.0
 	go.mongodb.org/mongo-driver v1.11.2
@@ -48,7 +40,6 @@ require (
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
 	github.com/DataDog/zstd v1.4.5 // indirect
 	github.com/ahmetb/go-linq/v3 v3.2.0 // indirect
-	github.com/asaskevich/govalidator v0.0.0-20210307081110-f21760c49a8d // indirect
 	github.com/benbjohnson/clock v1.3.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bluele/gcache v0.0.0-20190518031135-bc40bd653833 // indirect
@@ -91,11 +82,9 @@ require (
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
-	github.com/go-openapi/analysis v0.21.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.20.0 // indirect
-	github.com/go-openapi/loads v0.21.1 // indirect
-	github.com/go-openapi/spec v0.20.4 // indirect
+	github.com/go-openapi/swag v0.22.3 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.11.2 // indirect
@@ -116,7 +105,6 @@ require (
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.2.2 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
 	github.com/ipfs-force-community/metrics v1.0.1-0.20230208073319-4c0e29b038e1 // indirect
@@ -175,7 +163,6 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opentracing/opentracing-go v1.2.0 // indirect
 	github.com/patrickmn/go-cache v2.1.0+incompatible // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
@@ -197,6 +184,7 @@ require (
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/spf13/viper v1.12.0 // indirect
 	github.com/subosito/gotenv v1.4.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect

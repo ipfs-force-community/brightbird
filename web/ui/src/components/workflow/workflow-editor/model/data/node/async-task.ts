@@ -8,7 +8,7 @@ import { TaskStatusEnum } from '@/api/dto/enumeration';
 import { checkDuplicate } from '../../util/reference';
 
 export interface IAsyncTaskParam {
-  readonly ref: string;
+  readonly ref: string
   readonly name: string;
   readonly type: ParamTypeEnum;
   readonly required: boolean;
@@ -47,25 +47,21 @@ export interface ICache {
 }
 
 export class AsyncTask extends BaseNode {
-  readonly ownerRef: string;
   version: string;
-  versionDescription: string;
-  readonly inputs: IAsyncTaskParam[];
-  readonly outputs: IAsyncTaskParam[];
   caches: ICache[];
+  inputProperties: IAsyncTaskParam[]
+  svcProperties: IAsyncTaskParam[]
   failureMode: FailureModeEnum;
   private readonly validateParam?: ValidateParamFn;
   private readonly validateCache?: ValidateCacheFn;
 
   constructor(
-    ownerRef: string,
     ref: string,
     name: string,
     icon = '',
     version = '',
-    versionDescription = '',
-    inputs: IAsyncTaskParam[] = [],
-    outputs: IAsyncTaskParam[] = [],
+    inputProperties: IAsyncTaskParam[] = [],
+    svcProperties: IAsyncTaskParam[] = [],
     caches: ICache[] = [],
     failureMode: FailureModeEnum = FailureModeEnum.SUSPEND,
     validateParam?: ValidateParamFn,
@@ -75,14 +71,11 @@ export class AsyncTask extends BaseNode {
       ref,
       name,
       NodeTypeEnum.ASYNC_TASK,
-      checkDefaultIcon(icon) ? defaultIcon : icon,
-      `https://jianmuhub.com/${ownerRef}/${ref}/${version}`,
+      checkDefaultIcon(icon) ? defaultIcon : icon
     );
-    this.ownerRef = ownerRef;
     this.version = version;
-    this.versionDescription = versionDescription;
-    this.inputs = inputs;
-    this.outputs = outputs;
+    this.inputProperties = inputProperties;
+    this.svcProperties = svcProperties;
     this.caches = caches;
     this.failureMode = failureMode;
     this.validateParam = validateParam;
@@ -90,19 +83,17 @@ export class AsyncTask extends BaseNode {
   }
 
   static build(
-    { ownerRef, ref, name, icon, version, versionDescription, inputs, outputs, caches, failureMode }: any,
+    { ownerRef, ref, name, icon, version, versionDescription, inputProperties, svcProperties, caches, failureMode }: any,
     validateParam: ValidateParamFn | undefined,
     validateCache: ValidateCacheFn | undefined,
   ): AsyncTask {
     return new AsyncTask(
-      ownerRef,
       ref,
       name,
       icon,
       version,
-      versionDescription,
-      inputs,
-      outputs,
+        inputProperties,
+        svcProperties,
       caches,
       failureMode,
       validateParam,
@@ -111,11 +102,11 @@ export class AsyncTask extends BaseNode {
   }
 
   buildSelectableParam(nodeId: string): ISelectableParam | undefined {
-    if (this.outputs.length === 0) {
+    if (this.svcProperties.length === 0) {
       return undefined;
     }
 
-    const children: ISelectableParam[] = this.outputs.map(({ ref, name }) => {
+    const children: ISelectableParam[] = this.svcProperties.map(({ ref, name }) => {
       return {
         value: ref,
         label: name,
@@ -151,7 +142,7 @@ export class AsyncTask extends BaseNode {
   getFormRules(): Record<string, CustomRule> {
     const rules = super.getFormRules();
     const fields: Record<string, CustomRule> = {};
-    this.inputs.forEach((item, index) => {
+    this.inputProperties.forEach((item, index) => {
       const { required } = item;
       let value = [
         { required, message: `请输入${item.name}`, trigger: 'blur' },
@@ -239,8 +230,8 @@ export class AsyncTask extends BaseNode {
       version: [{ required: true, message: '请选择节点版本', trigger: 'change' }],
       inputs: {
         type: 'array',
-        required: this.inputs.length > 0,
-        len: this.inputs.length,
+        required: this.inputProperties.length > 0,
+        len: this.inputProperties.length,
         fields,
       },
       caches: {
@@ -255,11 +246,11 @@ export class AsyncTask extends BaseNode {
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   toDsl(): object {
-    const { name, version, inputs, caches, failureMode } = this;
+    const { name, version, inputProperties, caches, failureMode } = this;
     const param: {
       [key: string]: string | number | boolean;
     } = {};
-    inputs.forEach(({ ref, type, required, value }) => {
+    inputProperties.forEach(({ ref, type, required, value }) => {
       switch (type) {
         case ParamTypeEnum.NUMBER: {
           const val = parseFloat(value);
@@ -299,9 +290,9 @@ export class AsyncTask extends BaseNode {
     return {
       alias: name,
       'on-failure': failureMode === FailureModeEnum.SUSPEND ? undefined : failureMode,
-      type: `${this.ownerRef}/${super.getRef()}:${version}`,
+      type: ``,
       cache: caches.length === 0 ? undefined : _cache,
-      param: inputs.length === 0 ? undefined : param,
+      param: inputProperties.length === 0 ? undefined : param,
     };
   }
 }

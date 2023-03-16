@@ -1,15 +1,8 @@
-import { NodeTypeEnum } from './enumeration';
-
-export interface INodeCreatingDto extends Readonly<{
-  name: string;
-  description?: string;
-  dsl: string;
-}> {
-}
-
 export interface IPropertyDto extends Readonly<{
   name: string;
   type: string;
+  value: any;
+  require:true;
   description: string;
 }> {
 }

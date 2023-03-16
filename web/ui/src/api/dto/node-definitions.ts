@@ -51,7 +51,6 @@ export interface INodeDefVersionListVo
 export interface INodeParameterVo
   extends Readonly<{
     name: string;
-    ref: string;
     type: string;
     description: string;
     value: object;

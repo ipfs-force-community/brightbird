@@ -94,15 +94,15 @@ func run(ctx context.Context, cfg Config) error {
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(*gin.Engine), e),
 		fx_opt.Override(new(*V1RouterGroup), func(e *gin.Engine) *V1RouterGroup {
-			return (*V1RouterGroup)(e.Group("v1"))
+			return (*V1RouterGroup)(e.Group("api/v1"))
 		}),
 		fx_opt.Override(new(context.Context), ctx),
-		fx_opt.Override(new(*mongo.Collection), func() (*mongo.Collection, error) {
+		fx_opt.Override(new(*mongo.Database), func() (*mongo.Database, error) {
 			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
 			if err != nil {
 				return nil, err
 			}
-			return client.Database("test-platform").Collection("cases"), nil
+			return client.Database("test-platform"), nil
 		}),
 		fx_opt.Override(new(DeployPluginStore), func() (DeployPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
@@ -112,9 +112,11 @@ func run(ctx context.Context, cfg Config) error {
 		}),
 		fx_opt.Override(new(IPluginService), NewPlugin),
 		fx_opt.Override(new(ITestCaseService), NewCaseSvc),
+		fx_opt.Override(new(IGroupService), NewGroupSvc),
 		fx_opt.Override(fx_opt.NextInvoke(), RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), RegisterDeployRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), RegisterCasesRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), RegisterGroupRouter),
 	)
 	if err != nil {
 		return err
@@ -152,11 +154,8 @@ func corsMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "GET, POST, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers",
-			"DNT,X-Mx-ReqToken,Keep-Alive,User-Agent,X-Requested-With,"+
-				"If-Modified-Since,Cache-Control,Content-Type,Authorization,X-Forwarded-For,Origin,"+
-				"X-Real-Ip,spanId,preHost,svcName")
-		c.Header("Content-Type", "application/json")
+		c.Header("Access-Control-Allow-Headers", "*")
+		c.Header("Content-Type", "*")
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(http.StatusOK, "ok!")
 		}

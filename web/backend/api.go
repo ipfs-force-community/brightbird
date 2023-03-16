@@ -28,6 +28,115 @@ func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
 		c.JSON(http.StatusOK, version.Version())
 	})
 }
+
+func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IGroupService) {
+	group := v1group.Group("/group")
+
+	// swagger:route GET /group/list listGroup
+	//
+	// Lists all group.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Responses:
+	//       200: []group
+	group.GET("list", func(c *gin.Context) {
+		output, err := service.List(ctx)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.JSON(http.StatusOK, output)
+	})
+
+	// swagger:route GET /group/{name} getTestFlow
+	//
+	// Get specific group by name.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: name
+	//         in: path
+	//         description: name of test flow
+	//         required: true
+	//         type: string
+	//
+	//     Responses:
+	//       200: group
+	group.GET(":name", func(c *gin.Context) {
+		name := c.Param("name")
+		output, err := service.Get(ctx, name)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.JSON(http.StatusOK, output)
+	})
+
+	// swagger:route POST /group saveCases
+	//
+	// Get specific test case by name.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: group
+	//         in: body
+	//         description: group json
+	//         required: true
+	//         type: group
+	//         allowEmpty:  false
+	//
+	//     Responses:
+	//       200:
+	group.POST("", func(c *gin.Context) {
+		testFlow := types.Group{}
+		err := c.ShouldBindJSON(&testFlow)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		err = service.Save(ctx, testFlow)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+}
+
 func RegisterDeployRouter(ctx context.Context, v1group *V1RouterGroup, service IPluginService) {
 	group := v1group.Group("/deploy")
 

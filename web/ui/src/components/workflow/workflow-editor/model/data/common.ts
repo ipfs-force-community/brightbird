@@ -22,8 +22,6 @@ export interface IWorkflowNode {
 
   getIcon(): string;
 
-  getDocUrl(): string;
-
   buildSelectableParam(nodeId: string): ISelectableParam | undefined;
 
   getFormRules(): Record<string, CustomRule>;

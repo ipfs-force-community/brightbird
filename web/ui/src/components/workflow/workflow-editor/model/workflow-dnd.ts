@@ -6,12 +6,6 @@ import { NODE, PORTS } from '../shape/gengral-config';
 import { ClickNodeWarningCallbackFnType, WorkflowValidator } from './workflow-validator';
 import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
 import { NodeGroupEnum, NodeTypeEnum } from './data/enumeration';
-import {
-  getLocalNodeParams,
-  getLocalVersionList,
-  getOfficialNodeParams,
-  getOfficialVersionList,
-} from '@/api/node-library';
 import { AsyncTask } from './data/node/async-task';
 import { pushParams } from './workflow-node';
 
@@ -77,24 +71,7 @@ export class WorkflowDnd {
           return true;
         }
         const data = _data as AsyncTask;
-        const isOwnerRef = data.ownerRef === NodeGroupEnum.LOCAL;
-        const res = await (isOwnerRef ? getLocalVersionList : getOfficialVersionList)(data.getRef(), data.ownerRef);
-        data.version = res.versions.length > 0 ? res.versions[0] : '';
-        if (isOwnerRef) {
-          const {
-            inputParameters: inputs,
-            outputParameters: outputs,
-            description: versionDescription,
-          } = await getLocalNodeParams(data.getRef(), data.ownerRef, data.version);
-          pushParams(data, inputs, outputs, versionDescription);
-        } else {
-          const {
-            inputParams: inputs,
-            outputParams: outputs,
-            description: versionDescription,
-          } = await getOfficialNodeParams(data.getRef(), data.ownerRef, data.version);
-          pushParams(data, inputs, outputs, versionDescription);
-        }
+        pushParams(data, );
         // fix: #I5DXPM
         proxy.setData(data);
         data

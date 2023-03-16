@@ -17,9 +17,6 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
         vue: 'vue/dist/vue.esm-bundler.js',
       },
     },
-    server: {
-      host:"localhost",
-      port: 12356
-    }
+    server: {}
   };
 };

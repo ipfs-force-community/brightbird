@@ -12,10 +12,16 @@ type ExecPluginStore types.IPluginInfo
 
 type V1RouterGroup = gin.RouterGroup
 
-func NewCaseSvc(caseCol *mongo.Collection, execPluginStore ExecPluginStore) ITestCaseService {
+func NewCaseSvc(db *mongo.Database, execPluginStore ExecPluginStore) ITestCaseService {
 	return &CaseSvc{
-		caseCol:         caseCol,
+		caseCol:         db.Collection("cases"),
 		execPluginStore: execPluginStore,
+	}
+}
+
+func NewGroupSvc(db *mongo.Database, execPluginStore ExecPluginStore) IGroupService {
+	return &GroupSvc{
+		col: db.Collection("group"),
 	}
 }
 

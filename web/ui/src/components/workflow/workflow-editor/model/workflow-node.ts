@@ -3,8 +3,6 @@ import { Cron } from './data/node/cron';
 import { Webhook } from './data/node/webhook';
 import { Shell } from './data/node/shell';
 import { AsyncTask } from './data/node/async-task';
-import { fetchNodeLibraryList } from '@/api/view-no-auth';
-import { NodeTypeEnum } from '@/api/dto/enumeration';
 import { INodeParameterVo } from '@/api/dto/node-definitions';
 import { ParamTypeEnum } from '@/components/workflow/workflow-editor/model/data/enumeration';
 
@@ -19,13 +17,11 @@ interface IPageInfo {
  * @param data 原数据
  * @param inputs
  * @param outputs
- * @param versionDescription
  */
-export const pushParams = (data: AsyncTask, inputs: INodeParameterVo[], outputs: INodeParameterVo[], versionDescription: string) => {
-  data.versionDescription = versionDescription;
-  if (inputs) {
-    inputs.forEach(item => {
-      data.inputs.push({
+export const pushParams = (data: AsyncTask) => {
+/*  if (data.inputProperties) {
+    inputProperties.forEach(item => {
+      data.inputProperties.push({
         ref: item.ref,
         name: item.name,
         type: item.type as ParamTypeEnum,
@@ -34,19 +30,7 @@ export const pushParams = (data: AsyncTask, inputs: INodeParameterVo[], outputs:
         description: item.description,
       });
     });
-  }
-  if (outputs) {
-    outputs.forEach(item => {
-      data.outputs.push({
-        ref: item.ref,
-        name: item.name,
-        type: item.type as ParamTypeEnum,
-        value: (item.value || '').toString(),
-        required: item.required,
-        description: item.description,
-      });
-    });
-  }
+  }*/
 };
 
 export class WorkflowNode {
