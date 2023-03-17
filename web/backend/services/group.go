@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -29,7 +29,11 @@ var _ IGroupService = (*GroupSvc)(nil)
 
 type GroupSvc struct {
 	groupCol    *mongo.Collection
-	testflowSvc ITestCaseService
+	testflowSvc ITestFlowService
+}
+
+func NewGroupSvc(groupCol *mongo.Collection, testflowSvc ITestFlowService) *GroupSvc {
+	return &GroupSvc{groupCol: groupCol, testflowSvc: testflowSvc}
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {

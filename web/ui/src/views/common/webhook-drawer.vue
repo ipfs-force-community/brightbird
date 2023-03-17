@@ -9,7 +9,7 @@
       destroy-on-close
     >
       <div class="webhook-drawer">
-        <!-- 项目名称 -->
+        <!-- 测试流名称 -->
         <div class="project-name">{{ currentProject }}</div>
         <div class="webhook-link-container">
           <div class="link-tips">可以通过调用以下Webhook地址来触发流程执行</div>

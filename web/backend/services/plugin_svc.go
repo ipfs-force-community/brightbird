@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -16,8 +16,8 @@ type PluginSvc struct {
 	deployPluginStore DeployPluginStore
 }
 
-func NewPluginSvc() IPluginService {
-	return &PluginSvc{}
+func NewPluginSvc(deployPluginStore DeployPluginStore) *PluginSvc {
+	return &PluginSvc{deployPluginStore: deployPluginStore}
 }
 
 func (p *PluginSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {

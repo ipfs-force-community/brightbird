@@ -21,7 +21,7 @@ export const baseUrl = {
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
   deployPlugin: '/deploy',
-  cases: '/cases',
+  testflow: '/testflow',
   parameter: '/view/parameters',
   triggerEvent: '/view/trigger_events',
   trigger: '/view/trigger',
@@ -60,9 +60,20 @@ export function getProjectGroup(groupId: string): Promise<IProjectGroupVo> {
  */
 export function queryProject(dto: IProjectQueryingDto): Promise<IPageVo<IProjectVo>> {
   return restProxy({
-    url: `${baseUrl.cases}/list`,
+    url: `${baseUrl.testflow}/list`,
     method: 'get',
     payload: dto,
+  });
+}
+
+/**
+ * 获取组中测试流的数量
+ * @param dto
+ */
+export function countTestFlows(groupId: string): Promise<number> {
+  return restProxy({
+    url: `${baseUrl.testflow}/count/${groupId}`,
+    method: 'get',
   });
 }
 
@@ -83,7 +94,7 @@ export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
  */
 export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo> {
   return restProxy({
-    url: `${baseUrl.cases}/id/${projectId}`,
+    url: `${baseUrl.testflow}/id/${projectId}`,
     method: 'get',
   });
 }
@@ -196,7 +207,7 @@ export function fetch_deploy_plugins(): Promise<INodeVo[]> {
 
 export function fetch_exec_plugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.cases}/plugins`,
+    url: `${baseUrl.testflow}/plugins`,
     method: 'get',
   });
 }

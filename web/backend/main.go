@@ -9,6 +9,8 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/hunjixin/brightbird/web/backend/api"
+	"github.com/hunjixin/brightbird/web/backend/services"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -93,8 +95,8 @@ func run(ctx context.Context, cfg Config) error {
 	shutdown := make(types.Shutdown)
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(*gin.Engine), e),
-		fx_opt.Override(new(*V1RouterGroup), func(e *gin.Engine) *V1RouterGroup {
-			return (*V1RouterGroup)(e.Group("api/v1"))
+		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
+			return (*api.V1RouterGroup)(e.Group("api/v1"))
 		}),
 		fx_opt.Override(new(context.Context), ctx),
 		fx_opt.Override(new(*mongo.Database), func() (*mongo.Database, error) {
@@ -104,19 +106,19 @@ func run(ctx context.Context, cfg Config) error {
 			}
 			return client.Database("test-platform"), nil
 		}),
-		fx_opt.Override(new(DeployPluginStore), func() (DeployPluginStore, error) {
+		fx_opt.Override(new(services.DeployPluginStore), func() (services.DeployPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
 		}),
-		fx_opt.Override(new(ExecPluginStore), func() (ExecPluginStore, error) {
+		fx_opt.Override(new(services.ExecPluginStore), func() (services.ExecPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
 		}),
-		fx_opt.Override(new(IPluginService), NewPlugin),
-		fx_opt.Override(new(ITestCaseService), NewCaseSvc),
-		fx_opt.Override(new(IGroupService), NewGroupSvc),
-		fx_opt.Override(fx_opt.NextInvoke(), RegisterCommonRouter),
-		fx_opt.Override(fx_opt.NextInvoke(), RegisterDeployRouter),
-		fx_opt.Override(fx_opt.NextInvoke(), RegisterCasesRouter),
-		fx_opt.Override(fx_opt.NextInvoke(), RegisterGroupRouter),
+		fx_opt.Override(new(services.IPluginService), NewPlugin),
+		fx_opt.Override(new(services.ITestFlowService), NewCaseSvc),
+		fx_opt.Override(new(services.IGroupService), NewGroupSvc),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTestFlowRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterGroupRouter),
 	)
 	if err != nil {
 		return err

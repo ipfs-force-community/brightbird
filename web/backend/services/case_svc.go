@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ITestCaseService interface {
+type ITestFlowService interface {
 	GetByName(context.Context, string) (*types.TestFlow, error)
 	GetById(context.Context, primitive.ObjectID) (*types.TestFlow, error)
 	List(context.Context) (*ListRequestResp, error)
@@ -22,6 +22,10 @@ type ITestCaseService interface {
 type CaseSvc struct {
 	caseCol         *mongo.Collection
 	execPluginStore ExecPluginStore
+}
+
+func NewCaseSvc(caseCol *mongo.Collection, execPluginStore ExecPluginStore) *CaseSvc {
+	return &CaseSvc{caseCol: caseCol, execPluginStore: execPluginStore}
 }
 
 type BasePage struct {
