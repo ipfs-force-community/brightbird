@@ -206,7 +206,6 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IG
 
 		c.Status(http.StatusOK)
 	})
-
 	// swagger:route DELETE /group/{id} deleteGroup
 	//
 	// Delete group by id

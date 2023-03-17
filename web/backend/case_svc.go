@@ -15,6 +15,7 @@ type ITestCaseService interface {
 	List(context.Context) (*ListRequestResp, error)
 	Plugins(context.Context) ([]types.PluginOut, error)
 	Save(context.Context, types.TestFlow) error
+	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
 	ListInGroup(context.Context, *ListInGroupRequest) (*ListInGroupRequestResp, error)
 }
 
@@ -134,6 +135,9 @@ func (c *CaseSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 	return deployPlugins, nil
 }
 
+func (c *CaseSvc) CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error) {
+	return c.caseCol.CountDocuments(ctx, bson.D{{"groupId", groupId}})
+}
 func (c *CaseSvc) Save(ctx context.Context, tf types.TestFlow) error {
 	if tf.ID.IsZero() {
 		tf.ID = primitive.NewObjectID()

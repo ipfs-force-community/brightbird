@@ -60,7 +60,6 @@ import { IProjectVo } from '@/api/dto/project';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { queryProject } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
-import { ProjectStatusEnum, SortTypeEnum } from '@/api/dto/enumeration';
 import ProjectItem from '@/views/common/project-item.vue';
 import { IPageVo } from '@/api/dto/common';
 import { Mutable } from '@/utils/lib';
@@ -95,11 +94,6 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    // 项目组排序类型
-    sortType: {
-      type: String,
-      default: SortTypeEnum.DEFAULT_SORT,
-    },
   },
   setup(props: any) {
     const store = useStore();
@@ -113,8 +107,7 @@ export default defineComponent({
       }
       return projectGroupFoldingMapping[props.projectGroup.id];
     });
-    // 是否正在排序
-    const isSorting = ref<boolean>(false);
+
     const { proxy } = getCurrentInstance() as any;
     const loading = ref<boolean>(false);
     const projectPage = ref<Mutable<IPageVo<IProjectVo>>>({
@@ -130,7 +123,6 @@ export default defineComponent({
       pageSize:  40 ,
       groupId: props.projectGroup?.id,
       name: props.name,
-      sortType: props.sortType,
     });
     // 保存单个项目组的展开折叠状态
     const saveFoldStatus = (status: boolean, id: string) => {
@@ -189,20 +181,7 @@ export default defineComponent({
         mutate: 'mutate',
       }),
       toggle,
-      leave() {
-        if (isSorting.value) {
-          return;
-        }
-        currentItem.value = '';
-      },
-      enter(id: string) {
-        if (isSorting.value) {
-          return;
-        }
-        currentItem.value = id;
-      },
       loading,
-      ProjectStatusEnum,
       projectPage,
       projects,
       queryForm,

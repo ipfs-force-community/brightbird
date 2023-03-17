@@ -5,13 +5,13 @@
     </div>
     <div class="top-card" v-loading="loadingTop">
       <div class="top-title">
-        <div class="name">{{ projectGroupDetail?.name }}</div>
+        <div class="name">{{ testflowGroup?.name }}</div>
         <div class="count">
-          （共有 {{ projectGroupDetail?.projectCount }} 个项目）
+          （共有 {{ testFlowsInGroup?.total }} 个项目）
         </div>
       </div>
       <div class="description">
-        <span v-html="(projectGroupDetail?.description || '无').replace(/\n/g, '<br/>')"/>
+        <span v-html="(testflowGroup?.description || '无').replace(/\n/g, '<br/>')"/>
       </div>
     </div>
     <div class="content">
@@ -24,23 +24,13 @@
         <div>
           <span>项目列表</span>
         </div>
-        <jm-tooltip content="关闭排序" placement="top" v-if="isActive">
-          <div
-            :class="['move', isActive ? 'active' : '']"
-            @click="() => (isActive = !isActive)"
-          ></div>
-        </jm-tooltip>
-        <jm-tooltip content="排序" placement="top" v-else>
-          <div class="move" @click="() => (isActive = !isActive)"></div>
-        </jm-tooltip>
       </div>
       <div class="group-list-wrapper">
         <project-group
           v-if="initialized"
           :is-detail="true"
-          :project-group="projectGroupDetail"
+          :project-group="testflowGroup"
           :pageable="true"
-          :move="isActive"
         />
       </div>
     </div>
@@ -55,13 +45,15 @@
 
 <script lang="ts">
 import { IProjectGroupVo } from '@/api/dto/project-group';
-import { getProjectGroupDetail } from '@/api/view-no-auth';
+import {getProjectGroup, queryProject} from '@/api/view-no-auth';
 import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
 import ProjectAdder from '@/views/project-group/project-adder.vue';
 import ProjectGroup from '@/views/common/project-group.vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { IRootState } from '@/model';
+import {IPageVo} from "@/api/dto/common";
+import {IProjectVo} from "@/api/dto/project";
 
 export default defineComponent({
   props: {
@@ -79,12 +71,12 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const rootState = store.state as IRootState;
-    const isActive = ref<boolean>(false);
     const initialized = ref<boolean>(false);
     const loadingTop = ref<boolean>(false);
     const isShow = ref<boolean>(true);
     const creationActivated = ref<boolean>(false);
-    const projectGroupDetail = ref<IProjectGroupVo>();
+    const testflowGroup = ref<IProjectGroupVo>();
+    const testFlowsInGroup = ref<IPageVo<IProjectVo>>();
     const reloadMain = inject('reloadMain') as () => void;
     const add = () => {
       creationActivated.value = true;
@@ -92,7 +84,8 @@ export default defineComponent({
     const fetchProjectGroupDetail = async () => {
       try {
         loadingTop.value = true;
-        projectGroupDetail.value = await getProjectGroupDetail(props.id);
+        testflowGroup.value = await getProjectGroup(props.id)
+        testFlowsInGroup.value =  await queryProject({ groupId: props.id, pageNum: 0, pageSize: 0 });
         initialized.value = true;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -110,7 +103,6 @@ export default defineComponent({
       initialized,
       isShow,
       loadingTop,
-      isActive,
       creationActivated,
       close: () => {
         if (!['/', '/project-group'].includes(rootState.fromRoute.path)) {
@@ -121,7 +113,8 @@ export default defineComponent({
       },
       add,
       addCompleted,
-      projectGroupDetail,
+      testflowGroup,
+      testFlowsInGroup,
     };
   },
 });

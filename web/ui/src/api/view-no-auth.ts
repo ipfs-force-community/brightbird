@@ -44,6 +44,15 @@ export function listProjectGroup(): Promise<IProjectGroupVo[]> {
   });
 }
 
+/**
+ * 查询项目组详情
+ */
+export function getProjectGroup(groupId: string): Promise<IProjectGroupVo> {
+  return restProxy({
+    url: `${baseUrl.projectGroup}/${groupId}`,
+    method: 'get',
+  });
+}
 
 /**
  * 查询项目
@@ -175,16 +184,6 @@ export function fetchVersion(): Promise<string> {
     url: `${baseUrl.version}`,
     method: 'get',
     timeout: 1000,
-  });
-}
-
-/**
- * 查询项目组详情
- */
-export function getProjectGroupDetail(groupId: string): Promise<IProjectGroupVo> {
-  return restProxy({
-    url: `${baseUrl.projectGroup}/${groupId}`,
-    method: 'get',
   });
 }
 

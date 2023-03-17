@@ -29,7 +29,7 @@ var _ IGroupService = (*GroupSvc)(nil)
 
 type GroupSvc struct {
 	groupCol    *mongo.Collection
-	testFlowCol *mongo.Collection
+	testflowSvc ITestCaseService
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
@@ -56,14 +56,10 @@ func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*types.Group,
 }
 
 func (g GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
-	count, err := g.testFlowCol.CountDocuments(ctx, bson.D{{"groupId", id}})
-	if err != nil {
-		return err
-	}
+	count, err := g.testflowSvc.CountByGroup(ctx, id)
 	if count > 0 {
 		return fmt.Errorf("test flow (%d) in this group, remove test flow first", count)
 	}
-
 	_, err = g.groupCol.DeleteOne(ctx, bson.D{{"_id", id}})
 	if err != nil {
 		return err
