@@ -9,6 +9,33 @@ import (
 	"net/http"
 )
 
+type BasePageReq struct {
+	PageNum  int `form:"pageNum"`
+	PageSize int `form:"pageSize"`
+}
+
+type BasePageResp struct {
+	Total   int `json:"total"`
+	Pages   int `json:"pages"`
+	PageNum int `json:"pageNum"`
+}
+
+// ListInGroupRequest
+// swagger:model listInGroupRequest
+type ListInGroupRequest struct {
+	BasePageReq
+	// the group id of test flow
+	// required: true
+	GroupId string `form:"groupId" binding:"required"`
+}
+
+// ListTestFlowResp
+// swagger:model listTestFlowResp
+type ListTestFlowResp struct {
+	BasePageResp
+	List []*types.TestFlow `json:"list"`
+}
+
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service services.ITestFlowService) {
 	group := v1group.Group("/testflow")
 
@@ -99,15 +126,19 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//         type: integer
 	//
 	//     Responses:
-	//       200: listInGroupRequestResp
+	//       200: listTestFlowResp
 	group.GET("list", func(c *gin.Context) {
-		req := &services.ListInGroupRequest{}
+		req := &ListInGroupRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		output, err := service.ListInGroup(ctx, req)
+		output, err := service.ListInGroup(ctx, &types.PageReq[string]{
+			PageNum:  req.PageNum,
+			PageSize: req.PageSize,
+			Params:   req.GroupId,
+		})
 		if err != nil {
 			c.Error(err)
 			return

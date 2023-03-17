@@ -10,14 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// updateGroupRequest
-// swagger:model updateGroupRequest
-type UpdateGroupRequest struct {
-	Name        string `json:"name"`
-	IsShow      bool   `json:"isShow"`
-	Description string `json:"description"`
-}
-
 type IGroupService interface {
 	List(context.Context) ([]*types.Group, error)
 	Get(context.Context, primitive.ObjectID) (*types.Group, error)

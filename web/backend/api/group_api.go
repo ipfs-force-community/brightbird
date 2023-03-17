@@ -10,6 +10,14 @@ import (
 	"time"
 )
 
+// updateGroupRequest
+// swagger:model updateGroupRequest
+type UpdateGroupRequest struct {
+	Name        string `json:"name"`
+	IsShow      bool   `json:"isShow"`
+	Description string `json:"description"`
+}
+
 // GroupResp
 // swagger:model groupResp
 type GroupResp struct {
@@ -191,7 +199,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc s
 			return
 		}
 
-		req := services.UpdateGroupRequest{}
+		req := UpdateGroupRequest{}
 		err = c.ShouldBindJSON(&req)
 		if err != nil {
 			c.Error(err)
