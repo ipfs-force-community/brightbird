@@ -70,15 +70,14 @@ func DeployFLow(deployers []types.DeployNode, deployPlugin *types.PluginStore) f
 	return fx_opt.Options(opts...)
 }
 
-func getSvcMap(jsonParams json.RawMessage) (map[string]string, error) {
-	svcMap := struct {
-		SvcMap map[string]string
-	}{}
-	err := json.Unmarshal(jsonParams, &svcMap)
-	if err != nil {
-		return nil, err
+func getSvcMap(properties ...types.Property) (map[string]string, error) {
+	var svcMap = make(map[string]string)
+	for _, p := range properties {
+		if val, ok := p.Value.(string); ok && len(val) > 0 {
+			svcMap[p.Name] = val
+		}
 	}
-	return svcMap.SvcMap, nil
+	return svcMap, nil
 }
 
 func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type {
@@ -117,7 +116,7 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 	return reflect.StructOf(inDepTypeFields)
 }
 func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interface{}, string, error) {
-	svcMap, err := getSvcMap(depNode.Params)
+	svcMap, err := getSvcMap(append(depNode.Properties, *depNode.Out)...)
 	if err != nil {
 		return nil, "", err
 	}
@@ -183,8 +182,8 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 			fieldName := field.Name
 			if !field.Anonymous && len(fieldName) != 0 {
 				if fieldName == "Params" {
-					val := reflect.New(field.Type).Interface()
-					err = json.Unmarshal(depNode.Params, val)
+					val := reflect.New(field.Type)
+					err := collectParams(depNode.Properties, val.Interface())
 					if err != nil {
 						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
 					}
@@ -210,4 +209,20 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 			return results
 		}
 	}).Interface(), outTag, nil
+}
+
+func collectParams(properties []types.Property, params interface{}) error {
+	value := make(map[string]interface{})
+	for _, p := range properties {
+		value[p.Name] = p.Value
+	}
+	jsonBytes, err := json.Marshal(value)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(jsonBytes, params)
+	if err != nil {
+		return err
+	}
+	return nil
 }

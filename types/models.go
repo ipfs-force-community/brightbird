@@ -1,7 +1,6 @@
 package types
 
 import (
-	"encoding/json"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -43,30 +42,36 @@ type DeployNode struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name   string          `json:"name"`
-	Params json.RawMessage `json:"params"`
+	Name string `json:"name"`
+
+	IsAnnotateOut bool       `json:"isAnnotateOut"`
+	Properties    []Property `json:"properties"`
+	SvcProperties []Property `json:"svcProperties"`
+	Out           *Property  `json:"out"`
 }
 
 type TestItem struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name   string          `json:"name"`
-	Params json.RawMessage `json:"params"`
+	Name string `json:"name"`
+
+	Properties []Property `json:"properties"`
 }
 
 // TestFlow
 // swagger:model testFlow
 type TestFlow struct {
-	ID primitive.ObjectID `bson:"_id" json:"id"`
-	BaseTime
-	GroupId string
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name  string       `json:"name"`
-	Nodes []DeployNode `json:"nodes"`
-	Cases []TestItem   `json:"cases"`
+	Name string `json:"name"`
+
+	ID primitive.ObjectID `bson:"_id" json:"id"`
+	BaseTime
+	GroupId string       `json:"groupId"`
+	Nodes   []DeployNode `json:"nodes"`
+	Cases   []TestItem   `json:"cases"`
 }
 
 // Group

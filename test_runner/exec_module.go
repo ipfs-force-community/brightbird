@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
@@ -9,8 +8,8 @@ import (
 	"runtime/debug"
 )
 
-func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (interface{}, error) {
-	svcMap, err := getSvcMap(paramsJson)
+func GenInvokeExec(plugin *types.PluginDetail, testItem types.TestItem) (interface{}, error) {
+	svcMap, err := getSvcMap(testItem.Properties...)
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +38,7 @@ func GenInvokeExec(plugin *types.PluginDetail, paramsJson json.RawMessage) (inte
 			}
 		}
 		//apply json value
-		err := json.Unmarshal(paramsJson, ptrParams.Interface())
+		err := collectParams(testItem.Properties, ptrParams.Interface())
 		if err != nil {
 			return []reflect.Value{reflect.ValueOf(err)}
 		}
@@ -56,7 +55,7 @@ func ExecFlow(pluginStore *types.PluginStore, testItems []types.TestItem) fx_opt
 			opts = append(opts, fx_opt.Error(err))
 			break
 		}
-		fn, err := GenInvokeExec(pluginInfo, dep.Params)
+		fn, err := GenInvokeExec(pluginInfo, dep)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break

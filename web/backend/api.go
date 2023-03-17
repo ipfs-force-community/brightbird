@@ -33,7 +33,7 @@ func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
 func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IGroupService) {
 	group := v1group.Group("/group")
 
-	// swagger:route GET /group/list listGroup
+	// swagger:route GET /group listGroup
 	//
 	// Lists all group.
 	//
@@ -50,7 +50,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IG
 	//
 	//     Responses:
 	//       200: []group
-	group.GET("list", func(c *gin.Context) {
+	group.GET("", func(c *gin.Context) {
 		output, err := service.List(ctx)
 		if err != nil {
 			c.Error(err)
