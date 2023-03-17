@@ -1,6 +1,6 @@
 <template>
   <jm-scrollbar>
-    <div class="node-library-manager" v-scroll="{scrollableEl}">
+    <div class="plugin-manager">
       <div class="right-top-btn">
         <router-link :to="{ name: 'index' }">
           <jm-button type="primary" class="jm-icon-button-cancel" size="small">
@@ -10,15 +10,60 @@
       </div>
 
       <div class="title">
-        <span>建木节点库</span>
-        <span class="desc">（共有 {{ total }} 个节点定义）</span>
+        <span>部署插件</span>
+        <span class="desc">（共有 {{ execPlugins.total }} 个节点定义）</span>
       </div>
 
       <div class="content">
-        <jm-empty v-if="nodeLibraryListData.length === 0"/>
+        <jm-empty v-if="execPlugins.list.length === 0"/>
+        <div
+            v-else
+            v-for="(i, idx) in execPlugins.list"
+            :key="idx"
+            class="item"
+        >
+          <div class="deprecated" v-if="i.deprecated">
+            <jm-tooltip placement="top-start">
+              <template #content>
+                <div style="line-height: 20px">
+                  由于某些原因，该节点不被推荐使用（如该节点可<br/>能会导致一些已知问题或有更好的节点可替代它）
+                </div>
+              </template>
+              <img src="~@/assets/svgs/node-library/deprecated.svg" alt="">
+            </jm-tooltip>
+          </div>
+          <div class="item-t">
+            <span class="item-t-t">
+              <jm-text-viewer :value="i.name"/>
+            </span>
+
+            <p class="item-t-btm">
+              <jm-text-viewer :value="`${i.description || '无'}`"/>
+            </p>
+          </div>
+
+          <div
+              class="item-pos"
+              :class="{ 'node-definition-default-icon': !i.icon, 'deprecated-icon':i.deprecated}"
+          >
+            <img
+                v-if="i.icon"
+                :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div class="title">
+        <span>测试插件</span>
+        <span class="desc">（共有 {{ deployPlugins.total }} 个节点定义）</span>
+      </div>
+
+      <div class="content">
+        <jm-empty v-if="deployPlugins.list.length === 0"/>
         <div
           v-else
-          v-for="(i, idx) in nodeLibraryListData"
+          v-for="(i, idx) in deployPlugins.list"
           :key="idx"
           class="item"
         >
@@ -53,8 +98,8 @@
           </div>
         </div>
       </div>
-
     </div>
+
   </jm-scrollbar>
 </template>
 
@@ -69,42 +114,44 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
-import {fetch_deploy_plugins, fetch_exec_plugins} from "@/api/view-no-auth";
+import {fetch_deploy_plugins, fetch_exec_plugins, getProjectGroupDetail} from "@/api/view-no-auth";
+import {INodeVo} from "@/api/dto/node-library";
 
 export default defineComponent({
   components: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
-    const nodeLibraryListData = reactive<Mutable<INode>[]>([]);
-    const total = ref<number>(0);
-    const scrollableEl = inject('scrollableEl');
-
+    const deployPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
+    const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
     fetch_deploy_plugins()
         .then(res => {
-          nodeLibraryListData.push(...res);
+          deployPlugins.list = res
+          deployPlugins.total = res.length
         })
         .catch((err: Error) => {
           proxy.$throw(err, proxy);
         });
+
+
     fetch_exec_plugins()
         .then(res => {
-          nodeLibraryListData.push(...res);
+          execPlugins.list = res
+          execPlugins.total = res.length
         })
         .catch((err: Error) => {
           proxy.$throw(err, proxy);
         });
 
     return {
-      scrollableEl,
-      nodeLibraryListData,
-      total,
+      deployPlugins,
+      execPlugins,
     };
   },
 });
 </script>
 
 <style scoped lang="less">
-.node-library-manager {
+.plugin-manager {
   padding: 16px 20px 25px 16px;
   background-color: #ffffff;
   // height: calc(100vh - 185px);
