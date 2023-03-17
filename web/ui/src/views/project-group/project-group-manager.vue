@@ -20,57 +20,10 @@
           <span>项目分组</span>
           <span class="desc">（共有 {{ projectGroupList.length }} 个组）</span>
         </div>
-        <jm-tooltip content="关闭排序" placement="top" v-if="isActive">
-          <div
-            :class="['move', isActive ? 'active' : '']"
-            @click="() => (isActive = !isActive)"
-          ></div>
-        </jm-tooltip>
-        <jm-tooltip content="排序" placement="top" v-else>
-          <div class="move" @click="() => (isActive = !isActive)"></div>
-        </jm-tooltip>
       </div>
       <div class="content" v-loading="loading" ref="contentRef">
         <jm-empty v-if="projectGroupList.length === 0"/>
-        <jm-sorter
-          class="list"
-          v-model="projectGroupList"
-          @change="sortList"
-          v-else-if="isActive"
-        >
-          <div
-            v-for="(i, index) in projectGroupList"
-            :class="['item', moveClassList[index]]"
-            :key="i.id"
-            :_id="i.id"
-            @mouseenter="enter(i.id)"
-            @mouseleave="leave"
-          >
-            <div class="wrapper">
-              <div class="top">
-                <router-link :to="{ path: `/project-group/detail/${i.id}` }">
-                  <div class="name">
-                    <jm-text-viewer :value="i.name" :threshold="10"/>
-                  </div>
-                </router-link>
-              </div>
-              <div class="description">
-                <jm-text-viewer class="text-viewer" :value="(i.description || '无')"/>
-              </div>
-              <div class="update-time">
-                  <span>最后修改时间：</span
-                  ><span>{{ datetimeFormatter(i.modifiedTime) }}</span>
-              </div>
-              <div class="total">
-                共<span class="count"> {{ i.projectCount }} </span>条项目
-              </div>
-              <div class="cover">
-                <div class="drag-icon"></div>
-              </div>
-            </div>
-          </div>
-        </jm-sorter>
-        <div class="item" v-for="i in projectGroupList" :key="i.id" v-else>
+        <div  v-else class="item" v-for="i in projectGroupList" :key="i.id">
           <div class="wrapper">
             <div class="top">
               <router-link :to="{ path: `/project-group/detail/${i.id}` }">
@@ -148,13 +101,12 @@ import {
 } from 'vue';
 import GroupCreator from './project-group-creator.vue';
 import GroupEditor from './project-group-editor.vue';
-import { queryProjectGroup } from '@/api/view-no-auth';
+import {listProjectGroup} from '@/api/view-no-auth';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { datetimeFormatter } from '@/utils/formatter';
 import {
   deleteProjectGroup,
   updateProjectGroupShow,
-  updateProjectGroupSort,
 } from '@/api/project-group';
 import { Mutable } from '@/utils/lib';
 import {
@@ -174,22 +126,8 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const isShow = ref<boolean>(false);
     const loading = ref<boolean>();
-    // 是否正在排序
-    const isSorting = ref<boolean>(false);
     const contentRef = ref<HTMLElement>();
     const spacing = ref<string>('');
-    const active = ref<boolean>(false);
-    const isActive = computed<boolean>({
-      get() {
-        return active.value;
-      },
-      set(value) {
-        if (value) {
-          spacing.value = contentRef.value?.offsetWidth * 0.01 + 'px';
-        }
-        active.value = value;
-      },
-    });
     const creationActivated = ref<boolean>(false);
     const editionActivated = ref<boolean>(false);
     const projectGroupList = ref<Mutable<IProjectGroupVo>[]>([]);
@@ -203,9 +141,6 @@ export default defineComponent({
     const showChange = async (e: boolean, id: string) => {
       try {
         await updateProjectGroupShow(id);
-        // e
-        //   ? proxy.$success('首页显示项目分组')
-        //   : proxy.$success('首页隐藏项目分组');
       } catch (err) {
         proxy.$throw(err, proxy);
       }
@@ -218,15 +153,10 @@ export default defineComponent({
       childRoute.value = route.matched.length > 2;
     }
 
-    const moveClassList = computed<string[]>(() =>
-      projectGroupList.value.map(({ id }) => {
-        return id === currentItem.value ? 'move' : '';
-      }),
-    );
     const fetchProjectGroup = async () => {
       loading.value = true;
       try {
-        projectGroupList.value = await queryProjectGroup();
+        projectGroupList.value = await listProjectGroup()??[];
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -282,23 +212,6 @@ export default defineComponent({
         .catch(() => {
         });
     };
-    const sortList = async (e: any) => {
-      isSorting.value = true;
-      const { oldElement, newElement, originArr } = e;
-      console.log(oldElement, newElement);
-      try {
-        await updateProjectGroupSort({
-          originGroupId: newElement.id,
-          targetGroupId: oldElement.id,
-        });
-      } catch (err) {
-        proxy.$throw(err, proxy);
-        // 未调换成功，将数据位置对调状态还原
-        projectGroupList.value = originArr;
-      }
-      await sleep(300);
-      isSorting.value = false;
-    };
     const childRoute = ref<boolean>(false);
     changeView(childRoute, useRoute());
     onBeforeRouteUpdate(to => changeView(childRoute, to));
@@ -306,18 +219,6 @@ export default defineComponent({
       spacing,
       contentRef,
       childRoute,
-      leave() {
-        if (isSorting.value) {
-          return;
-        }
-        currentItem.value = '';
-      },
-      enter(id: string) {
-        if (isSorting.value) {
-          return;
-        }
-        currentItem.value = id;
-      },
       showChange,
       start(e: any) {
         currentSelected.value = true;
@@ -326,7 +227,6 @@ export default defineComponent({
       isShow,
       currentSelected,
       showInHomePage,
-      moveClassList,
       defaultProjectGroup,
       groupName,
       groupDescription,
@@ -334,10 +234,8 @@ export default defineComponent({
       addCompleted,
       editCompleted,
       datetimeFormatter,
-      sortList,
       projectGroupList,
       loading,
-      isActive,
       creationActivated,
       editionActivated,
       add,

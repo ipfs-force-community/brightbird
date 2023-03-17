@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	venus_sector_manager "github.com/hunjixin/brightbird/env/impl/venus-sector-manager"
 	"github.com/hunjixin/brightbird/types"
@@ -11,13 +10,13 @@ import (
 var Info = venus_sector_manager.PluginInfo
 
 type DepParams struct {
-	Params       json.RawMessage `optional:"true"`
+	Params       venus_sector_manager.Config `optional:"true"`
 	K8sEnv       *env.K8sEnvDeployer
 	Auth         env.IVenusAuthDeployer
 	Venus        env.IVenusDeployer
 	Message      env.IVenusMessageDeployer
 	Gateway      env.IVenusGatewayDeployer
-	Market       env.IVenusMarketDeployer
+	Market       env.IVenusMarketDeployer `optional:"true"`
 	AdminToken   types.AdminToken
 	WalletDeploy env.IVenusWalletDeployer `svcname:"Wallet"`
 }

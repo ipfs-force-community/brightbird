@@ -69,9 +69,9 @@ type TestFlow struct {
 
 	ID primitive.ObjectID `bson:"_id" json:"id"`
 	BaseTime
-	GroupId string       `json:"groupId"`
-	Nodes   []DeployNode `json:"nodes"`
-	Cases   []TestItem   `json:"cases"`
+	GroupId primitive.ObjectID `json:"groupId"`
+	Nodes   []DeployNode       `json:"nodes"`
+	Cases   []TestItem         `json:"cases"`
 }
 
 // Group

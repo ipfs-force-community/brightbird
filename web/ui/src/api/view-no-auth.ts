@@ -35,14 +35,15 @@ const baseHubUrl = {
 };
 
 /**
- * 查询项目组列表
+ * 获取项目组列表
  */
-export function queryProjectGroup(): Promise<IProjectGroupVo[]> {
-  return restProxy({
-    url: baseUrl.projectGroup,
+export function listProjectGroup(): Promise<IProjectGroupVo[]> {
+  return restProxy<IProjectGroupVo[]>({
+    url: `${baseUrl.projectGroup}`,
     method: 'get',
   });
 }
+
 
 /**
  * 查询项目
@@ -174,16 +175,6 @@ export function fetchVersion(): Promise<string> {
     url: `${baseUrl.version}`,
     method: 'get',
     timeout: 1000,
-  });
-}
-
-/**
- * 获取项目组列表
- */
-export function listProjectGroup(): Promise<IProjectGroupVo[]> {
-  return restProxy<IProjectGroupVo[]>({
-    url: `${baseUrl.projectGroup}/list`,
-    method: 'get',
   });
 }
 

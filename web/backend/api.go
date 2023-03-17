@@ -7,6 +7,7 @@ import (
 	"github.com/hunjixin/brightbird/version"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+	"time"
 )
 
 func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
@@ -60,9 +61,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IG
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /group/{name} getTestFlow
+	// swagger:route Get /group/{id} getTestFlow
 	//
-	// Get specific group by name.
+	// Get specific group by id.
 	//
 	//     Consumes:
 	//     - application/json
@@ -84,9 +85,14 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IG
 	//
 	//     Responses:
 	//       200: group
-	group.GET(":name", func(c *gin.Context) {
-		name := c.Param("name")
-		output, err := service.Get(ctx, name)
+	group.GET(":id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		output, err := service.Get(ctx, id)
 		if err != nil {
 			c.Error(err)
 			return
@@ -129,6 +135,109 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, service IG
 		}
 
 		err = service.Save(ctx, testFlow)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
+	// swagger:route POST /group/{id} updateGroup
+	//
+	// Update group name/show/description
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: path
+	//         description: id of  group
+	//         required: true
+	//         type: string
+	//       + name: group
+	//         in: body
+	//         description: update group request json
+	//         required: true
+	//         type: updateGroupRequest
+	//         allowEmpty:  false
+	//
+	//     Responses:
+	//       200:
+	group.POST("/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		req := UpdateGroupRequest{}
+		err = c.ShouldBindJSON(&req)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		group, err := service.Get(c, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		group.Name = req.Name
+		group.Description = req.Description
+		group.IsShow = req.IsShow
+		group.ModifiedTime = time.Now().Unix()
+
+		err = service.Save(ctx, *group)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
+	// swagger:route DELETE /group/{id} deleteGroup
+	//
+	// Delete group by id
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: path
+	//         description: id of  group
+	//         required: true
+	//         type: string
+	//
+	//     Responses:
+	//       200:
+	group.DELETE("/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		err = service.Delete(c, id)
 		if err != nil {
 			c.Error(err)
 			return

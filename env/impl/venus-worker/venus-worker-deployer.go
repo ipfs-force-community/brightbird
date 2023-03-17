@@ -3,7 +3,6 @@ package venus_worker
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -13,9 +12,11 @@ import (
 )
 
 type Config struct {
-	VenusSectorManagerUrl string
-	AuthToken             string
-	MinerAddress          string
+	env.BaseConfig
+	VenusSectorManagerUrl string `json:"-"`
+	AuthToken             string `json:"-"`
+
+	MinerAddress string `json:"minerAddress"`
 }
 
 type RenderParams struct {
@@ -47,8 +48,8 @@ type VenusWorkerDeployer struct {
 	svc        *corev1.Service
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}

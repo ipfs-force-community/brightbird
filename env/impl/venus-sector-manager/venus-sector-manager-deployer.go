@@ -3,7 +3,6 @@ package venus_sector_manager
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -13,16 +12,19 @@ import (
 )
 
 type Config struct {
-	NodeUrl      string
-	MessagerUrl  string
-	MarketUrl    string
-	GatewayUrl   string
-	AuthUrl      string
-	AuthToken    string
-	DbPlugin     string
-	DbDns        string
-	SendAddress  string
-	minerAddress int64
+	env.BaseConfig
+
+	NodeUrl     string `json:"-"`
+	MessagerUrl string `json:"-"`
+	MarketUrl   string `json:"-"`
+	GatewayUrl  string `json:"-"`
+	AuthUrl     string `json:"-"`
+	AuthToken   string `json:"-"`
+
+	DbPlugin     string `json:"dbPlugin"`
+	DbDns        string `json:"dbDns"`
+	SendAddress  string `json:"sendAddress"`
+	MinerAddress int64  `json:"minerAddress"`
 }
 
 type RenderParams struct {
@@ -54,8 +56,8 @@ type VenusSectorManagerDeployer struct {
 	svc        *corev1.Service
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params json.RawMessage) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndJson(DefaultConfig(), cfg, params)
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +85,7 @@ func NewVenusSectorManagerDeployer(env *env.K8sEnvDeployer, nodeUrl, messagerUrl
 			DbPlugin:     dbPlugin,
 			DbDns:        dbDns,
 			SendAddress:  sendAddress,
-			minerAddress: minerAddress,
+			MinerAddress: minerAddress,
 		},
 	}
 }

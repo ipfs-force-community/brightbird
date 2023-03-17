@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"github.com/hunjixin/brightbird/env"
 	venus_worker "github.com/hunjixin/brightbird/env/impl/venus-worker"
 	"github.com/hunjixin/brightbird/types"
@@ -11,7 +10,8 @@ import (
 var Info = venus_worker.PluginInfo
 
 type DepParams struct {
-	Params        json.RawMessage `optional:"true"`
+	Params venus_worker.Config `optional:"true"`
+
 	K8sEnv        *env.K8sEnvDeployer
 	SectorManager env.IVenusSectorManagerDeployer
 	AdminToken    types.AdminToken

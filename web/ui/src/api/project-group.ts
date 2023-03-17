@@ -6,7 +6,7 @@ import {
   IProjectGroupAddingDto,
   IProjectSortUpdatingDto,
 } from '@/api/dto/project-group';
-const baseUrl = '/projects/groups';
+const baseUrl = '/group';
 /**
  * 创建项目组
  */
@@ -30,7 +30,7 @@ export function editProjectGroup(
 ): Promise<void> {
   return restProxy({
     url: `${baseUrl}/${groupId}`,
-    method: 'put',
+    method: 'post',
     payload: dto,
     auth: true,
   });
@@ -73,21 +73,6 @@ export function projectGroupAddProject(
   return restProxy({
     url: `${baseUrl}/projects`,
     method: 'post',
-    payload: dto,
-    auth: true,
-  });
-}
-
-/**
- * 修改项目组的项目排序
- */
-export function updateProjectGroupProjectSort(
-    groupId: string,
-  dto: IProjectSortUpdatingDto,
-): Promise<void> {
-  return restProxy({
-    url: `${baseUrl}/${groupId}/projects/sort`,
-    method: 'patch',
     payload: dto,
     auth: true,
   });

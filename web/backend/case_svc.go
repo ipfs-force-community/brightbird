@@ -75,7 +75,12 @@ func (c *CaseSvc) List(ctx context.Context) (*ListRequestResp, error) {
 }
 
 func (c *CaseSvc) ListInGroup(ctx context.Context, req *ListInGroupRequest) (*ListInGroupRequestResp, error) {
-	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": req.GroupId})
+	groupId, err := primitive.ObjectIDFromHex(req.GroupId)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": groupId})
 	if err != nil {
 		return nil, err
 	}
