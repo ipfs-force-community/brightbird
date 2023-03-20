@@ -113,16 +113,16 @@ export default defineComponent({
     const tooltipVisible = ref<boolean>(false);
     const concurrentVal = ref<string>();
     const concurrentRef = ref();
-    onMounted(() => {
-      if (workflowForm.value.global.concurrent === true) {
-        concurrentVal.value = '9';
-        return;
-      } else if (workflowForm.value.global.concurrent === false) {
-        concurrentVal.value = '1';
-        return;
-      }
-      concurrentVal.value = workflowForm.value.global.concurrent.toString();
-    });
+    // onMounted(() => {
+    //   if (workflowForm.value.global.concurrent === true) {
+    //     concurrentVal.value = '9';
+    //     return;
+    //   } else if (workflowForm.value.global.concurrent === false) {
+    //     concurrentVal.value = '1';
+    //     return;
+    //   }
+    //   concurrentVal.value = workflowForm.value.global.concurrent.toString();
+    // });
 
     const workflowTool = new WorkflowTool(graph);
 

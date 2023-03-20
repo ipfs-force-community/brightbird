@@ -147,12 +147,12 @@ export class WorkflowGraph {
           if (originalNode === currentNode) {
             showPort(currentNode, (isChangingTarget ? targetPort : sourcePort)!);
           } else {
-            if (isChangingTarget) {
-              if (new CustomX6NodeProxy(currentNode).isTrigger()) {
-                // 触发器节点只能出，不能入
-                return !!targetMagnet;
-              }
-            }
+            // if (isChangingTarget) {
+            //   if (new CustomX6NodeProxy(currentNode).isTrigger()) {
+            //     // 触发器节点只能出，不能入
+            //     return !!targetMagnet;
+            //   }
+            // }
 
             if (this.getNodesInLine(
               isChangingTarget ? sourceNode : targetNode,
@@ -372,7 +372,7 @@ export class WorkflowGraph {
         });
       })
       // 筛选非触发器节点
-      .filter(node => !new CustomX6NodeProxy(node).isTrigger())
+      // .filter(node => !new CustomX6NodeProxy(node).isTrigger())
       .forEach(node =>
         node.getPorts().forEach(port => {
           node.portProp(port.id!, {

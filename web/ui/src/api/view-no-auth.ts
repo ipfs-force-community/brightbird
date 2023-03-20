@@ -5,7 +5,13 @@ import {
   ITaskParamVo,
   IWorkflowExecutionRecordVo,
 } from '@/api/dto/workflow-execution-record';
-import { IProcessTemplateVo, IProjectDetailVo, IProjectQueryingDto, IProjectVo, IWorkflowVo } from '@/api/dto/project';
+import {
+  IProcessTemplateVo,
+  IProjectDetailVo, IProjectIdVo,
+  IProjectQueryingDto, IProjectSavingDto,
+  IProjectVo,
+  IWorkflowVo
+} from '@/api/dto/project';
 import { IPageDto, IPageVo } from '@/api/dto/common';
 import { INodeVo } from '@/api/dto/node-library';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
@@ -86,6 +92,22 @@ export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo>
     url: `${baseUrl.cases}/id/${projectId}`,
     method: 'get',
   });
+}
+
+/**
+ * 保存项目
+ * @param dto
+ */
+export async function saveProject(dto: IProjectSavingDto): Promise<IProjectIdVo> {
+  const res = await restProxy({
+    url: `${baseUrl.cases}`,
+    method: 'post',
+    payload: dto,
+  });
+
+  return dto.id ? {
+    id: dto.id,
+  } : res;
 }
 
 /**

@@ -16,34 +16,34 @@ export class CustomX6NodeProxy {
     this.node = node;
   }
 
-  isTrigger(): boolean {
-    const { type } = JSON.parse(this.node.getData<string>());
-    return [NodeTypeEnum.CRON, NodeTypeEnum.WEBHOOK].includes(type);
-  }
+  // isTrigger(): boolean {
+  //   const { type } = JSON.parse(this.node.getData<string>());
+  //   return [NodeTypeEnum.CRON, NodeTypeEnum.WEBHOOK].includes(type);
+  // }
 
   getData(graph?: Graph, workflowData?: IWorkflow): IWorkflowNode {
     const obj = JSON.parse(this.node.getData<string>());
     let nodeData: IWorkflowNode;
 
     switch (obj.type) {
-      case NodeTypeEnum.CRON:
-        nodeData = Cron.build(obj);
-        break;
-      case NodeTypeEnum.WEBHOOK:
-        nodeData = Webhook.build(obj);
-        break;
-      case NodeTypeEnum.SHELL:
-        nodeData = Shell.build(
-          obj,
-          graph ? (value: string) => this.validateParam(graph, value) : undefined,
-          workflowData ? (name: string) => this.validateCache(workflowData, name) : undefined,
-        );
-        break;
+      // case NodeTypeEnum.CRON:
+      //   nodeData = Cron.build(obj);
+      //   break;
+      // case NodeTypeEnum.WEBHOOK:
+      //   nodeData = Webhook.build(obj);
+      //   break;
+      // case NodeTypeEnum.SHELL:
+      //   nodeData = Shell.build(
+      //     obj,
+      //     graph ? (value: string) => this.validateParam(graph, value) : undefined,
+      //     workflowData ? (name: string) => this.validateCache(workflowData, name) : undefined,
+      //   );
+      //   break;
       case NodeTypeEnum.ASYNC_TASK:
         nodeData = AsyncTask.build(
           obj,
           graph ? (value: string) => this.validateParam(graph, value) : undefined,
-          workflowData ? (name: string) => this.validateCache(workflowData, name) : undefined,
+          workflowData ? (name: string) => this.validateCache() : undefined,
         );
         break;
     }
@@ -130,14 +130,6 @@ export class CustomX6NodeProxy {
     }
   }
 
-  private validateCache({ global: { caches } }: IWorkflow, name: string) {
-    if (caches && typeof caches === 'string' && caches === name) {
-      return;
-    }
-    if (caches?.map(item => (item.ref ? item.ref : item)).includes(name)) {
-      return;
-    }
-    // throw new Error(`cache不存在${name}`);
-    throw new Error('缓存不存在');
+  private validateCache() {
   }
 }

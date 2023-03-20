@@ -71,7 +71,7 @@ export default defineComponent({
   emits: ['closed'],
   setup(props, { emit }) {
     const workflowForm = ref<IWorkflow>(props.workflowData);
-    const globalForm = ref<Global>(new Global(props.workflowData.global));
+    // const globalForm = ref<Global>(new Global(props.workflowData.global));
     const cacheFormRef = ref<HTMLFormElement>();
     const delDialogVisible = ref<boolean>(false);
     const currentIndex = ref<number>();
@@ -79,46 +79,46 @@ export default defineComponent({
 
     // 初始化构造遍历数据
     const cacheList: any = [];
-    if (workflowForm.value.global.caches && workflowForm.value.global.caches?.length > 0) {
-      if (typeof workflowForm.value.global.caches !== 'object') {
-        const cache = { ref: workflowForm.value.global.caches, key: uuidv4() };
-        cacheList.push(cache);
-        cacheTypes[cache.key] = CacheTypeEnum.EDIT;
-      } else {
-        workflowForm.value.global.caches?.forEach(item => {
-          const cache = { ref: item, key: uuidv4() };
-          cacheList.push(cache);
-          cacheTypes[cache.key] = CacheTypeEnum.EDIT;
-        });
-      }
-      globalForm.value.caches = cacheList;
-    }
+    // if (workflowForm.value.global.caches && workflowForm.value.global.caches?.length > 0) {
+    //   if (typeof workflowForm.value.global.caches !== 'object') {
+    //     const cache = { ref: workflowForm.value.global.caches, key: uuidv4() };
+    //     cacheList.push(cache);
+    //     cacheTypes[cache.key] = CacheTypeEnum.EDIT;
+    //   } else {
+    //     workflowForm.value.global.caches?.forEach(item => {
+    //       const cache = { ref: item, key: uuidv4() };
+    //       cacheList.push(cache);
+    //       cacheTypes[cache.key] = CacheTypeEnum.EDIT;
+    //     });
+    //   }
+    //   globalForm.value.caches = cacheList;
+    // }
 
     return {
-      globalForm,
+      // globalForm,
       cacheFormRef,
       delDialogVisible,
       cacheTypes,
       closeDrawer: async () => {
-        workflowForm.value.global.caches = globalForm.value.caches;
+        // workflowForm.value.global.caches = globalForm.value.caches;
         // eslint-disable-next-line @typescript-eslint/no-empty-function
         cacheFormRef.value!.validate().catch(() => {});
         emit('closed');
       },
       addCache: () => {
         const cache = { ref: '', key: uuidv4() };
-        globalForm.value.caches.push(cache);
+        // globalForm.value.caches.push(cache);
         cacheTypes[cache.key] = CacheTypeEnum.ADD;
       },
       changeCache: (val: string, oldVal: string, _index: number) => {
-        globalForm.value.caches.find((item, index) => index === _index)!.ref = val;
-
-        globalForm.value.caches.forEach(({ ref }, idx) => {
-          if (_index === idx || oldVal !== ref) {
-            return;
-          }
-          cacheFormRef.value?.validateField(`${idx}.ref`);
-        });
+        // globalForm.value.caches.find((item, index) => index === _index)!.ref = val;
+        //
+        // globalForm.value.caches.forEach(({ ref }, idx) => {
+        //   if (_index === idx || oldVal !== ref) {
+        //     return;
+        //   }
+        //   cacheFormRef.value?.validateField(`${idx}.ref`);
+        // });
       },
       // 点击删除
       handleDelete: (index: number) => {
@@ -126,19 +126,19 @@ export default defineComponent({
         currentIndex.value = index;
       },
       // dialog
-      delCache: () => {
-        const cache = globalForm.value.caches.splice(currentIndex.value!, 1)[0];
-        delete cacheTypes[cache.key];
-        delDialogVisible.value = false;
-      },
-      dialogOpended: async () => {
-        // 打开抽屉并且caches有值进行校验
-        if (globalForm.value.caches.length === 0) {
-          return;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        cacheFormRef.value!.validate().catch(() => {});
-      },
+      // delCache: () => {
+      //   const cache = globalForm.value.caches.splice(currentIndex.value!, 1)[0];
+      //   delete cacheTypes[cache.key];
+      //   delDialogVisible.value = false;
+      // },
+      // dialogOpended: async () => {
+      //   // 打开抽屉并且caches有值进行校验
+      //   if (globalForm.value.caches.length === 0) {
+      //     return;
+      //   }
+      //   // eslint-disable-next-line @typescript-eslint/no-empty-function
+      //   cacheFormRef.value!.validate().catch(() => {});
+      // },
     };
   },
 });

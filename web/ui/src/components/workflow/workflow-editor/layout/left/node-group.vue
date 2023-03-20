@@ -10,7 +10,7 @@
       <div class="network-anomaly" v-if="networkAnomaly">
         <div class="anomaly-img"></div>
         <span class="anomaly-tip">网络开小差啦</span>
-        <div class="reload-btn" @click="loadNodes(keyword,true,initialPageSize)">重新加载</div>
+        <div class="reload-btn" @click="loadNodes(keyword,true)">重新加载</div>
       </div>
       <template v-else-if="nodes.length>0">
         <div class="nodes-wrapper">
@@ -55,10 +55,10 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const groupName = computed<string>(() => {
-      if (props.type === NodeGroupEnum.TRIGGER) {
-        return '触发器';
-      } else if (props.type === NodeGroupEnum.INNER) {
-        return '内置节点';
+      if (props.type === NodeGroupEnum.DEPLOY) {
+        return '部署节点';
+      } else if (props.type === NodeGroupEnum.EXEC) {
+        return '测试节点';
       } else {
         return '';
       }
@@ -86,7 +86,7 @@ export default defineComponent({
      * @param currentPage 节点数据分页，当前第几页
      * @param pageSize 一页加载几条数据
      */
-    const loadNodes = async (keyword: string, reload: boolean, pageSize: number, currentPage: number = 1) => {
+    const loadNodes = async (keyword: string, reload: boolean) => {
       // 点击重试，将请求超时的状态还原到初始状态
       if (reload) {
         networkAnomaly.value = false;
@@ -94,14 +94,21 @@ export default defineComponent({
       try {
         loading.value = true;
         switch (props.type) {
-          // 触发器
-          case NodeGroupEnum.TRIGGER:
-            nodes.value = workflowNode.loadInnerTriggers(keyword);
+            // 官方节点
+          case NodeGroupEnum.DEPLOY: {
+            const { content } = await workflowNode.loadDeployPlugins(keyword);
+            nodes.value = content;
             break;
-          // 内置节点
-          case NodeGroupEnum.INNER:
-            nodes.value = workflowNode.loadInnerNodes(keyword);
+          }
+            // 社区节点
+          case NodeGroupEnum.EXEC: {
+            const { content } = await workflowNode.loadExecPlugins(keyword);
+            // 显示更多
+            // totalPages <= currentPage ? (loadState.value = StateEnum.NONE) : (loadState.value = StateEnum.MORE);
+            // currentPage > 1 ? nodes.value = [...nodes.value, ...content] : nodes.value = content;
+            nodes.value = content;
             break;
+          }
         }
         // 传递当前分组已加载的节点数量
         emit('getNodeCount', nodes.value.length);
@@ -128,12 +135,12 @@ export default defineComponent({
       collapsed.value = !collapsed.value;
     };
     // 显示更多
-    const btnDown = async () => {
-      loadState.value = StateEnum.LOADING;
-      await loadNodes(keyWord.value, false, initialPageSize, currentPage.value += 1);
-    };
+    // const btnDown = async () => {
+    //   loadState.value = StateEnum.LOADING;
+    //   await loadNodes(keyWord.value, false, initialPageSize, currentPage.value += 1);
+    // };
     onMounted(async () => {
-      await loadNodes(keyWord.value, false, initialPageSize);
+      await loadNodes(keyWord.value, false);
     });
     onUpdated(async () => {
       if (keyWord.value === props.keyword) {
@@ -141,7 +148,7 @@ export default defineComponent({
       }
       keyWord.value = props.keyword;
       // 搜索节点
-      await loadNodes(keyWord.value, false, keyWord.value === '' ? initialPageSize : searchPageSize);
+      await loadNodes(keyWord.value, false);
       // 搜索后将currentPage初始化
       currentPage.value = 1;
     });
@@ -155,7 +162,7 @@ export default defineComponent({
       nodes,
       collapsed,
       toggle,
-      btnDown,
+      // btnDown,
       drag: (data: IWorkflowNode, event: MouseEvent) => {
         getWorkflowDnd().drag(data, event);
       },

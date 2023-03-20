@@ -11,6 +11,7 @@ export enum NodeRefEnum {
  * 参数类型枚举
  */
 export enum ParamTypeEnum {
+  SECRET = 'SECRET',
   STRING = 'STRING',
   NUMBER = 'NUMBER',
   BOOL = 'BOOL',
@@ -52,11 +53,13 @@ export enum FailureModeEnum {
  * 节点分组枚举
  */
 export enum NodeGroupEnum {
-  TRIGGER = 'trigger',
-  INNER = 'inner',
-  LOCAL = 'local',
-  OFFICIAL = 'official',
-  COMMUNITY = 'community',
+  // TRIGGER = 'trigger',
+  // INNER = 'inner',
+  // LOCAL = 'local',
+  // OFFICIAL = 'official',
+  // COMMUNITY = 'community',
+  DEPLOY = 'deploy',
+  EXEC = 'exec',
 }
 
 /**

@@ -5,10 +5,9 @@ import { Shell } from './data/node/shell';
 import { AsyncTask } from './data/node/async-task';
 import { INodeParameterVo } from '@/api/dto/node-definitions';
 import { ParamTypeEnum } from '@/components/workflow/workflow-editor/model/data/enumeration';
+import {fetch_deploy_plugins, fetch_exec_plugins} from "@/api/view-no-auth";
 
 interface IPageInfo {
-  pageNum: number;
-  totalPages: number;
   content: IWorkflowNode[];
 }
 
@@ -18,10 +17,11 @@ interface IPageInfo {
  * @param inputs
  * @param outputs
  */
-export const pushParams = (data: AsyncTask) => {
-/*  if (data.inputProperties) {
-    inputProperties.forEach(item => {
-      data.inputProperties.push({
+export const pushParams = (data: AsyncTask, inputs: INodeParameterVo[], outputs: INodeParameterVo[], versionDescription: string) => {
+  data.versionDescription = versionDescription;
+  if (inputs) {
+    inputs.forEach(item => {
+      data.inputs.push({
         ref: item.ref,
         name: item.name,
         type: item.type as ParamTypeEnum,
@@ -30,7 +30,19 @@ export const pushParams = (data: AsyncTask) => {
         description: item.description,
       });
     });
-  }*/
+  }
+  if (outputs) {
+    outputs.forEach(item => {
+      data.outputs.push({
+        ref: item.ref,
+        name: item.name,
+        type: item.type as ParamTypeEnum,
+        value: (item.value || '').toString(),
+        required: item.required,
+        description: item.description,
+      });
+    });
+  }
 };
 
 export class WorkflowNode {
@@ -48,5 +60,23 @@ export class WorkflowNode {
     const arr: IWorkflowNode[] = [new Shell()];
 
     return keyword ? arr.filter(item => item.getName().includes(keyword)) : arr;
+
+  }
+
+  async loadDeployPlugins(keyword?: string): Promise<IPageInfo> {
+    const nodes = await fetch_deploy_plugins();
+    const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, item.icon, item.version, item.category, "", "", ""));
+
+    return {
+      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
+    };
+  }
+
+  async loadExecPlugins(keyword?: string): Promise<IPageInfo> {
+    const nodes = await fetch_exec_plugins();
+    const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, item.icon, item.version, item.category, "", "", ""));
+    return {
+      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
+    };
   }
 }

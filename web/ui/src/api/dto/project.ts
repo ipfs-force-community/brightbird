@@ -15,9 +15,25 @@ import {
 export interface IProjectSavingDto
   extends Readonly<{
     id?: string;
-    dslText: string;
-      groupId: string;
+    name: string;
+    createTime: string;
+    modifiedTime: string;
+    cases?: ICase[];
+    nodes?: INode[];
+    groupId: string;
   }> {}
+
+export interface ICase
+    extends Readonly<{
+        name: string;
+        params: string[];
+    }> {}
+
+export interface INode
+    extends Readonly<{
+        name: string;
+        params: string[];
+    }> {}
 
 /**
  * 克隆Git库dto
@@ -114,18 +130,12 @@ export interface IProjectDetailVo
   extends Readonly<
     BaseVo & {
       id: string;
-      dslSource: DslSourceEnum;
-      dslType: DslTypeEnum;
-      gitRepoId?: string;
-      workflowName: string;
-      workflowRef: string;
-      workflowVersion: string;
-      steps: number;
-      dslText: string;
-      eventBridgeId?: string;
-      triggerType: TriggerTypeEnum;
+      name: string;
+      createTime: string;
+      modifiedTime: string;
+      cases: ICase[];
+      nodes: INode[];
       groupId: string;
-      projectGroupName: string;
     }
   > {}
 

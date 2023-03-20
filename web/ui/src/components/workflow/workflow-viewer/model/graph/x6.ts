@@ -213,9 +213,9 @@ export class X6Graph extends BaseGraph {
     let tempNode = this.graph.getRootNodes()[0];
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (!new CustomX6NodeProxy(tempNode).isTrigger()) {
-        nodes.push(tempNode);
-      }
+      // if (!new CustomX6NodeProxy(tempNode).isTrigger()) {
+      //   nodes.push(tempNode);
+      // }
 
       const edges = this.graph.getOutgoingEdges(tempNode);
       if (!edges) {
@@ -304,10 +304,10 @@ export class X6Graph extends BaseGraph {
     let tempNode = this.graph.getRootNodes()[0];
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      if (new CustomX6NodeProxy(tempNode).isTrigger()) {
-        tempNode = this.graph.getOutgoingEdges(tempNode)![0].getTargetNode()!;
-        continue;
-      }
+      // if (new CustomX6NodeProxy(tempNode).isTrigger()) {
+      //   tempNode = this.graph.getOutgoingEdges(tempNode)![0].getTargetNode()!;
+      //   continue;
+      // }
 
       if (tempNode.id === node.id) {
         break;

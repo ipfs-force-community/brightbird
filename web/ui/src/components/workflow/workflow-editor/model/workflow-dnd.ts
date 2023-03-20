@@ -6,6 +6,10 @@ import { NODE, PORTS } from '../shape/gengral-config';
 import { ClickNodeWarningCallbackFnType, WorkflowValidator } from './workflow-validator';
 import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
 import { NodeGroupEnum, NodeTypeEnum } from './data/enumeration';
+import {
+  getOfficialNodeParams,
+  getOfficialVersionList,
+} from "@/api/node-library";
 import { AsyncTask } from './data/node/async-task';
 import { pushParams } from './workflow-node';
 
@@ -24,9 +28,9 @@ export class WorkflowDnd {
   }
 
   constructor(graph: Graph,
-    workflowValidator: WorkflowValidator,
-    nodeContainer: HTMLElement,
-    clickNodeWarningCallback: ClickNodeWarningCallbackFnType) {
+              workflowValidator: WorkflowValidator,
+              nodeContainer: HTMLElement,
+              clickNodeWarningCallback: ClickNodeWarningCallbackFnType) {
     this.graph = graph;
     this.dnd = new Addon.Dnd({
       target: graph,
@@ -65,19 +69,28 @@ export class WorkflowDnd {
         }
         if (_data.getType() !== NodeTypeEnum.ASYNC_TASK) {
           _data
-            .validate()
-            // 校验节点有误时，加警告
-            .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
+              .validate()
+              // 校验节点有误时，加警告
+              .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
           return true;
         }
         const data = _data as AsyncTask;
-        pushParams(data, );
+        const res = await getOfficialVersionList(data.getRef(), data.ownerRef);
+        data.version = res.versions.length > 0 ? res.versions[0] : '';
+
+        const {
+          inputParams: inputs,
+          outputParams: outputs,
+          description: versionDescription,
+        } = await getOfficialNodeParams(data.getRef(), data.ownerRef, data.version);
+        pushParams(data, inputs, outputs, versionDescription);
+
         // fix: #I5DXPM
         proxy.setData(data);
         data
-          .validate()
-          // 校验节点有误时，加警告
-          .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
+            .validate()
+            // 校验节点有误时，加警告
+            .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
         return true;
       },
     });

@@ -10,21 +10,21 @@ export const baseUrl = {
  * 保存项目
  * @param dto
  */
-export async function save(dto: IProjectSavingDto): Promise<IProjectIdVo> {
-  const url = `${baseUrl.project}${dto.id ? `/${dto.id}` : ''}`;
-  const method = dto.id ? 'put' : 'post';
-
-  const res = await restProxy({
-    url,
-    method,
-    payload: dto,
-    auth: true,
-  });
-
-  return dto.id ? {
-    id: dto.id,
-  } : res;
-}
+// export async function save(dto: IProjectSavingDto): Promise<IProjectIdVo> {
+//   const url = `${baseUrl.project}${dto.id ? `/${dto.id}` : ''}`;
+//   const method = dto.id ? 'put' : 'post';
+//
+//   const res = await restProxy({
+//     url,
+//     method,
+//     payload: dto,
+//     auth: true,
+//   });
+//
+//   return dto.id ? {
+//     id: dto.id,
+//   } : res;
+// }
 
 /**
  * 立即执行

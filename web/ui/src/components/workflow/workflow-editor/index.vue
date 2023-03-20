@@ -1,7 +1,9 @@
 <template>
   <div class="jm-workflow-editor">
     <template v-if="graph">
+<!--      工具栏-->
       <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" @open-cache-panel="openCachePanel" />
+<!--      节点配置面板：选中某个节点时，显示该节点的配置面板，允许用户进行配置-->
       <node-config-panel
         v-if="selectedNodeId"
         v-model="nodeConfigPanelVisible"
@@ -11,15 +13,18 @@
         modal-class="node-config-panel-overlay"
         @closed="handleNodeConfigPanelClosed"
       />
-      <cache-panel
-        modal-class="node-config-panel-overlay"
-        v-model="cachePanelVisible"
-        :workflow-data="workflowData"
-        @closed="handleCachePanel"
-      />
+<!--      缓存面板-->
+<!--      <cache-panel-->
+<!--        modal-class="node-config-panel-overlay"-->
+<!--        v-model="cachePanelVisible"-->
+<!--        :workflow-data="workflowData"-->
+<!--        @closed="handleCachePanel"-->
+<!--      />-->
     </template>
     <div class="main">
+<!--      节点面板：显示流程中全部节点，允许用户从中选择一个节点进行编辑-->
       <node-panel v-if="graph" @node-selected="nodeId => handleNodeSelected(nodeId, true)" />
+<!--      图形面板：显示图形化视图，允许用户通过拖拽、连线等方式编辑工作流-->
       <graph-panel
         :workflow-data="workflowData"
         @graph-created="handleGraphCreated"
@@ -109,21 +114,21 @@ export default defineComponent({
         selectedNodeId.value = '';
       },
       cachePanelVisible,
-      handleCachePanel: async () => {
-        await checkCache();
-        const nodes = graph.value!.getNodes();
-        for (const node of nodes) {
-          const workflowNode = new CustomX6NodeProxy(node).getData(graph.value, workflowData.value);
-          try {
-            await workflowNode.validate();
-            workflowValidator.removeWarning(node);
-          } catch ({ errors }) {
-            workflowValidator.addWarning(node, nodeId => {
-              handleNodeSelected(nodeId, true);
-            });
-          }
-        }
-      },
+      // handleCachePanel: async () => {
+      //   await checkCache();
+      //   const nodes = graph.value!.getNodes();
+      //   for (const node of nodes) {
+      //     const workflowNode = new CustomX6NodeProxy(node).getData(graph.value, workflowData.value);
+      //     try {
+      //       await workflowNode.validate();
+      //       workflowValidator.removeWarning(node);
+      //     } catch ({ errors }) {
+      //       workflowValidator.addWarning(node, nodeId => {
+      //         handleNodeSelected(nodeId, true);
+      //       });
+      //     }
+      //   }
+      // },
       openCachePanel: (_checkCache: () => Promise<void>) => {
         checkCache = _checkCache;
         cachePanelVisible.value = true;

@@ -21,8 +21,8 @@ func NewCaseSvc(db *mongo.Database, execPluginStore ExecPluginStore) ITestCaseSe
 
 func NewGroupSvc(db *mongo.Database, execPluginStore ExecPluginStore) IGroupService {
 	return &GroupSvc{
-		groupCol:    db.Collection("group"),
-		testFlowCol: db.Collection("cases"),
+		groupCol: db.Collection("group"),
+		//testFlowCol: db.Collection("cases"),
 	}
 }
 

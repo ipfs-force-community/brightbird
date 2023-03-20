@@ -8,25 +8,24 @@
     </template>
     <div class="jm-workflow-editor-node-config-panel">
       <jm-scrollbar v-if="drawerOpening" class="panel-container">
-        <cron-panel
-          v-if="nodeData.getType() === NodeTypeEnum.CRON"
-          :node-data="nodeData"
-          @form-created="handleFormCreated"
-        />
-        <webhook-panel
-          v-else-if="nodeData.getType() === NodeTypeEnum.WEBHOOK"
-          :node-data="nodeData"
-          @form-created="handleFormCreated"
-        />
-        <shell-panel
-          v-else-if="nodeData.getType() === NodeTypeEnum.SHELL"
-          :caches="workflowData.global.caches"
-          :node-data="nodeData"
-          @form-created="handleFormCreated"
-        />
+<!--        <cron-panel-->
+<!--          v-if="nodeData.getType() === NodeTypeEnum.CRON"-->
+<!--          :node-data="nodeData"-->
+<!--          @form-created="handleFormCreated"-->
+<!--        />-->
+<!--        <webhook-panel-->
+<!--          v-else-if="nodeData.getType() === NodeTypeEnum.WEBHOOK"-->
+<!--          :node-data="nodeData"-->
+<!--          @form-created="handleFormCreated"-->
+<!--        />-->
+<!--        <shell-panel-->
+<!--          v-else-if="nodeData.getType() === NodeTypeEnum.SHELL"-->
+<!--          :caches="workflowData.global.caches"-->
+<!--          :node-data="nodeData"-->
+<!--          @form-created="handleFormCreated"-->
+<!--        />-->
         <async-task-panel
-          v-else-if="nodeData.getType() === NodeTypeEnum.ASYNC_TASK"
-          :caches="workflowData.global.caches"
+          v-if="nodeData.getType() === NodeTypeEnum.ASYNC_TASK"
           :node-data="nodeData"
           @form-created="handleFormCreated"
         />
@@ -42,18 +41,19 @@ import CronPanel from './cron-panel.vue';
 import WebhookPanel from './webhook-panel.vue';
 import ShellPanel from './shell-panel.vue';
 import AsyncTaskPanel from './async-task-panel.vue';
-// eslint-disable-next-line no-redeclare
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../model/data/custom-x6-node-proxy';
 import { IWorkflow } from '../../model/data/common';
 
 export default defineComponent({
-  components: { CronPanel, WebhookPanel, ShellPanel, AsyncTaskPanel },
+  // components: { CronPanel, WebhookPanel, ShellPanel, AsyncTaskPanel },
+  components: { AsyncTaskPanel },
   props: {
     nodeId: {
       type: String,
       required: true,
     },
+    // 节点警告按钮是否被点击
     nodeWaringClicked: {
       type: Boolean,
       required: true,

@@ -1,6 +1,6 @@
 <template>
   <div class="example">
-    <jm-workflow-editor v-model="workflow" v-if="!loaded" />
+    <jm-workflow-editor v-model="workflow" v-if="!loaded" />jm-workflow-editor
   </div>
 </template>
 

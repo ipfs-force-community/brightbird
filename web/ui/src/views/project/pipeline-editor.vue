@@ -8,10 +8,9 @@
 import { defineComponent, getCurrentInstance, inject, nextTick, onMounted, ref } from 'vue';
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
-import { save as saveProject } from '@/api/project';
-import { fetchProjectDetail } from '@/api/view-no-auth';
-import yaml from 'yaml';
+import { saveProject, fetchProjectDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
+import { namespace } from '@/store/modules/workflow-execution-record';
 
 const { mapMutations, mapActions } = createNamespacedHelpers(namespace);
 export default defineComponent({
@@ -34,11 +33,8 @@ export default defineComponent({
     const workflow = ref<IWorkflow>({
       name: '未命名项目',
       groupId: '1',
-      description: '',
-      global: {
-        concurrent: 1,
-      },
-      data: '',
+      createTime: '',
+      modifiedTime: '',
     });
     onMounted(async () => {
       if (payload && editMode) {
@@ -53,18 +49,16 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const {dslText, groupId} = await fetchProjectDetail(props.id as string);
-          const rawData = yaml.parse(dslText)['raw-data'];
-          const {name, global, description} = yaml.parse(dslText);
+          const {name, createTime, modifiedTime, cases, nodes, groupId} = await fetchProjectDetail(props.id as string);
+          // const rawData = yaml.parse(dslText)['raw-data'];
+          // const {name, global, description} = yaml.parse(dslText);
           workflow.value = {
-            name,
+            name: name,
             groupId: groupId,
-            description,
-            global: {
-              concurrent: global ? global.concurrent : 1,
-              caches: global.cache ? global.cache : undefined,
-            },
-            data: rawData,
+            createTime: createTime,
+            modifiedTime: modifiedTime,
+            cases: cases,
+            nodes: nodes,
           };
         } catch (err) {
           proxy.$throw(err, proxy);
@@ -86,7 +80,11 @@ export default defineComponent({
         try {
           const { id } = await saveProject({
             groupId: workflow.value.groupId,
-            dslText: dsl,
+            name: workflow.value.name,
+            createTime: workflow.value.createTime,
+            modifiedTime: workflow.value.modifiedTime,
+            cases: workflow.value.cases,
+            nodes: workflow.value.nodes,
             id: editMode ? props.id : '',
           });
           proxy.$success(editMode ? '保存成功' : '新增成功');
@@ -104,9 +102,9 @@ export default defineComponent({
           proxy.$throw(err, proxy);
         }
       },
-      ...mapActions({
-        openAuthDialog: 'openAuthDialog',
-      }),
+      // ...mapActions({
+      //   openAuthDialog: 'openAuthDialog',
+      // }),
     };
   },
 });

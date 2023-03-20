@@ -10,16 +10,16 @@
     </div>
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
+<!--        <node-group-->
+<!--          class="trigger" :type="NodeGroupEnum." :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
+<!--        <node-group-->
+<!--          class="inner" :type="NodeGroupEnum.INNER" :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
+<!--        <node-group-->
+<!--          :type="NodeGroupEnum.LOCAL" :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
         <node-group
-          class="trigger" :type="NodeGroupEnum.TRIGGER" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="NodeGroupEnum.DEPLOY" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
         <node-group
-          class="inner" :type="NodeGroupEnum.INNER" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
-        <node-group
-          :type="NodeGroupEnum.LOCAL" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
-        <node-group
-          :type="NodeGroupEnum.OFFICIAL" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
-        <node-group
-          :type="NodeGroupEnum.COMMUNITY" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="NodeGroupEnum.EXEC" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
       </div>
       <div class="empty" v-if="nodeCount<=0">
         <jm-empty description="没有搜到相关结果" :image="noDataImage">
