@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/services"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 	"time"
@@ -29,7 +29,7 @@ type GroupResp struct {
 // swagger:model listGroupResp
 type ListGroupResp []GroupResp
 
-func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc services.IGroupService, testFlowSvc services.ITestFlowService) {
+func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc repo.IGroupRepo, testFlowSvc repo.ITestFlowRepo) {
 	group := v1group.Group("/group")
 
 	// swagger:route GET /group listGroup
@@ -122,7 +122,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc s
 
 	// swagger:route POST /group saveCases
 	//
-	// Get specific test case by name.
+	// Save group
 	//
 	//     Consumes:
 	//     - application/json

@@ -11,7 +11,7 @@ spec:
     - name: venus-testrunner
       image: "filvenus/testrunner:0f8e2e77fe3ffee9b873541ae0594cb1cc76366d"
       imagePullPolicy: IfNotPresent
-      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/testrunner/config-template.toml", "--plugins=/shared-dir/k8stest/testrunner/plugins", "--testfile=/shared-dir/k8stest/testrunner/cases/test-case-example.json"]
+      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/testrunner/config-template.toml", "--plugins=/shared-dir/k8stest/testrunner/plugins", "--testFlowId={{.TestFlowId}}"]
       env:
         - name: PRODUCTION
           value: "true"

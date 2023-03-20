@@ -1,18 +1,26 @@
 package main
 
 import (
-	"github.com/hunjixin/brightbird/web/backend/services"
+	"github.com/hunjixin/brightbird/repo"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func NewCaseSvc(db *mongo.Database, execPluginStore services.ExecPluginStore) services.ITestFlowService {
-	return services.NewCaseSvc(db.Collection("cases"), execPluginStore)
+func NewTestFlowRepo(db *mongo.Database, execPluginStore repo.ExecPluginStore) repo.ITestFlowRepo {
+	return repo.NewTestFlowRepo(db, execPluginStore)
 }
 
-func NewGroupSvc(db *mongo.Database, testflowSvc services.ITestFlowService) services.IGroupService {
-	return services.NewGroupSvc(db.Collection("group"), testflowSvc)
+func NewGroupRepo(db *mongo.Database, testflowSvc repo.ITestFlowRepo) repo.IGroupRepo {
+	return repo.NewGroupSvc(db, testflowSvc)
 }
 
-func NewPlugin(deployPluginStore services.DeployPluginStore) services.IPluginService {
-	return services.NewPluginSvc(deployPluginStore)
+func NewJobRepo(db *mongo.Database) repo.IJobRepo {
+	return repo.NewJobRepo(db)
+}
+
+func NewTaskRepo(db *mongo.Database) repo.ITaskRepo {
+	return repo.NewTaskRepo(db)
+}
+
+func NewPlugin(deployPluginStore repo.DeployPluginStore) repo.IPluginService {
+	return repo.NewPluginSvc(deployPluginStore)
 }

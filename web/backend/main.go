@@ -6,11 +6,11 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/fx_opt"
+	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/hunjixin/brightbird/web/backend/api"
-	"github.com/hunjixin/brightbird/web/backend/services"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -106,15 +106,20 @@ func run(ctx context.Context, cfg Config) error {
 			}
 			return client.Database("test-platform"), nil
 		}),
-		fx_opt.Override(new(services.DeployPluginStore), func() (services.DeployPluginStore, error) {
+		fx_opt.Override(new(repo.DeployPluginStore), func() (repo.DeployPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
 		}),
-		fx_opt.Override(new(services.ExecPluginStore), func() (services.ExecPluginStore, error) {
+		fx_opt.Override(new(repo.ExecPluginStore), func() (repo.ExecPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
 		}),
-		fx_opt.Override(new(services.IPluginService), NewPlugin),
-		fx_opt.Override(new(services.ITestFlowService), NewCaseSvc),
-		fx_opt.Override(new(services.IGroupService), NewGroupSvc),
+		fx_opt.Override(new(repo.IPluginService), NewPlugin),
+
+		//group repo
+		fx_opt.Override(new(repo.ITestFlowRepo), NewTestFlowRepo),
+		fx_opt.Override(new(repo.IGroupRepo), NewGroupRepo),
+		fx_opt.Override(new(repo.IJobRepo), NewJobRepo),
+		fx_opt.Override(new(repo.ITaskRepo), NewTaskRepo),
+
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTestFlowRouter),

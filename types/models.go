@@ -57,10 +57,10 @@ type DeployNode struct {
 	// min length: 3
 	Name string `json:"name"`
 
-	IsAnnotateOut bool       `json:"isAnnotateOut"`
-	Properties    []Property `json:"properties"`
-	SvcProperties []Property `json:"svcProperties"`
-	Out           *Property  `json:"out"`
+	IsAnnotateOut bool        `json:"isAnnotateOut"`
+	Properties    []*Property `json:"properties"`
+	SvcProperties []*Property `json:"svcProperties"`
+	Out           *Property   `json:"out"`
 }
 
 type TestItem struct {
@@ -69,33 +69,81 @@ type TestItem struct {
 	// min length: 3
 	Name string `json:"name"`
 
-	Properties []Property `json:"properties"`
+	Properties []*Property `json:"properties"`
 }
 
 // TestFlow
 // swagger:model testFlow
 type TestFlow struct {
+	ID primitive.ObjectID `bson:"_id" json:"id"`
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name string `json:"name"`
-
-	ID primitive.ObjectID `bson:"_id" json:"id"`
-	BaseTime
+	Name    string             `json:"name"`
 	GroupId primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
-	Nodes   []DeployNode       `json:"nodes"`
-	Cases   []TestItem         `json:"cases"`
+	Nodes   []*DeployNode      `json:"nodes"`
+	Cases   []*TestItem        `json:"cases"`
+
+	BaseTime
 }
 
 // Group
 // swagger:model group
 type Group struct {
 	ID primitive.ObjectID `bson:"_id" json:"id"`
-	BaseTime
 	// the name for this test flow
 	// required: true
 	// min length: 3
 	Name        string `json:"name"`
 	IsShow      bool   `json:"isShow"`
 	Description string `json:"description"`
+
+	BaseTime
+}
+
+type JobType string
+
+const (
+	CronJobType JobType = "cron_job"
+)
+
+// Job
+// swagger:model job
+type Job struct {
+	ID          primitive.ObjectID `bson:"_id" json:"id"`
+	TestFlowId  primitive.ObjectID `json:"testFlowId"`
+	Name        string             `json:"name"`
+	JobType     JobType            `json:"jobType"`
+	Description string             `json:"description"`
+
+	//cron job params
+	CronJobParams
+
+	BaseTime
+}
+
+type CronJobParams struct {
+	CronExpression string `json:"cronExpression"`
+}
+
+type State string
+
+const (
+	Init       State = "init"
+	Running    State = "running"
+	Error      State = "error"
+	Successful State = "success"
+)
+
+// Task
+// swagger:model task
+type Task struct {
+	ID         primitive.ObjectID `bson:"_id" json:"id"`
+	JobId      primitive.ObjectID `json:"jobId"`
+	TestFlowId primitive.ObjectID `json:"testflowId"` //save this field for convience, get from job info is alright
+	TestId     TestId             `json:"testId"`
+	State      State              `json:"state"`
+	Logs       []string           `json:"logs"`
+	Versions   map[string]string  `json:"versions"` // save a copy of task flow, but task flow update version information in this running
+	BaseTime
 }

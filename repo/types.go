@@ -1,4 +1,4 @@
-package services
+package repo
 
 import (
 	"github.com/hunjixin/brightbird/types"

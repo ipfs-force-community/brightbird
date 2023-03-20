@@ -1,4 +1,4 @@
-package services
+package repo
 
 import (
 	"context"
@@ -10,22 +10,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type IGroupService interface {
+type IGroupRepo interface {
 	List(context.Context) ([]*types.Group, error)
 	Get(context.Context, primitive.ObjectID) (*types.Group, error)
 	Save(context.Context, types.Group) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
-var _ IGroupService = (*GroupSvc)(nil)
+var _ IGroupRepo = (*GroupSvc)(nil)
 
 type GroupSvc struct {
 	groupCol    *mongo.Collection
-	testflowSvc ITestFlowService
+	testflowSvc ITestFlowRepo
 }
 
-func NewGroupSvc(groupCol *mongo.Collection, testflowSvc ITestFlowService) *GroupSvc {
-	return &GroupSvc{groupCol: groupCol, testflowSvc: testflowSvc}
+func NewGroupSvc(db *mongo.Database, testflowSvc ITestFlowRepo) *GroupSvc {
+	return &GroupSvc{groupCol: db.Collection("groups"), testflowSvc: testflowSvc}
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {

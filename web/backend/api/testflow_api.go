@@ -3,8 +3,8 @@ package api
 import (
 	"context"
 	"github.com/gin-gonic/gin"
+	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/services"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
 )
@@ -36,7 +36,7 @@ type ListTestFlowResp struct {
 	List []*types.TestFlow `json:"list"`
 }
 
-func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service services.ITestFlowService) {
+func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
 
 	// swagger:route GET /testflow/plugins listTestflowPlugins

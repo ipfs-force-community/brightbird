@@ -29,6 +29,7 @@ type PluginInfo struct {
 	Version     string   `json:"version"`
 	Category    Category `json:"category"`
 	Description string   `json:"description"`
+	Repo        string   `json:"repo"`
 	Path        string   `json:"path"`
 }
 
