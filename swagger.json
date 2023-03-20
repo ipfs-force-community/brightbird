@@ -26,211 +26,6 @@
   "host": "127.0.0.1:12356",
   "basePath": "/api/v1",
   "paths": {
-    "/cases": {
-      "post": {
-        "description": "save test case, create if not exist",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "operationId": "saveCases",
-        "parameters": [
-          {
-            "description": "test flow json",
-            "name": "testflow",
-            "in": "body",
-            "required": true,
-            "schema": {
-              "description": "test flow json",
-              "type": "object",
-              "$ref": "#/definitions/testFlow"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          }
-        }
-      }
-    },
-    "/cases/id/{id}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Get specific test case by id.",
-        "operationId": "getTestFlowById",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "id of test flow",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "testFlow",
-            "schema": {
-              "$ref": "#/definitions/testFlow"
-            }
-          }
-        }
-      }
-    },
-    "/cases/list/": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists exec test flows in specific group.",
-        "operationId": "listTestFlowsInGroup",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "group id  of test flow",
-            "name": "groupId",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "integer",
-            "description": "page number  of test flow",
-            "name": "pageNum",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "description": "page size  of test flow",
-            "name": "pageSize",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "listInGroupRequestResp",
-            "schema": {
-              "$ref": "#/definitions/listInGroupRequestResp"
-            }
-          }
-        }
-      }
-    },
-    "/cases/listall": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists all exec test flows.",
-        "operationId": "listAllTestFlows",
-        "responses": {
-          "200": {
-            "description": "testFlow",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/testFlow"
-              }
-            }
-          }
-        }
-      }
-    },
-    "/cases/name/{name}": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Get specific test case by name.",
-        "operationId": "getTestFlowByName",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "name of test flow",
-            "name": "name",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "testFlow",
-            "schema": {
-              "$ref": "#/definitions/testFlow"
-            }
-          }
-        }
-      }
-    },
-    "/cases/plugins": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists all exec plugins.",
-        "operationId": "listCasesPlugins",
-        "responses": {
-          "200": {
-            "description": "pluginOut",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pluginOut"
-              }
-            }
-          }
-        }
-      }
-    },
     "/deploy/plugins": {
       "get": {
         "consumes": [
@@ -276,12 +71,9 @@
         "operationId": "listGroup",
         "responses": {
           "200": {
-            "description": "group",
+            "description": "listGroupResp",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/group"
-              }
+              "$ref": "#/definitions/listGroupResp"
             }
           }
         }
@@ -346,9 +138,9 @@
         ],
         "responses": {
           "200": {
-            "description": "group",
+            "description": "groupResp",
             "schema": {
-              "$ref": "#/definitions/group"
+              "$ref": "#/definitions/groupResp"
             }
           }
         }
@@ -366,7 +158,7 @@
           "http",
           "https"
         ],
-        "operationId": "updateGroupRequest",
+        "operationId": "updateGroup",
         "parameters": [
           {
             "type": "string",
@@ -392,6 +184,271 @@
             "description": ""
           }
         }
+      },
+      "delete": {
+        "description": "Delete group by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  group",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/testflow": {
+      "post": {
+        "description": "save test case, create if not exist",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "saveTestFlow",
+        "parameters": [
+          {
+            "description": "test flow json",
+            "name": "testflow",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "test flow json",
+              "type": "object",
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/testflow/count/": {
+      "get": {
+        "description": "Count testflow numbers in group",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "countTestFlowsInGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "group id  of test flow",
+            "name": "groupId",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/testflow/id/{id}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific test case by id.",
+        "operationId": "getTestFlowById",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of test flow",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/list/": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists exec test flows in specific group.",
+        "operationId": "listTestFlowsInGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "group id  of test flow",
+            "name": "groupId",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "page number  of test flow",
+            "name": "pageNum",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size  of test flow",
+            "name": "pageSize",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "listTestFlowResp",
+            "schema": {
+              "$ref": "#/definitions/listTestFlowResp"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/listall": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all exec test flows.",
+        "operationId": "listAllTestFlows",
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/testFlow"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/testflow/name/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get specific test case by name.",
+        "operationId": "getTestFlowByName",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "name of test flow",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/plugins": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all exec plugins.",
+        "operationId": "listTestflowPlugins",
+        "responses": {
+          "200": {
+            "description": "pluginOut",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginOut"
+              }
+            }
+          }
+        }
       }
     },
     "/version": {
@@ -409,7 +466,21 @@
     }
   },
   "definitions": {
-    "BasePage": {
+    "BasePageReq": {
+      "type": "object",
+      "properties": {
+        "PageNum": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "PageSize": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
+    "BasePageResp": {
       "type": "object",
       "properties": {
         "pageNum": {
@@ -428,7 +499,7 @@
           "x-go-name": "Total"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     },
     "BaseTime": {
       "type": "object",
@@ -576,6 +647,61 @@
       "x-go-name": "Group",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
+    "groupResp": {
+      "description": "GroupResp",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "isShow": {
+          "type": "boolean",
+          "x-go-name": "IsShow"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        },
+        "testFlowCount": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "TestFlowCount"
+        }
+      },
+      "x-go-name": "GroupResp",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
+    "listGroupResp": {
+      "description": "ListGroupResp",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/groupResp"
+      },
+      "x-go-name": "ListGroupResp",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
     "listInGroupRequest": {
       "description": "ListInGroupRequest",
       "type": "object",
@@ -597,10 +723,10 @@
         }
       },
       "x-go-name": "ListInGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     },
-    "listInGroupRequestResp": {
-      "description": "ListInGroupRequestResp",
+    "listTestFlowResp": {
+      "description": "ListTestFlowResp",
       "type": "object",
       "properties": {
         "list": {
@@ -626,38 +752,8 @@
           "x-go-name": "Total"
         }
       },
-      "x-go-name": "ListInGroupRequestResp",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
-    },
-    "listRequestResp": {
-      "description": "ListInGroupRequestResp",
-      "type": "object",
-      "properties": {
-        "list": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/testFlow"
-          },
-          "x-go-name": "List"
-        },
-        "pageNum": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "PageNum"
-        },
-        "pages": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "Pages"
-        },
-        "total": {
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "Total"
-        }
-      },
-      "x-go-name": "ListRequestResp",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-name": "ListTestFlowResp",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     },
     "pluginOut": {
       "description": "PluginOut",
@@ -819,7 +915,7 @@
         }
       },
       "x-go-name": "UpdateGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/web/backend"
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     }
   },
   "x-meta-array": [

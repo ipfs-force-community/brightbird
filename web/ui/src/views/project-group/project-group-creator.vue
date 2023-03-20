@@ -1,7 +1,7 @@
 <template>
   <jm-dialog v-model="dialogVisible" width="776px" :destroy-on-close="true">
     <template #title>
-      <div class="creator-title">新建项目分组</div>
+      <div class="creator-title">新建测试流分组</div>
     </template>
     <jm-form
       :model="createForm"
@@ -88,7 +88,7 @@ export default defineComponent({
             description,
             isShow,
           });
-          proxy.$success('项目分组创建成功');
+          proxy.$success('测试流分组创建成功');
           emit('completed');
           dialogVisible.value = false;
         } catch (err) {

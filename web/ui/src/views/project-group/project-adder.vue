@@ -5,12 +5,12 @@
         <div class="edit-icon">
           <img src="~@/assets/svgs/btn/edit.svg" alt="" />
         </div>
-        <span>添加项目</span>
+        <span>添加测试流</span>
       </div>
     </template>
     <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
-      <jm-form-item label="选择项目组" label-position="top" class="project-group" prop="groupId">
-        <jm-select @change="selectChange" v-model="createForm.groupId" placeholder="请选择项目组">
+      <jm-form-item label="选择测试流组" label-position="top" class="project-group" prop="groupId">
+        <jm-select @change="selectChange" v-model="createForm.groupId" placeholder="请选择测试流组">
           <jm-option
             v-for="item in projectGroupList"
             :disabled="id === item.id"
@@ -22,7 +22,7 @@
         </jm-select>
       </jm-form-item>
       <div class="selected-list">
-        <div class="title">已选项目</div>
+        <div class="title">已选测试流</div>
         <div class="selected-list-wrapper">
           <div class="selected-item" v-for="(i, index) in compSelectedList" :key="i.id">
             <!--            <span class="item-name">{{ i.name }}</span>-->
@@ -32,7 +32,7 @@
         </div>
       </div>
       <jm-input
-        placeholder="请输入项目名称或描述"
+        placeholder="请输入测试流名称或描述"
         type="text"
         class="search-input"
         v-model.trim="keyword"
@@ -109,14 +109,14 @@ export default defineComponent({
       projectIds: [],
     });
     const keyword = ref<string>();
-    // 被选中的项目
+    // 被选中的测试流
     const selectedList = ref<Mutable<IProjectVo[]>>([]);
     const compSelectedList = computed(() => selectedList.value);
     const editorRule = ref<Record<string, any>>({
-      groupId: [{ required: true, message: '请选择项目组', trigger: 'change' }],
+      groupId: [{ required: true, message: '请选择测试流组', trigger: 'change' }],
     });
     const projectGroupList = ref<IProjectGroupVo[]>([]);
-    // 已选择的项目数组
+    // 已选择的测试流数组
     const selectProject = (item: IProjectVo) => {
       selectedList.value.some(i => i.id === item.id)
         ? (selectedList.value = selectedList.value.filter(i => i.id !== item.id))
@@ -141,7 +141,7 @@ export default defineComponent({
     };
     const search = async () => {
       if (!createForm.value.groupId) {
-        proxy.$error('请选择项目组');
+        proxy.$error('请选择测试流组');
         return;
       }
       projectList.value = await queryProject({
@@ -168,7 +168,7 @@ export default defineComponent({
         compSelectedList.value.forEach(item => projectIds.push(item.id));
         try {
           if (projectIds.length === 0) {
-            proxy.$error('请添加项目');
+            proxy.$error('请添加测试流');
             return;
           }
           loading.value = true;
@@ -176,7 +176,7 @@ export default defineComponent({
             groupId: props.id,
             projectIds,
           });
-          proxy.$success('项目添加成功');
+          proxy.$success('测试流添加成功');
           emit('completed');
           dialogVisible.value = false;
         } catch (err) {

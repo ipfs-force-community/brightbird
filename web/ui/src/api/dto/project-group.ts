@@ -8,6 +8,7 @@ export interface IProjectGroupVo
       id: string;
       name: string;
       isShow: boolean;
+      testFlowCount: number;
       description?: string;
     }
   > {}

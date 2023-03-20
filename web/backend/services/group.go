@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -9,14 +9,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// updateGroupRequest
-// swagger:model updateGroupRequest
-type UpdateGroupRequest struct {
-	Name        string `json:"name"`
-	IsShow      bool   `json:"isShow"`
-	Description string `json:"description"`
-}
 
 type IGroupService interface {
 	List(context.Context) ([]*types.Group, error)
@@ -29,7 +21,11 @@ var _ IGroupService = (*GroupSvc)(nil)
 
 type GroupSvc struct {
 	groupCol    *mongo.Collection
-	testflowSvc ITestCaseService
+	testflowSvc ITestFlowService
+}
+
+func NewGroupSvc(groupCol *mongo.Collection, testflowSvc ITestFlowService) *GroupSvc {
+	return &GroupSvc{groupCol: groupCol, testflowSvc: testflowSvc}
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {

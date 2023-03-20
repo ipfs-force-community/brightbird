@@ -11,7 +11,7 @@
 
       <div class="title">
         <span>部署插件</span>
-        <span class="desc">（共有 {{ execPlugins.total }} 个节点定义）</span>
+        <span class="desc">（共有 {{ execPlugins.total }} 个插件定义）</span>
       </div>
 
       <div class="content">
@@ -26,7 +26,7 @@
             <jm-tooltip placement="top-start">
               <template #content>
                 <div style="line-height: 20px">
-                  由于某些原因，该节点不被推荐使用（如该节点可<br/>能会导致一些已知问题或有更好的节点可替代它）
+                  由于某些原因，该插件不被推荐使用（如该插件可<br/>能会导致一些已知问题或有更好的插件可替代它）
                 </div>
               </template>
               <img src="~@/assets/svgs/node-library/deprecated.svg" alt="">
@@ -56,7 +56,7 @@
 
       <div class="title">
         <span>测试插件</span>
-        <span class="desc">（共有 {{ deployPlugins.total }} 个节点定义）</span>
+        <span class="desc">（共有 {{ deployPlugins.total }} 个插件定义）</span>
       </div>
 
       <div class="content">
@@ -71,7 +71,7 @@
             <jm-tooltip placement="top-start">
               <template #content>
                 <div style="line-height: 20px">
-                  由于某些原因，该节点不被推荐使用（如该节点可<br/>能会导致一些已知问题或有更好的节点可替代它）
+                  由于某些原因，该插件不被推荐使用（如该插件可<br/>能会导致一些已知问题或有更好的插件可替代它）
                 </div>
               </template>
               <img src="~@/assets/svgs/node-library/deprecated.svg" alt="">
@@ -114,7 +114,7 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
-import {fetch_deploy_plugins, fetch_exec_plugins, getProjectGroupDetail} from "@/api/view-no-auth";
+import {fetch_deploy_plugins, fetch_exec_plugins} from "@/api/view-no-auth";
 import {INodeVo} from "@/api/dto/node-library";
 
 export default defineComponent({
@@ -162,35 +162,6 @@ export default defineComponent({
 
     .jm-icon-button-cancel::before {
       font-weight: bold;
-    }
-  }
-
-  .menu-bar {
-    button {
-      position: relative;
-
-      .label {
-        position: absolute;
-        left: 0;
-        bottom: 45px;
-        width: 100%;
-        text-align: center;
-        font-size: 18px;
-        color: #b5bdc6;
-      }
-
-      &.add {
-        margin: 0.5%;
-        width: 24%;
-        min-width: 230px;
-        height: 200px;
-        background-color: #ffffff;
-        border: 1px dashed #b5bdc6;
-        background-image: url('@/assets/svgs/btn/add.svg');
-        background-position: center 55px;
-        background-repeat: no-repeat;
-        cursor: pointer;
-      }
     }
   }
 

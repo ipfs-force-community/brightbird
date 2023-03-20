@@ -7,7 +7,7 @@
       <div class="top-title">
         <div class="name">{{ testflowGroup?.name }}</div>
         <div class="count">
-          （共有 {{ testFlowsInGroup?.total }} 个项目）
+          （共有 {{ testflowGroup?.testFlowCount }} 个测试流）
         </div>
       </div>
       <div class="description">
@@ -17,12 +17,12 @@
     <div class="content">
       <div class="menu-bar">
         <button class="add" @click="add">
-          <div class="label">添加项目</div>
+          <div class="label">添加测试流</div>
         </button>
       </div>
       <div class="title">
         <div>
-          <span>项目列表</span>
+          <span>测试流列表</span>
         </div>
       </div>
       <div class="group-list-wrapper">
@@ -76,7 +76,6 @@ export default defineComponent({
     const isShow = ref<boolean>(true);
     const creationActivated = ref<boolean>(false);
     const testflowGroup = ref<IProjectGroupVo>();
-    const testFlowsInGroup = ref<IPageVo<IProjectVo>>();
     const reloadMain = inject('reloadMain') as () => void;
     const add = () => {
       creationActivated.value = true;
@@ -85,7 +84,6 @@ export default defineComponent({
       try {
         loadingTop.value = true;
         testflowGroup.value = await getProjectGroup(props.id)
-        testFlowsInGroup.value =  await queryProject({ groupId: props.id, pageNum: 0, pageSize: 0 });
         initialized.value = true;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -114,7 +112,6 @@ export default defineComponent({
       add,
       addCompleted,
       testflowGroup,
-      testFlowsInGroup,
     };
   },
 });

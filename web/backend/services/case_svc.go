@@ -1,4 +1,4 @@
-package main
+package services
 
 import (
 	"context"
@@ -9,19 +9,23 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ITestCaseService interface {
+type ITestFlowService interface {
 	GetByName(context.Context, string) (*types.TestFlow, error)
 	GetById(context.Context, primitive.ObjectID) (*types.TestFlow, error)
-	List(context.Context) (*ListRequestResp, error)
+	List(context.Context) (*types.PageResp[types.TestFlow], error)
 	Plugins(context.Context) ([]types.PluginOut, error)
 	Save(context.Context, types.TestFlow) error
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
-	ListInGroup(context.Context, *ListInGroupRequest) (*ListInGroupRequestResp, error)
+	ListInGroup(context.Context, *types.PageReq[string]) (*types.PageResp[types.TestFlow], error)
 }
 
 type CaseSvc struct {
 	caseCol         *mongo.Collection
 	execPluginStore ExecPluginStore
+}
+
+func NewCaseSvc(caseCol *mongo.Collection, execPluginStore ExecPluginStore) *CaseSvc {
+	return &CaseSvc{caseCol: caseCol, execPluginStore: execPluginStore}
 }
 
 type BasePage struct {
@@ -30,53 +34,27 @@ type BasePage struct {
 	PageNum int `json:"pageNum"`
 }
 
-// ListInGroupRequest
-// swagger:model listInGroupRequest
-type ListInGroupRequest struct {
-	// the group id of test flow
-	// required: true
-	GroupId  string `form:"groupId" binding:"required"`
-	PageNum  int    `form:"pageNum"`
-	PageSize int    `form:"pageSize"`
-}
-
-// ListInGroupRequestResp
-// swagger:model listRequestResp
-type ListRequestResp struct {
-	BasePage
-	List []*types.TestFlow `json:"list"`
-}
-
-// ListInGroupRequestResp
-// swagger:model listInGroupRequestResp
-type ListInGroupRequestResp struct {
-	BasePage
-	List []*types.TestFlow `json:"list"`
-}
-
-func (c *CaseSvc) List(ctx context.Context) (*ListRequestResp, error) {
+func (c *CaseSvc) List(ctx context.Context) (*types.PageResp[types.TestFlow], error) {
 	cur, err := c.caseCol.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 
-	tf := []*types.TestFlow{}
+	tf := []types.TestFlow{}
 	err = cur.All(ctx, &tf)
 	if err != nil {
 		return nil, err
 	}
-	return &ListRequestResp{
-		BasePage: BasePage{
-			Total:   len(tf),
-			PageNum: 1,
-			Pages:   1,
-		},
-		List: tf,
+	return &types.PageResp[types.TestFlow]{
+		Total:   len(tf),
+		PageNum: 1,
+		Pages:   1,
+		List:    tf,
 	}, nil
 }
 
-func (c *CaseSvc) ListInGroup(ctx context.Context, req *ListInGroupRequest) (*ListInGroupRequestResp, error) {
-	groupId, err := primitive.ObjectIDFromHex(req.GroupId)
+func (c *CaseSvc) ListInGroup(ctx context.Context, req *types.PageReq[string]) (*types.PageResp[types.TestFlow], error) {
+	groupId, err := primitive.ObjectIDFromHex(req.Params)
 	if err != nil {
 		return nil, err
 	}
@@ -86,18 +64,16 @@ func (c *CaseSvc) ListInGroup(ctx context.Context, req *ListInGroupRequest) (*Li
 		return nil, err
 	}
 
-	tf := []*types.TestFlow{}
+	tf := []types.TestFlow{}
 	err = cur.All(ctx, &tf)
 	if err != nil {
 		return nil, err
 	}
-	return &ListInGroupRequestResp{
-		BasePage: BasePage{
-			Total:   len(tf),
-			PageNum: 1,
-			Pages:   1,
-		},
-		List: tf,
+	return &types.PageResp[types.TestFlow]{
+		Total:   len(tf),
+		PageNum: 1,
+		Pages:   1,
+		List:    tf,
 	}, nil
 }
 
@@ -146,7 +122,7 @@ func (c *CaseSvc) Save(ctx context.Context, tf types.TestFlow) error {
 	update := bson.M{
 		"$set": tf,
 	}
-	_, err := c.caseCol.UpdateOne(ctx, bson.D{{"Name", tf.Name}}, update, options.Update().SetUpsert(true))
+	_, err := c.caseCol.UpdateOne(ctx, bson.D{{"name", tf.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return err
 	}

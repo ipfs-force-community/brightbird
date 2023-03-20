@@ -17,7 +17,7 @@
       </div>
       <div class="title">
         <div>
-          <span>项目分组</span>
+          <span>测试流分组</span>
           <span class="desc">（共有 {{ projectGroupList.length }} 个组）</span>
         </div>
       </div>
@@ -66,7 +66,7 @@
               <span>首页展示</span>
             </div>
             <div class="total">
-              共<span class="count"> {{ i.projectCount }} </span>条项目
+              共<span class="count"> {{ i.testFlowCount }} </span>条测试流
             </div>
           </div>
         </div>
@@ -203,7 +203,7 @@ export default defineComponent({
         .then(async () => {
           try {
             await deleteProjectGroup(groupId);
-            proxy.$success('项目分组删除成功');
+            proxy.$success('测试流分组删除成功');
             await fetchProjectGroup();
           } catch (err) {
             proxy.$throw(err, proxy);

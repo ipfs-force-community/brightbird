@@ -16,14 +16,14 @@
             <router-link :to="{ path: `/project-group/detail/${projectGroup?.id}` }"
             >{{ projectGroup?.name }}
             </router-link>
-            <span class="desc">（共有 {{ projectPage.total >= 0 ? projectPage.total : 0 }} 个项目）</span>
+            <span class="desc">（共有 {{ projectPage.total >= 0 ? projectPage.total : 0 }} 个测试流）</span>
           </div>
         </div>
       </template>
       <template #default>
         <div>
           <div class="projects" v-show="toggle&&projects.length > 0">
-            <jm-empty description="暂无项目" :image-size="98" v-if="projects.length === 0" />
+            <jm-empty description="暂无测试流" :image-size="98" v-if="projects.length === 0" />
             <project-item
               v-else
               v-for="project of projects"
@@ -76,14 +76,9 @@ const MAX_AUTO_REFRESHING_OF_NO_RUNNING_COUNT = 5;
 export default defineComponent({
   components: { JmSorter, ProjectItem, Folding },
   props: {
-    // 项目组
+    // 测试流组
     projectGroup: {
       type: Object as PropType<IProjectGroupVo>,
-    },
-    // 是否分页
-    pageable: {
-      type: Boolean,
-      required: true,
     },
     // 查询关键字
     name: {
@@ -99,9 +94,9 @@ export default defineComponent({
     const store = useStore();
     const { mapMutations } = createNamespacedHelpers(namespace);
     const projectGroupFoldingMapping = store.state[namespace];
-    // 根据项目组在vuex中保存的状态，进行展开、折叠间的切换
+    // 根据测试流组在vuex中保存的状态，进行展开、折叠间的切换
     const toggle = computed<boolean>(() => {
-      // 只有全等于为undefined说明该项目组一开始根本没有做折叠操作
+      // 只有全等于为undefined说明该测试流组一开始根本没有做折叠操作
       if (projectGroupFoldingMapping[props.projectGroup?.id] === undefined) {
         return true;
       }
@@ -124,17 +119,17 @@ export default defineComponent({
       groupId: props.projectGroup?.id,
       name: props.name,
     });
-    // 保存单个项目组的展开折叠状态
+    // 保存单个测试流组的展开折叠状态
     const saveFoldStatus = (status: boolean, id: string) => {
       // 改变状态
       const toggle = !status;
-      // 调用vuex的mutations更改对应项目组的状态
+      // 调用vuex的mutations更改对应测试流组的状态
       proxy.mutate({
         id,
         status: toggle,
       });
     };
-    // 重新加载当前已经加载过的项目
+    // 重新加载当前已经加载过的测试流
     const reloadCurrentProjectList = async () => {
       try {
         const { pageSize, pageNum } = queryForm.value;
@@ -149,20 +144,17 @@ export default defineComponent({
 
     const loadProject = async () => {
       projectPage.value = await queryProject({ ...queryForm.value });
-      // 项目组中项目为空，将其自动折叠
+      // 测试流组中测试流为空，将其自动折叠
       if (projectPage.value.total === 0) {
         saveFoldStatus(true, props.projectGroup?.id);
       }
       return;
     };
-    // 初始化项目列表
+    // 初始化测试流列表
     onBeforeMount(async () => {
       await nextTick(() => {
         queryForm.value.name = props.name;
       });
-      if (props.pageable) {
-        loading.value = true;
-      }
       await loadProject();
     });
     onUpdated(async () => {
@@ -186,7 +178,7 @@ export default defineComponent({
       projects,
       queryForm,
       handleProjectSynchronized: async () => {
-        // 刷新项目列表，保留查询状态
+        // 刷新测试流列表，保留查询状态
         await reloadCurrentProjectList();
       },
       handleProjectDeleted: (id: string) => {
@@ -195,11 +187,11 @@ export default defineComponent({
       },
       handleProjectTriggered: async (id: string) => {
         await sleep(400);
-        // 刷新项目列表，保留查询状态
+        // 刷新测试流列表，保留查询状态
         await reloadCurrentProjectList();
       },
       handleProjectTerminated: async (id: string) => {
-        // 刷新项目列表，保留查询状态
+        // 刷新测试流列表，保留查询状态
         await reloadCurrentProjectList();
       },
       saveFoldStatus,

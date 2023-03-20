@@ -4,6 +4,19 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+type PageReq[T any] struct {
+	PageNum  int `form:"pageNum"`
+	PageSize int `form:"pageSize"`
+	Params   T   `json:"params"`
+}
+
+type PageResp[T any] struct {
+	Total   int `json:"total"`
+	Pages   int `json:"pages"`
+	PageNum int `json:"pageNum"`
+	List    []T `json:"list"`
+}
+
 type BaseTime struct {
 	/**
 	 * 创建时间
@@ -69,7 +82,7 @@ type TestFlow struct {
 
 	ID primitive.ObjectID `bson:"_id" json:"id"`
 	BaseTime
-	GroupId primitive.ObjectID `json:"groupId"`
+	GroupId primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
 	Nodes   []DeployNode       `json:"nodes"`
 	Cases   []TestItem         `json:"cases"`
 }
