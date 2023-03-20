@@ -22,9 +22,11 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
+	Params struct {
+		PrivKey string `json:"privKey"`
+	} `optional:"true"`
 	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
 	VenusWallet env.IVenusWalletDeployer `json:"-" svcname:"Wallet"`
-	PrivKey     string                   `json:"privKey" optional:"true"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -54,7 +56,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	}
 	fmt.Println("wallet:", version)
 
-	keyBytes, err := hex.DecodeString(params.PrivKey)
+	keyBytes, err := hex.DecodeString(params.Params.PrivKey)
 	if err != nil {
 		return err
 	}

@@ -20,9 +20,11 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
+	Params struct {
+		Password string `json:"password" optional:"true"`
+	} `optional:"true"`
 	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
 	VenusWallet env.IVenusWalletDeployer `json:"-" svcname:"Wallet"`
-	Password    string                   `json:"password" optional:"true"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -52,7 +54,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	}
 	fmt.Println("wallet:", version)
 
-	err = walletRpc.SetPassword(ctx, params.Password)
+	err = walletRpc.SetPassword(ctx, params.Params.Password)
 	if err != nil {
 		return err
 	}
