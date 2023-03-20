@@ -2,7 +2,6 @@ package job
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/robfig/cron/v3"
@@ -11,13 +10,25 @@ import (
 )
 
 type TaskMgr struct {
-	c                  *cron.Cron
-	jobRepo            repo.IJobRepo
-	taskRepo           repo.ITaskRepo
-	testFlowRepo       repo.ITestFlowRepo
-	k8sEnv             *env.K8sEnvDeployer
-	imageBuilder       ImageBuilderMgr
-	runnerTemplateFile string
+	c            *cron.Cron
+	jobRepo      repo.IJobRepo
+	taskRepo     repo.ITaskRepo
+	testFlowRepo repo.ITestFlowRepo
+	testRunner   *TestRunnerDeployer
+	imageBuilder ImageBuilderMgr
+	runnerConfig string
+}
+
+func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder ImageBuilderMgr, runnerConfig string) *TaskMgr {
+	return &TaskMgr{
+		c:            c,
+		jobRepo:      jobRepo,
+		taskRepo:     taskRepo,
+		testFlowRepo: testFlowRepo,
+		testRunner:   testRunner,
+		imageBuilder: imageBuilder,
+		runnerConfig: runnerConfig,
+	}
 }
 
 func (taskMgr *TaskMgr) Start(ctx context.Context) error {
@@ -77,12 +88,13 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) error {
 	}
 
 	//run test flow
-	file, err := os.Open(taskMgr.runnerTemplateFile)
+	file, err := os.Open(taskMgr.runnerConfig)
 	if err != nil {
 		return err
 	}
 
-	return taskMgr.k8sEnv.ApplyRunner(ctx, file, map[string]string{
+	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"TestFlowId": job.TestFlowId.String(),
+		"TestId":     string(task.TestId),
 	})
 }

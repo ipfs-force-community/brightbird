@@ -177,7 +177,7 @@ func getTestFLow(ctx context.Context, mongoUrl string, taskIdStr string) (*types
 	//merge version
 	for _, node := range testFlow.Nodes {
 		for _, property := range node.Properties {
-			if property.Name == "version" {
+			if property.Name == types.CodeVersion {
 				version, ok := task.Versions[node.Name]
 				if !ok {
 					return nil, fmt.Errorf("not found version for deploy %s", node.Name)

@@ -13,7 +13,7 @@ import (
 // swagger:model listTaskResp
 type ListTaskResp []types.Task
 
-func RegisterTaskAPI(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo) {
+func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
 
 	// swagger:route GET /task listTasks

@@ -28,6 +28,7 @@ var PluginInfo = types.PluginInfo{
 	Name:        "venus-auth-simple",
 	Version:     version.Version(),
 	Category:    types.Deploy,
+	Repo:        "https://github.com/filecoin-project/venus-auth.git",
 	Description: "",
 }
 

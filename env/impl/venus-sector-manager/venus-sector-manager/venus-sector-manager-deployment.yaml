@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-sector-manager-{{.TestID}}
-          image: "filvenus/venus-sector-manager:388e9682b97960dd46e201a7004c3ceead1e97a0"
+          image: "filvenus/venus-sector-manager:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 1789

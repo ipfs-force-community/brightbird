@@ -39,6 +39,8 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        string(env.VenusSectorManager),
 	Version:     version.Version(),
+	Category:    types.Deploy,
+	Repo:        "https://github.com/ipfs-force-community/venus-cluster.git",
 	Description: "",
 }
 

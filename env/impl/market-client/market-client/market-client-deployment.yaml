@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-market-client-{{.UniqueId}}
-          image: "filvenus/market-client:0e3ce38882a9322e3c19fc36cfd765360ed86398"
+          image: "filvenus/market-client:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 41231

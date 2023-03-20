@@ -11,10 +11,13 @@ import (
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/hunjixin/brightbird/web/backend/api"
+	"github.com/hunjixin/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/robfig/cron/v3"
 	"github.com/urfave/cli/v2"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.uber.org/fx"
 	"net"
 	"net/http"
 	"os"
@@ -39,6 +42,18 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:  "plugins",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "proxy",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "build-space",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "runner-cfg",
 				Value: "",
 			},
 			&cli.StringFlag{
@@ -76,6 +91,19 @@ func main() {
 			if c.IsSet("mongo") {
 				cfg.MongoUrl = c.String("mongo")
 			}
+
+			if c.IsSet("proxy") {
+				cfg.Proxy = c.String("proxy")
+			}
+
+			if c.IsSet("build-space") {
+				cfg.BuildSpace = c.String("build-space")
+			}
+
+			if c.IsSet("runner-cfg") {
+				cfg.RunnerConfig = c.String("runner-cfg")
+			}
+
 			return run(c.Context, cfg)
 		},
 	}
@@ -112,18 +140,32 @@ func run(ctx context.Context, cfg Config) error {
 		fx_opt.Override(new(repo.ExecPluginStore), func() (repo.ExecPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
 		}),
+		//k8s env
+		fx_opt.Override(new(*job.TestRunnerDeployer), func(lc fx.Lifecycle) (*job.TestRunnerDeployer, error) {
+			return job.NewTestRunnerDeployer("default")
+		}),
+		//deploy plugin
 		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 
-		//group repo
+		//job
+		fx_opt.Override(new(*cron.Cron), cron.New),
+		fx_opt.Override(new(job.IIMageBuilder), NewBuilderMgr),
+		fx_opt.Override(new(*job.TaskMgr), job.NewTaskMgr),
+		//data repo
 		fx_opt.Override(new(repo.ITestFlowRepo), NewTestFlowRepo),
 		fx_opt.Override(new(repo.IGroupRepo), NewGroupRepo),
 		fx_opt.Override(new(repo.IJobRepo), NewJobRepo),
 		fx_opt.Override(new(repo.ITaskRepo), NewTaskRepo),
 
+		//api
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTestFlowRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterGroupRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterJobRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTaskRouter),
+
+		//start
 	)
 	if err != nil {
 		return err

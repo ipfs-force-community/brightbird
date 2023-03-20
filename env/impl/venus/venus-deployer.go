@@ -37,6 +37,7 @@ var PluginInfo = types.PluginInfo{
 	Name:        "venus-daemon-simple",
 	Version:     version.Version(),
 	Category:    types.Deploy,
+	Repo:        "https://github.com/filecoin-project/venus.git",
 	Description: "",
 }
 

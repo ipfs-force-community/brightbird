@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-auth-{{.UniqueId}}
-          image: "filvenus/venus-auth:5fb2656ce8710470957e9a5cf7b7c09f21dd2d5a"
+          image: "filvenus/venus-auth:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 8989

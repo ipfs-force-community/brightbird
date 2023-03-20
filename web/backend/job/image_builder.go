@@ -7,6 +7,7 @@ import (
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v50/github"
+	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	giturls "github.com/whilp/git-urls"
@@ -25,11 +26,22 @@ type BuildTask struct {
 }
 
 type ImageBuilderMgr struct {
-	store          types.PluginStore
-	buildSpace     string
-	taskCh         chan BuildTask
-	jobMap         map[string]IIMageBuilder
-	defaultBuilder IIMageBuilder
+	proxy      string
+	store      repo.DeployPluginStore
+	buildSpace string
+	taskCh     chan BuildTask
+	//todo make build factory if need more build types
+	jobMap map[string]IIMageBuilder
+}
+
+func NewImageBuilderMgr(store repo.DeployPluginStore, buildSpace, proxy string) *ImageBuilderMgr {
+	return &ImageBuilderMgr{
+		store:      store,
+		buildSpace: buildSpace,
+		proxy:      proxy,
+		jobMap:     map[string]IIMageBuilder{},
+		taskCh:     make(chan BuildTask),
+	}
 }
 
 func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []*types.DeployNode) (map[string]string, error) {
@@ -40,10 +52,11 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 			return nil, err
 		}
 
-		codeVersionProp, err := findPropertyByName(node.Properties, "codeVersion")
+		codeVersionProp, err := findPropertyByName(node.Properties, types.CodeVersion)
 		if err != nil {
 			return nil, err
 		}
+
 		version := codeVersionProp.Value.(string)
 		if version != "" {
 			//get master replace back
@@ -65,7 +78,7 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 		if err != nil {
 			return nil, err
 		}
-		versionMap[node.Name] = version
+		versionMap[node.Name] = codeVersionProp.Value.(string)
 	}
 	return versionMap, nil
 }
@@ -75,20 +88,20 @@ func (mgr *ImageBuilderMgr) AddBuildTask(task BuildTask) {
 }
 
 func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
-	for _, job := range mgr.jobMap {
-		err := job.InitRepo(ctx, mgr.buildSpace)
-		if err != nil {
-			return err
-		}
-	}
-
 	for {
 		select {
 		case buildTask := <-mgr.taskCh:
 			builder, ok := mgr.jobMap[buildTask.Name]
 			if !ok {
 				log.Error("target %s not found", buildTask.Name)
-				builder = mgr.defaultBuilder
+				builder = &VenusImageBuilder{
+					proxy: mgr.proxy,
+				}
+				err := builder.InitRepo(ctx, buildTask.Repo)
+				if err != nil {
+					log.Error("init builder for %s failed %v", buildTask.Name, err)
+				}
+				mgr.jobMap[buildTask.Name] = builder
 				continue
 			}
 
@@ -101,8 +114,8 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 	}
 }
 
-func (mgr *ImageBuilderMgr) fetchMasterCommit(ctx context.Context, repoPath string) (string, error) {
-	schema, err := giturls.Parse(repoPath)
+func (mgr *ImageBuilderMgr) fetchMasterCommit(ctx context.Context, repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
 	if err != nil {
 		return "", err
 	}
@@ -127,7 +140,7 @@ func (mgr *ImageBuilderMgr) fetchMasterCommit(ctx context.Context, repoPath stri
 	}
 	commit := branch.GetCommit()
 	if commit == nil {
-		return "", fmt.Errorf("%s unable to find lastet commit, unknown reason", repoPath)
+		return "", fmt.Errorf("%s unable to find lastet commit, unknown reason", repoUrl)
 	}
 	return *commit.SHA, nil
 }
@@ -138,10 +151,12 @@ type IIMageBuilder interface {
 }
 
 type VenusImageBuilder struct {
+	proxy    string
 	repoPath string
 	gitUrl   string
 }
 
+// InitRepo do something once for cache
 func (builder *VenusImageBuilder) InitRepo(ctx context.Context, codeSpace string) error {
 	_, err := git.PlainCloneContext(ctx, codeSpace, false, &git.CloneOptions{
 		URL:             builder.gitUrl,
@@ -150,14 +165,21 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, codeSpace string
 		Depth:           1,
 	})
 
-	builder.repoPath = path.Join(codeSpace, getRepoNameFromUrl(builder.gitUrl))
+	repoName, err := getRepoNameFromUrl(builder.gitUrl)
+	builder.repoPath = path.Join(codeSpace, repoName)
 	return err
 }
 
-func getRepoNameFromUrl(url string) string {
-	return ""
+func getRepoNameFromUrl(repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	phase := strings.Split(strings.TrimRight(schema.Path, ".git"), "/")
+	return phase[1], nil
 }
 
+// Build exec build image once
 func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) error {
 	repo, err := git.PlainOpen(builder.repoPath)
 	if err != nil {
@@ -179,8 +201,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 	}
 
 	err = script.Exec(fmt.Sprintf("cd %s", builder.repoPath)).
-		Exec(fmt.Sprintf("make docker tag=%s", commit)).
-		Exec(fmt.Sprintf("make dcoker-push tag=%s", commit)).Error()
+		Exec(fmt.Sprintf("make docker-push TAG=%s BUILD_DOCKER_PROXY=%s", commit, builder.proxy)).Error()
 	if err != nil {
 		return err
 	}

@@ -13,7 +13,7 @@ import (
 // swagger:model listJobResp
 type ListJobResp []types.Job
 
-func RegisterJobAPI(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo) {
+func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo) {
 	group := v1group.Group("/job")
 
 	// swagger:route GET /job listJobs

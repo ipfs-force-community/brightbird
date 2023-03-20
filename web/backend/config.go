@@ -4,6 +4,10 @@ type Config struct {
 	PluginStore string
 	MongoUrl    string
 	Listen      string
+
+	BuildSpace   string
+	RunnerConfig string
+	Proxy        string
 }
 
 func DefaultConfig() Config {

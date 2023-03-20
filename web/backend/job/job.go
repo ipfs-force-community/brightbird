@@ -2,19 +2,15 @@ package job
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/repo"
+	"github.com/hunjixin/brightbird/types"
+	"github.com/robfig/cron/v3"
 	"sync"
 )
 
-type JobType string
-
-const (
-	ManualJobType  JobType = "manual_job"
-	WebHookJobType JobType = "webhook_job"
-	CronJobType    JobType = "cron_Job"
-)
-
 type IJobManager interface {
-	Start(ctx context.Context)
+	Start(ctx context.Context) error
+	ReplaceJob(ctx context.Context, job *types.Job) error
 	StopJob(ctx context.Context, jobId string) error
 }
 
@@ -27,23 +23,86 @@ type IJob interface {
 var _ IJobManager = (*JobManager)(nil)
 
 type JobManager struct {
-	lk   sync.Mutex
-	jobs map[string]IJob
+	lk sync.Mutex
+
+	cron       *cron.Cron
+	taskRepo   repo.ITaskRepo
+	jobRepo    repo.IJobRepo
+	runningJob map[string]IJob
 }
 
-func (j JobManager) Start(ctx context.Context) {
-
+func NewJobManager(cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *JobManager {
+	return &JobManager{
+		cron:       cron,
+		taskRepo:   taskRepo,
+		jobRepo:    jobRepo,
+		lk:         sync.Mutex{},
+		runningJob: make(map[string]IJob),
+	}
 }
 
-func (j JobManager) StopJob(ctx context.Context, jobId string) error {
+func (j *JobManager) ReplaceJob(ctx context.Context, job *types.Job) error {
 	j.lk.Lock()
 	defer j.lk.Unlock()
-	if job, ok := j.jobs[jobId]; ok {
+
+	oldJob, ok := j.runningJob[job.ID.String()]
+	if ok {
+		err := oldJob.Stop(ctx)
+		if err != nil {
+			log.Errorf("unable to stop old job %s %v", job.ID, err)
+			return err
+		}
+		delete(j.runningJob, job.ID.String())
+	}
+
+	switch job.JobType {
+	case types.CronJobType:
+		jobInstance := NewCronJob(*job, j.cron, j.taskRepo)
+		err := jobInstance.Run(ctx)
+		if err != nil {
+			return err
+		}
+		j.runningJob[job.ID.String()] = jobInstance
+	default:
+		log.Errorf("unsupport job %s", job.ID)
+	}
+	return nil
+}
+
+func (j *JobManager) Start(ctx context.Context) error {
+	jobs, err := j.jobRepo.List(ctx)
+	if err != nil {
+		return err
+	}
+
+	j.lk.Lock()
+	defer j.lk.Unlock()
+	for _, job := range jobs {
+		switch job.JobType {
+		case types.CronJobType:
+			jobInstance := NewCronJob(*job, j.cron, j.taskRepo)
+			err := jobInstance.Run(ctx)
+			if err != nil {
+				log.Errorf("job %s unable to start %v", job.ID, err)
+				continue
+			}
+			j.runningJob[job.ID.String()] = jobInstance
+		default:
+			log.Errorf("unsupport job %s", job.ID)
+		}
+	}
+	return nil
+}
+
+func (j *JobManager) StopJob(ctx context.Context, jobId string) error {
+	j.lk.Lock()
+	defer j.lk.Unlock()
+	if job, ok := j.runningJob[jobId]; ok {
 		err := job.Stop(ctx)
 		if err != nil {
 			return err
 		}
-		delete(j.jobs, jobId)
+		delete(j.runningJob, jobId)
 	}
 	return nil
 }

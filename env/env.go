@@ -137,29 +137,6 @@ func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
 	objectMeta.Labels["apptype"] = "venus"
 }
 
-func (env *K8sEnvDeployer) ApplyRunner(ctx context.Context, f fs.File, args any) error {
-	data, err := QuickRender(f, args)
-	if err != nil {
-		return err
-	}
-
-	deployment := &appv1.Deployment{}
-	err = yaml_k8s.Unmarshal(data, deployment)
-	if err != nil {
-		return err
-	}
-
-	name := deployment.Name
-	deploymentClient := env.k8sClient.AppsV1().Deployments(env.namespace)
-	log.Infof("Creating runner %s ...", name)
-	_, err = deploymentClient.Create(ctx, deployment, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	log.Infof("Created runner %s.", name)
-	return nil
-}
-
 // RunDeployment deploy k8s's deployment from specific yaml config
 func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args any) (*appv1.Deployment, error) {
 	data, err := QuickRender(f, args)
