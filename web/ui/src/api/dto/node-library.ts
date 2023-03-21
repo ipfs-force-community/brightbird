@@ -2,7 +2,7 @@ export interface IPropertyDto extends Readonly<{
   name: string;
   type: string;
   value: any;
-  require:true;
+  required: true;
   description: string;
 }> {
 }
@@ -10,14 +10,16 @@ export interface IPropertyDto extends Readonly<{
 export interface INodeVo extends Readonly<{
   icon: string;
   name: string;
-  version: string
-  category: string
-  description: string
-  path: string
-  isAnnotateOut: boolean
-  properties: IPropertyDto[]
-  SvcProperties: IPropertyDto[]
-  Out?:IPropertyDto
+  createTime: string;
+  modifyTime: string;
+  version: string;
+  category: string;
+  description: string;
+  path: string;
+  isAnnotateOut: boolean;
+  properties: IPropertyDto[];
+  svcProperties: IPropertyDto[];
+  out?:IPropertyDto;
   deprecated: boolean;
 }> {
 }

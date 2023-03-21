@@ -13,10 +13,10 @@ import {
   IWorkflowVo
 } from '@/api/dto/project';
 import { IPageDto, IPageVo } from '@/api/dto/common';
-import { INodeVo } from '@/api/dto/node-library';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
+import {INodeVo} from "@/api/dto/node-library";
 
 export const baseUrl = {
   projectGroup: '/group',
@@ -111,7 +111,7 @@ export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo>
  */
 export async function saveProject(dto: IProjectSavingDto): Promise<IProjectIdVo> {
   const res = await restProxy({
-    url: `${baseUrl.cases}`,
+    url: `${baseUrl}`,
     method: 'post',
     payload: dto,
   });
@@ -220,19 +220,48 @@ export function fetchVersion(): Promise<string> {
   });
 }
 
-export function fetch_deploy_plugins(): Promise<INodeVo[]> {
+/**
+ * 获取deploy插件
+ */
+export function fetchDeployPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
     url: `${baseUrl.deployPlugin}/plugins`,
     method: 'get',
   });
 }
 
-export function fetch_exec_plugins(): Promise<INodeVo[]> {
+/**
+ * 根据name获取deploy插件
+ * @param name
+ */
+export function fetchDeployByName(name: string): Promise<INodeVo> {
+  return restProxy<INodeVo>({
+    url: `${baseUrl.deployPlugin}/get/${name}`,
+    method: 'get',
+  });
+}
+
+/**
+ * 获取exec插件
+ */
+export function fetchExecPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
     url: `${baseUrl.testflow}/plugins`,
     method: 'get',
   });
 }
+
+/**
+ * 根据name获取exec插件
+ * @param name
+ */
+export function fetchExecByName(name: string): Promise<INodeVo> {
+  return restProxy<INodeVo>({
+    url: `${baseUrl.testflow}/get/${name}`,
+    method: 'get',
+  });
+}
+
 
 /**
  * 获取项目缓存
