@@ -10,6 +10,7 @@ import (
 
 type IPluginService interface {
 	Plugins(context.Context) ([]types.PluginOut, error)
+	GetByName(context.Context, string) (*types.PluginOut, error)
 }
 
 type PluginSvc struct {
@@ -28,6 +29,24 @@ func (p *PluginSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 			return err
 		}
 		deployPlugins = append(deployPlugins, pluginOut)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return deployPlugins, nil
+}
+
+func (p *PluginSvc) GetByName(ctx context.Context, name string) (*types.PluginOut, error) {
+	var deployPlugins *types.PluginOut
+	err := p.deployPluginStore.Each(func(detail *types.PluginDetail) error {
+		pluginOut, err := getPluginOutput(detail)
+		if err != nil {
+			return err
+		}
+		if pluginOut.Name == name {
+			deployPlugins = &pluginOut
+		}
 		return nil
 	})
 	if err != nil {
