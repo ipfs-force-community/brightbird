@@ -26,6 +26,40 @@
   "host": "127.0.0.1:12356",
   "basePath": "/api/v1",
   "paths": {
+    "/deploy/get/{name}": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Get deploy plugin by name.",
+        "operationId": "getDeployPluginByName",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "name of deploy",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        }
+      }
+    },
     "/deploy/plugins": {
       "get": {
         "consumes": [

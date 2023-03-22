@@ -1,17 +1,12 @@
-import { Addon, Graph, Node, Point } from '@antv/x6';
+import {Addon, Graph, Node, Point} from '@antv/x6';
 // @ts-ignore
 import listen from 'good-listener';
-import { IWorkflowNode } from './data/common';
-import { NODE, PORTS } from '../shape/gengral-config';
-import { ClickNodeWarningCallbackFnType, WorkflowValidator } from './workflow-validator';
-import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
-import { NodeGroupEnum, NodeTypeEnum } from './data/enumeration';
-import {
-  getOfficialNodeParams,
-  getOfficialVersionList,
-} from "@/api/node-library";
-import { AsyncTask } from './data/node/async-task';
-import { pushParams } from './workflow-node';
+import {IWorkflowNode} from './data/common';
+import {NODE, PORTS} from '../shape/gengral-config';
+import {ClickNodeWarningCallbackFnType, WorkflowValidator} from './workflow-validator';
+import {CustomX6NodeProxy} from './data/custom-x6-node-proxy';
+import {NodeGroupEnum, NodeTypeEnum} from './data/enumeration';
+import {AsyncTask} from './data/node/async-task';
 
 const { icon: { width, height }, textMaxHeight } = NODE;
 
@@ -75,17 +70,6 @@ export class WorkflowDnd {
           return true;
         }
         const data = _data as AsyncTask;
-        const res = await getOfficialVersionList(data.getRef(), data.ownerRef);
-        data.version = res.versions.length > 0 ? res.versions[0] : '';
-
-        const {
-          inputParams: inputs,
-          outputParams: outputs,
-          description: versionDescription,
-        } = await getOfficialNodeParams(data.getRef(), data.ownerRef, data.version);
-        pushParams(data, inputs, outputs, versionDescription);
-
-        // fix: #I5DXPM
         proxy.setData(data);
         data
             .validate()

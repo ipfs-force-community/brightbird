@@ -10,12 +10,6 @@
     </div>
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
-<!--        <node-group-->
-<!--          class="trigger" :type="NodeGroupEnum." :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
-<!--        <node-group-->
-<!--          class="inner" :type="NodeGroupEnum.INNER" :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
-<!--        <node-group-->
-<!--          :type="NodeGroupEnum.LOCAL" :keyword="tempKeyword" @get-node-count="getNodeCount"/>-->
         <node-group
           :type="NodeGroupEnum.DEPLOY" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
         <node-group
@@ -24,9 +18,6 @@
       <div class="empty" v-if="nodeCount<=0">
         <jm-empty description="没有搜到相关结果" :image="noDataImage">
         </jm-empty>
-        <div class="submit-issue" @click="submitIssue">
-          欢迎提交节点需求
-        </div>
       </div>
     </jm-scrollbar>
   </div>
@@ -63,10 +54,6 @@ export default defineComponent({
       // 如果node-group中都找不到节点拖拽面板不展示
       nodeCount.value += count;
     };
-    // 提交issie
-    const submitIssue = () => {
-      window.open('https://gitee.com/jianmu-runners/jianmu-runner-list/issues', '_blank');
-    };
     // 确定容器宽度
     onMounted(() => {
       // 初始化dnd
@@ -77,7 +64,6 @@ export default defineComponent({
         (nodeId: string) => emit('node-selected', nodeId));
     });
     return {
-      submitIssue,
       noDataImage,
       nodeCount,
       getNodeCount,

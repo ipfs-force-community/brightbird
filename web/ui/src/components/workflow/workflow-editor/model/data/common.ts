@@ -15,8 +15,6 @@ export type CustomRule = CustomRuleItem | CustomRuleItem[];
  * 节点数据
  */
 export interface IWorkflowNode {
-  getRef(): string;
-
   getName(): string;
 
   getType(): NodeTypeEnum;
@@ -32,19 +30,10 @@ export interface IWorkflowNode {
    * @throws Error
    */
   validate(): Promise<void>;
-
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  toDsl(): object;
-}
-
-export interface ICache {
-  ref: string;
-  key: string;
 }
 
 export interface IGlobal {
   concurrent: number | boolean;
-  caches?: ICache[];
 }
 
 /**

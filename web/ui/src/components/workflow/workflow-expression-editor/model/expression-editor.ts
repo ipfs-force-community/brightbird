@@ -155,10 +155,10 @@ export class ExpressionEditor {
   }
 
   private buildHtml(plainText: string): string {
-    plainText = plainText.trim();
-    if (!plainText) {
-      return '';
-    }
+    // plainText = plainText.trim();
+    // if (!plainText) {
+    //   return '';
+    // }
 
     let tempDiv = document.createElement('div');
     const children = plainText.split(NEW_LINE).map((pText => {

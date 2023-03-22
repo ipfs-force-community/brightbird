@@ -3,27 +3,10 @@
     <template #title>
       <div>
         <span>{{ nodeData.getName() }}</span>
-        <a :href="nodeData.getDocUrl()" target="_blank" class="jm-icon-button-help" />
       </div>
     </template>
     <div class="jm-workflow-editor-node-config-panel">
       <jm-scrollbar v-if="drawerOpening" class="panel-container">
-<!--        <cron-panel-->
-<!--          v-if="nodeData.getType() === NodeTypeEnum.CRON"-->
-<!--          :node-data="nodeData"-->
-<!--          @form-created="handleFormCreated"-->
-<!--        />-->
-<!--        <webhook-panel-->
-<!--          v-else-if="nodeData.getType() === NodeTypeEnum.WEBHOOK"-->
-<!--          :node-data="nodeData"-->
-<!--          @form-created="handleFormCreated"-->
-<!--        />-->
-<!--        <shell-panel-->
-<!--          v-else-if="nodeData.getType() === NodeTypeEnum.SHELL"-->
-<!--          :caches="workflowData.global.caches"-->
-<!--          :node-data="nodeData"-->
-<!--          @form-created="handleFormCreated"-->
-<!--        />-->
         <async-task-panel
           v-if="nodeData.getType() === NodeTypeEnum.ASYNC_TASK"
           :node-data="nodeData"
@@ -37,9 +20,6 @@
 <script lang="ts">
 import { defineComponent, inject, nextTick, PropType, provide, ref } from 'vue';
 import { NodeTypeEnum } from '../../model/data/enumeration';
-import CronPanel from './cron-panel.vue';
-import WebhookPanel from './webhook-panel.vue';
-import ShellPanel from './shell-panel.vue';
 import AsyncTaskPanel from './async-task-panel.vue';
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../model/data/custom-x6-node-proxy';

@@ -1,9 +1,6 @@
 import { Graph, Node } from '@antv/x6';
 import { IWorkflow, IWorkflowNode } from './common';
 import { NodeTypeEnum } from './enumeration';
-import { Cron } from './node/cron';
-import { Webhook } from './node/webhook';
-import { Shell } from './node/shell';
 import { AsyncTask } from './node/async-task';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
 import { extractReferences, getParam } from '../../../workflow-expression-editor/model/util';
@@ -16,34 +13,14 @@ export class CustomX6NodeProxy {
     this.node = node;
   }
 
-  // isTrigger(): boolean {
-  //   const { type } = JSON.parse(this.node.getData<string>());
-  //   return [NodeTypeEnum.CRON, NodeTypeEnum.WEBHOOK].includes(type);
-  // }
-
   getData(graph?: Graph, workflowData?: IWorkflow): IWorkflowNode {
     const obj = JSON.parse(this.node.getData<string>());
     let nodeData: IWorkflowNode;
 
     switch (obj.type) {
-      // case NodeTypeEnum.CRON:
-      //   nodeData = Cron.build(obj);
-      //   break;
-      // case NodeTypeEnum.WEBHOOK:
-      //   nodeData = Webhook.build(obj);
-      //   break;
-      // case NodeTypeEnum.SHELL:
-      //   nodeData = Shell.build(
-      //     obj,
-      //     graph ? (value: string) => this.validateParam(graph, value) : undefined,
-      //     workflowData ? (name: string) => this.validateCache(workflowData, name) : undefined,
-      //   );
-      //   break;
       case NodeTypeEnum.ASYNC_TASK:
         nodeData = AsyncTask.build(
           obj,
-          graph ? (value: string) => this.validateParam(graph, value) : undefined,
-          workflowData ? (name: string) => this.validateCache() : undefined,
         );
         break;
     }
@@ -64,17 +41,6 @@ export class CustomX6NodeProxy {
     let graphNode = this.node;
     let workflowNode = new CustomX6NodeProxy(graphNode).getData();
     const params: ISelectableParam[] = [];
-    if (workflowNode.getType() === NodeTypeEnum.CRON) {
-      return params;
-    }
-    if (workflowNode.getType() === NodeTypeEnum.WEBHOOK) {
-      const param = workflowNode.buildSelectableParam(graphNode.id);
-      if (!param || !param.children || param.children.length === 0) {
-        return params;
-      }
-      params.push(param);
-      return params;
-    }
 
     // eslint-disable-next-line no-constant-condition
     while (true) {

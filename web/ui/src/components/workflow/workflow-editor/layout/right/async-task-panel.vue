@@ -23,109 +23,86 @@
       <div class="separate"></div>
       <div v-if="form.version">
         <div class="tab-container">
-          <div :class="{ 'input-tab': true, 'selected-tab': tabFlag }" @click="tabFlag = true">
+          <div :class="{ 'input-tab': true, 'selected-tab': tabFlag === 1 }" @click="tabFlag = 1">
             输入参数
-            <div class="checked-underline" v-if="tabFlag"></div>
+            <div class="checked-underline" v-if="tabFlag === 1"></div>
           </div>
-          <div :class="{ 'output-tab': true, 'selected-tab': !tabFlag }" @click="tabFlag = false">
+          <div :class="{ 'output-tab': true, 'selected-tab': tabFlag === 2 }" @click="tabFlag = 2">
             输出参数
-            <div class="checked-underline" v-if="!tabFlag"></div>
+            <div class="checked-underline" v-if="tabFlag === 2"></div>
+          </div>
+          <div :class="{ 'optional-tab': true, 'selected-tab': tabFlag === 3 }" @click="tabFlag = 3">
+            依赖参数
+            <div class="checked-underline" v-if="tabFlag === 3"></div>
           </div>
         </div>
-        <div class="inputs-container set-padding" v-if="tabFlag">
-          <jm-form-item
-              v-for="(item, index) in form.inputs"
-              :key="item.ref"
-              :prop="`inputs.${index}.value`"
-              :rules="nodeData.getFormRules().inputs.fields[index].fields.value"
-              class="node-name"
-          >
-            <template #label>
-              {{ item.name }}
-              <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
-                <i class="jm-icon-button-help"></i>
-              </jm-tooltip>
-            </template>
-            <secret-key-selector
-                v-if="item.type === ParamTypeEnum.SECRET"
-                v-model="item.value"
-                :placeholder="item.description ? item.description : '请选择' + item.name"
-            />
-            <expression-editor
-                v-else
-                v-model="item.value"
-                :node-id="nodeId"
-                :placeholder="item.description ? item.description : '请输入' + item.name"
-            />
-          </jm-form-item>
-          <div class="cache-item">
-            <div class="cache-label">
-              缓存挂载
-              <jm-tooltip placement="top" :append-to-body="false" content="在顶部缓存模块中添加缓存后，在此挂载">
-                <i class="jm-icon-button-help"></i>
-              </jm-tooltip>
-            </div>
-            <cache-selector
-                v-for="(item, index) in form.caches"
-                :key="item.key"
-                :index="index"
-                v-model:cache-info="cachesInfo"
-                v-model:name="item.name"
-                v-model:value="item.value"
-                :rules="form.getFormRules().caches.fields[index].fields"
-                :form-model-name="'caches'"
-                @update-disable="updateDisable"
-                @update-cache="updateCache"
-                @change-dir="changeDir"
-                @delete-selected="deleteCacheSelector"
-            />
-            <div class="add-select-cache-btn">
-              <span class="add-link" @click="addSelector">
-                <i class="jm-icon-button-add" />
-                <span>添加</span>
-              </span>
-            </div>
+        <div class="inputs-container set-padding" v-if="tabFlag === 1">
+          <div v-if="!form.inputs">
+            <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
-          <jm-form-item
-              label="执行失败时"
-              class="node-item"
-              prop="failureMode"
-              :rules="nodeData.getFormRules().failureMode"
-              v-if="failureVisible"
-          >
-            <jm-radio-group v-model="form.failureMode">
-              <jm-radio :label="'suspend'">挂起</jm-radio>
-              <jm-radio :label="'ignore'">忽略</jm-radio>
-            </jm-radio-group>
-          </jm-form-item>
-        </div>
-        <div class="outputs-container set-padding" v-else>
-          <div v-if="form.outputs">
-            <div v-for="item in form.outputs" :key="item.ref">
-              <div class="label">
-                <i class="required-icon" v-if="item.required"></i>
-                {{ item.name }}
-                <jm-tooltip placement="top" :append-to-body="false">
-                  <template #content>
-                    类型：{{ item.type }}<br />
-                    <span v-if="item.value">描述：{{ item.description }}</span>
-                  </template>
+          <div v-if="form.inputs">
+            <jm-form-item
+                v-for="(item, index) in form.inputs"
+                :key="item.name"
+                :prop="`inputs.${index}.value`"
+                class="node-name"
+            >
+              <template #label>
+                {{ item.name }} ({{ item.type}})
+                <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
-              </div>
-              <div class="content">
-                <template v-if="item.value">
-                  {{ item.value }}
-                </template>
-                <template v-else-if="item.description">
-                  {{ item.description }}
-                </template>
-                <template v-else>暂无描述</template>
-              </div>
-            </div>
+              </template>
+              <expression-editor
+                  v-model="item.value"
+                  :node-id="nodeId"
+                  :placeholder="item.description ? item.description : '请输入' + item.name"
+              />
+            </jm-form-item>
           </div>
-          <div v-if="!form.outputs[0]">
+        </div>
+        <div class="outputs-container set-padding" v-else-if="tabFlag === 2">
+          <div v-if="form.out">
+            <div class="label">
+              <i class="required-icon" v-if="form.out.required"></i>
+              {{ form.out.type }}
+              <jm-tooltip placement="top" v-if="form.out.description" :append-to-body="false" :content="form.out.description">
+                <i class="jm-icon-button-help"></i>
+              </jm-tooltip>
+            </div>
+            <expression-editor
+                v-model="form.out.value"
+                :node-id="nodeId"
+                :placeholder="form.out.description ? form.out.description : '请输入' + form.out.type"
+            />
+          </div>
+          <div v-if="!form.out">
             <jm-empty description="无输出参数" :image="noParamImage"></jm-empty>
+          </div>
+        </div>
+        <div class="optional-container set-padding" v-else-if="tabFlag === 3">
+          <div v-if="form.outputs">
+            <jm-form-item
+                v-for="(item, index) in form.outputs"
+                :key="item.name"
+                :prop="`inputs.${index}.value`"
+                class="node-name"
+            >
+              <template #label>
+                {{ item.name }}
+                <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
+                  <i class="jm-icon-button-help"></i>
+                </jm-tooltip>
+              </template>
+              <expression-editor
+                  v-model="item.value"
+                  :node-id="nodeId"
+                  :placeholder="item.description ? item.description : '请输入' + item.name"
+              />
+            </jm-form-item>
+          </div>
+          <div v-if="!form.outputs">
+            <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
           </div>
         </div>
       </div>
@@ -137,18 +114,13 @@
 import { defineComponent, getCurrentInstance, inject, onMounted, PropType, ref } from 'vue';
 import { AsyncTask } from '../../model/data/node/async-task';
 import { NodeGroupEnum, ParamTypeEnum } from '../../model/data/enumeration';
-import {
-  getOfficialNodeParams,
-  getOfficialVersionList,
-} from '@/api/node-library';
+import noParamImage from '../../svgs/no-param.svg';
 import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
 import ExpressionEditor from './form/expression-editor.vue';
-import CacheSelector from './form/cache-selector.vue';
 import { Node } from '@antv/x6';
-import { pushParams } from '../../model/workflow-node';
 
 export default defineComponent({
-  components: { ExpressionEditor, CacheSelector },
+  components: { ExpressionEditor },
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,
@@ -170,20 +142,15 @@ export default defineComponent({
     nodeId.value = getNode().id;
     const versionLoading = ref<boolean>(false);
     const failureVisible = ref<boolean>(false);
-    const tabFlag = ref<boolean>(true);
+    const tabFlag = ref<number>(1);
+    const optionalFlag = ref<boolean>(false);
+    const outputTabSelected = ref<boolean>(false);
     const changeVersion = async () => {
       form.value.inputs.length = 0;
       form.value.outputs.length = 0;
       try {
         versionLoading.value = true;
         failureVisible.value = false;
-
-        // eslint-disable-next-line no-redeclare
-        const list = await getOfficialNodeParams(form.value.getRef(), form.value.ownerRef, form.value.version);
-        // eslint-disable-next-line no-redeclare
-        const { inputParams: inputs, outputParams: outputs, description: versionDescription } = list;
-        pushParams(form.value as AsyncTask, inputs, outputs, versionDescription);
-
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -192,40 +159,28 @@ export default defineComponent({
       }
     };
 
-    // 模拟缓存列表
-    const caches = ref<any>(props.caches || []);
-    // 构造需要的数据
-    const cachesInfo = ref<{ name: string; disable: boolean }[]>([]);
-    if (typeof caches.value === 'string') {
-      cachesInfo.value.push({ name: caches.value, disable: false });
-    } else {
-      caches.value.forEach((item: any) => {
-        cachesInfo.value.push({ name: item.ref ? item.ref : item, disable: false });
-      });
-    }
-
     onMounted(async () => {
       if (form.value.version) {
         failureVisible.value = true;
       }
-      versionLoading.value = true;
-      // 获取versionList
-      try {
-
-        versionList.value = await getOfficialVersionList(form.value.getRef(), form.value.ownerRef);
-
-        if (!form.value.version && versionList.value.versions.length > 0) {
-          form.value.version = versionList.value.versions[0];
-          await changeVersion();
-        }
-      } catch (err) {
-        proxy.$throw(err, proxy);
-      } finally {
-        versionLoading.value = false;
-        // 等待异步数据请求结束才代码form创建成功（解决第一次点击警告按钮打开drawer没有表单验证）
-        emit('form-created', formRef.value);
-      }
+      emit('form-created', formRef.value);
     });
+
+    return {
+      formRef,
+      form,
+      versionList,
+      ParamTypeEnum,
+      nodeId,
+      versionLoading,
+      failureVisible,
+      // 获取节点信息
+      changeVersion,
+      tabFlag,
+      optionalFlag,
+      outputTabSelected,
+      noParamImage,
+    };
 
   },
 });
@@ -295,9 +250,12 @@ export default defineComponent({
   border-bottom: 1px solid #e6ebf2;
   margin-bottom: 10px;
   padding-left: 20px;
+  align-items: flex-start;
+  width: 100%;
 
 .input-tab,
-.output-tab {
+.output-tab,
+.optional-tab {
   line-height: 50px;
   width: 56px;
   display: flex;
@@ -313,7 +271,9 @@ export default defineComponent({
 }
 }
 
-.input-tab {
+.input-tab,
+.output-tab,
+.optional-tab {
   margin-right: 40px;
 }
 
@@ -322,17 +282,9 @@ export default defineComponent({
 }
 }
 
-.cache-item {
-.cache-label {
-  line-height: 20px;
-  margin-bottom: 16px;
-  padding-top: 10px;
-  color: #3f536e;
-  font-size: 14px;
-}
-}
-
-.outputs-container {
+.inputs-container,
+.outputs-container,
+.optional-container {
   font-size: 14px;
 
 .required-icon {

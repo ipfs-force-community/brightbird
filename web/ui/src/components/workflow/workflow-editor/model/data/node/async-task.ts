@@ -1,11 +1,8 @@
-import { BaseNode } from './base-node';
-import { FailureModeEnum, NodeTypeEnum, ParamTypeEnum, RefTypeEnum } from '../enumeration';
+import {BaseNode} from './base-node';
+import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
-import { CustomRule, ValidateCacheFn, ValidateParamFn } from '../common';
-import { ISelectableParam } from '../../../../workflow-expression-editor/model/data';
-import { INNER_PARAM_LABEL, INNER_PARAM_TAG } from '../../../../workflow-expression-editor/model/const';
-import { TaskStatusEnum } from '@/api/dto/enumeration';
-import { checkDuplicate } from '../../util/reference';
+import {TaskStatusEnum} from '@/api/dto/enumeration';
+import {IPropertyDto} from "@/api/dto/node-library";
 
 export interface IAsyncTaskParam {
   readonly ref: string;
@@ -37,196 +34,50 @@ export function checkDefaultIcon(icon: string) {
 }
 
 export class AsyncTask extends BaseNode {
-  readonly ownerRef: string;
+  groupType: NodeGroupEnum;
   version: string;
-  versionDescription: string;
-  readonly inputs: IAsyncTaskParam[];
-  readonly outputs: IAsyncTaskParam[];
-  failureMode: FailureModeEnum;
-  private readonly validateParam?: ValidateParamFn;
-  private readonly validateCache?: ValidateCacheFn;
+  category: string;
+  readonly inputs: IPropertyDto[];
+  readonly outputs: IPropertyDto[];
+  out: IPropertyDto;
+  createTime: string;
+  modifiedTime: string;
+  isAnnotateOut: boolean;
 
   constructor(
       name: string,
+      type: NodeTypeEnum,
       icon = '',
+      groupType: NodeGroupEnum,
       version = '',
       category = '',
-      versionDescription = '',
-      ownerRef: string,
-      ref: string,
-      inputs: IAsyncTaskParam[] = [],
-      outputs: IAsyncTaskParam[] = [],
-      failureMode: FailureModeEnum = FailureModeEnum.SUSPEND,
-      validateParam?: ValidateParamFn,
-      validateCache?: ValidateCacheFn,
+      inputs: IPropertyDto[],
+      outputs: IPropertyDto[],
+      createTime = '',
+      modifiedTime = '',
+      isAnnotateOut = false,
+      out: IPropertyDto,
   ) {
     super(
-        ref,
         name,
         NodeTypeEnum.ASYNC_TASK,
         checkDefaultIcon(icon) ? defaultIcon : icon,
     );
-    this.ownerRef = ownerRef;
+    this.groupType = groupType;
     this.version = version;
-    this.versionDescription = versionDescription;
+    this.category = category;
     this.inputs = inputs;
     this.outputs = outputs;
-    this.failureMode = failureMode;
-    this.validateParam = validateParam;
-    this.validateCache = validateCache;
+    this.createTime = createTime;
+    this.modifiedTime = modifiedTime;
+    this.isAnnotateOut = isAnnotateOut;
+    this.out = out;
   }
 
   static build(
-      { ownerRef, ref, name, icon, version, versionDescription, inputs, outputs, caches, failureMode }: any,
-      validateParam: ValidateParamFn | undefined,
-      validateCache: ValidateCacheFn | undefined,
+      { name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out}: any,
   ): AsyncTask {
-    return new AsyncTask(
-        ownerRef,
-        ref,
-        name,
-        icon,
-        version,
-        versionDescription,
-        inputs,
-        outputs,
-        caches,
-        failureMode,
-        validateParam,
-    );
+    return new AsyncTask(name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out);
   }
 
-  buildSelectableParam(nodeId: string): ISelectableParam | undefined {
-    if (this.outputs.length === 0) {
-      return undefined;
-    }
-
-    const children: ISelectableParam[] = this.outputs.map(({ ref, name }) => {
-      return {
-        value: ref,
-        label: name,
-      };
-    });
-    children.push({
-      // 文档：https://v2.jianmu.dev/guide/custom-node.html#_4-%E5%86%85%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0
-      value: INNER_PARAM_TAG,
-      label: INNER_PARAM_LABEL,
-      children: [
-        {
-          value: 'execution_status',
-          label: '节点任务执行状态',
-        },
-        {
-          value: 'start_time',
-          label: '节点任务开始时间',
-        },
-        {
-          value: 'end_time',
-          label: '节点任务结束时间',
-        },
-      ],
-    });
-
-    return {
-      value: nodeId,
-      label: super.getName(),
-      children,
-    };
-  }
-
-  getFormRules(): Record<string, CustomRule> {
-    const rules = super.getFormRules();
-    const fields: Record<string, CustomRule> = {};
-    this.inputs.forEach((item, index) => {
-      const { required } = item;
-      let value;
-      if (item.type === ParamTypeEnum.SECRET) {
-        value = { required, message: `请选择${item.name}`, trigger: 'change' };
-      } else {
-        value = [
-          { required, message: `请输入${item.name}`, trigger: 'blur' },
-          {
-            validator: (rule: any, value: any, callback: any) => {
-              if (value && this.validateParam) {
-                try {
-                  this.validateParam(value);
-                } catch ({ message }) {
-                  callback(message);
-                  return;
-                }
-              }
-              callback();
-            },
-            trigger: 'blur',
-          },
-        ];
-      }
-      fields[index] = {
-        type: 'object',
-        required,
-        fields: {
-          value,
-        } as Record<string, CustomRule>,
-      };
-    });
-
-    const shellCacheFields: Record<string, CustomRule> = {};
-    return {
-      ...rules,
-      version: [{ required: true, message: '请选择节点版本', trigger: 'change' }],
-      inputs: {
-        type: 'array',
-        required: this.inputs.length > 0,
-        len: this.inputs.length,
-        fields,
-      },
-      failureMode: [{ required: true }],
-    };
-  }
-
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  toDsl(): object {
-    const { name, version, inputs, failureMode } = this;
-    const param: {
-      [key: string]: string | number | boolean;
-    } = {};
-    inputs.forEach(({ ref, type, required, value }) => {
-      switch (type) {
-        case ParamTypeEnum.NUMBER: {
-          const val = parseFloat(value);
-          if (!isNaN(val)) {
-            param[ref] = val;
-            return;
-          }
-          break;
-        }
-        case ParamTypeEnum.BOOL: {
-          switch (value) {
-            case 'true':
-              param[ref] = true;
-              return;
-            case 'false':
-              param[ref] = false;
-              return;
-          }
-          break;
-        }
-      }
-
-      if (!param[ref]) {
-        param[ref] = value;
-      }
-
-      if (!required && !value && type !== ParamTypeEnum.STRING) {
-        delete param[ref];
-      }
-    });
-
-    return {
-      alias: name,
-      'on-failure': failureMode === FailureModeEnum.SUSPEND ? undefined : failureMode,
-      type: `${this.ownerRef}/${super.getRef()}:${version}`,
-      param: inputs.length === 0 ? undefined : param,
-    };
-  }
 }

@@ -1,5 +1,4 @@
 import { Cell, CellView, Graph, JQuery, Node, Point } from '@antv/x6';
-import { NodeTypeEnum } from './data/enumeration';
 import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
 import nodeWarningIcon from '../svgs/node-warning.svg';
 import { IWorkflow } from './data/common';
@@ -68,14 +67,6 @@ export class WorkflowValidator {
       throw new Error('未存在任何节点');
     }
 
-    if (
-      !nodes.find(node =>
-        [NodeTypeEnum.SHELL, NodeTypeEnum.ASYNC_TASK].includes(new CustomX6NodeProxy(node).getData().getType()),
-      )
-    ) {
-      throw new Error('至少有一个shell或任务节点');
-    }
-
     if (nodes.length > 1) {
       const nodeSet = new Set<Node>();
       this.graph.getEdges().forEach(edge => {
@@ -106,10 +97,6 @@ export class WorkflowValidator {
       return false;
     }
 
-    if (!this.checkTrigger(node)) {
-      return false;
-    }
-
     return true;
   }
 
@@ -127,20 +114,4 @@ export class WorkflowValidator {
     return true;
   }
 
-  private checkTrigger(droppingNode: Node): boolean {
-    if (!new CustomX6NodeProxy(droppingNode).isTrigger()) {
-      // 非trigger时，忽略
-      return true;
-    }
-
-    // 表示当前拖放的节点为trigger
-    const currentTrigger = this.graph.getNodes().find(node => new CustomX6NodeProxy(node).isTrigger());
-
-    if (currentTrigger) {
-      this.proxy.$warning('只能有一个触发器');
-      return false;
-    }
-
-    return true;
-  }
 }

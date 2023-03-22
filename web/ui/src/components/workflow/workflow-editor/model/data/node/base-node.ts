@@ -4,21 +4,15 @@ import { NodeTypeEnum } from '../enumeration';
 import { ISelectableParam } from '../../../../workflow-expression-editor/model/data';
 
 export abstract class BaseNode implements IWorkflowNode {
-  private readonly ref: string;
   name: string;
   private readonly type: NodeTypeEnum;
   private readonly icon: string;
 
-  protected constructor(ref: string, name: string,
+  protected constructor(name: string,
     type: NodeTypeEnum, icon: string) {
-    this.ref = ref;
     this.name = name;
     this.type = type;
     this.icon = icon;
-  }
-
-  getRef(): string {
-    return this.ref;
   }
 
   getName(): string {
@@ -58,9 +52,5 @@ export abstract class BaseNode implements IWorkflowNode {
     await validator.validate(source, {
       first: true,
     });
-  }
-
-  toDsl(): object {
-    return {};
   }
 }
