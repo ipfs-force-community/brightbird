@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
@@ -31,7 +32,7 @@ func (cronJob *CronJob) Run(ctx context.Context) error {
 	log := log.With("job", cronJob.job.ID, "testflow", cronJob.job.TestFlowId)
 	entryId, err := cronJob.cron.AddFunc(cronJob.job.CronExpression, func() {
 		log.Infof("job(%s) start to running", cronJob.job.Name)
-		err := cronJob.taskRepo.Save(ctx, types.Task{
+		id, err := cronJob.taskRepo.Save(ctx, types.Task{
 			ID:         primitive.NewObjectID(),
 			JobId:      cronJob.job.ID,
 			TestFlowId: cronJob.job.TestFlowId,
@@ -40,8 +41,10 @@ func (cronJob *CronJob) Run(ctx context.Context) error {
 			BaseTime:   types.BaseTime{},
 		})
 		if err != nil {
-			log.Infof("job not running")
+			log.Errorf("job %s save task fail %w", cronJob.job.ID, err)
+			return
 		}
+		log.Infof("job %s save task %s", cronJob.job.ID, id)
 	})
 	cronJob.cronId = &entryId
 	return err

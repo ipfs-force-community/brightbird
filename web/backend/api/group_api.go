@@ -2,12 +2,13 @@ package api
 
 import (
 	"context"
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
-	"time"
 )
 
 // updateGroupRequest
@@ -153,13 +154,13 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 			return
 		}
 
-		err = groupSvc.Save(ctx, testFlow)
+		id, err := groupSvc.Save(ctx, testFlow)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		c.Status(http.StatusOK)
+		c.String(http.StatusOK, id.String())
 	})
 
 	// swagger:route POST /group/{id} updateGroup
@@ -217,7 +218,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 		group.IsShow = req.IsShow
 		group.ModifiedTime = time.Now().Unix()
 
-		err = groupSvc.Save(ctx, *group)
+		_, err = groupSvc.Save(ctx, *group)
 		if err != nil {
 			c.Error(err)
 			return

@@ -2,18 +2,23 @@ package repo
 
 import (
 	"context"
+	"time"
+
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type ListParams struct {
+	JobId primitive.ObjectID
+}
+
 type ITaskRepo interface {
-	List(context.Context) ([]*types.Task, error)
-	ListInJob(context.Context, primitive.ObjectID) ([]*types.Task, error)
+	List(context.Context, ListParams) ([]*types.Task, error)
 	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	Get(context.Context, primitive.ObjectID) (*types.Task, error)
-	Save(context.Context, types.Task) error
+	Save(context.Context, types.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -27,22 +32,12 @@ type TaskRepo struct {
 	taskCol *mongo.Collection
 }
 
-func (j *TaskRepo) ListInJob(ctx context.Context, jobId primitive.ObjectID) ([]*types.Task, error) {
-	cur, err := j.taskCol.Find(ctx, bson.D{{"jobId", jobId}})
-	if err != nil {
-		return nil, err
+func (j *TaskRepo) List(ctx context.Context, params ListParams) ([]*types.Task, error) {
+	filter := bson.D{}
+	if params.JobId.IsZero() {
+		filter = append(filter, bson.E{Key: "jobId", Value: params.JobId})
 	}
-
-	var tasks []*types.Task
-	err = cur.All(ctx, tasks)
-	if err != nil {
-		return nil, err
-	}
-	return tasks, nil
-}
-
-func (j *TaskRepo) List(ctx context.Context) ([]*types.Task, error) {
-	cur, err := j.taskCol.Find(ctx, bson.M{})
+	cur, err := j.taskCol.Find(ctx, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -64,15 +59,27 @@ func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task,
 	return tf, nil
 }
 
-func (j *TaskRepo) Save(ctx context.Context, task types.Task) error {
+func (j *TaskRepo) Save(ctx context.Context, task types.Task) (primitive.ObjectID, error) {
 	if task.ID.IsZero() {
 		task.ID = primitive.NewObjectID()
 	}
-	_, err := j.taskCol.InsertOne(ctx, task)
+
+	count, err := j.taskCol.CountDocuments(ctx, bson.D{{"_id", task.ID}})
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
-	return nil
+	if count == 0 {
+		task.BaseTime.CreateTime = time.Now().Unix()
+		task.BaseTime.ModifiedTime = time.Now().Unix()
+	} else {
+		task.BaseTime.ModifiedTime = time.Now().Unix()
+	}
+
+	_, err = j.taskCol.InsertOne(ctx, task)
+	if err != nil {
+		return primitive.ObjectID{}, err
+	}
+	return task.ID, nil
 }
 
 func (j *TaskRepo) Delete(ctx context.Context, id primitive.ObjectID) error {

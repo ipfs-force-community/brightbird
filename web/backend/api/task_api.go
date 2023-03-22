@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
 )
 
 // ListTaskResp
@@ -31,10 +32,24 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo r
 	//
 	//     Deprecated: false
 	//
+	//     Parameters:
+	//       + name: jobId
+	//         in: query
+	//         description: job id
+	//         required: false
+	//         type: string
+	//
 	//     Responses:
 	//       200: listTaskResp
 	group.GET("", func(c *gin.Context) {
-		tasks, err := tasksRepo.List(ctx)
+		params := repo.ListParams{}
+		err := c.ShouldBindQuery(&params)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		tasks, err := tasksRepo.List(ctx, params)
 		if err != nil {
 			c.Error(err)
 			return
@@ -42,7 +57,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo r
 		c.JSON(http.StatusOK, tasks)
 	})
 
-	// swagger:route Get /task getTask
+	// swagger:route Get /task/{id} getTask
 	//
 	// Get task by id
 	//
@@ -80,46 +95,6 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo r
 		}
 
 		c.JSON(http.StatusOK, task)
-	})
-
-	// swagger:route Get /task listTasksInJob
-	//
-	// Get tasks belong to specific job
-	//
-	//     Consumes:
-	//     - application/json
-	//
-	//     Produces:
-	//     - application/json
-	//     - application/text
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: jobId
-	//         in: query
-	//         description: job id
-	//         required: true
-	//         type: string
-	//
-	//     Responses:
-	//       200: listTaskResp
-	group.GET("", func(c *gin.Context) {
-		jobId, err := primitive.ObjectIDFromHex(c.Query("jobId"))
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		tasks, err := tasksRepo.ListInJob(ctx, jobId)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.JSON(http.StatusOK, tasks)
 	})
 
 	// swagger:route DELETE /task/{id} deleteTask

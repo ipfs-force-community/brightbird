@@ -4,13 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"time"
+
 	"github.com/hunjixin/brightbird/repo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"os"
-	"path/filepath"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/google/uuid"
@@ -43,6 +44,10 @@ func main() {
 			&cli.StringFlag{
 				Name:  "mongo",
 				Value: "mongodb://localhost:27017",
+			},
+			&cli.StringFlag{
+				Name:  "dbName",
+				Value: "testplateform",
 			},
 			&cli.IntFlag{
 				Name:  "timeout",
@@ -83,6 +88,15 @@ func main() {
 			if c.IsSet("taskId") {
 				cfg.TaskId = c.String("testFlowId")
 			}
+
+			if c.IsSet("dbName") {
+				cfg.DbName = c.String("dbBane")
+			}
+
+			if c.IsSet("mongoUrl") {
+				cfg.MongoUrl = c.String("mongoUrl")
+			}
+
 			if len(cfg.TaskId) == 0 {
 				return errors.New("test flow id must be specific")
 			}
@@ -98,7 +112,7 @@ func main() {
 }
 
 func run(ctx context.Context, cfg Config) (err error) {
-	flow, err := getTestFLow(ctx, cfg.MongoUrl, cfg.TaskId)
+	flow, err := getTestFLow(ctx, cfg.MongoUrl, cfg.DbName, cfg.TaskId)
 	if err != nil {
 		return
 	}
@@ -151,12 +165,12 @@ func run(ctx context.Context, cfg Config) (err error) {
 	return stop(ctx)
 }
 
-func getTestFLow(ctx context.Context, mongoUrl string, taskIdStr string) (*types.TestFlow, error) {
+func getTestFLow(ctx context.Context, mongoUrl string, dbName string, taskIdStr string) (*types.TestFlow, error) {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
 	if err != nil {
 		return nil, err
 	}
-	db := client.Database("test-platform")
+	db := client.Database(dbName)
 
 	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
 	if err != nil {

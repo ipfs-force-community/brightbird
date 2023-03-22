@@ -3,6 +3,7 @@ package main
 type Config struct {
 	PluginStore string
 	MongoUrl    string
+	DbName      string
 	Listen      string
 
 	BuildSpace   string

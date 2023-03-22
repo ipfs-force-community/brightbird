@@ -82,13 +82,6 @@ export enum NodeTypeEnum {
   LOCAL = 'LOCAL',
 }
 
-/**
- * 密钥管理器类型枚举
- */
-export enum CredentialManagerTypeEnum {
-  LOCAL = 'local',
-  VAULT = 'vault',
-}
 
 /**
  * webhook请求状态枚举
@@ -118,11 +111,23 @@ export enum FailureModeEnum {
   SUSPEND = 'SUSPEND',
 }
 
+
 /**
- * 节点定义可见类型枚举
+ * job枚举类型
  */
-export enum VisibleTypeEnum {
-  PUBLIC = 'PUBLIC',
-  PRIVATE = 'PRIVATE',
-  ORGANIZATION_VISIBLE = 'ORGANIZATION_VISIBLE',
+export enum JobEnum {
+  CronJob = 'cron_job',
+  Fake = 'fake'
 }
+
+
+/**
+ * task state枚举类型
+ */
+export enum TaskStateEnum {
+	Init        = "init",
+	Running     = "running",
+	Error       = "error",
+	Successful  = "success"
+}
+

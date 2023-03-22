@@ -3,6 +3,11 @@ package main
 
 import (
 	"context"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/fx_opt"
@@ -18,93 +23,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/fx"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
 )
 
 var log = logging.Logger("main")
 
 func main() {
 	app := &cli.App{
-		Name:    "lotus-health",
-		Usage:   "Tools for monitoring lotus daemon health",
+		Name:    "backend",
+		Usage:   "test plateform backend",
 		Version: version.Version(),
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:  "config",
-				Value: "",
-			},
-			&cli.StringFlag{
-				Name:  "mongo",
-				Value: "mongodb://localhost:27017",
-			},
-			&cli.StringFlag{
-				Name:  "plugins",
-				Value: "",
-			},
-			&cli.StringFlag{
-				Name:  "proxy",
-				Value: "",
-			},
-			&cli.StringFlag{
-				Name:  "build-space",
-				Value: "",
-			},
-			&cli.StringFlag{
-				Name:  "runner-cfg",
-				Value: "",
-			},
-			&cli.StringFlag{
-				Name:  "listen",
-				Value: "127.0.0.1:12356",
-			},
-		},
-		Action: func(c *cli.Context) error {
-			err := logging.SetLogLevel("*", c.String("log-level"))
-			if err != nil {
-				return err
-			}
-
-			cfg := DefaultConfig()
-			if c.IsSet("config") {
-				configPath := c.String("config")
-				configFileContent, err := os.ReadFile(configPath)
-				if err != nil {
-					return err
-				}
-				err = toml.Unmarshal(configFileContent, &cfg)
-				if err != nil {
-					return err
-				}
-			}
-
-			if c.IsSet("plugins") {
-				cfg.PluginStore = c.String("plugins")
-			}
-
-			if c.IsSet("listen") {
-				cfg.Listen = c.String("listen")
-			}
-
-			if c.IsSet("mongo") {
-				cfg.MongoUrl = c.String("mongo")
-			}
-
-			if c.IsSet("proxy") {
-				cfg.Proxy = c.String("proxy")
-			}
-
-			if c.IsSet("build-space") {
-				cfg.BuildSpace = c.String("build-space")
-			}
-
-			if c.IsSet("runner-cfg") {
-				cfg.RunnerConfig = c.String("runner-cfg")
-			}
-
-			return run(c.Context, cfg)
+		Commands: []*cli.Command{
+			exampleCmd,
+			runCmd,
 		},
 	}
 
@@ -113,6 +43,98 @@ func main() {
 		os.Exit(1)
 		return
 	}
+}
+
+var runCmd = &cli.Command{
+	Name:  "run",
+	Usage: "Tools for monitoring lotus daemon health",
+	Flags: []cli.Flag{
+		&cli.StringFlag{
+			Name:  "config",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "plugins",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "proxy",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "build-space",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "runner-cfg",
+			Value: "",
+		},
+		&cli.StringFlag{
+			Name:  "mongo",
+			Value: "mongodb://localhost:27017",
+		},
+		&cli.StringFlag{
+			Name:  "dbName",
+			Value: "testplateform",
+		},
+		&cli.StringFlag{
+			Name:  "listen",
+			Value: "127.0.0.1:12356",
+		},
+		&cli.StringFlag{
+			Name:  "log-level",
+			Value: "debug",
+		},
+	},
+	Action: func(c *cli.Context) error {
+		err := logging.SetLogLevel("*", c.String("log-level"))
+		if err != nil {
+			return err
+		}
+
+		cfg := DefaultConfig()
+		if c.IsSet("config") {
+			configPath := c.String("config")
+			configFileContent, err := os.ReadFile(configPath)
+			if err != nil {
+				return err
+			}
+			err = toml.Unmarshal(configFileContent, &cfg)
+			if err != nil {
+				return err
+			}
+		}
+
+		if c.IsSet("plugins") {
+			cfg.PluginStore = c.String("plugins")
+		}
+
+		if c.IsSet("listen") {
+			cfg.Listen = c.String("listen")
+		}
+
+		if c.IsSet("dbName") {
+			cfg.DbName = c.String("dbBane")
+		}
+
+		if c.IsSet("mongoUrl") {
+			cfg.MongoUrl = c.String("mongoUrl")
+		}
+
+		if c.IsSet("proxy") {
+			cfg.Proxy = c.String("proxy")
+		}
+
+		if c.IsSet("build-space") {
+			cfg.BuildSpace = c.String("build-space")
+		}
+
+		if c.IsSet("runner-cfg") {
+			cfg.RunnerConfig = c.String("runner-cfg")
+		}
+
+		return run(c.Context, cfg)
+	},
 }
 
 func run(ctx context.Context, cfg Config) error {
@@ -132,7 +154,7 @@ func run(ctx context.Context, cfg Config) error {
 			if err != nil {
 				return nil, err
 			}
-			return client.Database("test-platform"), nil
+			return client.Database(cfg.DbName), nil
 		}),
 		fx_opt.Override(new(repo.DeployPluginStore), func() (repo.DeployPluginStore, error) {
 			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
@@ -148,9 +170,10 @@ func run(ctx context.Context, cfg Config) error {
 		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 
 		//job
-		fx_opt.Override(new(*cron.Cron), cron.New),
-		fx_opt.Override(new(job.IIMageBuilder), NewBuilderMgr),
-		fx_opt.Override(new(*job.TaskMgr), job.NewTaskMgr),
+		fx_opt.Override(new(*cron.Cron), NewCron),
+		fx_opt.Override(new(*job.ImageBuilderMgr), NewBuilderMgr(cfg)),
+		fx_opt.Override(new(*job.TaskMgr), NewTaskMgr(cfg)),
+		fx_opt.Override(new(job.IJobManager), NewJobManager),
 		//data repo
 		fx_opt.Override(new(repo.ITestFlowRepo), NewTestFlowRepo),
 		fx_opt.Override(new(repo.IGroupRepo), NewGroupRepo),
@@ -166,6 +189,15 @@ func run(ctx context.Context, cfg Config) error {
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTaskRouter),
 
 		//start
+		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, builder *job.ImageBuilderMgr) {
+			go builder.Start(ctx)
+		}),
+		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, taskMgr *job.TaskMgr) {
+			go taskMgr.Start(ctx)
+		}),
+		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, jobMgr job.IJobManager) {
+			go jobMgr.Start(ctx)
+		}),
 	)
 	if err != nil {
 		return err

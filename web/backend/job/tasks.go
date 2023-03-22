@@ -2,11 +2,12 @@ package job
 
 import (
 	"context"
+	"os"
+	"time"
+
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/robfig/cron/v3"
-	"os"
-	"time"
 )
 
 type TaskMgr struct {
@@ -15,11 +16,11 @@ type TaskMgr struct {
 	taskRepo     repo.ITaskRepo
 	testFlowRepo repo.ITestFlowRepo
 	testRunner   *TestRunnerDeployer
-	imageBuilder ImageBuilderMgr
+	imageBuilder *ImageBuilderMgr
 	runnerConfig string
 }
 
-func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder ImageBuilderMgr, runnerConfig string) *TaskMgr {
+func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder *ImageBuilderMgr, runnerConfig string) *TaskMgr {
 	return &TaskMgr{
 		c:            c,
 		jobRepo:      jobRepo,
@@ -46,7 +47,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				continue
 			}
 			for _, job := range jobs {
-				tasks, err := taskMgr.taskRepo.ListInJob(ctx, job.ID)
+				tasks, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID})
 				if err != nil {
 					log.Error("fetch task list fail %v", err)
 					continue
@@ -54,14 +55,13 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				for _, task := range tasks {
 					err = taskMgr.Process(ctx, task)
 					if err != nil {
-						log.Error("process task (%s) fail %v", err)
+						log.Errorf("process task (%s) fail %v", task.ID, err)
 						continue
 					}
 				}
 			}
 		}
 	}
-	return nil
 }
 
 func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) error {
@@ -76,7 +76,7 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) error {
 	}
 
 	//confirm version and build image.
-	versionMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes) //todo maybe move this code to previous step
+	versionMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, job.Versions) //todo maybe move this code to previous step
 	if err != nil {
 		return err
 	}

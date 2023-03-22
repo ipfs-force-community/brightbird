@@ -33,6 +33,15 @@ export default [
       title: '本地节点库',
     },
   },
+  // job路由
+  {
+    name: 'job',
+    path: 'job',
+    component: () => import('@/views/job/job-manager.vue'),
+    meta: {
+      title: 'Job管理',
+    },
+  },
   {
     name: 'project-group',
     path: 'project-group',

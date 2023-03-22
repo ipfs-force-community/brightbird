@@ -2,10 +2,11 @@ package job
 
 import (
 	"context"
+	"sync"
+
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/robfig/cron/v3"
-	"sync"
 )
 
 type IJobManager interface {
@@ -75,22 +76,26 @@ func (j *JobManager) Start(ctx context.Context) error {
 		return err
 	}
 
-	j.lk.Lock()
-	defer j.lk.Unlock()
 	for _, job := range jobs {
-		switch job.JobType {
-		case types.CronJobType:
-			jobInstance := NewCronJob(*job, j.cron, j.taskRepo)
-			err := jobInstance.Run(ctx)
-			if err != nil {
-				log.Errorf("job %s unable to start %v", job.ID, err)
-				continue
+		go func(innerJob *types.Job) {
+			switch innerJob.JobType {
+			case types.CronJobType:
+				jobInstance := NewCronJob(*innerJob, j.cron, j.taskRepo)
+				err := jobInstance.Run(ctx)
+				if err != nil {
+					log.Errorf("job %s unable to start %v", innerJob.ID, err)
+					return
+				}
+				j.lk.Lock()
+				defer j.lk.Unlock()
+				j.runningJob[innerJob.ID.String()] = jobInstance
+			default:
+				log.Errorf("unsupport job %s", innerJob.ID)
 			}
-			j.runningJob[job.ID.String()] = jobInstance
-		default:
-			log.Errorf("unsupport job %s", job.ID)
-		}
+		}(job)
 	}
+	j.cron.Start()
+	log.Info("start cron job worker")
 	return nil
 }
 
@@ -104,5 +109,6 @@ func (j *JobManager) StopJob(ctx context.Context, jobId string) error {
 		}
 		delete(j.runningJob, jobId)
 	}
+	<-j.cron.Stop().Done()
 	return nil
 }

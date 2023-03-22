@@ -3,6 +3,10 @@ package job
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
+	"strings"
+
 	"github.com/bitfield/script"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
@@ -11,9 +15,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	giturls "github.com/whilp/git-urls"
-	"os"
-	"path"
-	"strings"
 )
 
 var log = logging.Logger("builder")
@@ -44,7 +45,7 @@ func NewImageBuilderMgr(store repo.DeployPluginStore, buildSpace, proxy string) 
 	}
 }
 
-func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []*types.DeployNode) (map[string]string, error) {
+func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []*types.DeployNode, versions map[string]string) (map[string]string, error) {
 	versionMap := make(map[string]string)
 	for _, node := range deployNodes {
 		plugin, err := mgr.store.GetPlugin(node.Name)
@@ -52,12 +53,7 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 			return nil, err
 		}
 
-		codeVersionProp, err := findPropertyByName(node.Properties, types.CodeVersion)
-		if err != nil {
-			return nil, err
-		}
-
-		version := codeVersionProp.Value.(string)
+		version := versions[node.Name]
 		if version != "" {
 			//get master replace back
 			//todo fetch master commit id and neve save this version to database
@@ -78,7 +74,7 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 		if err != nil {
 			return nil, err
 		}
-		versionMap[node.Name] = codeVersionProp.Value.(string)
+		versionMap[node.Name] = version
 	}
 	return versionMap, nil
 }
@@ -164,6 +160,9 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, codeSpace string
 		InsecureSkipTLS: false,
 		Depth:           1,
 	})
+	if err != nil {
+		return err
+	}
 
 	repoName, err := getRepoNameFromUrl(builder.gitUrl)
 	builder.repoPath = path.Join(codeSpace, repoName)
@@ -206,13 +205,4 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		return err
 	}
 	return nil
-}
-
-func findPropertyByName(properties []*types.Property, name string) (*types.Property, error) {
-	for _, p := range properties {
-		if p.Name == name {
-			return p, nil
-		}
-	}
-	return nil, fmt.Errorf("property %s not found", name)
 }

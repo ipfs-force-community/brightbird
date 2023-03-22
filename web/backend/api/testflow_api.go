@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
 )
 
 type BasePageReq struct {
@@ -295,12 +296,12 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		err = service.Save(ctx, testFlow)
+		id, err := service.Save(ctx, testFlow)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		c.Status(http.StatusOK)
+		c.String(http.StatusOK, id.String())
 	})
 }
