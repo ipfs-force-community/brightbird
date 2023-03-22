@@ -20,7 +20,7 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, onBeforeMount, ref, SetupContext } from 'vue';
 import { TriggerTypeEnum } from '@/api/dto/enumeration';
-import { fetchProjectDetail, fetchWorkflow } from '@/api/view-no-auth';
+import {fetchTestFlowDetail, fetchWorkflow} from '@/api/view-no-auth';
 import { INodeDefVo } from '@/api/dto/project';
 
 export default defineComponent({
@@ -42,38 +42,38 @@ export default defineComponent({
     const triggerType = ref<TriggerTypeEnum>();
     const close = () => emit('close');
 
-    const loadDsl = async () => {
-      if (dsl.value) {
-        return;
-      }
+    // const loadDsl = async () => {
+    //   if (dsl.value) {
+    //     return;
+    //   }
+    //
+    //   try {
+    //     loading.value = true;
+    //
+    //     const {
+    //       workflowName,
+    //       workflowRef,
+    //       workflowVersion,
+    //       triggerType: _triggerType,
+    //     } = await fetchTestFlowDetail(props.projectId);
+    //     title.value = workflowName;
+    //     triggerType.value = _triggerType;
+    //
+    //     const { nodes, dslText } = await fetchWorkflow(workflowRef, workflowVersion);
+    //     dsl.value = dslText;
+    //     nodeDefs.value = nodes
+    //       .filter(({ metadata }) => metadata)
+    //       .map(({ metadata }) => JSON.parse(metadata as string));
+    //   } catch (err) {
+    //     close();
+    //
+    //     proxy.$throw(err, proxy);
+    //   } finally {
+    //     loading.value = false;
+    //   }
+    // };
 
-      try {
-        loading.value = true;
-
-        const {
-          workflowName,
-          workflowRef,
-          workflowVersion,
-          triggerType: _triggerType,
-        } = await fetchProjectDetail(props.projectId);
-        title.value = workflowName;
-        triggerType.value = _triggerType;
-
-        const { nodes, dslText } = await fetchWorkflow(workflowRef, workflowVersion);
-        dsl.value = dslText;
-        nodeDefs.value = nodes
-          .filter(({ metadata }) => metadata)
-          .map(({ metadata }) => JSON.parse(metadata as string));
-      } catch (err) {
-        close();
-
-        proxy.$throw(err, proxy);
-      } finally {
-        loading.value = false;
-      }
-    };
-
-    onBeforeMount(() => loadDsl());
+    // onBeforeMount(() => loadDsl());
 
     return {
       TriggerTypeEnum,

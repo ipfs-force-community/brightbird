@@ -114,8 +114,8 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
-import {fetch_deploy_plugins, fetch_exec_plugins} from "@/api/view-no-auth";
-import {INodeVo} from "@/api/dto/node-library";
+import { fetchDeployPlugins, fetchExecPlugins } from "@/api/view-no-auth";
+import { INodeVo } from '@/api/dto/project';
 
 export default defineComponent({
   components: {},
@@ -123,7 +123,7 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const deployPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
     const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
-    fetch_deploy_plugins()
+    fetchDeployPlugins()
         .then(res => {
           deployPlugins.list = res
           deployPlugins.total = res.length
@@ -133,7 +133,7 @@ export default defineComponent({
         });
 
 
-    fetch_exec_plugins()
+    fetchExecPlugins()
         .then(res => {
           execPlugins.list = res
           execPlugins.total = res.length

@@ -60,13 +60,13 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { createJob, getJobTypes } from '@/api/job';
-import { listProjectGroup, queryProject } from '@/api/view-no-auth';
+import { listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
 
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { IProjectGroupVo } from '@/api/dto/project-group';
-import { IProjectVo } from '@/api/dto/project';
+import { ITestFlowDetail } from '@/api/dto/project';
 import { IPageVo } from '@/api/dto/common';
 
 export default defineComponent({
@@ -83,7 +83,7 @@ export default defineComponent({
     const jobTypesRef = ref<JobEnum[]>([]);
     const selectGroupId = ref<string>();
     const groups = ref<IProjectGroupVo[]>([]);
-    const testflows = ref<IPageVo<IProjectVo>>({
+    const testflows = ref<IPageVo<ITestFlowDetail>>({
       total: -1,
       pages: 0,
       list: [],
@@ -155,7 +155,7 @@ export default defineComponent({
       testflowsLoading.value = true;
       createForm.value.testFlowId = ""
       try {
-        testflows.value = await queryProject({
+        testflows.value = await queryTestFlow({
           groupId: selectGroupId.value,
           pageNum: 0,
           pageSize: 0,

@@ -1,5 +1,5 @@
 import { ITaskExecutionRecordVo, IWorkflowExecutionRecordVo } from '@/api/dto/workflow-execution-record';
-import { INodeDefVo, IProjectDetailVo } from '@/api/dto/project';
+import { INodeDefVo, ITestFlowDetail} from '@/api/dto/project';
 import { NodeToolbarTabTypeEnum } from '@/components/workflow/workflow-viewer/model/data/enumeration';
 import { TriggerTypeEnum } from '@/api/dto/enumeration';
 
@@ -8,7 +8,7 @@ import { TriggerTypeEnum } from '@/api/dto/enumeration';
  */
 export interface IState {
   recordDetail: {
-    project?: IProjectDetailVo;
+    project?: ITestFlowDetail;
     navScrollLeft: number;
     allRecords: IWorkflowExecutionRecordVo[];
     record?: IWorkflowExecutionRecordVo;

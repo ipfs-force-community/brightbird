@@ -53,7 +53,7 @@ import {
   onMounted,
 } from 'vue';
 
-import { fetchProjectDetail, listProjectGroup, queryProject } from '@/api/view-no-auth';
+import {fetchTestFlowDetail, listProjectGroup, queryTestFlow} from '@/api/view-no-auth';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IJobUpdateVo } from '@/api/dto/job';
 import { getJob, updateJob } from '@/api/job'
@@ -109,7 +109,7 @@ export default defineComponent({
       groupLoading.value = true;
       try {
         groups.value = await listProjectGroup();
-        const testflow = await fetchProjectDetail(editorForm.value.testFlowId);
+        const testflow = await fetchTestFlowDetail(editorForm.value.testFlowId);
         selectGroupId.value = testflow.groupId;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -122,7 +122,7 @@ export default defineComponent({
       testflowsLoading.value = true;
       editorForm.value.testFlowId = ""
       try {
-        testflows.value = await queryProject({
+        testflows.value = await queryTestFlow({
           groupId: selectGroupId.value,
           pageNum: 0,
           pageSize: 0,
