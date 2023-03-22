@@ -18,7 +18,7 @@ export class ExpressionEditor {
     value: string, selectableParams: ISelectableParam[]) {
     this.toolbar = new ParamToolbar(paramToolbarEl, selectableParams);
     this.editorEl = editorEl;
-    this.refresh(value);
+    // this.refresh(value);
 
     this.observer = new MutationObserver(() => {
       const paramRefEl = this.toolbar.getParamRefEl();
