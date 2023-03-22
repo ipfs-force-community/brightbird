@@ -12,27 +12,30 @@ import {
 /**
  * 保存项目dto
  */
-export interface IProjectSavingDto
+export interface ITestFlowDetail
   extends Readonly<{
     id?: string;
     name: string;
     createTime: string;
     modifiedTime: string;
-    cases?: ICase[];
-    nodes?: INode[];
+    cases?: Case[];
+    nodes?: Node[];
     groupId: string;
   }> {}
 
-export interface ICase
+export interface Node
     extends Readonly<{
         name: string;
-        params: string[];
+        isAnnotateOut: boolean;
+        properties: IPropertyDto[];
+        svcProperties: IPropertyDto[];
+        out:IPropertyDto;
     }> {}
 
-export interface INode
+export interface Case
     extends Readonly<{
         name: string;
-        params: string[];
+        properties: IPropertyDto[];
     }> {}
 
 /**
@@ -79,65 +82,19 @@ export interface IProjectImportingDto
 export interface IProjectQueryingDto
   extends Readonly<
     IPageDto & {
-      groupId?: string;
-      name?: string;
-      sortType?: SortTypeEnum;
+      groupId: string;
+      pageNum?: number;
+      pageSize?: number;
     }
   > {}
 
 /**
  * 项目id vo
  */
-export interface IProjectIdVo
+export interface ITestFlowIdVo
   extends Readonly<{
     id: string;
   }> {}
-
-/**
- * 项目vo
- */
-export interface IProjectVo
-  extends Readonly<
-    BaseVo & {
-      id: string;
-      name: string;
-      source: DslSourceEnum;
-      dslType: DslTypeEnum;
-      gitRepoId?: string;
-      startTime?: string;
-      suspendedTime?: string;
-      latestTime?: string;
-      nextTime?: string;
-      status: ProjectStatusEnum;
-      eventBridgeId?: string;
-      triggerType: TriggerTypeEnum;
-      enabled: boolean;
-      mutable: boolean;
-      description?: string;
-      concurrent: boolean | number;
-      workflowInstanceId: string;
-      serialNo: number;
-      occurredTime: string;
-      workflowRef: string;
-      caches?: string[];
-    }
-  > {}
-
-/**
- * 项目详情vo
- */
-export interface IProjectDetailVo
-  extends Readonly<
-    BaseVo & {
-      id: string;
-      name: string;
-      createTime: string;
-      modifiedTime: string;
-      cases: ICase[];
-      nodes: INode[];
-      groupId: string;
-    }
-  > {}
 
 /**
  * 项目webhook vo
@@ -245,3 +202,29 @@ export interface INodeDefVo
     documentLink?: string;
     type: string;
   }> {}
+
+export interface IPropertyDto extends Readonly<{
+    name: string;
+    type: string;
+    value: any;
+    required: true;
+    description: string;
+}> {
+}
+
+export interface INodeVo extends Readonly<{
+    icon: string;
+    name: string;
+    createTime: string;
+    modifiedTiem: string;
+    version: string;
+    category: string;
+    description: string;
+    path: string;
+    isAnnotateOut: boolean;
+    properties: IPropertyDto[];
+    svcProperties: IPropertyDto[];
+    out:IPropertyDto;
+    deprecated: boolean;
+}> {
+}

@@ -8,7 +8,7 @@
 import { defineComponent, getCurrentInstance, inject, nextTick, onMounted, ref } from 'vue';
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
-import { saveProject, fetchProjectDetail } from '@/api/view-no-auth';
+import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { namespace } from '@/store/modules/workflow-execution-record';
 
@@ -49,7 +49,7 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const {name, createTime, modifiedTime, cases, nodes, groupId} = await fetchProjectDetail(props.id as string);
+          const {name, createTime, modifiedTime, cases, nodes, groupId} = await fetchTestFlowDetail(props.id as string);
           // const rawData = yaml.parse(dslText)['raw-data'];
           // const {name, global, description} = yaml.parse(dslText);
           workflow.value = {
@@ -78,7 +78,7 @@ export default defineComponent({
       close,
       save: async (back: boolean, dsl: string) => {
         try {
-          const { id } = await saveProject({
+          const { id } = await saveTestFlow({
             groupId: workflow.value.groupId,
             name: workflow.value.name,
             createTime: workflow.value.createTime,

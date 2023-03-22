@@ -85,7 +85,7 @@
 import { IPageVo } from '@/api/dto/common';
 import { IProjectVo } from '@/api/dto/project';
 import { IProjectGroupVo } from '@/api/dto/project-group';
-import { listProjectGroup, queryProject } from '@/api/view-no-auth';
+import { listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
 import { IProjectGroupAddingForm } from '@/model/modules/project-group';
 import { Mutable } from '@/utils/lib';
 import { defineComponent, ref, onMounted, getCurrentInstance, computed } from 'vue';
@@ -124,7 +124,7 @@ export default defineComponent({
     };
     const projectList = ref<IPageVo<IProjectVo>>();
     const selectChange = async (groupId: string) => {
-      projectList.value = await queryProject({
+      projectList.value = await queryTestFlow({
         groupId,
         pageNum: START_PAGE_NUM,
         pageSize: 8,
@@ -132,7 +132,7 @@ export default defineComponent({
       selectedList.value = [];
     };
     const pageChange = async (currentPage: number) => {
-      projectList.value = await queryProject({
+      projectList.value = await queryTestFlow({
         groupId: createForm.value.groupId,
         pageNum: currentPage,
         pageSize: 8,
@@ -144,7 +144,7 @@ export default defineComponent({
         proxy.$error('请选择测试流组');
         return;
       }
-      projectList.value = await queryProject({
+      projectList.value = await queryTestFlow({
         groupId: createForm.value.groupId,
         pageNum: START_PAGE_NUM,
         pageSize: 8,

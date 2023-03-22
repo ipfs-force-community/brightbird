@@ -6,17 +6,13 @@ import {
   IWorkflowExecutionRecordVo,
 } from '@/api/dto/workflow-execution-record';
 import {
-  IProcessTemplateVo,
-  IProjectDetailVo, IProjectIdVo,
-  IProjectQueryingDto, IProjectSavingDto,
-  IProjectVo,
-  IWorkflowVo
+  INodeVo, IProcessTemplateVo, ITestFlowDetail,
+  IProjectQueryingDto, IWorkflowVo, ITestFlowIdVo
 } from '@/api/dto/project';
 import { IPageDto, IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
-import {INodeVo} from "@/api/dto/node-library";
 
 export const baseUrl = {
   projectGroup: '/group',
@@ -64,7 +60,7 @@ export function getProjectGroup(groupId: string): Promise<IProjectGroupVo> {
  * 查询项目
  * @param dto
  */
-export function queryProject(dto: IProjectQueryingDto): Promise<IPageVo<IProjectVo>> {
+export function queryTestFlow(dto: IProjectQueryingDto): Promise<IPageVo<ITestFlowDetail>> {
   return restProxy({
     url: `${baseUrl.testflow}/list`,
     method: 'get',
@@ -98,7 +94,7 @@ export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
  * 获取项目详情
  * @param projectId
  */
-export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo> {
+export function fetchTestFlowDetail(projectId: string): Promise<ITestFlowDetail> {
   return restProxy({
     url: `${baseUrl.testflow}/id/${projectId}`,
     method: 'get',
@@ -109,9 +105,9 @@ export function fetchProjectDetail(projectId: string): Promise<IProjectDetailVo>
  * 保存项目
  * @param dto
  */
-export async function saveProject(dto: IProjectSavingDto): Promise<IProjectIdVo> {
+export async function saveTestFlow(dto: ITestFlowDetail): Promise<ITestFlowIdVo> {
   const res = await restProxy({
-    url: `${baseUrl}`,
+    url: `${baseUrl.testflow}`,
     method: 'post',
     payload: dto,
   });

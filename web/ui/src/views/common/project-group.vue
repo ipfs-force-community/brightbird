@@ -56,9 +56,9 @@ import {
   ref,
   watch,
 } from 'vue';
-import { IProjectVo } from '@/api/dto/project';
+import {ITestFlowDetail, ITestFlowIdVo} from '@/api/dto/project';
 import { IProjectGroupVo } from '@/api/dto/project-group';
-import { queryProject } from '@/api/view-no-auth';
+import { queryTestFlow } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
 import ProjectItem from '@/views/common/project-item.vue';
 import { IPageVo } from '@/api/dto/common';
@@ -105,13 +105,13 @@ export default defineComponent({
 
     const { proxy } = getCurrentInstance() as any;
     const loading = ref<boolean>(false);
-    const projectPage = ref<Mutable<IPageVo<IProjectVo>>>({
+    const projectPage = ref<Mutable<IPageVo<ITestFlowDetail>>>({
       total: -1,
       pages: 0,
       list: [],
       pageNum: START_PAGE_NUM,
     });
-    const projects = computed<IProjectVo[]>(() => projectPage.value.list);
+    const projects = computed<ITestFlowDetail[]>(() => projectPage.value.list);
 
     const queryForm = ref<IQueryForm>({
       pageNum: START_PAGE_NUM,
@@ -135,7 +135,7 @@ export default defineComponent({
         const { pageSize, pageNum } = queryForm.value;
         // 获得当前已经加载了的总数
         const currentCount = pageSize * pageNum;
-        projectPage.value =  await queryProject({ ...queryForm.value, pageNum: 1, pageSize: currentCount });
+        projectPage.value =  await queryTestFlow({ ...queryForm.value, pageNum: 1, pageSize: currentCount });
         console.log(projectPage.value)
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -143,7 +143,7 @@ export default defineComponent({
     };
 
     const loadProject = async () => {
-      projectPage.value = await queryProject({ ...queryForm.value });
+      projectPage.value = await queryTestFlow({ ...queryForm.value });
       // 测试流组中测试流为空，将其自动折叠
       if (projectPage.value.total === 0) {
         saveFoldStatus(true, props.projectGroup?.id);
