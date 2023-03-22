@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-wallet-{{.UniqueId}}
-          image: "filvenus/venus-wallet:ce182a1637fc1d2ef850cbc58e7cdf49883bdaa7"
+          image: "filvenus/venus-wallet:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 5678

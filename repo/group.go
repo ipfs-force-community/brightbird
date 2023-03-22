@@ -1,8 +1,10 @@
-package services
+package repo
 
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -10,22 +12,22 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type IGroupService interface {
+type IGroupRepo interface {
 	List(context.Context) ([]*types.Group, error)
 	Get(context.Context, primitive.ObjectID) (*types.Group, error)
-	Save(context.Context, types.Group) error
+	Save(context.Context, types.Group) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
-var _ IGroupService = (*GroupSvc)(nil)
+var _ IGroupRepo = (*GroupSvc)(nil)
 
 type GroupSvc struct {
 	groupCol    *mongo.Collection
-	testflowSvc ITestFlowService
+	testflowSvc ITestFlowRepo
 }
 
-func NewGroupSvc(groupCol *mongo.Collection, testflowSvc ITestFlowService) *GroupSvc {
-	return &GroupSvc{groupCol: groupCol, testflowSvc: testflowSvc}
+func NewGroupSvc(db *mongo.Database, testflowSvc ITestFlowRepo) *GroupSvc {
+	return &GroupSvc{groupCol: db.Collection("groups"), testflowSvc: testflowSvc}
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
@@ -63,16 +65,28 @@ func (g GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
 	return nil
 }
 
-func (g *GroupSvc) Save(ctx context.Context, group types.Group) error {
+func (g *GroupSvc) Save(ctx context.Context, group types.Group) (primitive.ObjectID, error) {
 	if group.ID.IsZero() {
 		group.ID = primitive.NewObjectID()
 	}
+
+	count, err := g.groupCol.CountDocuments(ctx, bson.D{{"_id", group.ID}})
+	if err != nil {
+		return primitive.ObjectID{}, err
+	}
+	if count == 0 {
+		group.BaseTime.CreateTime = time.Now().Unix()
+		group.BaseTime.ModifiedTime = time.Now().Unix()
+	} else {
+		group.BaseTime.ModifiedTime = time.Now().Unix()
+	}
+
 	update := bson.M{
 		"$set": group,
 	}
-	_, err := g.groupCol.UpdateOne(ctx, bson.D{{"Name", group.Name}}, update, options.Update().SetUpsert(true))
+	_, err = g.groupCol.UpdateOne(ctx, bson.D{{"name", group.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
-	return nil
+	return group.ID, nil
 }

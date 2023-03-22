@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: test-runner-{{.TestId}}
+  labels:
+    app: venus-testrunner-pod
+    apptype: testrunner
+spec:
+  initContainers:
+  containers:
+    - name: venus-testrunner
+      image: "filvenus/testrunner:0f8e2e77fe3ffee9b873541ae0594cb1cc76366d"
+      imagePullPolicy: IfNotPresent
+      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/testrunner/config-template.toml", "--plugins=/shared-dir/k8stest/testrunner/plugins", "--testFlowId={{.TestFlowId}}"]
+      env:
+        - name: PRODUCTION
+          value: "true"
+      volumeMounts:
+        - mountPath: /shared-dir
+          name: shared-dir-v
+  volumes:
+    - name: shared-dir-v
+      persistentVolumeClaim:
+        claimName: testnet-shared-dir

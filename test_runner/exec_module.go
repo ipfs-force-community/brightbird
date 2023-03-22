@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 )
 
-func GenInvokeExec(plugin *types.PluginDetail, testItem types.TestItem) (interface{}, error) {
+func GenInvokeExec(plugin *types.PluginDetail, testItem *types.TestItem) (interface{}, error) {
 	svcMap, err := getSvcMap(testItem.Properties...)
 	if err != nil {
 		return nil, err
@@ -47,7 +47,7 @@ func GenInvokeExec(plugin *types.PluginDetail, testItem types.TestItem) (interfa
 	}).Interface(), nil
 }
 
-func ExecFlow(pluginStore *types.PluginStore, testItems []types.TestItem) fx_opt.Option {
+func ExecFlow(pluginStore *types.PluginStore, testItems []*types.TestItem) fx_opt.Option {
 	var opts []fx_opt.Option
 	for _, dep := range testItems {
 		pluginInfo, err := pluginStore.GetPlugin(dep.Name)

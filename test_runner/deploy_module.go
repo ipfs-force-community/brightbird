@@ -15,7 +15,7 @@ import (
 	"runtime/debug"
 )
 
-func DeployFLow(deployers []types.DeployNode, deployPlugin *types.PluginStore) fx_opt.Option {
+func DeployFLow(deployers []*types.DeployNode, deployPlugin *types.PluginStore) fx_opt.Option {
 	opts := []fx_opt.Option{
 		fx_opt.Override(new(types.AdminToken), func(ctx context.Context, k8sEnv *env.K8sEnvDeployer, authDeploy env.IVenusAuthDeployer) (types.AdminToken, error) {
 			endpoint := authDeploy.SvcEndpoint()
@@ -70,7 +70,7 @@ func DeployFLow(deployers []types.DeployNode, deployPlugin *types.PluginStore) f
 	return fx_opt.Options(opts...)
 }
 
-func getSvcMap(properties ...types.Property) (map[string]string, error) {
+func getSvcMap(properties ...*types.Property) (map[string]string, error) {
 	var svcMap = make(map[string]string)
 	for _, p := range properties {
 		if val, ok := p.Value.(string); ok && len(val) > 0 {
@@ -115,8 +115,8 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 	})
 	return reflect.StructOf(inDepTypeFields)
 }
-func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interface{}, string, error) {
-	svcMap, err := getSvcMap(append(depNode.Properties, *depNode.Out)...)
+func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (interface{}, string, error) {
+	svcMap, err := getSvcMap(append(depNode.Properties, depNode.Out)...)
 	if err != nil {
 		return nil, "", err
 	}
@@ -211,7 +211,7 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode types.DeployNode) (interf
 	}).Interface(), outTag, nil
 }
 
-func collectParams(properties []types.Property, params interface{}) error {
+func collectParams(properties []*types.Property, params interface{}) error {
 	value := make(map[string]interface{})
 	for _, p := range properties {
 		value[p.Name] = p.Value

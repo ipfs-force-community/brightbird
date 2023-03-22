@@ -36,6 +36,7 @@ var PluginInfo = types.PluginInfo{
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Description: "",
+	Repo:        "https://github.com/ipfs-force-community/chain-co.git",
 }
 
 var _ env.IChainCoDeployer = (*ChainCoDeployer)(nil)

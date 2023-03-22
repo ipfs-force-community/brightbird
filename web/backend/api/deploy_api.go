@@ -3,11 +3,11 @@ package api
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/web/backend/services"
+	"github.com/hunjixin/brightbird/repo"
 	"net/http"
 )
 
-func RegisterDeployRouter(ctx context.Context, v1group *V1RouterGroup, service services.IPluginService) {
+func RegisterDeployRouter(ctx context.Context, v1group *V1RouterGroup, service repo.IPluginService) {
 	group := v1group.Group("/deploy")
 
 	// swagger:route GET /deploy/plugins listDeployPlugins

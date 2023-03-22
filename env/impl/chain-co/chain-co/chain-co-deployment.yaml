@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-chain-co-{{.UniqueId}}
-          image: "filvenus/chain-co:a3d8c56a903c344df58efdbe90741777b5d21676"
+          image: "filvenus/chain-co:{{.CodeVersion}}"
           args: ["run" {{if gt (len .Nodes) 0}}{{range $i, $a := .Nodes}},--node={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
           ports:
             - containerPort: 1234

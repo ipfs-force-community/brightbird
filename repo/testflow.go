@@ -1,7 +1,10 @@
-package services
+package repo
 
 import (
 	"context"
+	"sort"
+	"time"
+
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -9,23 +12,23 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type ITestFlowService interface {
+type ITestFlowRepo interface {
 	GetByName(context.Context, string) (*types.TestFlow, error)
 	GetById(context.Context, primitive.ObjectID) (*types.TestFlow, error)
 	List(context.Context) (*types.PageResp[types.TestFlow], error)
 	Plugins(context.Context) ([]types.PluginOut, error)
-	Save(context.Context, types.TestFlow) error
+	Save(context.Context, types.TestFlow) (primitive.ObjectID, error)
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
 	ListInGroup(context.Context, *types.PageReq[string]) (*types.PageResp[types.TestFlow], error)
 }
 
-type CaseSvc struct {
+type TestFlowRepo struct {
 	caseCol         *mongo.Collection
 	execPluginStore ExecPluginStore
 }
 
-func NewCaseSvc(caseCol *mongo.Collection, execPluginStore ExecPluginStore) *CaseSvc {
-	return &CaseSvc{caseCol: caseCol, execPluginStore: execPluginStore}
+func NewTestFlowRepo(db *mongo.Database, execPluginStore ExecPluginStore) *TestFlowRepo {
+	return &TestFlowRepo{caseCol: db.Collection("testflows"), execPluginStore: execPluginStore}
 }
 
 type BasePage struct {
@@ -34,7 +37,7 @@ type BasePage struct {
 	PageNum int `json:"pageNum"`
 }
 
-func (c *CaseSvc) List(ctx context.Context) (*types.PageResp[types.TestFlow], error) {
+func (c *TestFlowRepo) List(ctx context.Context) (*types.PageResp[types.TestFlow], error) {
 	cur, err := c.caseCol.Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
@@ -53,7 +56,7 @@ func (c *CaseSvc) List(ctx context.Context) (*types.PageResp[types.TestFlow], er
 	}, nil
 }
 
-func (c *CaseSvc) ListInGroup(ctx context.Context, req *types.PageReq[string]) (*types.PageResp[types.TestFlow], error) {
+func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[string]) (*types.PageResp[types.TestFlow], error) {
 	groupId, err := primitive.ObjectIDFromHex(req.Params)
 	if err != nil {
 		return nil, err
@@ -77,16 +80,16 @@ func (c *CaseSvc) ListInGroup(ctx context.Context, req *types.PageReq[string]) (
 	}, nil
 }
 
-func (c *CaseSvc) GetByName(ctx context.Context, name string) (*types.TestFlow, error) {
+func (c *TestFlowRepo) GetByName(ctx context.Context, name string) (*types.TestFlow, error) {
 	tf := &types.TestFlow{}
-	err := c.caseCol.FindOne(ctx, bson.D{{"Name", name}}).Decode(tf)
+	err := c.caseCol.FindOne(ctx, bson.D{{"name", name}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
 	return tf, nil
 }
 
-func (c *CaseSvc) GetById(ctx context.Context, id primitive.ObjectID) (*types.TestFlow, error) {
+func (c *TestFlowRepo) GetById(ctx context.Context, id primitive.ObjectID) (*types.TestFlow, error) {
 	tf := &types.TestFlow{}
 	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
@@ -95,7 +98,7 @@ func (c *CaseSvc) GetById(ctx context.Context, id primitive.ObjectID) (*types.Te
 	return tf, nil
 }
 
-func (c *CaseSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
+func (c *TestFlowRepo) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 	var deployPlugins []types.PluginOut
 	err := c.execPluginStore.Each(func(detail *types.PluginDetail) error {
 		pluginOut, err := getPluginOutput(detail)
@@ -108,23 +111,39 @@ func (c *CaseSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 	if err != nil {
 		return nil, err
 	}
+	sort.Slice(deployPlugins, func(i, j int) bool {
+		return deployPlugins[i].Name > deployPlugins[j].Name
+	})
 	return deployPlugins, nil
 }
 
-func (c *CaseSvc) CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error) {
+func (c *TestFlowRepo) CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error) {
 	return c.caseCol.CountDocuments(ctx, bson.D{{"groupId", groupId}})
 }
-func (c *CaseSvc) Save(ctx context.Context, tf types.TestFlow) error {
+
+func (c *TestFlowRepo) Save(ctx context.Context, tf types.TestFlow) (primitive.ObjectID, error) {
 	if tf.ID.IsZero() {
 		tf.ID = primitive.NewObjectID()
+	}
+
+	count, err := c.caseCol.CountDocuments(ctx, bson.D{{"_id", tf.ID}})
+	if err != nil {
+		return primitive.ObjectID{}, err
+	}
+	if count == 0 {
+		tf.BaseTime.CreateTime = time.Now().Unix()
+		tf.BaseTime.ModifiedTime = time.Now().Unix()
+	} else {
+		tf.BaseTime.ModifiedTime = time.Now().Unix()
 	}
 
 	update := bson.M{
 		"$set": tf,
 	}
-	_, err := c.caseCol.UpdateOne(ctx, bson.D{{"name", tf.Name}}, update, options.Update().SetUpsert(true))
+	_, err = c.caseCol.UpdateOne(ctx, bson.D{{"name", tf.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
-		return err
+		return primitive.ObjectID{}, err
 	}
-	return nil
+
+	return tf.ID, nil
 }

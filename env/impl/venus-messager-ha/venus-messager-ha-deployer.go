@@ -39,6 +39,7 @@ var PluginInfo = types.PluginInfo{
 	Name:        "venus-message-ha",
 	Version:     version.Version(),
 	Category:    types.Deploy,
+	Repo:        "https://github.com/filecoin-project/venus-messager.git",
 	Description: "",
 }
 

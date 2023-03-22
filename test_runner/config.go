@@ -5,5 +5,6 @@ type Config struct {
 	BootstrapPeers []string
 	Timeout        int
 	MongoUrl       string
-	CaseName       string
+	DbName         string
+	TaskId         string
 }

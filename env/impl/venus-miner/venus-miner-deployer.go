@@ -37,6 +37,7 @@ var PluginInfo = types.PluginInfo{
 	Name:        string(env.VenusMiner),
 	Version:     version.Version(),
 	Category:    types.Deploy,
+	Repo:        "https://github.com/filecoin-project/venus-miner.git",
 	Description: "",
 }
 

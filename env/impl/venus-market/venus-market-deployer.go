@@ -38,6 +38,7 @@ var PluginInfo = types.PluginInfo{
 	Name:        string(env.VenusMarket),
 	Version:     version.Version(),
 	Category:    types.Deploy,
+	Repo:        "https://github.com/filecoin-project/venus-market.git",
 	Description: "",
 }
 

@@ -1,0 +1,7 @@
+PluginStore = './plugins'
+MongoUrl = 'mongodb://192.168.200.103:27017'
+DbName = 'lidb'
+Listen = '0.0.0.0:12356'
+BuildSpace = '/storage-nfs-4/k8stest/buildspace'
+RunnerConfig = './script/testrunner-deployment-template.yaml'
+Proxy = 'http://192.168.200.34:7891'

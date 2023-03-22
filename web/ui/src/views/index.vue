@@ -9,24 +9,18 @@
               <span class="text">图形项目</span>
             </div>
           </router-link>
-          <!--          <router-link :to="{ name: 'create-project' }">-->
-          <!--            <div class="btn-item">-->
-          <!--              <button class="code"></button>-->
-          <!--              <span class="text">代码项目</span>-->
-          <!--            </div>-->
-          <!--          </router-link>-->
-          <!--          <router-link :to="{ name: 'import-project' }">-->
-          <!--            <div class="btn-item">-->
-          <!--              <button class="git"></button>-->
-          <!--              <span class="text">导入项目</span>-->
-          <!--            </div>-->
-          <!--          </router-link>-->
         </div>
         <div class="right-area">
           <router-link :to="{ name: 'node-library' }">
             <div class="btn-item">
               <button class="node-library"></button>
               <span class="text">本地节点</span>
+            </div>
+          </router-link>
+          <router-link :to="{ name: 'job' }">
+            <div class="btn-item">
+              <button class="job"></button>
+              <span class="text">Job管理</span>
             </div>
           </router-link>
           <router-link :to="{ name: 'project-group' }">
@@ -126,6 +120,11 @@ export default defineComponent({
 
           &.node-library {
             background-image: url('@/assets/svgs/index/node-library-btn.svg');
+          }
+
+
+          &.job {
+            background-image: url('@/assets/svgs/index/code-project-btn.svg');
           }
 
           &.group {

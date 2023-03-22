@@ -2,12 +2,16 @@ package main
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/hunjixin/brightbird/repo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/BurntSushi/toml"
 	"github.com/google/uuid"
@@ -41,10 +45,18 @@ func main() {
 				Name:  "mongo",
 				Value: "mongodb://localhost:27017",
 			},
+			&cli.StringFlag{
+				Name:  "dbName",
+				Value: "testplateform",
+			},
 			&cli.IntFlag{
 				Name:  "timeout",
 				Value: 0,
 				Usage: "timeout for testing unit(m)",
+			},
+			&cli.StringFlag{
+				Name:  "taskId",
+				Usage: "test  to running",
 			},
 			&cli.StringFlag{
 				Name:  "log-level",
@@ -73,6 +85,21 @@ func main() {
 			if c.IsSet("timeout") {
 				cfg.Timeout = c.Int("timeout")
 			}
+			if c.IsSet("taskId") {
+				cfg.TaskId = c.String("testFlowId")
+			}
+
+			if c.IsSet("dbName") {
+				cfg.DbName = c.String("dbBane")
+			}
+
+			if c.IsSet("mongoUrl") {
+				cfg.MongoUrl = c.String("mongoUrl")
+			}
+
+			if len(cfg.TaskId) == 0 {
+				return errors.New("test flow id must be specific")
+			}
 			return run(c.Context, cfg)
 		},
 	}
@@ -85,13 +112,7 @@ func main() {
 }
 
 func run(ctx context.Context, cfg Config) (err error) {
-	col, err := getMongoCaseCol(ctx, cfg.MongoUrl)
-	if err != nil {
-		return
-	}
-	
-	flow := &types.TestFlow{}
-	err = col.FindOne(ctx, bson.D{{"Name", cfg.CaseName}}).Decode(flow)
+	flow, err := getTestFLow(ctx, cfg.MongoUrl, cfg.DbName, cfg.TaskId)
 	if err != nil {
 		return
 	}
@@ -144,11 +165,40 @@ func run(ctx context.Context, cfg Config) (err error) {
 	return stop(ctx)
 }
 
-func getMongoCaseCol(ctx context.Context, mongoUrl string) (*mongo.Collection, error) {
+func getTestFLow(ctx context.Context, mongoUrl string, dbName string, taskIdStr string) (*types.TestFlow, error) {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
 	if err != nil {
 		return nil, err
 	}
-	db := client.Database("test-platform")
-	return db.Collection("cases"), nil
+	db := client.Database(dbName)
+
+	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
+	if err != nil {
+		return nil, err
+	}
+	taskRep := repo.NewTaskRepo(db)
+	testflowRepo := repo.NewTestFlowRepo(db, nil)
+
+	task, err := taskRep.Get(ctx, taskId)
+	if err != nil {
+		return nil, err
+	}
+
+	testFlow, err := testflowRepo.GetById(ctx, task.TestFlowId)
+	if err != nil {
+		return nil, err
+	}
+	//merge version
+	for _, node := range testFlow.Nodes {
+		for _, property := range node.Properties {
+			if property.Name == types.CodeVersion {
+				version, ok := task.Versions[node.Name]
+				if !ok {
+					return nil, fmt.Errorf("not found version for deploy %s", node.Name)
+				}
+				property.Value = version
+			}
+		}
+	}
+	return testFlow, nil
 }

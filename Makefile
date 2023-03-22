@@ -28,6 +28,7 @@ runner:
 	go build -o testrunner  $(GOFLAGS) ./test_runner
 
 backend:
+	rm -f ./backend
 	go build -o backend  $(GOFLAGS) ./web/backend
 
 build-all: exec-plugin deploy-plugin runner backend

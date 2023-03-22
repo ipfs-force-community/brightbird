@@ -1,11 +1,13 @@
-package services
+package repo
 
 import (
 	"context"
 	"fmt"
-	"github.com/hunjixin/brightbird/types"
 	"reflect"
+	"sort"
 	"strings"
+
+	"github.com/hunjixin/brightbird/types"
 )
 
 type IPluginService interface {
@@ -34,6 +36,9 @@ func (p *PluginSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
 	if err != nil {
 		return nil, err
 	}
+	sort.Slice(deployPlugins, func(i, j int) bool {
+		return deployPlugins[i].Name > deployPlugins[j].Name
+	})
 	return deployPlugins, nil
 }
 

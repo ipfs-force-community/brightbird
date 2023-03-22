@@ -2,11 +2,12 @@ package api
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/services"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/hunjixin/brightbird/repo"
+	"github.com/hunjixin/brightbird/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BasePageReq struct {
@@ -36,7 +37,7 @@ type ListTestFlowResp struct {
 	List []*types.TestFlow `json:"list"`
 }
 
-func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service services.ITestFlowService) {
+func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
 
 	// swagger:route GET /testflow/plugins listTestflowPlugins
@@ -295,12 +296,12 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		err = service.Save(ctx, testFlow)
+		id, err := service.Save(ctx, testFlow)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		c.Status(http.StatusOK)
+		c.String(http.StatusOK, id.String())
 	})
 }
