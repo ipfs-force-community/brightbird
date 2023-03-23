@@ -16,7 +16,7 @@ import {INodeDefVo, ITestFlowDetail} from '@/api/dto/project';
  */
 export const namespace = 'workflow-execution-record';
 
-// export default {
+export default {
 //   namespaced: true,
 //   state: () => {
 //     return {
@@ -121,5 +121,5 @@ export const namespace = 'workflow-execution-record';
   //       });
   //     commit('mutateRecordDetail', { project, allRecords, record, recordDsl, taskRecords, nodeInfos });
   //   },
-//   },
-// } as Module<IState, IRootState>;
+  // },
+} as Module<IState, IRootState>;
