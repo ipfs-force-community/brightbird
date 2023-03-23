@@ -21,7 +21,7 @@
       </jm-form-item>
 
       <jm-form-item label="版本设置" prop="version">
-        <div v-for="[component, version] in editorForm.versions" >
+        <div v-for="(version, component) in editorForm.versions" >
           <jm-input :content=version :placeholder="`填写组件${component}的版本`" >
             <template #prepend>{{component}}:</template>
           </jm-input>
@@ -53,14 +53,29 @@ import {
   onMounted,
 } from 'vue';
 
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import {fetchTestFlowDetail, listProjectGroup, queryTestFlow} from '@/api/view-no-auth';
+=======
+import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+>>>>>>> Stashed changes
+=======
+import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+>>>>>>> Stashed changes
+=======
+import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+>>>>>>> Stashed changes
+=======
+import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+>>>>>>> Stashed changes
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IJobUpdateVo } from '@/api/dto/job';
 import { getJob, updateJob } from '@/api/job'
-import { IProjectVo } from '@/api/dto/project';
+import { ITestFlowDetail } from '@/api/dto/project';
 import { IPageVo } from '@/api/dto/common';
 import { Mutable } from '@/utils/lib';
-import { async } from '@antv/x6/lib/registry/marker/async';
 
 export default defineComponent({
   emits: ['completed'],
@@ -75,7 +90,7 @@ export default defineComponent({
       testFlowId: "",
       name: "",
       description: "",
-      versions:new Map<string, string>(),
+      versions:{"a":"b"},
       cronExpression: "",
     });
     const editorRule = ref<object>({
@@ -99,7 +114,7 @@ export default defineComponent({
     const groupLoading = ref<boolean>(false);
     const testflowsLoading = ref<boolean>(false);
     const groups = ref<IProjectGroupVo[]>([]);
-    const testflows = ref<IPageVo<IProjectVo>>({
+    const testflows = ref<IPageVo<ITestFlowDetail>>({
       total: -1,
       pages: 0,
       list: [],
@@ -123,7 +138,23 @@ export default defineComponent({
       editorForm.value.testFlowId = ""
       try {
         testflows.value = await queryTestFlow({
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           groupId: selectGroupId.value,
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
           pageNum: 0,
           pageSize: 0,
         })
@@ -135,10 +166,10 @@ export default defineComponent({
     }
 
     const onSelectTf = async () =>{
-      const versions = new Map<string, string>();
+        let versions: any= {};
         const selTf = testflows.value?.list?.find(a=>a.id == editorForm.value.testFlowId)
-        selTf?.nodes.forEach(f=>{
-          versions.set(f.name, "");
+        selTf?.nodes?.forEach(f=>{
+          versions[f.name] = "";
         })
         editorForm.value.versions = versions;
     }
@@ -152,11 +183,11 @@ export default defineComponent({
         try {
           loading.value = true;
           await updateJob(props.id, {
-            name,
-            description,
-            testFlowId,
-            versions,
-            cronExpression,
+            name:name,
+            testFlowId:testFlowId,
+            description: description,
+            versions: versions,
+            cronExpression:cronExpression,
           });
           proxy.$success('项目分组修改成功');
           emit('completed');
@@ -171,8 +202,8 @@ export default defineComponent({
     onMounted(async () => {
       await fetchJob()
       await fetchGroupList()
-      testflows.value = await queryProject({
-        groupId: selectGroupId.value,
+      testflows.value = await queryTestFlow({
+        groupId: selectGroupId.value??"",
         pageNum: 0,
         pageSize: 0,
       })

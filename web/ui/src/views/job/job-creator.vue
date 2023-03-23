@@ -34,7 +34,7 @@
 
 
       <jm-form-item label="版本设置" prop="version">
-        <div v-for="[component, version] in createForm.versions" >
+        <div v-for="(version, component) in createForm.versions" >
           <jm-input :content=version :placeholder="`填写组件${component}的版本`" >
             <template #prepend>{{component}}:</template>
           </jm-input>
@@ -95,7 +95,7 @@ export default defineComponent({
       testFlowId: '',
       jobType: JobEnum.CronJob,
       description: "",
-      versions:new Map<string, string>(),
+      versions:{},
       cronExpression: "",
     });
 
@@ -156,7 +156,23 @@ export default defineComponent({
       createForm.value.testFlowId = ""
       try {
         testflows.value = await queryTestFlow({
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
+<<<<<<< Updated upstream
           groupId: selectGroupId.value,
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
+=======
+          groupId: selectGroupId.value??"",
+>>>>>>> Stashed changes
           pageNum: 0,
           pageSize: 0,
         })
@@ -168,9 +184,10 @@ export default defineComponent({
     }
 
     const onSelectTf = async () =>{
-      const versions = new Map<string, string>();
-        testflows.value?.list?.forEach(f=>{
-          versions.set(f.name, "");
+      let versions: any= {};
+        const selTf = testflows.value?.list?.find(a=>a.id == createForm.value.testFlowId)
+        selTf?.nodes?.forEach(f=>{
+          versions[f.name] =  "";
         })
         createForm.value.versions = versions;
     }

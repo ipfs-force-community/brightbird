@@ -20,6 +20,7 @@ type UpdateJobRequest struct {
 	Description string             `json:"description"`
 	//cron job params
 	types.CronJobParams
+	Versions map[string]string `json:"versions"`
 }
 
 // ListJobResp
@@ -132,7 +133,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		id, err := primitive.ObjectIDFromHex(c.Query("id"))
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
 			c.Error(err)
 			return
@@ -148,6 +149,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		job.Name = params.Name
 		job.Description = params.Description
 		job.CronJobParams = params.CronJobParams
+		job.Versions = params.Versions
 
 		switch job.JobType {
 		case types.CronJobType:

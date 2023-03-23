@@ -6,33 +6,33 @@ export interface IJobIdVo
   }> {}
 
 export interface IJobVo extends Readonly<{
-    id: string
-    testFlowId: string
-    name: string
-    jobType: JobEnum
-    description: string,
-    cronExpression: string,
-    versions: Map<string, string>
-    createTime:string,
-    modifiedTime:string,
+    id: string;
+    testFlowId: string;
+    name: string;
+    jobType: JobEnum;
+    description: string;
+    cronExpression: string;
+    versions: Map<string, string>;
+    createTime:string;
+    modifiedTime:string;
   }> {
   }
 
 export interface IJobCreateVo extends Readonly<{
-    testFlowId: string
-    name: string
-    jobType: JobEnum
-    description: string,
-    versions: Map<string, string>
-    cronExpression: string,
+    testFlowId: string;
+    name: string;
+    jobType: JobEnum;
+    description: string;
+    versions: any;
+    cronExpression: string;
     }> {
 }
 
 export interface IJobUpdateVo extends Readonly<{
-    testFlowId: string
-    name: string
-    description: string,
-    versions:  Map<string, string>
-    cronExpression: string,
+    name: string;
+    testFlowId: string;
+    description: string;
+    versions:  any;
+    cronExpression: string;
     }> {
 }
