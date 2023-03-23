@@ -115,17 +115,7 @@ import {
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
 import {fetchDeployPlugins, fetchExecPlugins} from "@/api/view-no-auth";
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import {INodeVo} from "@/api/dto/project";
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-import {INodeVo} from "@/api/dto/node-library";
->>>>>>> Stashed changes
 
 export default defineComponent({
   components: {},

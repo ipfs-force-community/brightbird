@@ -53,23 +53,7 @@ import {
   onMounted,
 } from 'vue';
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import {fetchTestFlowDetail, listProjectGroup, queryTestFlow} from '@/api/view-no-auth';
-=======
-import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
->>>>>>> Stashed changes
-=======
-import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
->>>>>>> Stashed changes
-=======
-import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
->>>>>>> Stashed changes
-=======
-import { fetchTestFlowDetail, listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
->>>>>>> Stashed changes
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IJobUpdateVo } from '@/api/dto/job';
 import { getJob, updateJob } from '@/api/job'
@@ -138,23 +122,7 @@ export default defineComponent({
       editorForm.value.testFlowId = ""
       try {
         testflows.value = await queryTestFlow({
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-          groupId: selectGroupId.value,
-=======
           groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
           pageNum: 0,
           pageSize: 0,
         })

@@ -156,23 +156,7 @@ export default defineComponent({
       createForm.value.testFlowId = ""
       try {
         testflows.value = await queryTestFlow({
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-          groupId: selectGroupId.value,
-=======
           groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
-=======
-          groupId: selectGroupId.value??"",
->>>>>>> Stashed changes
           pageNum: 0,
           pageSize: 0,
         })
