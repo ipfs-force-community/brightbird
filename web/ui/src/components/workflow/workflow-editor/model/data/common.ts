@@ -1,7 +1,7 @@
 import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
-import {ICase, INode} from "@/api/dto/project";
+import { Case, Node} from "@/api/dto/project";
 
 type TriggerValue = 'blur' | 'change';
 
@@ -30,6 +30,8 @@ export interface IWorkflowNode {
    * @throws Error
    */
   validate(): Promise<void>;
+
+  toDsl(): object;
 }
 
 export interface IGlobal {
@@ -41,14 +43,13 @@ export interface IGlobal {
  */
 export interface IWorkflow {
   name: string;
-  // description?: string;
   groupId: string;
-  // global: IGlobal;
-  // data: string;
   createTime: string;
   modifiedTime: string;
-  cases?: ICase[];
-  nodes?: INode[];
+  cases?: Case[];
+  nodes?: Node[];
+  graph?: string;
+
 }
 
 export type ValidateParamFn = (value: string) => void;

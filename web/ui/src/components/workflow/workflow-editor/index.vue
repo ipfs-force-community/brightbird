@@ -43,11 +43,10 @@ import NodeConfigPanel from './layout/right/node-config-panel.vue';
 import CachePanel from './layout/right/cache-panel.vue';
 import GraphPanel from './layout/main/graph-panel.vue';
 import { IWorkflow } from './model/data/common';
-// eslint-disable-next-line no-redeclare
 import { Graph, Node } from '@antv/x6';
 import registerCustomVueShape from './shape/custom-vue-shape';
 import { WorkflowValidator } from './model/workflow-validator';
-import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
+import {Case} from "@/api/dto/project";
 
 // 注册自定义x6元素
 registerCustomVueShape();
@@ -68,9 +67,7 @@ export default defineComponent({
     const graph = ref<Graph>();
     const nodeConfigPanelVisible = ref<boolean>(false);
     const selectedNodeId = ref<string>('');
-    let checkCache: () => Promise<void>;
     const nodeWaringClicked = ref<boolean>(false);
-    const cachePanelVisible = ref<boolean>(false);
     let workflowValidator: WorkflowValidator;
 
     provide('getGraph', (): Graph => graph.value!);
@@ -89,11 +86,11 @@ export default defineComponent({
       handleBack: () => {
         emit('back');
       },
-      handleSave: async (back: boolean, dsl: string) => {
+      handleSave: async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
         // 必须克隆后发事件，否则外部的数据绑定会受影响
         emit('update:model-value', cloneDeep(workflowData.value));
 
-        emit('save', back, dsl);
+        emit('save', back, caseList, nodeList, graph);
       },
       handleGraphCreated: (g: Graph) => {
         workflowValidator = new WorkflowValidator(g, proxy, workflowData.value);
@@ -112,26 +109,6 @@ export default defineComponent({
         // 取消选中
         graph.value!.unselect(selectedNodeId.value);
         selectedNodeId.value = '';
-      },
-      cachePanelVisible,
-      // handleCachePanel: async () => {
-      //   await checkCache();
-      //   const nodes = graph.value!.getNodes();
-      //   for (const node of nodes) {
-      //     const workflowNode = new CustomX6NodeProxy(node).getData(graph.value, workflowData.value);
-      //     try {
-      //       await workflowNode.validate();
-      //       workflowValidator.removeWarning(node);
-      //     } catch ({ errors }) {
-      //       workflowValidator.addWarning(node, nodeId => {
-      //         handleNodeSelected(nodeId, true);
-      //       });
-      //     }
-      //   }
-      // },
-      openCachePanel: (_checkCache: () => Promise<void>) => {
-        checkCache = _checkCache;
-        cachePanelVisible.value = true;
       },
     };
   },
@@ -154,11 +131,6 @@ export default defineComponent({
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
-
-  .node-config-panel-overlay {
-    background-color: transparent;
-    //cursor: not-allowed;
-  }
 
   .main {
     position: relative;

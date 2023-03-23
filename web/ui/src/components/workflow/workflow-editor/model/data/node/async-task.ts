@@ -2,7 +2,7 @@ import {BaseNode} from './base-node';
 import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
 import {TaskStatusEnum} from '@/api/dto/enumeration';
-import {IPropertyDto} from "@/api/dto/node-library";
+import {IPropertyDto} from "@/api/dto/project";
 
 export interface IAsyncTaskParam {
   readonly ref: string;
@@ -78,6 +78,41 @@ export class AsyncTask extends BaseNode {
       { name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out}: any,
   ): AsyncTask {
     return new AsyncTask(name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/ban-types
+  toDsl(): object {
+    const { name, version, inputs, } = this;
+    const param: {
+      [key: string]: string | number | boolean;
+    } = {};
+    if (inputs && inputs.length > 0) {
+      inputs.forEach(({ name, type, required, value }) => {
+        switch (type) {
+          case ParamTypeEnum.NUMBER: {
+            const val = parseFloat(value);
+            if (!isNaN(val)) {
+              param[name] = val;
+              return;
+            }
+            break;
+          }
+        }
+
+        if (!param[name]) {
+          param[name] = value;
+        }
+
+        if (!required && !value && type !== ParamTypeEnum.STRING) {
+          delete param[name];
+        }
+      });
+
+    }
+
+    return {
+      alias: name,
+    };
   }
 
 }

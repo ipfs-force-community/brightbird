@@ -13,19 +13,24 @@ import {
  * 保存项目dto
  */
 export interface ITestFlowDetail
-  extends Readonly<{
-    id?: string;
-    name: string;
-    createTime: string;
-    modifiedTime: string;
-    cases?: Case[];
-    nodes?: Node[];
-    groupId: string;
+    extends Readonly<{
+        id?: string;
+        name: string;
+        createTime: string;
+        modifiedTime: string;
+        cases?: Case[];
+        nodes?: Node[];
+        groupId: string;
+        graph: string;
   }> {}
 
 export interface Node
     extends Readonly<{
         name: string;
+        version: string;
+        category: string;
+        createTime: string;
+        modifiedTime: string;
         isAnnotateOut: boolean;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
@@ -35,7 +40,9 @@ export interface Node
 export interface Case
     extends Readonly<{
         name: string;
+        category: string;
         properties: IPropertyDto[];
+        svcProperties: IPropertyDto[];
     }> {}
 
 /**

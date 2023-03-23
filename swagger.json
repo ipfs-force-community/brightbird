@@ -113,6 +113,7 @@
         }
       },
       "post": {
+        "description": "Save group",
         "consumes": [
           "application/json"
         ],
@@ -124,7 +125,6 @@
           "http",
           "https"
         ],
-        "summary": "Get specific test case by name.",
         "operationId": "saveCases",
         "parameters": [
           {
@@ -237,6 +237,234 @@
           {
             "type": "string",
             "description": "id of  group",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/job": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all jobs.",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "listJobResp",
+            "schema": {
+              "$ref": "#/definitions/listJobResp"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "save job entity, create if not exist",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "saveJob",
+        "parameters": [
+          {
+            "description": "job json",
+            "name": "job",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "job json",
+              "type": "object",
+              "$ref": "#/definitions/job"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/job/{id}": {
+      "get": {
+        "description": "Update job",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "updateJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "job update params",
+            "name": "updateJobParams",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "job update params",
+              "type": "object",
+              "$ref": "#/definitions/updateJobRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "job",
+            "schema": {
+              "$ref": "#/definitions/job"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete job by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "deleteJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  job",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    },
+    "/task": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "summary": "Lists all tasks.",
+        "operationId": "listTasks",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "jobId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "listTaskResp",
+            "schema": {
+              "$ref": "#/definitions/listTaskResp"
+            }
+          }
+        }
+      }
+    },
+    "/task/{id}": {
+      "get": {
+        "description": "Get task by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "getTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "task",
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete task by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "operationId": "deleteTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  job",
             "name": "id",
             "in": "path",
             "required": true
@@ -557,6 +785,16 @@
       "type": "string",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
+    "CronJobParams": {
+      "type": "object",
+      "properties": {
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        }
+      },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
     "DeployNode": {
       "type": "object",
       "required": [
@@ -593,6 +831,10 @@
       },
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
+    "JobType": {
+      "type": "string",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
     "PluginInfo": {
       "type": "object",
       "properties": {
@@ -611,11 +853,23 @@
           "type": "string",
           "x-go-name": "Path"
         },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
         "version": {
           "type": "string",
           "x-go-name": "Version"
         }
       },
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "State": {
+      "type": "string",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "TestId": {
+      "type": "string",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "TestItem": {
@@ -727,6 +981,56 @@
       "x-go-name": "GroupResp",
       "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     },
+    "job": {
+      "description": "Job",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "jobType": {
+          "$ref": "#/definitions/JobType"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "Job",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
     "listGroupResp": {
       "description": "ListGroupResp",
       "type": "array",
@@ -757,6 +1061,24 @@
         }
       },
       "x-go-name": "ListInGroupRequest",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
+    "listJobResp": {
+      "description": "ListJobResp",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/job"
+      },
+      "x-go-name": "ListJobResp",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
+    "listTaskResp": {
+      "description": "ListTaskResp",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/task"
+      },
+      "x-go-name": "ListTaskResp",
       "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     },
     "listTestFlowResp": {
@@ -838,6 +1160,10 @@
           },
           "x-go-name": "Properties"
         },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
         "svcProperties": {
           "type": "array",
           "items": {
@@ -878,6 +1204,58 @@
         }
       },
       "x-go-name": "Property",
+      "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "task": {
+      "description": "Task",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "jobId": {
+          "type": "string",
+          "x-go-name": "JobId"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "state": {
+          "$ref": "#/definitions/State"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "testId": {
+          "$ref": "#/definitions/TestId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "Task",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "testFlow": {
@@ -949,6 +1327,37 @@
         }
       },
       "x-go-name": "UpdateGroupRequest",
+      "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
+    },
+    "updateJobRequest": {
+      "description": "UpdateJobRequest",
+      "type": "object",
+      "properties": {
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "UpdateJobRequest",
       "x-go-package": "github.com/hunjixin/brightbird/web/backend/api"
     }
   },

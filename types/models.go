@@ -67,9 +67,9 @@ type TestItem struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name string `json:"name"`
-
-	Properties []*Property `json:"properties"`
+	Name          string      `json:"name"`
+	Properties    []*Property `json:"properties"`
+	SvcProperties []*Property `json:"svcProperties"`
 }
 
 // TestFlow

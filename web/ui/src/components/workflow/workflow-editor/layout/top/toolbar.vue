@@ -18,30 +18,6 @@
           <button class="jm-icon-workflow-zoom-center" @click="zoom(ZoomTypeEnum.CENTER)"></button>
         </jm-tooltip>
       </div>
-      <div class="cache" @click="openCachePanel">
-        <i class="jm-icon-workflow-cache" />
-        <span>缓存</span>
-        <i class="cache-icon" v-if="cacheIconVisible" />
-      </div>
-      <div class="configs">
-        最大并发数
-        <i class="jm-icon-button-help" @mouseover="tooltipVisible = true" @mouseout="tooltipVisible = false"></i>
-        <jm-select
-          ref="concurrentRef"
-          :model-value="concurrentVal"
-          filterable
-          allow-create
-          @keyup.enter="enterConcurrent"
-          @change="changeConcurrent"
-          @blur="blurConcurrent"
-        >
-          <jm-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value" />
-        </jm-select>
-        <div class="tooltip-popper" v-show="tooltipVisible">
-          <span class="popper-description">单个流程中可同时执行/挂起的实例数</span>
-          <img src="../../svgs/concurrent-example.svg" class="concurrent-example" />
-        </div>
-      </div>
       <div class="operations">
         <jm-button class="save-return" @click="save(true)" @keypress.enter.prevent>保存并返回</jm-button>
         <jm-button type="primary" @click="save(false)" @keypress.enter.prevent>保存</jm-button>
@@ -61,8 +37,7 @@ import { IWorkflow } from '../../model/data/common';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import { cloneDeep } from 'lodash';
 import { compare } from '../../model/util/object';
-import { Global } from '../../model/data/global';
-import { v4 as uuidv4 } from 'uuid';
+import { Case, Node } from '@/api/dto/project';
 
 export default defineComponent({
   components: { ProjectPanel },
@@ -113,50 +88,8 @@ export default defineComponent({
     const tooltipVisible = ref<boolean>(false);
     const concurrentVal = ref<string>();
     const concurrentRef = ref();
-    // onMounted(() => {
-    //   if (workflowForm.value.global.concurrent === true) {
-    //     concurrentVal.value = '9';
-    //     return;
-    //   } else if (workflowForm.value.global.concurrent === false) {
-    //     concurrentVal.value = '1';
-    //     return;
-    //   }
-    //   concurrentVal.value = workflowForm.value.global.concurrent.toString();
-    // });
 
     const workflowTool = new WorkflowTool(graph);
-
-    const changeConcurrent = (val: string) => {
-      if (!val) {
-        return;
-      }
-      const reg = /^[1-9][0-9]{0,3}$/;
-      if (Number(val) > 9999 || !reg.test(val)) {
-        concurrentVal.value = workflowForm.value.global.concurrent.toString();
-      } else {
-        concurrentVal.value = val;
-        workflowForm.value.global.concurrent = Number(concurrentVal.value);
-      }
-    };
-
-    // 缓存校验图标
-    const checkCache = async (): Promise<void> => {
-      if (workflowForm.value.global.caches && typeof workflowForm.value.global.caches === 'string') {
-        workflowForm.value.global.caches = [{ ref: workflowForm.value.global.caches, key: uuidv4() }];
-      }
-      const { global } = workflowForm.value;
-      // 如果没有值直接忽略
-      if (global && (global.caches?.length === 0 || !global.caches)) {
-        cacheIconVisible.value = false;
-        return;
-      }
-      try {
-        await new Global(global).validateCache();
-        cacheIconVisible.value = false;
-      } catch (err) {
-        cacheIconVisible.value = true;
-      }
-    };
 
     return {
       ZoomTypeEnum,
@@ -217,30 +150,30 @@ export default defineComponent({
 
           const graphData = graph.toJSON();
           workflowTool.slimGraphData(graphData);
-          workflowForm.value.data = JSON.stringify(graphData);
-          emit('save', back, workflowTool.toDsl(workflowForm.value));
+
+          const caseList = graphData.cells
+              .map(call => call.data as Case)
+              .filter(call => call.category === 'Exec');
+
+          const nodeList = graphData.cells
+              .map(call => call.data as Node)
+              .filter(call => call.category === 'Deployer');
+
+          workflowForm.value.graph = JSON.stringify(graphData);
+          workflowForm.value.cases = caseList
+          workflowForm.value.nodes = nodeList
+
+          emit('save', back, caseList, nodeList, workflowTool.toDsl(workflowForm.value));
           workflowBackUp = cloneDeep(workflowForm.value);
         } catch ({ message }) {
           proxy.$error(message);
         }
-      },
-      openCachePanel: () => {
-        checkCache();
-        emit('open-cache-panel', checkCache);
       },
       cacheIconVisible,
       tooltipVisible,
       options,
       concurrentVal,
       concurrentRef,
-      changeConcurrent,
-      enterConcurrent: (e: any) => {
-        changeConcurrent(e.target.value);
-        concurrentRef.value.blur();
-      },
-      blurConcurrent: (e: any) => {
-        changeConcurrent(e.target.value);
-      },
     };
   },
 });

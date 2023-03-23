@@ -11,8 +11,8 @@ import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { namespace } from '@/store/modules/workflow-execution-record';
+import { Case, Node} from "@/api/dto/project";
 
-const { mapMutations, mapActions } = createNamespacedHelpers(namespace);
 export default defineComponent({
   props: {
     id: {
@@ -30,6 +30,7 @@ export default defineComponent({
     const loaded = ref<boolean>(false);
     const reloadMain = inject('reloadMain') as () => void;
     const editMode = !!props.id;
+    const flowCreateTime = ref<string>('');
     const workflow = ref<IWorkflow>({
       name: '未命名项目',
       groupId: '1',
@@ -49,9 +50,8 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const {name, createTime, modifiedTime, cases, nodes, groupId} = await fetchTestFlowDetail(props.id as string);
-          // const rawData = yaml.parse(dslText)['raw-data'];
-          // const {name, global, description} = yaml.parse(dslText);
+          const {name, createTime, modifiedTime, cases, nodes, groupId, graph} = await fetchTestFlowDetail(props.id as string);
+          flowCreateTime.value = createTime
           workflow.value = {
             name: name,
             groupId: groupId,
@@ -59,6 +59,7 @@ export default defineComponent({
             modifiedTime: modifiedTime,
             cases: cases,
             nodes: nodes,
+            graph: graph,
           };
         } catch (err) {
           proxy.$throw(err, proxy);
@@ -76,15 +77,16 @@ export default defineComponent({
       loading,
       workflow,
       close,
-      save: async (back: boolean, dsl: string) => {
+      save: async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
         try {
           const { id } = await saveTestFlow({
             groupId: workflow.value.groupId,
             name: workflow.value.name,
-            createTime: workflow.value.createTime,
-            modifiedTime: workflow.value.modifiedTime,
-            cases: workflow.value.cases,
-            nodes: workflow.value.nodes,
+            createTime: editMode ? flowCreateTime.value : new Date().toISOString(),
+            modifiedTime: new Date().toISOString(),
+            cases: caseList,
+            nodes: nodeList,
+            graph: graph,
             id: editMode ? props.id : '',
           });
           proxy.$success(editMode ? '保存成功' : '新增成功');
@@ -102,9 +104,6 @@ export default defineComponent({
           proxy.$throw(err, proxy);
         }
       },
-      // ...mapActions({
-      //   openAuthDialog: 'openAuthDialog',
-      // }),
     };
   },
 });

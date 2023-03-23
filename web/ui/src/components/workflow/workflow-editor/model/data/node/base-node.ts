@@ -53,4 +53,8 @@ export abstract class BaseNode implements IWorkflowNode {
       first: true,
     });
   }
+
+  toDsl(): object {
+    return {};
+  }
 }
