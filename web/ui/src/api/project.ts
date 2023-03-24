@@ -1,5 +1,5 @@
 import { restProxy } from '@/api';
-import { IGitCloningDto, IGitVo, IProjectIdVo, IProjectImportingDto, IProjectSavingDto } from '@/api/dto/project';
+import { IGitCloningDto, IGitVo, IProjectImportingDto } from '@/api/dto/project';
 
 export const baseUrl = {
   project: '/projects',

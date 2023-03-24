@@ -29,7 +29,7 @@
 
 <script lang="ts">
 import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref } from 'vue';
-import { Graph } from '@antv/x6';
+import {Cell, Graph } from '@antv/x6';
 import { ZoomTypeEnum } from '../../model/data/enumeration';
 import { WorkflowTool } from '../../model/workflow-tool';
 import ProjectPanel from './project-panel.vue';
@@ -151,13 +151,31 @@ export default defineComponent({
           const graphData = graph.toJSON();
           workflowTool.slimGraphData(graphData);
 
-          const caseList = graphData.cells
-              .map(call => call.data as Case)
-              .filter(call => call.category === 'Exec');
-
-          const nodeList = graphData.cells
-              .map(call => call.data as Node)
-              .filter(call => call.category === 'Deployer');
+          const caseList: Case[] = [];
+          const nodeList: Node[] = [];
+          graphData.cells.forEach((cell) => {
+            if (cell.shape === 'edge') {
+              return;
+            }
+            const jsonObject = JSON.parse(cell.data);
+            if (jsonObject.category === 'Exec') {
+              const CaseObj: Case = {
+                name: jsonObject.name,
+                properties: jsonObject.properties,
+                svcProperties: jsonObject.svcProperties,
+              };
+              caseList.push(CaseObj);
+            } else if (jsonObject.category === 'Deployer') {
+              const NodeObj: Node = {
+                name: jsonObject.name,
+                isAnnotateOut: jsonObject.isAnnotateOut,
+                properties: jsonObject.properties,
+                svcProperties: jsonObject.svcProperties,
+                out: jsonObject.out,
+              };
+              nodeList.push(NodeObj);
+            }
+          });
 
           workflowForm.value.graph = JSON.stringify(graphData);
           workflowForm.value.cases = caseList

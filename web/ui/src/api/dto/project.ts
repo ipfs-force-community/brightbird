@@ -8,6 +8,7 @@ import {
   SortTypeEnum,
   TriggerTypeEnum,
 } from '@/api/dto/enumeration';
+import internal from "stream";
 
 /**
  * 保存项目dto
@@ -16,8 +17,8 @@ export interface ITestFlowDetail
     extends Readonly<{
         id?: string;
         name: string;
-        createTime: string;
-        modifiedTime: string;
+        createTime: number;
+        modifiedTime: number;
         cases?: Case[];
         nodes?: Node[];
         groupId: string;
@@ -27,10 +28,7 @@ export interface ITestFlowDetail
 export interface Node
     extends Readonly<{
         name: string;
-        version: string;
-        category: string;
-        createTime: string;
-        modifiedTime: string;
+        // category: string;
         isAnnotateOut: boolean;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
@@ -40,7 +38,7 @@ export interface Node
 export interface Case
     extends Readonly<{
         name: string;
-        category: string;
+        // category: string;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
     }> {}

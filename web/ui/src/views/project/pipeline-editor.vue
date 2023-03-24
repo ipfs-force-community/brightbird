@@ -1,6 +1,7 @@
 <template>
   <div class="pipeline" v-loading="loading">
     <jm-workflow-editor v-model="workflow" @back="close" @save="save" v-if="!loaded" />
+    <project-panel v-if="projectPanelVisible" v-model="projectPanelVisible" :workflow-data="workflow" />
   </div>
 </template>
 
@@ -30,12 +31,13 @@ export default defineComponent({
     const loaded = ref<boolean>(false);
     const reloadMain = inject('reloadMain') as () => void;
     const editMode = !!props.id;
-    const flowCreateTime = ref<string>('');
+    const flowCreateTime = ref<number>(0);
+    const projectPanelVisible = ref<boolean>(false);
     const workflow = ref<IWorkflow>({
       name: '未命名项目',
       groupId: '1',
-      createTime: '',
-      modifiedTime: '',
+      createTime: 0,
+      modifiedTime: 0,
     });
     onMounted(async () => {
       if (payload && editMode) {
@@ -76,14 +78,20 @@ export default defineComponent({
       loaded,
       loading,
       workflow,
+      projectPanelVisible,
       close,
       save: async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
         try {
+          if (workflow.value.name === '未命名项目' || workflow.value.groupId === '1') {
+            projectPanelVisible.value = true;
+            return;
+          }
+
           const { id } = await saveTestFlow({
             groupId: workflow.value.groupId,
             name: workflow.value.name,
-            createTime: editMode ? flowCreateTime.value : new Date().toISOString(),
-            modifiedTime: new Date().toISOString(),
+            createTime: (editMode ? Number(flowCreateTime.value) : Date.now()) * 1000000,
+            modifiedTime: Date.now() * 1000000,
             cases: caseList,
             nodes: nodeList,
             graph: graph,

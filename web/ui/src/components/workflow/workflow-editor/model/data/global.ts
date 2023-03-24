@@ -1,5 +1,5 @@
 import Schema, { Value } from 'async-validator';
-import { CustomRule, ICache, IGlobal } from './common';
+import { CustomRule, IGlobal } from './common';
 import { checkDuplicate } from '../util/reference';
 import { RefTypeEnum } from './enumeration';
 

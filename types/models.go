@@ -83,6 +83,7 @@ type TestFlow struct {
 	GroupId primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
 	Nodes   []*DeployNode      `json:"nodes"`
 	Cases   []*TestItem        `json:"cases"`
+	Graph   string             `json:"graph"`
 
 	BaseTime
 }

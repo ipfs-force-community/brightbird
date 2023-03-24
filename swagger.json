@@ -890,6 +890,13 @@
             "$ref": "#/definitions/property"
           },
           "x-go-name": "Properties"
+        },
+        "svcProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/property"
+          },
+          "x-go-name": "SvcProperties"
         }
       },
       "x-go-package": "github.com/hunjixin/brightbird/types"
@@ -1277,6 +1284,10 @@
           "type": "string",
           "format": "int64",
           "x-go-name": "CreateTime"
+        },
+        "graph": {
+          "type": "string",
+          "x-go-name": "Graph"
         },
         "groupId": {
           "type": "string",
