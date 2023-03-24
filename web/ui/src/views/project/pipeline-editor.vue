@@ -1,17 +1,15 @@
 <template>
   <div class="pipeline" v-loading="loading">
     <jm-workflow-editor v-model="workflow" @back="close" @save="save" v-if="!loaded" />
-    <project-panel v-if="projectPanelVisible" v-model="projectPanelVisible" :workflow-data="workflow" />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, inject, nextTick, onMounted, ref } from 'vue';
+import { defineComponent, getCurrentInstance, inject, nextTick, onMounted, ref, provide } from 'vue';
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
-import { namespace } from '@/store/modules/workflow-execution-record';
 import { Case, Node} from "@/api/dto/project";
 
 export default defineComponent({
@@ -33,6 +31,7 @@ export default defineComponent({
     const editMode = !!props.id;
     const flowCreateTime = ref<number>(0);
     const projectPanelVisible = ref<boolean>(false);
+    provide('projectPanelVisible', projectPanelVisible);
     const workflow = ref<IWorkflow>({
       name: '未命名项目',
       groupId: '1',
@@ -96,6 +95,7 @@ export default defineComponent({
             nodes: nodeList,
             graph: graph,
             id: editMode ? props.id : '',
+            description: workflow.value.description || '',
           });
           proxy.$success(editMode ? '保存成功' : '新增成功');
           if (!back) {

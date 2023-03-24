@@ -44,6 +44,7 @@ import { listProjectGroup } from '@/api/view-no-auth';
 
 export interface IProjectInfo {
   name: string;
+  description: string;
   groupId: string;
 }
 
@@ -60,6 +61,7 @@ export default defineComponent({
     const workflowForm = ref<IWorkflow>(props.workflowData);
     const projectInfoForm = ref<IProjectInfo>({
       name: props.workflowData.name,
+      description: props.workflowData.description || '',
       groupId: props.workflowData.groupId,
     });
 

@@ -49,7 +49,7 @@ export interface IWorkflow {
   cases?: Case[];
   nodes?: Node[];
   graph?: string;
-
+  description?: string;
 }
 
 export type ValidateParamFn = (value: string) => void;

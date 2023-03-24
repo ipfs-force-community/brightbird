@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref } from 'vue';
+import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref,  } from 'vue';
 import {Cell, Graph } from '@antv/x6';
 import { ZoomTypeEnum } from '../../model/data/enumeration';
 import { WorkflowTool } from '../../model/workflow-tool';
@@ -46,13 +46,17 @@ export default defineComponent({
       type: Object as PropType<IWorkflow>,
       required: true,
     },
+    projectPanelVisible: {
+      type: Boolean,
+      default: false,
+    },
   },
   emits: ['back', 'save', 'open-cache-panel'],
   setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     let workflowBackUp = cloneDeep(props.workflowData);
     const workflowForm = ref<IWorkflow>(props.workflowData);
-    const projectPanelVisible = ref<boolean>(false);
+    const projectPanelVisible = inject('projectPanelVisible') as Boolean;
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();
     const getWorkflowValidator = inject('getWorkflowValidator') as () => WorkflowValidator;

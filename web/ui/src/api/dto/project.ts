@@ -23,6 +23,7 @@ export interface ITestFlowDetail
         nodes?: Node[];
         groupId: string;
         graph: string;
+        description: string;
   }> {}
 
 export interface Node

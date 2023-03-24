@@ -2,7 +2,7 @@
   <div class="jm-workflow-editor">
     <template v-if="graph">
 <!--      工具栏-->
-      <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" @open-cache-panel="openCachePanel" />
+      <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" :project-panel-visible="projectPanelVisible" />
 <!--      节点配置面板：选中某个节点时，显示该节点的配置面板，允许用户进行配置-->
       <node-config-panel
         v-if="selectedNodeId"
@@ -35,12 +35,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, PropType, provide, ref } from 'vue';
+import { defineComponent, getCurrentInstance, PropType, provide, ref, inject } from 'vue';
 import { cloneDeep } from 'lodash';
 import Toolbar from './layout/top/toolbar.vue';
 import NodePanel from './layout/left/node-panel.vue';
 import NodeConfigPanel from './layout/right/node-config-panel.vue';
-import CachePanel from './layout/right/cache-panel.vue';
+// import CachePanel from './layout/right/cache-panel.vue';
 import GraphPanel from './layout/main/graph-panel.vue';
 import { IWorkflow } from './model/data/common';
 import { Graph, Node } from '@antv/x6';
@@ -53,7 +53,7 @@ registerCustomVueShape();
 
 export default defineComponent({
   name: 'jm-workflow-editor',
-  components: { Toolbar, NodePanel, NodeConfigPanel, GraphPanel, CachePanel },
+  components: { Toolbar, NodePanel, NodeConfigPanel, GraphPanel },
   props: {
     modelValue: {
       type: Object as PropType<IWorkflow>,
@@ -72,6 +72,7 @@ export default defineComponent({
 
     provide('getGraph', (): Graph => graph.value!);
     provide('getWorkflowValidator', (): WorkflowValidator => workflowValidator!);
+    const projectPanelVisible = inject('projectPanelVisible') as boolean;
     const handleNodeSelected = async (nodeId: string, waringClicked: boolean) => {
       nodeConfigPanelVisible.value = true;
       selectedNodeId.value = nodeId;
@@ -83,6 +84,7 @@ export default defineComponent({
       nodeConfigPanelVisible,
       selectedNodeId,
       nodeWaringClicked,
+      projectPanelVisible,
       handleBack: () => {
         emit('back');
       },
