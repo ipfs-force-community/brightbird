@@ -266,6 +266,6 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			c.Error(err)
 			return
 		}
-		c.String(http.StatusOK, id.String())
+		c.String(http.StatusOK, id.Hex())
 	})
 }

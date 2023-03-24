@@ -44,8 +44,8 @@ export interface IGlobal {
 export interface IWorkflow {
   name: string;
   groupId: string;
-  createTime: number;
-  modifiedTime: number;
+  createTime: string;
+  modifiedTime: string;
   cases?: Case[];
   nodes?: Node[];
   graph?: string;

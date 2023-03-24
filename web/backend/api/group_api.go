@@ -160,7 +160,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 			return
 		}
 
-		c.String(http.StatusOK, id.String())
+		c.String(http.StatusOK, id.Hex())
 	})
 
 	// swagger:route POST /group/{id} updateGroup

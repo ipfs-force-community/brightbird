@@ -17,8 +17,8 @@ export interface ITestFlowDetail
     extends Readonly<{
         id?: string;
         name: string;
-        createTime: number;
-        modifiedTime: number;
+        createTime: string;
+        modifiedTime: string;
         cases?: Case[];
         nodes?: Node[];
         groupId: string;

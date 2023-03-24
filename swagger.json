@@ -1285,6 +1285,10 @@
           "format": "int64",
           "x-go-name": "CreateTime"
         },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
         "graph": {
           "type": "string",
           "x-go-name": "Graph"

@@ -29,14 +29,14 @@ export default defineComponent({
     const loaded = ref<boolean>(false);
     const reloadMain = inject('reloadMain') as () => void;
     const editMode = !!props.id;
-    const flowCreateTime = ref<number>(0);
+    const flowCreateTime = ref<string>('');
     const projectPanelVisible = ref<boolean>(false);
     provide('projectPanelVisible', projectPanelVisible);
     const workflow = ref<IWorkflow>({
       name: '未命名项目',
       groupId: '1',
-      createTime: 0,
-      modifiedTime: 0,
+      createTime: '',
+      modifiedTime: '',
     });
     onMounted(async () => {
       if (payload && editMode) {
@@ -86,11 +86,11 @@ export default defineComponent({
             return;
           }
 
-          const { id } = await saveTestFlow({
+          const  id = await saveTestFlow({
             groupId: workflow.value.groupId,
             name: workflow.value.name,
-            createTime: (editMode ? Number(flowCreateTime.value) : Date.now()) * 1000000,
-            modifiedTime: Date.now() * 1000000,
+            createTime: ((editMode ? Number(flowCreateTime.value) : Date.now()) * 1000000).toString(),
+            modifiedTime: (Date.now() * 1000000).toString(),
             cases: caseList,
             nodes: nodeList,
             graph: graph,

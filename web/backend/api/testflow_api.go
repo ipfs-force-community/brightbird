@@ -302,6 +302,6 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		c.String(http.StatusOK, id.String())
+		c.String(http.StatusOK, id.Hex())
 	})
 }
