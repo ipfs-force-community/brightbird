@@ -79,11 +79,12 @@ type TestFlow struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name    string             `json:"name"`
-	GroupId primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
-	Nodes   []*DeployNode      `json:"nodes"`
-	Cases   []*TestItem        `json:"cases"`
-	Graph   string             `json:"graph"`
+	Name        string             `json:"name"`
+	GroupId     primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
+	Nodes       []*DeployNode      `json:"nodes"`
+	Cases       []*TestItem        `json:"cases"`
+	Graph       string             `json:"graph"`
+	Description string             `json:"description"`
 
 	BaseTime
 }
