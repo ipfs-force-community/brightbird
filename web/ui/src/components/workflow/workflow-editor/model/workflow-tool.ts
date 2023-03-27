@@ -128,7 +128,6 @@ export class WorkflowTool {
 
     let node = this.graph.getRootNodes()[0];
 
-    // 遍历图形中的所有节点和边，并将其转换为代理对象
     while (true) {
       idArr.push(node.id);
       nodeProxyArr.push(new CustomX6NodeProxy(node));
@@ -146,10 +145,11 @@ export class WorkflowTool {
 
     const idMap = new Map<string, string>();
     nodeProxyArr.forEach((nodeProxy, index) => {
-      const ref = `node_${index}`;
+      // const ref = `node_${index}`;
       const nodeData = nodeProxy.getData();
+      const ref = nodeData.getName();
 
-      if (nodeData instanceof AsyncTask && (nodeData as AsyncTask).outputs && (nodeData as AsyncTask).outputs.length > 0) {
+      if (nodeData instanceof AsyncTask && (nodeData as AsyncTask).out) {
         // 只有在异步任务节点有输出参数时，才有可能被下游节点引用
         idMap.set(idArr[index], ref);
       }
@@ -159,6 +159,7 @@ export class WorkflowTool {
 
     let dsl = yaml.stringify({
       name: workflowData.name,
+      description: workflowData.description,
       pipeline,
     });
 

@@ -42,38 +42,35 @@ export default defineComponent({
     const triggerType = ref<TriggerTypeEnum>();
     const close = () => emit('close');
 
-    // const loadDsl = async () => {
-    //   if (dsl.value) {
-    //     return;
-    //   }
-    //
-    //   try {
-    //     loading.value = true;
-    //
-    //     const {
-    //       workflowName,
-    //       workflowRef,
-    //       workflowVersion,
-    //       triggerType: _triggerType,
-    //     } = await fetchTestFlowDetail(props.projectId);
-    //     title.value = workflowName;
-    //     triggerType.value = _triggerType;
-    //
-    //     const { nodes, dslText } = await fetchWorkflow(workflowRef, workflowVersion);
-    //     dsl.value = dslText;
-    //     nodeDefs.value = nodes
-    //       .filter(({ metadata }) => metadata)
-    //       .map(({ metadata }) => JSON.parse(metadata as string));
-    //   } catch (err) {
-    //     close();
-    //
-    //     proxy.$throw(err, proxy);
-    //   } finally {
-    //     loading.value = false;
-    //   }
-    // };
+    const loadDsl = async () => {
+      if (dsl.value) {
+        return;
+      }
 
-    // onBeforeMount(() => loadDsl());
+      try {
+        loading.value = true;
+
+        const {
+          name,
+          workflowVersion,
+        } = await fetchTestFlowDetail(props.projectId);
+        title.value = workflowName;
+
+        const { nodes, dslText } = await fetchWorkflow(workflowRef, workflowVersion);
+        dsl.value = dslText;
+        nodeDefs.value = nodes
+          .filter(({ metadata }) => metadata)
+          .map(({ metadata }) => JSON.parse(metadata as string));
+      } catch (err) {
+        close();
+
+        proxy.$throw(err, proxy);
+      } finally {
+        loading.value = false;
+      }
+    };
+
+    onBeforeMount(() => loadDsl());
 
     return {
       TriggerTypeEnum,
