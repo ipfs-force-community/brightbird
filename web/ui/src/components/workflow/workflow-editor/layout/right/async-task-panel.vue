@@ -45,6 +45,7 @@
                 v-for="(item, index) in form.inputs"
                 :key="item.name"
                 :prop="`inputs.${index}.value`"
+                :rules="nodeData.getFormRules().version"
                 class="node-name"
             >
               <template #label>
@@ -53,10 +54,12 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <expression-editor
+              <jm-input
                   v-model="item.value"
                   :node-id="nodeId"
                   :placeholder="item.description ? item.description : '请输入' + item.name"
+                  show-word-limit
+                  :maxlength="36"
               />
             </jm-form-item>
           </div>
@@ -70,10 +73,12 @@
                 <i class="jm-icon-button-help"></i>
               </jm-tooltip>
             </div>
-            <expression-editor
+            <jm-input
                 v-model="form.out.value"
                 :node-id="nodeId"
                 :placeholder="form.out.description ? form.out.description : '请输入' + form.out.type"
+                show-word-limit
+                :maxlength="36"
             />
           </div>
           <div v-if="!form.out">
@@ -94,10 +99,12 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <expression-editor
+              <jm-input
                   v-model="item.value"
                   :node-id="nodeId"
                   :placeholder="item.description ? item.description : '请输入' + item.name"
+                  show-word-limit
+                  :maxlength="36"
               />
             </jm-form-item>
           </div>
