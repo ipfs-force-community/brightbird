@@ -18,6 +18,22 @@ export interface IJobVo extends Readonly<{
   }> {
   }
 
+  export interface IJobDetailVo extends Readonly<{
+    id: string;
+    testFlowId: string;
+    name: string;
+    testFlowName:string;
+    groupName:string;
+    jobType: JobEnum;
+    description: string;
+    cronExpression: string;
+    versions: Map<string, string>;
+    createTime:string;
+    modifiedTime:string;
+  }> {
+  }
+
+
 export interface IJobCreateVo extends Readonly<{
     testFlowId: string;
     name: string;

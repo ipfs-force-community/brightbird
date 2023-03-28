@@ -112,7 +112,12 @@ func main() {
 }
 
 func run(ctx context.Context, cfg Config) (err error) {
-	flow, err := getTestFLow(ctx, cfg.MongoUrl, cfg.DbName, cfg.TaskId)
+	db, err := getDatabase(ctx, cfg.MongoUrl, cfg.DbName)
+	if err != nil {
+		return
+	}
+
+	flow, err := getTestFLow(ctx, db, cfg.TaskId)
 	if err != nil {
 		return
 	}
@@ -129,8 +134,12 @@ func run(ctx context.Context, cfg Config) (err error) {
 
 	cleaner := Cleaner{}
 	defer func() {
-		if err := cleaner.DoClean(); err != nil {
-			log.Errorf("clean up failed %v", err)
+		if err != nil {
+			_ = markFailTask(ctx, db, cfg.TaskId, err)
+		}
+		//todo get logs
+		if cleanErr := cleaner.DoClean(); cleanErr != nil {
+			log.Errorf("clean up failed %v", cleanErr)
 		}
 	}()
 
@@ -165,13 +174,25 @@ func run(ctx context.Context, cfg Config) (err error) {
 	return stop(ctx)
 }
 
-func getTestFLow(ctx context.Context, mongoUrl string, dbName string, taskIdStr string) (*types.TestFlow, error) {
+func getDatabase(ctx context.Context, mongoUrl string, dbName string) (*mongo.Database, error) {
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
 	if err != nil {
 		return nil, err
 	}
-	db := client.Database(dbName)
+	return client.Database(dbName), nil
+}
 
+func markFailTask(ctx context.Context, db *mongo.Database, taskIdStr string, inErr error) error {
+	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
+	if err != nil {
+		return err
+	}
+
+	taskRep := repo.NewTaskRepo(db)
+	return taskRep.MarkFail(ctx, taskId, inErr.Error())
+}
+
+func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*types.TestFlow, error) {
 	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
 	if err != nil {
 		return nil, err

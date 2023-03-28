@@ -38,7 +38,6 @@
                     toEdit(
                       i.id,
                       i.name,
-                      i.isDefaultGroup,
                       i.isShow,
                       i.description
                     )
@@ -77,7 +76,6 @@
         @completed="addCompleted"
       />
       <group-editor
-        :default-group="defaultProjectGroup"
         :name="groupName || ''"
         :description="groupDescription"
         :is-show="showInHomePage"
@@ -134,7 +132,6 @@ export default defineComponent({
     const groupName = ref<string>();
     const groupDescription = ref<string>();
     const groupId = ref<string>();
-    const defaultProjectGroup = ref<boolean>(false);
     const currentItem = ref<string>('-1');
     const currentSelected = ref<boolean>(false);
     const showInHomePage = ref<boolean>(false);
@@ -178,11 +175,9 @@ export default defineComponent({
     const toEdit = (
       id: string,
       name: string,
-      isDefault: boolean,
       isShow: boolean,
       description?: string,
     ) => {
-      defaultProjectGroup.value = isDefault;
       groupName.value = name;
       groupDescription.value = description;
       groupId.value = id;
@@ -227,7 +222,6 @@ export default defineComponent({
       isShow,
       currentSelected,
       showInHomePage,
-      defaultProjectGroup,
       groupName,
       groupDescription,
       groupId,

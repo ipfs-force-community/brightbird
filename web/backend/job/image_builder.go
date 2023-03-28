@@ -3,11 +3,12 @@ package job
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"path"
 	"strings"
 
-	"github.com/bitfield/script"
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/google/go-github/v50/github"
@@ -19,11 +20,15 @@ import (
 
 var log = logging.Logger("builder")
 
+type BuildResult struct {
+	Version string
+	Err     error //buffer 1 length
+}
 type BuildTask struct {
 	Name   string
 	Repo   string
 	Commit string
-	Result chan error //buffer 1 length
+	Result chan BuildResult //buffer 1 length
 }
 
 type ImageBuilderMgr struct {
@@ -33,15 +38,22 @@ type ImageBuilderMgr struct {
 	taskCh     chan BuildTask
 	//todo make build factory if need more build types
 	jobMap map[string]IIMageBuilder
+
+	dockerOp IDockerOperation
+
+	//make inject
+	ffi *ffiDownloader
 }
 
-func NewImageBuilderMgr(store repo.DeployPluginStore, buildSpace, proxy string) *ImageBuilderMgr {
+func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy string) *ImageBuilderMgr {
 	return &ImageBuilderMgr{
+		dockerOp:   dockerOp,
 		store:      store,
 		buildSpace: buildSpace,
 		proxy:      proxy,
 		jobMap:     map[string]IIMageBuilder{},
 		taskCh:     make(chan BuildTask),
+		ffi:        newFFIDownloader(""),
 	}
 }
 
@@ -53,28 +65,18 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 			return nil, err
 		}
 
-		version := versions[node.Name]
-		if version != "" {
-			//get master replace back
-			//todo fetch master commit id and neve save this version to database
-			masterCommit, err := mgr.fetchMasterCommit(context.Background(), plugin.Repo)
-			if err != nil {
-				return nil, err
-			}
-			version = masterCommit
-		}
-		result := make(chan error, 1)
+		result := make(chan BuildResult, 1)
 		mgr.taskCh <- BuildTask{
 			Name:   node.Name,
 			Repo:   plugin.Repo,
-			Commit: version,
+			Commit: versions[node.Name],
 			Result: result,
 		}
-		err = <-result
-		if err != nil {
-			return nil, err
+		br := <-result
+		if br.Err != nil {
+			return nil, br.Err
 		}
-		versionMap[node.Name] = version
+		versionMap[node.Name] = br.Version
 	}
 	return versionMap, nil
 }
@@ -87,86 +89,303 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 	for {
 		select {
 		case buildTask := <-mgr.taskCh:
-			builder, ok := mgr.jobMap[buildTask.Name]
-			if !ok {
-				log.Error("target %s not found", buildTask.Name)
-				builder = &VenusImageBuilder{
-					proxy: mgr.proxy,
+			plugin, err := mgr.store.GetPlugin(buildTask.Name)
+			if err != nil {
+				buildTask.Result <- BuildResult{
+					Err: err,
 				}
-				err := builder.InitRepo(ctx, buildTask.Repo)
-				if err != nil {
-					log.Error("init builder for %s failed %v", buildTask.Name, err)
-				}
-				mgr.jobMap[buildTask.Name] = builder
 				continue
 			}
 
-			err := builder.Build(ctx, buildTask.Commit)
-			if err != nil {
-				log.Error("build task (%s) commit (%s) %v", buildTask.Name, buildTask.Commit, err)
+			builder, ok := mgr.jobMap[buildTask.Name]
+			if !ok {
+				log.Infof("target %s not found and create a new builder", buildTask.Name)
+				builder = &VenusImageBuilder{
+					proxy:     mgr.proxy,
+					codeSpace: mgr.buildSpace,
+					ffi:       mgr.ffi,
+				}
+				err := builder.InitRepo(context.Background(), plugin.Repo)
+				if err != nil {
+					log.Errorf("init builder for %s failed %v", buildTask.Name, err)
+					buildTask.Result <- BuildResult{
+						Err: err,
+					}
+					continue
+				}
+				mgr.jobMap[buildTask.Name] = builder
 			}
-			buildTask.Result <- err
+
+			//get master replace back
+			//todo fetch master commit id and neve save this version to database
+			version, err := builder.FetchCommit(ctx, buildTask.Commit)
+			if err != nil {
+				buildTask.Result <- BuildResult{
+					Err: err,
+				}
+				continue
+			}
+
+			//check if images exit
+			hasImage, err := mgr.dockerOp.CheckImageExit(ctx, fmt.Sprintf("filvenus/%s", plugin.ImageTarget), version)
+			if err != nil {
+				buildTask.Result <- BuildResult{
+					Err: err,
+				}
+				continue
+			}
+
+			if !hasImage {
+				err := builder.Build(ctx, version)
+				if err != nil {
+					log.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
+					buildTask.Result <- BuildResult{
+						Err: err,
+					}
+					continue
+				}
+			}
+
+			buildTask.Result <- BuildResult{
+				Version: version,
+			}
 		}
 	}
 }
 
-func (mgr *ImageBuilderMgr) fetchMasterCommit(ctx context.Context, repoUrl string) (string, error) {
-	schema, err := giturls.Parse(repoUrl)
-	if err != nil {
-		return "", err
-	}
-
-	phase := strings.Split(strings.TrimRight(schema.Path, ".git"), "/")
-	project, repoName := phase[0], phase[1]
-	client := github.NewClient(nil)
-
-	repo, _, err := client.Repositories.Get(ctx, project, repoName)
-	if err != nil {
-		return "", err
-	}
-
-	defaultBranch := "main" //current github action
-	if repo.DefaultBranch != nil {
-		defaultBranch = *repo.DefaultBranch
-	}
-
-	branch, _, err := client.Repositories.GetBranch(ctx, project, repoName, defaultBranch, true)
-	if err != nil {
-		return "", err
-	}
-	commit := branch.GetCommit()
-	if commit == nil {
-		return "", fmt.Errorf("%s unable to find lastet commit, unknown reason", repoUrl)
-	}
-	return *commit.SHA, nil
-}
-
 type IIMageBuilder interface {
 	InitRepo(ctx context.Context, repo string) error
+	FetchCommit(ctx context.Context, commit string) (string, error)
 	Build(ctx context.Context, commit string) error
 }
 
 type VenusImageBuilder struct {
-	proxy    string
-	repoPath string
-	gitUrl   string
+	proxy     string
+	codeSpace string
+	repoPath  string
+
+	repo *git.Repository
+	ffi  *ffiDownloader
 }
 
 // InitRepo do something once for cache
-func (builder *VenusImageBuilder) InitRepo(ctx context.Context, codeSpace string) error {
-	_, err := git.PlainCloneContext(ctx, codeSpace, false, &git.CloneOptions{
-		URL:             builder.gitUrl,
+func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) error {
+	repoName, err := getRepoNameFromUrl(repoUrl)
+	if err != nil {
+		return err
+	}
+
+	builder.repoPath = path.Join(builder.codeSpace, repoName)
+	_, err = os.Stat(builder.repoPath)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	builder.repo, err = git.PlainOpen(builder.repoPath)
+	if err == nil {
+		return err
+	}
+
+	log.Errorf("open git repo %s faile, clean and clone again %v", repoUrl, err)
+	err = os.RemoveAll(builder.repoPath)
+	if err != nil {
+		return err
+	}
+
+	_, err = git.PlainCloneContext(ctx, builder.repoPath, false, &git.CloneOptions{
+		URL:             repoUrl,
 		Progress:        os.Stdout,
 		InsecureSkipTLS: false,
-		Depth:           1,
+	})
+	if err != nil && err != git.ErrRepositoryAlreadyExists {
+		return err
+	}
+
+	//check again
+	builder.repo, err = git.PlainOpen(builder.repoPath)
+	if err == nil {
+		return err
+	}
+
+	return nil
+}
+
+func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
+	workTree, err := builder.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	err = workTree.Clean(&git.CleanOptions{})
+	if err != nil && err != plumbing.ErrObjectNotFound {
+		return err
+	}
+
+	err = builder.repo.Fetch(&git.FetchOptions{
+		Progress: os.Stdout,
+		// InsecureSkipTLS skips ssl verify if protocol is https
+		InsecureSkipTLS: false,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return err
+	}
+
+	err = updateSubmodule(workTree)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string) (string, error) {
+	err := builder.updateRepo(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	repo, err := git.PlainOpen(builder.repoPath)
+	if err != nil {
+		return "", err
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return "", err
+	}
+
+	if len(commit) == 0 {
+		err = workTree.Checkout(&git.CheckoutOptions{Force: true}) //git checkout master
+		if err != nil {
+			return "", err
+		}
+		headHash, err := repo.Head()
+		if err != nil {
+			return "", err
+		}
+		return headHash.String(), nil
+	}
+
+	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
+	if err == nil {
+		return hash.String(), nil
+	}
+
+	if err == plumbing.ErrReferenceNotFound {
+		remotes, err := repo.Remotes()
+		if err != nil {
+			return "", err
+		}
+		//detact remote
+		remoteName := remotes[0].Config().Name
+		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
+		if err != nil {
+			return "", err
+		}
+		return hash.String(), nil
+	}
+	return "", err
+}
+
+// Build exec build image once
+func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) error {
+	err := builder.updateRepo(ctx)
+	if err != nil {
+		return err
+	}
+
+	repo, err := git.PlainOpen(builder.repoPath)
+	if err != nil {
+		return err
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
+	if err != nil {
+		return err
+	}
+
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Hash:   *hash,
+		Branch: "",
+		Force:  true,
 	})
 	if err != nil {
 		return err
 	}
 
-	repoName, err := getRepoNameFromUrl(builder.gitUrl)
-	builder.repoPath = path.Join(codeSpace, repoName)
-	return err
+	err = updateSubmodule(workTree)
+	if err != nil {
+		return err
+	}
+
+	submodules, err := workTree.Submodules()
+	if err != nil {
+		return err
+	}
+
+	ffiVersion := ""
+	for _, module := range submodules {
+		if module.Config().Name == "filecoin-ffi" {
+			status, err := module.Status()
+			if err != nil {
+				return err
+			}
+			ffiVersion = status.Expected.String()
+			break
+		}
+	}
+
+	if len(ffiVersion) > 0 {
+		ffiPath, err := builder.ffi.downloadFFI(ctx, ffiVersion)
+		if err != nil {
+			return err
+		}
+
+		//	tar -C "${__tmp_dir}" -xzf "${__tarball_path}"
+		err = execMakefile(builder.repoPath, "tar", "-C", ffiPath, "-xzf", "./extern/filecoin-ffi")
+		if err != nil {
+			fmt.Println(err.Error())
+			return err
+		}
+	}
+
+	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy)
+	if err != nil {
+		fmt.Println(err.Error())
+		return err
+	}
+	return nil
+}
+
+func updateSubmodule(workTree *git.Worktree) error {
+	submodules, err := workTree.Submodules()
+	if err != nil {
+		return err
+	}
+	for _, sub := range submodules {
+		status, err := sub.Status()
+		if err != nil {
+			return err
+		}
+		if status.IsClean() {
+			err = sub.Update(&git.SubmoduleUpdateOptions{
+				Init: true,
+				// NoFetch tell to the update command to not fetch new objects from the
+				// remote site.
+				NoFetch:           true,
+				RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func getRepoNameFromUrl(repoUrl string) (string, error) {
@@ -175,34 +394,75 @@ func getRepoNameFromUrl(repoUrl string) (string, error) {
 		return "", err
 	}
 	phase := strings.Split(strings.TrimRight(schema.Path, ".git"), "/")
-	return phase[1], nil
+	return phase[2], nil
 }
 
-// Build exec build image once
-func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) error {
-	repo, err := git.PlainOpen(builder.repoPath)
-	if err != nil {
-		return err
-	}
+func execMakefile(dir string, name string, arg ...string) error {
+	cmd := exec.Command(name, arg...)
+	cmd.Dir = dir
 
-	workTree, err := repo.Worktree()
-	err = workTree.Clean(&git.CleanOptions{})
-	if err != nil {
-		return err
-	}
-
-	hasher := plumbing.NewHash(commit)
-	err = workTree.Checkout(&git.CheckoutOptions{
-		Hash: hasher,
-	})
-	if err != nil {
-		return err
-	}
-
-	err = script.Exec(fmt.Sprintf("cd %s", builder.repoPath)).
-		Exec(fmt.Sprintf("make docker-push TAG=%s BUILD_DOCKER_PROXY=%s", commit, builder.proxy)).Error()
+	//var out bytes.Buffer
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+type ffiDownloader struct {
+	tempPath string
+	token    string
+}
+
+func newFFIDownloader(token string) *ffiDownloader {
+	return &ffiDownloader{
+		tempPath: os.TempDir(),
+		token:    token,
+	}
+}
+func (downloader ffiDownloader) downloadFFI(ctx context.Context, releaseTag string) (string, error) {
+	fileName := releaseTag + "-filecoin-ffi-Linux-standard.tar.gz"
+	filePath := path.Join(downloader.tempPath, fileName)
+
+	_, err := os.Stat(filePath)
+	if err == nil {
+		return filePath, nil
+	}
+	if err != nil && !os.IsNotExist(err) {
+		return "", err
+	}
+
+	client := github.NewTokenClient(ctx, downloader.token)
+	tag, _, err := client.Repositories.GetReleaseByTag(ctx, "filecoin-project", "filecoin-ffi", releaseTag[0:16])
+	if err != nil {
+		return "", err
+	}
+
+	var linuxAssert *github.ReleaseAsset
+	for _, assert := range tag.Assets {
+		if assert.Name != nil && strings.Contains(*assert.Name, "Linux") && assert.URL != nil {
+			linuxAssert = assert
+		}
+	}
+	if linuxAssert == nil {
+		return "", fmt.Errorf("linux release for tag %s not exit", releaseTag)
+	}
+
+	body, _, err := client.Repositories.DownloadReleaseAsset(ctx, "filecoin-project", "filecoin-ffi", *linuxAssert.ID, nil)
+	if err != nil {
+		return "", err
+	}
+
+	fs, err := os.Create(filePath)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = io.Copy(fs, body)
+	if err != nil {
+		return "", err
+	}
+	return filePath, nil
 }

@@ -11,7 +11,6 @@
     >
       <jm-form-item label="分组名称" label-position="top" prop="name">
         <jm-input
-          :disabled="defaultGroup"
           v-model="editorForm.name"
           clearable
           placeholder="请输入分组名称"
@@ -78,10 +77,6 @@ export default defineComponent({
     id: { type: String, required: true },
     description: {
       type: String,
-    },
-    defaultGroup: {
-      type: Boolean,
-      required: true,
     },
     isShow: {
       type: Boolean,

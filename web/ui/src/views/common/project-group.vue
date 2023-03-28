@@ -27,7 +27,6 @@
             <project-item
               v-else
               v-for="project of projects"
-              :concurrent="project.concurrent"
               :key="project.id"
               :project="project"
               @triggered="handleProjectTriggered"

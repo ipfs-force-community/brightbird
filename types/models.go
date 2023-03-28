@@ -116,6 +116,7 @@ type Job struct {
 	TestFlowId  primitive.ObjectID `json:"testFlowId"`
 	Name        string             `json:"name"`
 	JobType     JobType            `json:"jobType"`
+	ExecCount   int                `json:"execCount"`
 	Description string             `json:"description"`
 
 	Versions map[string]string `json:"versions"` // save a version setting for user job specific
@@ -142,6 +143,7 @@ const (
 // swagger:model task
 type Task struct {
 	ID         primitive.ObjectID `bson:"_id" json:"id"`
+	Name       string             `json:"name"`
 	JobId      primitive.ObjectID `json:"jobId"`
 	TestFlowId primitive.ObjectID `json:"testFlowId"` //save this field for convience, get from job info is alright
 	TestId     TestId             `json:"testId"`

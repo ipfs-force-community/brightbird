@@ -3,6 +3,7 @@ package venus_worker
 import (
 	"context"
 	"embed"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -31,6 +32,8 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        string(env.VenusWorker),
 	Version:     version.Version(),
+	Repo:        "https://github.com/ipfs-force-community/venus-cluster.git",
+	ImageTarget: "venus-worker",
 	Description: "",
 }
 

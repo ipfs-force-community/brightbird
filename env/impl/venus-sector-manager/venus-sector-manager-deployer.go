@@ -3,6 +3,7 @@ package venus_sector_manager
 import (
 	"context"
 	"embed"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -41,6 +42,7 @@ var PluginInfo = types.PluginInfo{
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Repo:        "https://github.com/ipfs-force-community/venus-cluster.git",
+	ImageTarget: "venus-sector-manager",
 	Description: "",
 }
 

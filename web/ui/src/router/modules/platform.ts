@@ -41,6 +41,17 @@ export default [
     meta: {
       title: 'Job管理',
     },
+    children:[
+      {
+        name: 'job-detail',
+        path: 'detail/:id',
+        component: () => import('@/views/job/job-detail.vue'),
+        props: ({ params: { id } }: RouteLocationNormalizedLoaded) => ({ id }),
+        meta: {
+          title: 'Job详情',
+        },
+      },
+    ]
   },
   {
     name: 'project-group',

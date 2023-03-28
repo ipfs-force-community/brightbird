@@ -32,10 +32,9 @@
         <jm-input v-model="createForm.cronExpression" clearable placeholder="请输入Cron表达式" />
       </jm-form-item>
 
-
       <jm-form-item label="版本设置" prop="version">
-        <div v-for="(version, component) in createForm.versions" >
-          <jm-input :content=version :placeholder="`填写组件${component}的版本`" >
+        <div v-for="(version, component) in createForm.versions">
+          <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="createForm.versions[component]">
             <template #prepend>{{component}}:</template>
           </jm-input>
         </div>  

@@ -25,7 +25,7 @@ export default defineComponent({
     const graphNode = graph.getCellById(props.nodeId) as Node;
     const proxy = new CustomX6NodeProxy(graphNode);
     // 级联选择器选项
-    const selectableParams = ref<ISelectableParam[]>(proxy.getSelectableParams(graph));
+    const selectableParams = ref<ISelectableParam[]>(proxy.getData());
     onMounted(() => {
       emit('editor-created', (params: ISelectableParam[]) => {
         selectableParams.value = params;

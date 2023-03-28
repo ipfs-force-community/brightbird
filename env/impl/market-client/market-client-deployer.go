@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -39,6 +40,7 @@ var PluginInfo = types.PluginInfo{
 	Category:    types.Deploy,
 	Description: "",
 	Repo:        "https://github.com/filecoin-project/venus-market.git",
+	ImageTarget: "market-client",
 }
 
 type IMarketClientDeployer env.IDeployer

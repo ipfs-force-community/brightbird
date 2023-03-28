@@ -1,4 +1,4 @@
-import { IJobCreateVo, IJobUpdateVo, IJobIdVo, IJobVo } from "./dto/job";
+import { IJobCreateVo, IJobUpdateVo, IJobIdVo, IJobVo, IJobDetailVo } from "./dto/job";
 import { restProxy } from '@/api';
 import { JobEnum } from "./dto/enumeration";
 
@@ -57,6 +57,19 @@ export async function listJobs(): Promise<IJobVo[]> {
 export async function getJob(id: String): Promise<IJobVo> {
     const res = await restProxy({ 
         url:`${baseUrl.job}/${id}`,
+        method:"get",
+    });
+  
+    return res
+}
+
+/**
+ * 获取job
+ * @param dto
+ */
+export async function getJobDetail(id: String): Promise<IJobDetailVo> {
+    const res = await restProxy({ 
+        url:`${baseUrl.job}/detail/${id}`,
         method:"get",
     });
   
