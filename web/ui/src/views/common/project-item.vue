@@ -22,8 +22,11 @@
           <jm-tooltip content="编辑" placement="bottom">
             <button class="edit" @click="edit(project.id)"></button>
           </jm-tooltip>
+          <jm-tooltip content="预览测试流" placement="bottom">
+            <button class="pipeline-label" @click="dslDialogFlag = true"></button>
+          </jm-tooltip>
           <jm-tooltip content="删除" placement="bottom">
-            <button class="del" @click="del(project.id)"></button>
+            <button class="jm-icon-button-delete" @click="del(project.id)"></button>
           </jm-tooltip>
         </div>
       </div>

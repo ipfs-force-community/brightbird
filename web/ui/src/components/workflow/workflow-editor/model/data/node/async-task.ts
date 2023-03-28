@@ -38,7 +38,7 @@ export class AsyncTask extends BaseNode {
   version: string;
   category: string;
   readonly inputs: IPropertyDto[];
-  readonly outputs: IPropertyDto[];
+  readonly svcProperties: IPropertyDto[];
   out: IPropertyDto;
   createTime: string;
   modifiedTime: string;
@@ -52,7 +52,7 @@ export class AsyncTask extends BaseNode {
       version = '',
       category = '',
       inputs: IPropertyDto[],
-      outputs: IPropertyDto[],
+      svcProperties: IPropertyDto[],
       createTime = '',
       modifiedTime = '',
       isAnnotateOut = false,
@@ -67,7 +67,7 @@ export class AsyncTask extends BaseNode {
     this.version = version;
     this.category = category;
     this.inputs = inputs;
-    this.outputs = outputs;
+    this.svcProperties = svcProperties;
     this.createTime = createTime;
     this.modifiedTime = modifiedTime;
     this.isAnnotateOut = isAnnotateOut;
@@ -75,25 +75,36 @@ export class AsyncTask extends BaseNode {
   }
 
   static build(
-      { name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out}: any,
+      { name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, isAnnotateOut, out}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, groupType, version, category, inputs, outputs, createTime, modifiedTime, isAnnotateOut, out);
+    return new AsyncTask(name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, isAnnotateOut, out);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   toDsl(): object {
-    const { name, version, inputs, } = this;
+    const { name, version, inputs, svcProperties, out } = this;
     const param: {
       [key: string]: string | number | boolean;
     } = {};
     if (inputs && inputs.length > 0) {
-      inputs.forEach(({ name, type, required, value }) => {
+      inputs.forEach(({name, type, required, value}) => {
         switch (type) {
           case ParamTypeEnum.NUMBER: {
             const val = parseFloat(value);
             if (!isNaN(val)) {
               param[name] = val;
               return;
+            }
+            break;
+          }
+          case ParamTypeEnum.BOOL: {
+            switch (value) {
+              case 'true':
+                param[name] = true;
+                return;
+              case 'false':
+                param[name] = false;
+                return;
             }
             break;
           }
@@ -107,11 +118,75 @@ export class AsyncTask extends BaseNode {
           delete param[name];
         }
       });
-
     }
 
+    const svc: {
+      [key: string]: string | number | boolean;
+    } = {};
+    if (svcProperties && svcProperties.length > 0) {
+      svcProperties.forEach(({name, type, required, value}) => {
+        switch (type) {
+          case ParamTypeEnum.NUMBER: {
+            const val = parseFloat(value);
+            if (!isNaN(val)) {
+              svc[name] = val;
+              return;
+            }
+            break;
+          }
+          case ParamTypeEnum.BOOL: {
+            switch (value) {
+              case 'true':
+                svc[name] = true;
+                return;
+              case 'false':
+                svc[name] = false;
+                return;
+            }
+            break;
+          }
+        }
+
+        if (!svc[name]) {
+          svc[name] = value;
+        }
+
+        if (!required && !value && type !== ParamTypeEnum.STRING) {
+          delete svc[name];
+        }
+      });
+    }
+
+    const output: {
+      [key: string]: string | number | boolean;
+    } = {};
+    if (out) {
+      switch (out.type) {
+        case ParamTypeEnum.NUMBER: {
+          const val = parseFloat(out.value);
+          if (!isNaN(val)) {
+            output[out.name] = val;
+          }
+          break;
+        }
+        default: {
+          if (!output[out.name]) {
+            output[out.name] = out.value;
+          }
+
+          if (!out.required && !out.value && out.type !== ParamTypeEnum.STRING) {
+            delete output[out.name];
+          }
+        }
+      }
+    }
+
+
     return {
-      alias: name,
+      type: `${this.name}:${version}`,
+      param: inputs && inputs.length === 0 ? undefined : param,
+      svc: svcProperties && svcProperties.length == 0 ? undefined: svc,
+      output: !out ? undefined: output,
     };
   }
 

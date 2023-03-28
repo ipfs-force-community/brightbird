@@ -45,6 +45,7 @@
                 v-for="(item, index) in form.inputs"
                 :key="item.name"
                 :prop="`inputs.${index}.value`"
+                :rules="nodeData.getFormRules().version"
                 class="node-name"
             >
               <template #label>
@@ -53,10 +54,12 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <expression-editor
+              <jm-input
                   v-model="item.value"
                   :node-id="nodeId"
                   :placeholder="item.description ? item.description : '请输入' + item.name"
+                  show-word-limit
+                  :maxlength="36"
               />
             </jm-form-item>
           </div>
@@ -70,10 +73,12 @@
                 <i class="jm-icon-button-help"></i>
               </jm-tooltip>
             </div>
-            <expression-editor
+            <jm-input
                 v-model="form.out.value"
                 :node-id="nodeId"
                 :placeholder="form.out.description ? form.out.description : '请输入' + form.out.type"
+                show-word-limit
+                :maxlength="36"
             />
           </div>
           <div v-if="!form.out">
@@ -81,9 +86,9 @@
           </div>
         </div>
         <div class="optional-container set-padding" v-else-if="tabFlag === 3">
-          <div v-if="form.outputs">
+          <div v-if="form.svcProperties">
             <jm-form-item
-                v-for="(item, index) in form.outputs"
+                v-for="(item, index) in form.svcProperties"
                 :key="item.name"
                 :prop="`inputs.${index}.value`"
                 class="node-name"
@@ -94,14 +99,16 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <expression-editor
+              <jm-input
                   v-model="item.value"
                   :node-id="nodeId"
                   :placeholder="item.description ? item.description : '请输入' + item.name"
+                  show-word-limit
+                  :maxlength="36"
               />
             </jm-form-item>
           </div>
-          <div v-if="!form.outputs">
+          <div v-if="!form.svcProperties">
             <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
           </div>
         </div>
@@ -147,7 +154,7 @@ export default defineComponent({
     const outputTabSelected = ref<boolean>(false);
     const changeVersion = async () => {
       form.value.inputs.length = 0;
-      form.value.outputs.length = 0;
+      form.value.svcProperties.length = 0;
       try {
         versionLoading.value = true;
         failureVisible.value = false;

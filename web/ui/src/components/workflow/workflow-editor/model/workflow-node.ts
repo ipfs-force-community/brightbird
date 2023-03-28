@@ -1,7 +1,6 @@
 import {IWorkflowNode} from './data/common';
 import {AsyncTask} from './data/node/async-task';
 import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '@/components/workflow/workflow-editor/model/data/enumeration';
-import {IPropertyDto} from "@/api/dto/node-library";
 import {fetchDeployPlugins, fetchExecPlugins} from "@/api/view-no-auth";
 
 interface IPageInfo {
