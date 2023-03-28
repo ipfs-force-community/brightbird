@@ -42,18 +42,20 @@ type ImageBuilderMgr struct {
 	dockerOp IDockerOperation
 
 	//make inject
-	ffi *ffiDownloader
+	ffi             *ffiDownloader
+	privateRegistry string
 }
 
-func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy string) *ImageBuilderMgr {
+func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy, githubToken, privateRegistry string) *ImageBuilderMgr {
 	return &ImageBuilderMgr{
-		dockerOp:   dockerOp,
-		store:      store,
-		buildSpace: buildSpace,
-		proxy:      proxy,
-		jobMap:     map[string]IIMageBuilder{},
-		taskCh:     make(chan BuildTask),
-		ffi:        newFFIDownloader(""),
+		dockerOp:        dockerOp,
+		store:           store,
+		buildSpace:      buildSpace,
+		proxy:           proxy,
+		jobMap:          map[string]IIMageBuilder{},
+		taskCh:          make(chan BuildTask),
+		ffi:             newFFIDownloader(githubToken),
+		privateRegistry: privateRegistry,
 	}
 }
 
@@ -101,9 +103,10 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 			if !ok {
 				log.Infof("target %s not found and create a new builder", buildTask.Name)
 				builder = &VenusImageBuilder{
-					proxy:     mgr.proxy,
-					codeSpace: mgr.buildSpace,
-					ffi:       mgr.ffi,
+					proxy:           mgr.proxy,
+					codeSpace:       mgr.buildSpace,
+					ffi:             mgr.ffi,
+					privateRegistry: mgr.privateRegistry,
 				}
 				err := builder.InitRepo(context.Background(), plugin.Repo)
 				if err != nil {
@@ -166,6 +169,8 @@ type VenusImageBuilder struct {
 
 	repo *git.Repository
 	ffi  *ffiDownloader
+
+	privateRegistry string
 }
 
 // InitRepo do something once for cache
@@ -330,7 +335,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 
 	ffiVersion := ""
 	for _, module := range submodules {
-		if module.Config().Name == "filecoin-ffi" {
+		if strings.Contains(module.Config().Name, "filecoin-ffi") {
 			status, err := module.Status()
 			if err != nil {
 				return err
@@ -347,14 +352,14 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		}
 
 		//	tar -C "${__tmp_dir}" -xzf "${__tarball_path}"
-		err = execMakefile(builder.repoPath, "tar", "-C", ffiPath, "-xzf", "./extern/filecoin-ffi")
+		err = execMakefile(builder.repoPath, "tar", "-xzf", ffiPath, "-C", "./extern/filecoin-ffi")
 		if err != nil {
 			fmt.Println(err.Error())
 			return err
 		}
 	}
 
-	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy)
+	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy, "PRIVATE_REGISTRY="+builder.privateRegistry)
 	if err != nil {
 		fmt.Println(err.Error())
 		return err
@@ -450,7 +455,7 @@ func (downloader ffiDownloader) downloadFFI(ctx context.Context, releaseTag stri
 		return "", fmt.Errorf("linux release for tag %s not exit", releaseTag)
 	}
 
-	body, _, err := client.Repositories.DownloadReleaseAsset(ctx, "filecoin-project", "filecoin-ffi", *linuxAssert.ID, nil)
+	body, _, err := client.Repositories.DownloadReleaseAsset(ctx, "filecoin-project", "filecoin-ffi", *linuxAssert.ID, client.Client())
 	if err != nil {
 		return "", err
 	}

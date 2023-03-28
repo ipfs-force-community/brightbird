@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
-
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/web/backend/config"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/mongo"
+	"net/url"
+	"os"
 )
 
 func UseProxy(cfg config.Config) error {
@@ -46,9 +46,25 @@ func NewCron() *cron.Cron {
 	return cron.New(cron.WithLogger(job.NewCronLog()))
 }
 
-func NewBuilderMgr(cfg config.Config) func(job.IDockerOperation, repo.DeployPluginStore) *job.ImageBuilderMgr {
-	return func(dockerOp job.IDockerOperation, store repo.DeployPluginStore) *job.ImageBuilderMgr {
-		return job.NewImageBuilderMgr(dockerOp, store, cfg.BuildSpace, cfg.Proxy)
+func NewBuilderMgr(cfg config.Config) func(job.IDockerOperation, repo.DeployPluginStore) (*job.ImageBuilderMgr, error) {
+	return func(dockerOp job.IDockerOperation, store repo.DeployPluginStore) (*job.ImageBuilderMgr, error) {
+		regUrl := ""
+		if len(cfg.DockerRegistry) == 1 {
+			regUrl = cfg.DockerRegistry[0].URL
+		} else {
+			for _, reg := range cfg.DockerRegistry {
+				if reg.Push {
+					regUrl = reg.URL
+					break
+				}
+			}
+		}
+
+		url, err := url.Parse(regUrl)
+		if err != nil {
+			return nil, err
+		}
+		return job.NewImageBuilderMgr(dockerOp, store, cfg.BuildSpace, cfg.Proxy, cfg.GitToken, url.Host), nil
 	}
 }
 

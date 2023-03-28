@@ -6,11 +6,10 @@ type Config struct {
 	DbName      string
 	Listen      string
 
-	BuildSpace   string
-	RunnerConfig string
-	Proxy        string
-	GitToken     string
-
+	BuildSpace     string
+	RunnerConfig   string
+	Proxy          string
+	GitToken       string
 	DockerRegistry []DockerRegistry
 }
 
@@ -19,6 +18,7 @@ type DockerRegistry struct {
 	UserName string
 	Password string
 	Type     string
+	Push     bool
 }
 
 func DefaultConfig() Config {

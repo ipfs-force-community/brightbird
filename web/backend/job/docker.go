@@ -102,16 +102,22 @@ func NewHarborClientWrapper(apiURL, username, password string) (*HarborClientWra
 
 func (client *HarborClientWrapper) Tags(ctx context.Context, name string) ([]string, error) {
 	seq := strings.Split(name, "/")
-	tags, err := client.c.ListTags(ctx, seq[0], seq[1], "")
+	artifacts, err := client.c.ListArtifacts(ctx, seq[0], seq[1])
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]string, len(tags))
-	for index, tag := range tags {
-		results[index] = tag.Name
+	var allTags []string
+	for _, artifact := range artifacts {
+		tags, err := client.c.ListTags(ctx, seq[0], seq[1], artifact.Digest)
+		if err != nil {
+			return nil, err
+		}
+		for _, tag := range tags {
+			allTags = append(allTags, tag.Name)
+		}
 	}
-	return results, nil
+	return allTags, nil
 }
 
 var _ IDockerRegistry = (*OfficialClientWrapper)(nil)

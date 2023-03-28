@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	"github.com/hunjixin/brightbird/repo"
@@ -65,7 +66,7 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 		}
 		j.runningJob[job.ID.String()] = jobInstance
 	default:
-		log.Errorf("unsupport job %s", job.ID)
+		return fmt.Errorf("unsupport job %s", job.ID)
 	}
 	return nil
 }
@@ -77,7 +78,12 @@ func (j *JobManager) Start(ctx context.Context) error {
 	}
 
 	for _, job := range jobs {
-		go j.InsertOrReplaceJob(ctx, job)
+		err := j.InsertOrReplaceJob(ctx, job)
+		if err != nil {
+
+			log.Info("start job fail %s %v", job.Name, err)
+			continue
+		}
 	}
 	j.cron.Start()
 	log.Info("start cron job worker")

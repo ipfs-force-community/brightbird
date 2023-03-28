@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 
 	"github.com/hunjixin/brightbird/types"
@@ -93,10 +94,14 @@ func (j *TaskRepo) Save(ctx context.Context, task *types.Task) (primitive.Object
 		task.BaseTime.ModifiedTime = time.Now().Unix()
 	}
 
-	_, err = j.taskCol.InsertOne(ctx, task)
+	update := bson.M{
+		"$set": task,
+	}
+	_, err = j.taskCol.UpdateOne(ctx, bson.D{{"_id", task.ID}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
+
 	return task.ID, nil
 }
 
