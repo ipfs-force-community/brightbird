@@ -51,9 +51,7 @@ import ProjectAdder from '@/views/project-group/project-adder.vue';
 import ProjectGroup from '@/views/common/project-group.vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { IRootState } from '@/model';
-import {IPageVo} from "@/api/dto/common";
-import {IProjectVo} from "@/api/dto/project";
+import { IRootState } from '@/model'
 
 export default defineComponent({
   props: {

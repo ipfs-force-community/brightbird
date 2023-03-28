@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -38,6 +39,7 @@ var PluginInfo = types.PluginInfo{
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus.git",
+	ImageTarget: "venus",
 	Description: "",
 }
 

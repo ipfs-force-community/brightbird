@@ -11,7 +11,7 @@ import (
 
 type IJobManager interface {
 	Start(ctx context.Context) error
-	ReplaceJob(ctx context.Context, job *types.Job) error
+	InsertOrReplaceJob(ctx context.Context, job *types.Job) error
 	StopJob(ctx context.Context, jobId string) error
 }
 
@@ -42,7 +42,7 @@ func NewJobManager(cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRe
 	}
 }
 
-func (j *JobManager) ReplaceJob(ctx context.Context, job *types.Job) error {
+func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) error {
 	j.lk.Lock()
 	defer j.lk.Unlock()
 
@@ -58,7 +58,7 @@ func (j *JobManager) ReplaceJob(ctx context.Context, job *types.Job) error {
 
 	switch job.JobType {
 	case types.CronJobType:
-		jobInstance := NewCronJob(*job, j.cron, j.taskRepo)
+		jobInstance := NewCronJob(*job, j.cron, j.taskRepo, j.jobRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err
@@ -77,22 +77,7 @@ func (j *JobManager) Start(ctx context.Context) error {
 	}
 
 	for _, job := range jobs {
-		go func(innerJob *types.Job) {
-			switch innerJob.JobType {
-			case types.CronJobType:
-				jobInstance := NewCronJob(*innerJob, j.cron, j.taskRepo)
-				err := jobInstance.Run(ctx)
-				if err != nil {
-					log.Errorf("job %s unable to start %v", innerJob.ID, err)
-					return
-				}
-				j.lk.Lock()
-				defer j.lk.Unlock()
-				j.runningJob[innerJob.ID.String()] = jobInstance
-			default:
-				log.Errorf("unsupport job %s", innerJob.ID)
-			}
-		}(job)
+		go j.InsertOrReplaceJob(ctx, job)
 	}
 	j.cron.Start()
 	log.Info("start cron job worker")

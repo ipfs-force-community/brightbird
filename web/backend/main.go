@@ -16,6 +16,7 @@ import (
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/hunjixin/brightbird/web/backend/api"
+	"github.com/hunjixin/brightbird/web/backend/config"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
@@ -92,7 +93,7 @@ var runCmd = &cli.Command{
 			return err
 		}
 
-		cfg := DefaultConfig()
+		cfg := config.DefaultConfig()
 		if c.IsSet("config") {
 			configPath := c.String("config")
 			configFileContent, err := os.ReadFile(configPath)
@@ -137,13 +138,16 @@ var runCmd = &cli.Command{
 	},
 }
 
-func run(ctx context.Context, cfg Config) error {
+func run(ctx context.Context, cfg config.Config) error {
 	e := gin.Default()
 	e.Use(corsMiddleWare())
 	e.Use(errorHandleMiddleWare())
 
 	shutdown := make(types.Shutdown)
 	stop, err := fx_opt.New(ctx,
+		//config
+		fx_opt.Override(new(config.Config), cfg),
+
 		fx_opt.Override(new(*gin.Engine), e),
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
 			return (*api.V1RouterGroup)(e.Group("api/v1"))
@@ -170,6 +174,7 @@ func run(ctx context.Context, cfg Config) error {
 		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 
 		//job
+		fx_opt.Override(new(job.IDockerOperation), NewDockerRegistry(cfg)),
 		fx_opt.Override(new(*cron.Cron), NewCron),
 		fx_opt.Override(new(*job.ImageBuilderMgr), NewBuilderMgr(cfg)),
 		fx_opt.Override(new(*job.TaskMgr), NewTaskMgr(cfg)),
@@ -180,6 +185,8 @@ func run(ctx context.Context, cfg Config) error {
 		fx_opt.Override(new(repo.IJobRepo), NewJobRepo),
 		fx_opt.Override(new(repo.ITaskRepo), NewTaskRepo),
 
+		//use proxy
+		fx_opt.Override(fx_opt.NextInvoke(), UseProxy),
 		//api
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),

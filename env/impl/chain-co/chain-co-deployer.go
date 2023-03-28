@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -37,6 +38,7 @@ var PluginInfo = types.PluginInfo{
 	Category:    types.Deploy,
 	Description: "",
 	Repo:        "https://github.com/ipfs-force-community/chain-co.git",
+	ImageTarget: "chain-co",
 }
 
 var _ env.IChainCoDeployer = (*ChainCoDeployer)(nil)

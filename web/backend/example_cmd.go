@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/hunjixin/brightbird/web/backend/config"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 )
@@ -10,7 +11,7 @@ import (
 var exampleCmd = &cli.Command{
 	Name: "config",
 	Action: func(_ *cli.Context) error {
-		cfg := Config{}
+		cfg := config.Config{}
 		data, err := toml.Marshal(cfg)
 		if err != nil {
 			return err

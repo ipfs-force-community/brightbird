@@ -5,13 +5,13 @@
     </div>
     <div class="top-card" v-loading="loadingTop">
       <div class="top-title">
-        <div class="name">{{ testflowGroup?.name }}</div>
-        <div class="count">
-          （共有 {{ testflowGroup?.testFlowCount }} 个测试流）
-        </div>
+        <div class="name">{{ jobDetail?.name }}</div>
+      </div>
+      <div class="count">
+          测试流: {{ jobDetail?.testFlowName }}
       </div>
       <div class="description">
-        <span v-html="(testflowGroup?.description || '无').replace(/\n/g, '<br/>')"/>
+        描述:<span v-html="(jobDetail?.description || '无').replace(/\n/g, '<br/>')"/>
       </div>
     </div>
     <div class="content">
@@ -20,39 +20,39 @@
           <span>任务列表</span>
         </div>
       </div>
-      <div class="group-list-wrapper">
-       
+      <div class="task-wrapper">
+        <jm-empty description="暂无任务" :image-size="98" v-if="tasks?.length === 0" />
+            <task-item
+              class="task"
+              v-else
+              v-for="task of tasks"
+              :key="task.id"
+              :task="task"
+            />
       </div>
     </div>
-    <project-adder
-      :id="id"
-      v-if="creationActivated"
-      @closed="creationActivated = false"
-      @completed="addCompleted"
-    />
   </div>
 </template>
 
 <script lang="ts">
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import {getProjectGroup, queryTestFlow} from '@/api/view-no-auth';
-import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
-import ProjectAdder from '@/views/project-group/project-adder.vue';
-import ProjectGroup from '@/views/common/project-group.vue';
+import {getJobDetail} from '@/api/job'
+import {getTaskInJob} from '@/api/tasks'
+import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { IRootState } from '@/model';
+import { IJobDetailVo } from '@/api/dto/job';
+
+import { ITaskVo } from '@/api/dto/tasks';
+import TaskItem from "@/views/common/task-item.vue"
 
 export default defineComponent({
+  components: {TaskItem},
   props: {
     id: {
       type: String,
       required: true,
     },
-  },
-  components: {
-    ProjectAdder,
-    ProjectGroup,
   },
   setup(props) {
     const { proxy } = getCurrentInstance() as any;
@@ -61,17 +61,14 @@ export default defineComponent({
     const rootState = store.state as IRootState;
     const initialized = ref<boolean>(false);
     const loadingTop = ref<boolean>(false);
-    const isShow = ref<boolean>(true);
-    const creationActivated = ref<boolean>(false);
-    const testflowGroup = ref<IProjectGroupVo>();
-    const reloadMain = inject('reloadMain') as () => void;
-    const add = () => {
-      creationActivated.value = true;
-    };
-    const fetchProjectGroupDetail = async () => {
+    const jobDetail = ref<IJobDetailVo>();
+    const tasks = ref<ITaskVo[]>();
+
+    const fetchJobDetail = async () => {
       try {
         loadingTop.value = true;
-        testflowGroup.value = await getProjectGroup(props.id)
+        jobDetail.value = await getJobDetail(props.id)
+        tasks.value = await getTaskInJob({jobId:props.id})
         initialized.value = true;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -80,26 +77,20 @@ export default defineComponent({
       }
     };
     onMounted(async () => {
-      await fetchProjectGroupDetail();
+      await fetchJobDetail();
     });
-    const addCompleted = async () => {
-      reloadMain();
-    };
     return {
       initialized,
-      isShow,
+      tasks,
       loadingTop,
-      creationActivated,
       close: () => {
-        if (!['/', '/project-group'].includes(rootState.fromRoute.path)) {
+        if (!['/', '/job'].includes(rootState.fromRoute.path)) {
           router.push({ name: 'index' });
           return;
         }
         router.push(rootState.fromRoute.fullPath);
       },
-      add,
-      addCompleted,
-      testflowGroup,
+      jobDetail,
     };
   },
 });
@@ -131,13 +122,8 @@ export default defineComponent({
       color: #082340;
 
       .name {
-        font-size: 20px;
+        font-size: 40px;
         font-weight: 500;
-      }
-
-      .count {
-        font-weight: 400;
-        opacity: 0.45;
       }
     }
 
@@ -212,15 +198,11 @@ export default defineComponent({
       }
     }
 
-    .group-list-wrapper {
+    .task-wrapper {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
 
-      .load-more {
-        align-self: center;
-      }
-
-      .project-group {
+      .task {
         margin-top: -10px;
       }
     }

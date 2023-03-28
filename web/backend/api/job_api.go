@@ -23,11 +23,19 @@ type UpdateJobRequest struct {
 	Versions map[string]string `json:"versions"`
 }
 
+// JobDetailResp
+// swagger:model jobDetailResp
+type JobDetailResp struct {
+	types.Job
+	TestFlowName string `json:"testFlowName"`
+	GroupName    string `json:"groupName"`
+}
+
 // ListJobResp
 // swagger:model listJobResp
 type ListJobResp []types.Job
 
-func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, jobManager job.IJobManager) {
+func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager) {
 	group := v1group.Group("/job")
 
 	// swagger:route GET /job listJobs
@@ -94,6 +102,61 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		c.JSON(http.StatusOK, job)
+	})
+
+	// swagger:route Get /job/detail/{id} getJob
+	//
+	// Get job detail by id
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: path
+	//         description: job id
+	//         required: true
+	//         type: string
+	//
+	//     Responses:
+	//       200: jobDetailResp
+	group.GET("detail/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		job, err := jobRepo.Get(ctx, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		testflow, err := testFlowRepo.GetById(ctx, job.TestFlowId)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		tfGroup, err := groupRepo.Get(ctx, testflow.GroupId)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		c.JSON(http.StatusOK, JobDetailResp{
+			*job,
+			testflow.Name,
+			tfGroup.Name,
+		})
 	})
 
 	// swagger:route Get /job/{id} updateJob
@@ -166,7 +229,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		err = jobManager.ReplaceJob(ctx, job)
+		err = jobManager.InsertOrReplaceJob(ctx, job)
 		if err != nil {
 			c.Error(err)
 			return
@@ -261,7 +324,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		err = jobManager.ReplaceJob(ctx, job)
+		err = jobManager.InsertOrReplaceJob(ctx, job)
 		if err != nil {
 			c.Error(err)
 			return

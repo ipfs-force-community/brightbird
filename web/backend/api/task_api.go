@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/web/backend/job"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,7 +15,11 @@ import (
 // swagger:model listTaskResp
 type ListTaskResp []types.Task
 
-func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo) {
+// ListTasksReq
+// swagger:model listTasksReq
+type ListTasksReq repo.ListParams
+
+func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
 
 	// swagger:route GET /task listTasks
@@ -42,14 +47,14 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo r
 	//     Responses:
 	//       200: listTaskResp
 	group.GET("", func(c *gin.Context) {
-		params := repo.ListParams{}
+		params := ListTasksReq{}
 		err := c.ShouldBindQuery(&params)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		tasks, err := tasksRepo.List(ctx, params)
+		tasks, err := tasksRepo.List(ctx, repo.ListParams(params))
 		if err != nil {
 			c.Error(err)
 			return
@@ -133,6 +138,40 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo r
 			return
 		}
 
+		c.Status(http.StatusOK)
+	})
+
+	// swagger:route DELETE /task/stop/{id} stopTask
+	//
+	// stop task
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: path
+	//         description: id of  job
+	//         required: true
+	//         type: string
+	//
+	//     Responses:
+	//       200:
+	group.POST("/stop/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		taskManager.StopOneTask(ctx, id)
 		c.Status(http.StatusOK)
 	})
 }

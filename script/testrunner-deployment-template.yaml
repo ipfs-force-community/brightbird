@@ -5,6 +5,7 @@ metadata:
   labels:
     app: venus-testrunner-pod
     apptype: testrunner
+    testid: {{.TestId}}
 spec:
   initContainers:
   containers:

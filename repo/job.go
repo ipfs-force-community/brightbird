@@ -16,6 +16,7 @@ type IJobRepo interface {
 	Get(context.Context, primitive.ObjectID) (*types.Job, error)
 	Save(context.Context, *types.Job) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
+	IncExecCount(ctx context.Context, id primitive.ObjectID) (*types.Job, error)
 }
 
 var _ IJobRepo = (*JobRepo)(nil)
@@ -45,6 +46,21 @@ func (j *JobRepo) List(ctx context.Context) ([]*types.Job, error) {
 func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Job, error) {
 	tf := &types.Job{}
 	err := j.jobCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	if err != nil {
+		return nil, err
+	}
+	return tf, nil
+}
+
+func (j *JobRepo) IncExecCount(ctx context.Context, id primitive.ObjectID) (*types.Job, error) {
+	tf := &types.Job{}
+
+	inc := bson.M{
+		"$inc": bson.M{
+			"execcount": 1,
+		},
+	}
+	err := j.jobCol.FindOneAndUpdate(ctx, bson.D{{"_id", id}}, inc).Decode(tf)
 	if err != nil {
 		return nil, err
 	}

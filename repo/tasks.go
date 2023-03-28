@@ -11,14 +11,16 @@ import (
 )
 
 type ListParams struct {
-	JobId primitive.ObjectID
+	JobId primitive.ObjectID `json:"jobId"`
+	State []types.State      `json:"state"`
 }
 
 type ITaskRepo interface {
 	List(context.Context, ListParams) ([]*types.Task, error)
 	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
+	MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error
 	Get(context.Context, primitive.ObjectID) (*types.Task, error)
-	Save(context.Context, types.Task) (primitive.ObjectID, error)
+	Save(context.Context, *types.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -34,9 +36,14 @@ type TaskRepo struct {
 
 func (j *TaskRepo) List(ctx context.Context, params ListParams) ([]*types.Task, error) {
 	filter := bson.D{}
-	if params.JobId.IsZero() {
-		filter = append(filter, bson.E{Key: "jobId", Value: params.JobId})
+	if !params.JobId.IsZero() {
+		filter = append(filter, bson.E{Key: "jobid", Value: params.JobId})
 	}
+
+	if len(params.State) > 0 {
+		filter = append(filter, bson.E{Key: "state", Value: bson.M{"$in": params.State}})
+	}
+
 	cur, err := j.taskCol.Find(ctx, filter)
 	if err != nil {
 		return nil, err
@@ -59,7 +66,18 @@ func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task,
 	return tf, nil
 }
 
-func (j *TaskRepo) Save(ctx context.Context, task types.Task) (primitive.ObjectID, error) {
+func (j *TaskRepo) MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error {
+	update := bson.M{
+		"$push": bson.M{
+			"logs": reason,
+		},
+	}
+
+	_, err := j.taskCol.UpdateByID(ctx, id, update)
+	return err
+}
+
+func (j *TaskRepo) Save(ctx context.Context, task *types.Task) (primitive.ObjectID, error) {
 	if task.ID.IsZero() {
 		task.ID = primitive.NewObjectID()
 	}
