@@ -51,17 +51,9 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const {name, createTime, modifiedTime, cases, nodes, groupId, graph} = await fetchTestFlowDetail(props.id as string);
-          flowCreateTime.value = createTime
-          workflow.value = {
-            name: name,
-            groupId: groupId,
-            createTime: createTime,
-            modifiedTime: modifiedTime,
-            cases: cases,
-            nodes: nodes,
-            graph: graph,
-          };
+          const fetchedData = await fetchTestFlowDetail(props.id as string);
+          flowCreateTime.value = fetchedData.createTime
+          workflow.value = fetchedData;
         } catch (err) {
           proxy.$throw(err, proxy);
         } finally {
