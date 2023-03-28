@@ -112,8 +112,8 @@ export default defineComponent({
           workflowBackUp.name !== workflowForm.value.name ||
           workflowBackUp.description !== workflowForm.value.description ||
           workflowBackUp.groupId !== workflowForm.value.groupId ||
-          !compare(originData, targetData) ||
-          !compare(JSON.stringify(workflowBackUp.global), JSON.stringify(workflowForm.value.global))
+          !compare(originData, targetData)
+          // !compare(JSON.stringify(workflowBackUp.global), JSON.stringify(workflowForm.value.global))
         ) {
           proxy
             .$confirm(' ', '保存此次修改', {
@@ -129,8 +129,36 @@ export default defineComponent({
                 proxy.$error(message);
                 return;
               }
-              workflowForm.value.data = JSON.stringify(targetData);
-              emit('save', true, workflowTool.toDsl(workflowForm.value));
+              const caseList: Case[] = [];
+              const nodeList: Node[] = [];
+              targetData.cells.forEach((cell: { shape: string; data: string; }) => {
+                if (cell.shape === 'edge') {
+                  return;
+                }
+                const jsonObject = JSON.parse(cell.data);
+                if (jsonObject.category === 'Exec') {
+                  const CaseObj: Case = {
+                    name: jsonObject.name,
+                    properties: jsonObject.properties,
+                    svcProperties: jsonObject.svcProperties,
+                  };
+                  caseList.push(CaseObj);
+                } else if (jsonObject.category === 'Deployer') {
+                  const NodeObj: Node = {
+                    name: jsonObject.name,
+                    isAnnotateOut: jsonObject.isAnnotateOut,
+                    properties: jsonObject.properties,
+                    svcProperties: jsonObject.svcProperties,
+                    out: jsonObject.out,
+                  };
+                  nodeList.push(NodeObj);
+                }
+              });
+
+              workflowForm.value.graph = JSON.stringify(targetData);
+              workflowForm.value.cases = caseList
+              workflowForm.value.nodes = nodeList
+              emit('save', true,  caseList, nodeList, workflowTool.toDsl(workflowForm.value));
             })
             .catch((action: string) => {
               if (action === 'cancel') {

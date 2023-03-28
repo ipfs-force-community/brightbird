@@ -93,7 +93,7 @@ export default defineComponent({
           const  id = await saveTestFlow({
             groupId: workflow.value.groupId,
             name: workflow.value.name,
-            createTime: ((editMode ? Number(flowCreateTime.value) : Date.now()) * 1000000).toString(),
+            createTime: (editMode ? BigInt(flowCreateTime.value) : BigInt(Date.now()) * BigInt(1000000)).toString(),
             modifiedTime: (Date.now() * 1000000).toString(),
             cases: caseList,
             nodes: nodeList,

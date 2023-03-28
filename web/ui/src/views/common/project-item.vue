@@ -5,7 +5,7 @@
       <div class="content-top">
         <router-link
             :to="{
-            name: 'workflow-execution-record-detail',
+            name: '',
             query: { projectId: project.id },
           }"
         >
