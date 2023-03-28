@@ -50,6 +50,7 @@ export interface IWorkflow {
   nodes?: Node[];
   graph?: string;
   description?: string;
+  data: string;
 }
 
 export type ValidateParamFn = (value: string) => void;

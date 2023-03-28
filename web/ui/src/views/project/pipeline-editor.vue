@@ -11,6 +11,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { Case, Node} from "@/api/dto/project";
+import yaml from 'yaml';
 
 export default defineComponent({
   props: {
@@ -37,23 +38,34 @@ export default defineComponent({
       groupId: '1',
       createTime: '',
       modifiedTime: '',
+      data: '',
     });
     onMounted(async () => {
-      if (payload && editMode) {
-        // 初始化走这里获取到的cache为空
-        workflow.value = JSON.parse(payload as string);
-        loaded.value = true;
-        await nextTick();
-        loaded.value = false;
-        return;
-      }
+      // if (payload && editMode) {
+      //   // 初始化走这里获取到的cache为空
+      //   workflow.value = JSON.parse(payload as string);
+      //   loaded.value = true;
+      //   await nextTick();
+      //   loaded.value = false;
+      //   return;
+      // }
       if (editMode) {
         try {
           loading.value = true;
           loaded.value = true;
           const fetchedData = await fetchTestFlowDetail(props.id as string);
+          const rawData = yaml.parse(fetchedData.graph)['raw-data'];
           flowCreateTime.value = fetchedData.createTime
-          workflow.value = fetchedData;
+          workflow.value = {
+            name: fetchedData.name,
+            groupId: fetchedData.groupId,
+            createTime: fetchedData.createTime,
+            modifiedTime: fetchedData.modifiedTime,
+            cases: fetchedData.cases,
+            nodes: fetchedData.nodes,
+            graph: fetchedData.graph,
+            data: rawData,
+          };
         } catch (err) {
           proxy.$throw(err, proxy);
         } finally {
