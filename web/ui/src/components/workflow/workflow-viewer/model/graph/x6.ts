@@ -1,14 +1,13 @@
 import { BaseGraph } from '../base-graph';
 import { Graph, Node } from '@antv/x6';
 import { parse } from '../dsl/x6';
-import { TaskStatusEnum, TriggerTypeEnum } from '@/api/dto/enumeration';
+import { TaskStatusEnum } from '@/api/dto/enumeration';
 import { WorkflowTool } from '@/components/workflow/workflow-editor/model/workflow-tool';
 import { render } from '@/components/workflow/workflow-editor/model/workflow-graph';
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
 import { NodeRefEnum, NodeTypeEnum, ZoomTypeEnum } from '@/components/workflow/workflow-editor/model/data/enumeration';
 import { INodeMouseoverEvent } from '@/components/workflow/workflow-viewer/model/data/common';
 import { NodeTypeEnum as G6NodeTypeEnum } from '../data/enumeration';
-import { Cron } from '@/components/workflow/workflow-editor/model/data/node/cron';
 import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
 import { imgs, states } from '@/components/workflow/workflow-viewer/shapes/async-task';
 import { BaseTaskRunning } from '../../animations/base-task-running';
@@ -24,8 +23,8 @@ export class X6Graph extends BaseGraph {
   private readonly workflowTool: WorkflowTool;
   private readonly runningAnimations: Record<string, BaseTaskRunning>;
 
-  constructor(dsl: string, triggerType: TriggerTypeEnum, container: HTMLElement) {
-    const { dslType, asyncTaskRefs, data } = parse(dsl, triggerType);
+  constructor(dsl: string, container: HTMLElement) {
+    const { dslType, asyncTaskRefs, data } = parse(dsl);
     super(dslType);
     this.asyncTaskRefs = asyncTaskRefs;
 
@@ -107,7 +106,7 @@ export class X6Graph extends BaseGraph {
 
   getAsyncTaskNodeCount(): number {
     return this.graph.getNodes()
-      .filter(node => [NodeTypeEnum.SHELL, NodeTypeEnum.ASYNC_TASK]
+      .filter(node => [NodeTypeEnum.ASYNC_TASK]
         .includes(new CustomX6NodeProxy(node).getData().getType()))
       .length;
   }
@@ -213,9 +212,6 @@ export class X6Graph extends BaseGraph {
     let tempNode = this.graph.getRootNodes()[0];
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      // if (!new CustomX6NodeProxy(tempNode).isTrigger()) {
-      //   nodes.push(tempNode);
-      // }
 
       const edges = this.graph.getOutgoingEdges(tempNode);
       if (!edges) {
@@ -287,27 +283,12 @@ export class X6Graph extends BaseGraph {
   } {
     const workflowNode = new CustomX6NodeProxy(node).getData();
     const description = workflowNode.getName();
-    const type = (workflowNode.getType() === NodeTypeEnum.SHELL ? 'async-task' : workflowNode.getType()) as G6NodeTypeEnum;
-
-    if (workflowNode.getType() === NodeTypeEnum.CRON) {
-      return {
-        id: workflowNode.getRef(),
-        description: (workflowNode as Cron).schedule,
-        type,
-      };
-    }
-    if (workflowNode.getType() === NodeTypeEnum.WEBHOOK) {
-      return { id: workflowNode.getRef(), description, type };
-    }
+    const type = (workflowNode.getType()) as G6NodeTypeEnum;
 
     let index = 0;
     let tempNode = this.graph.getRootNodes()[0];
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      // if (new CustomX6NodeProxy(tempNode).isTrigger()) {
-      //   tempNode = this.graph.getOutgoingEdges(tempNode)![0].getTargetNode()!;
-      //   continue;
-      // }
 
       if (tempNode.id === node.id) {
         break;

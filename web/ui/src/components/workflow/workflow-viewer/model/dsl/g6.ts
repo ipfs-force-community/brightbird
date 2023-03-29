@@ -1,7 +1,7 @@
 import { EdgeConfig, NodeConfig } from '@antv/g6';
 import yaml from 'yaml';
 import { NodeTypeEnum } from '../../model/data/enumeration';
-import { DslTypeEnum, TriggerTypeEnum } from '@/api/dto/enumeration';
+import { DslTypeEnum } from '@/api/dto/enumeration';
 import { INodeDefVo } from '@/api/dto/project';
 import shellIcon from '../../svgs/shape/shell.svg';
 import { SHELL_NODE_TYPE } from '../../model/data/common';
@@ -11,79 +11,46 @@ import { SHELL_NODE_TYPE } from '../../model/data/common';
  */
 export const MAX_LABEL_LENGTH = 10;
 
-/**
- * 解析webhook节点
- * @param nodes
- * @param edges
- * @param isWorkflow
- */
-function parseWebhook(nodes: NodeConfig[], edges: EdgeConfig[], isWorkflow: boolean): void {
-  const key = 'webhook';
-  const label = key;
-  const type = NodeTypeEnum.WEBHOOK;
-
-  nodes.splice(0, 0, {
-    id: key,
-    label,
-    description: key,
-    type,
-  });
-
-  let startNode;
-
-  if (isWorkflow) {
-    startNode = nodes.find(item => item.type === NodeTypeEnum.START) as NodeConfig;
-  } else {
-    startNode = nodes[1];
-  }
-
-  edges.push({
-    source: key,
-    target: startNode.id,
-    type: 'flow',
-  });
-}
-
-/**
- * 解析cron节点
- * @param cron
- * @param nodes
- * @param edges
- * @param isWorkflow
- */
-function parseCron(cron: string | undefined, nodes: NodeConfig[], edges: EdgeConfig[], isWorkflow: boolean): void {
-  if (!cron) {
-    // 不存在时，忽略
-    return;
-  }
-
-  const key = NodeTypeEnum.CRON;
-  // const label = cron.length > MAX_LABEL_LENGTH ? `${cron.substr(0, MAX_LABEL_LENGTH)}...` : cron;
-  const label = 'cron';
-  const description = cron;
-  const type = NodeTypeEnum.CRON;
-
-  nodes.splice(0, 0, {
-    id: key,
-    label,
-    description,
-    type,
-  });
-
-  let startNode;
-
-  if (isWorkflow) {
-    startNode = nodes.find(item => item.type === NodeTypeEnum.START) as NodeConfig;
-  } else {
-    startNode = nodes[1];
-  }
-
-  edges.push({
-    source: key,
-    target: startNode.id,
-    type: 'flow',
-  });
-}
+// /**
+//  * 解析cron节点
+//  * @param cron
+//  * @param nodes
+//  * @param edges
+//  * @param isWorkflow
+//  */
+// function parseCron(cron: string | undefined, nodes: NodeConfig[], edges: EdgeConfig[], isWorkflow: boolean): void {
+//   if (!cron) {
+//     // 不存在时，忽略
+//     return;
+//   }
+//
+//   const key = NodeTypeEnum.CRON;
+//   // const label = cron.length > MAX_LABEL_LENGTH ? `${cron.substr(0, MAX_LABEL_LENGTH)}...` : cron;
+//   const label = 'cron';
+//   const description = cron;
+//   const type = NodeTypeEnum.CRON;
+//
+//   nodes.splice(0, 0, {
+//     id: key,
+//     label,
+//     description,
+//     type,
+//   });
+//
+//   let startNode;
+//
+//   if (isWorkflow) {
+//     startNode = nodes.find(item => item.type === NodeTypeEnum.START) as NodeConfig;
+//   } else {
+//     startNode = nodes[1];
+//   }
+//
+//   edges.push({
+//     source: key,
+//     target: startNode.id,
+//     type: 'flow',
+//   });
+// }
 
 /**
  * 解析workflow节点
@@ -185,8 +152,6 @@ function parseWorkflow(workflow: any): {
       }
     }
   });
-
-  // ====================================================================================================
 
   const groupByTarget: {
     [key: string]: EdgeConfig[];
@@ -308,33 +273,21 @@ function parsePipeline(pipeline: any): {
 /**
  * 解析yaml
  * @param dsl
- * @param triggerType
  * @param nodeInfos
  */
-export function parse(dsl: string | undefined, triggerType: TriggerTypeEnum | undefined, nodeInfos?: INodeDefVo[]): {
+export function parse(dsl: string | undefined, nodeInfos?: INodeDefVo[]): {
   dslType: DslTypeEnum;
   nodes: NodeConfig[];
   edges: EdgeConfig[];
 } {
-  if (!dsl || !triggerType) {
+  if (!dsl) {
     return { nodes: [], edges: [], dslType: DslTypeEnum.WORKFLOW };
   }
 
-  const { trigger, workflow, pipeline } = yaml.parse(dsl);
+  const { workflow, pipeline } = yaml.parse(dsl);
 
   // 解析workflow节点
   const { nodes, edges } = workflow ? parseWorkflow(workflow) : parsePipeline(pipeline);
-
-  switch (triggerType) {
-    case TriggerTypeEnum.CRON:
-      // 解析cron节点
-      parseCron(trigger.schedule, nodes, edges, !!workflow);
-      break;
-    case TriggerTypeEnum.WEBHOOK:
-      // 解析webhook节点
-      parseWebhook(nodes, edges, !!workflow);
-      break;
-  }
 
   if (nodeInfos) {
     // 匹配icon

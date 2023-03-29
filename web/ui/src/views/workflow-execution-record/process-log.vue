@@ -32,12 +32,6 @@
           <jm-text-viewer :value="process.id" :tip-append-to-body="false" />
         </div>
       </div>
-      <div class="item">
-        <div class="param-key">流程版本号</div>
-        <div class="param-value">
-          <jm-text-viewer :value="process.workflowVersion" :tip-append-to-body="false" />
-        </div>
-      </div>
     </div>
 
     <div class="process-log">
@@ -62,56 +56,55 @@ import { computed, defineComponent, getCurrentInstance, ref } from 'vue';
 import { useStore } from 'vuex';
 import { namespace } from '@/store/modules/workflow-execution-record';
 import { IState } from '@/model/modules/workflow-execution-record';
-import { IWorkflowExecutionRecordVo } from '@/api/dto/workflow-execution-record';
 import { datetimeFormatter } from '@/utils/formatter';
 import { TriggerTypeEnum, WorkflowExecutionRecordStatusEnum } from '@/api/dto/enumeration';
-import { downloadWorkflowLogs, randomWorkflowLogs } from '@/api/workflow-execution-record';
+import { downloadWorkflowLogs } from '@/api/workflow-execution-record';
 
 export default defineComponent({
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const state = useStore().state[namespace] as IState;
-    const process = computed<IWorkflowExecutionRecordVo>(
-      () =>
-        (state.recordDetail.record || {
-          id: '',
-          serialNo: '',
-          name: '',
-          workflowRef: '',
-          workflowVersion: '',
-          startTime: '',
-          status: '',
-          triggerId: '',
-          triggerType: TriggerTypeEnum.MANUAL,
-        }) as IWorkflowExecutionRecordVo,
-    );
-    const executing = computed<boolean>(
-      () => WorkflowExecutionRecordStatusEnum.RUNNING === (process.value.status as WorkflowExecutionRecordStatusEnum),
-    );
-    const isSuspended = computed<boolean>(
-      () => WorkflowExecutionRecordStatusEnum.SUSPENDED === (process.value.status as WorkflowExecutionRecordStatusEnum),
-    );
+    // const process = computed<IWorkflowExecutionRecordVo>(
+    //   () =>
+    //     (state.recordDetail.record || {
+    //       id: '',
+    //       serialNo: '',
+    //       name: '',
+    //       workflowRef: '',
+    //       // workflowVersion: '',
+    //       startTime: '',
+    //       status: '',
+    //       triggerId: '',
+    //       triggerType: TriggerTypeEnum.MANUAL,
+    //     }) as IWorkflowExecutionRecordVo,
+    // );
+    // const executing = computed<boolean>(
+    //   () => WorkflowExecutionRecordStatusEnum.RUNNING === (process.value.status as WorkflowExecutionRecordStatusEnum),
+    // );
+    // const isSuspended = computed<boolean>(
+    //   () => WorkflowExecutionRecordStatusEnum.SUSPENDED === (process.value.status as WorkflowExecutionRecordStatusEnum),
+    // );
     const processLog = ref<string>('');
     const moreLog = ref<boolean>(false);
 
     // 下载日志
-    const download = async () => {
-      try {
-        return await downloadWorkflowLogs(process.value.triggerId);
-      } catch (err) {
-        proxy.$throw(err, proxy);
-      }
-    };
+    // const download = async () => {
+    //   try {
+    //     return await downloadWorkflowLogs(process.value.triggerId);
+    //   } catch (err) {
+    //     proxy.$throw(err, proxy);
+    //   }
+    // };
 
     return {
       workflowName: state.recordDetail.record?.name,
       process,
-      executing,
-      isSuspended,
+      // executing,
+      // isSuspended,
       datetimeFormatter,
       processLog,
       WorkflowExecutionRecordStatusEnum,
-      download,
+      // download,
       moreLog,
     };
   },

@@ -1,12 +1,8 @@
 import { ActionContext, Module } from 'vuex';
 import { IRootState } from '@/model';
 import { IState } from '@/model/modules/workflow-execution-record';
-import { ITaskExecutionRecordVo, IWorkflowExecutionRecordVo } from '@/api/dto/workflow-execution-record';
 import {
   fetchTestFlowDetail,
-  fetchWorkflow,
-  listAsyncTaskInstance,
-  listWorkflowExecutionRecord,
 } from '@/api/view-no-auth';
 import yaml from 'yaml';
 import {INodeDefVo, ITestFlowDetail} from '@/api/dto/project';

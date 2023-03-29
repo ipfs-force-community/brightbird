@@ -25,18 +25,13 @@
           <jm-tooltip content="预览测试流" placement="bottom">
             <button class="pipeline-label" @click="dslDialogFlag = true"></button>
           </jm-tooltip>
-          <jm-tooltip content="删除" placement="bottom">
+          <jm-tooltip content="删除" placement="bottom" :disabled="deleting">
             <button class="jm-icon-button-delete" @click="del(project.id)"></button>
           </jm-tooltip>
         </div>
       </div>
     </div>
-    <cache-drawer
-      v-if="cacheDrawerFlag"
-      v-model="cacheDrawerFlag"
-      :current-project-name="project.name"
-      :current-project-workflow-ref="project.workflowRef"
-    ></cache-drawer>
+
     <project-preview-dialog v-if="dslDialogFlag" :project-id="project.id" @close="dslDialogFlag = false" />
     <div class="cover"></div>
   </div>
@@ -44,19 +39,19 @@
 
 <script lang="ts">
 import { defineComponent, getCurrentInstance, PropType, ref, SetupContext } from 'vue';
-import { IProjectVo } from '@/api/dto/project';
-import { del } from '@/api/project';
 import ProjectPreviewDialog from './project-preview-dialog.vue';
 import WebhookDrawer from './webhook-drawer.vue';
 import CacheDrawer from '@/views/common/cache-drawer.vue';
 import { useRouter } from 'vue-router';
 import JmTextViewer from "@/components/text-viewer/index.vue";
+import {ITestFlowDetail} from "@/api/dto/project";
+import {deleteTestFlow} from "@/api/view-no-auth";
 
 export default defineComponent({
   components: {JmTextViewer, ProjectPreviewDialog, WebhookDrawer, CacheDrawer },
   props: {
     project: {
-      type: Object as PropType<IProjectVo>,
+      type: Object as PropType<ITestFlowDetail>,
       required: true,
     },
     // 控制item是否加上hover样式，根据对比id值判断
@@ -88,7 +83,34 @@ export default defineComponent({
         if (deleting.value) {
           return;
         }
-        //todo delete
+
+        const { name } = props.project;
+
+        let msg = '<div>确定要删除项目吗?</div>';
+        msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${name}</div>`;
+
+        proxy
+            .$confirm(msg, '删除项目', {
+              confirmButtonText: '确定',
+              cancelButtonText: '取消',
+              type: 'warning',
+              dangerouslyUseHTMLString: true,
+            })
+            .then(() => {
+              deleting.value = true;
+
+              deleteTestFlow(id)
+                  .then(() => {
+                    proxy.$success('删除成功');
+                    deleting.value = false;
+
+                    emit('deleted', id);
+                  })
+                  .catch((err: Error) => {
+                    proxy.$throw(err, proxy);
+                    deleting.value = false;
+                  });
+            });
       },
     };
   },

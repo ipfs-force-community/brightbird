@@ -2,7 +2,6 @@ import yaml from 'yaml';
 import { BaseGraph } from './base-graph';
 import { G6Graph } from './graph/g6';
 import { X6Graph } from './graph/x6';
-import { TriggerTypeEnum } from '@/api/dto/enumeration';
 import { INodeDefVo } from '@/api/dto/project';
 import { GraphDirectionEnum } from './data/enumeration';
 
@@ -11,8 +10,7 @@ export class WorkflowGraph {
   private readonly resizeObserver: ResizeObserver;
   readonly visibleDsl: string;
 
-  constructor(dsl: string, triggerType: TriggerTypeEnum,
-    nodeInfos: INodeDefVo[], container: HTMLElement, direction: GraphDirectionEnum) {
+  constructor(dsl: string, nodeInfos: INodeDefVo[], container: HTMLElement, direction: GraphDirectionEnum) {
     const obj = yaml.parse(dsl);
     const { 'raw-data': rawData } = obj;
     if (rawData) {
@@ -22,8 +20,8 @@ export class WorkflowGraph {
       this.visibleDsl = dsl;
     }
 
-    this.graph = rawData ? new X6Graph(dsl, triggerType, container) :
-      new G6Graph(dsl, triggerType, nodeInfos, container, direction);
+    this.graph = rawData ? new X6Graph(dsl, container) :
+      new G6Graph(dsl, nodeInfos, container, direction);
 
     const containerParentEl = container.parentElement!;
     this.resizeObserver = new ResizeObserver(() => {

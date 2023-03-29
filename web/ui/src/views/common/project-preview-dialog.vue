@@ -10,8 +10,7 @@
         <jm-workflow-viewer
           :dsl="dsl"
           readonly
-          :node-infos="nodeDefs"
-          :trigger-type="triggerType"/>
+          :node-infos="nodeDefs"/>
       </div>
     </jm-dialog>
   </div>
@@ -19,9 +18,8 @@
 
 <script lang="ts">
 import { defineComponent, getCurrentInstance, onBeforeMount, ref, SetupContext } from 'vue';
-import { TriggerTypeEnum } from '@/api/dto/enumeration';
-import {fetchTestFlowDetail, fetchWorkflow} from '@/api/view-no-auth';
-import { INodeDefVo } from '@/api/dto/project';
+import { fetchTestFlowDetail } from '@/api/view-no-auth';
+import { Node } from '@/api/dto/project';
 
 export default defineComponent({
   props: {
@@ -38,8 +36,7 @@ export default defineComponent({
     const title = ref<string>('');
     const loading = ref<boolean>(false);
     const dsl = ref<string>();
-    const nodeDefs = ref<INodeDefVo[]>([]);
-    const triggerType = ref<TriggerTypeEnum>();
+    const nodeDefs = ref<Node[]>([]);
     const close = () => emit('close');
 
     const loadDsl = async () => {
@@ -49,18 +46,11 @@ export default defineComponent({
 
       try {
         loading.value = true;
-
-        const {
-          name,
-          workflowVersion,
-        } = await fetchTestFlowDetail(props.projectId);
-        title.value = workflowName;
-
-        const { nodes, dslText } = await fetchWorkflow(workflowRef, workflowVersion);
-        dsl.value = dslText;
+        const { name, nodes, graph} = await fetchTestFlowDetail(props.projectId);
+        title.value = name
+        dsl.value = graph
         nodeDefs.value = nodes
-          .filter(({ metadata }) => metadata)
-          .map(({ metadata }) => JSON.parse(metadata as string));
+
       } catch (err) {
         close();
 
@@ -73,13 +63,11 @@ export default defineComponent({
     onBeforeMount(() => loadDsl());
 
     return {
-      TriggerTypeEnum,
       dialogVisible,
       title,
       loading,
       dsl,
       nodeDefs,
-      triggerType,
       close,
     };
   },

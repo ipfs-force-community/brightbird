@@ -1,9 +1,7 @@
 import { restProxy } from '@/api/index';
 import {
-  IAsyncTaskInstanceVo,
   ITaskExecutionRecordVo,
   ITaskParamVo,
-  IWorkflowExecutionRecordVo,
 } from '@/api/dto/workflow-execution-record';
 import {
   INodeVo, IProcessTemplateVo, ITestFlowDetail,
@@ -125,28 +123,6 @@ export async function saveTestFlow(dto: ITestFlowDetail): Promise<ITestFlowIdVo>
 }
 
 /**
- * 获取流程执行记录列表
- * @param workflowRef
- */
-export function listWorkflowExecutionRecord(workflowRef: string): Promise<IWorkflowExecutionRecordVo[]> {
-  return restProxy<IWorkflowExecutionRecordVo[]>({
-    url: `${baseUrl.workflow}/${workflowRef}`,
-    method: 'get',
-  });
-}
-
-/**
- * 获取异步任务实例列表
- * @param triggerId
- */
-export function listAsyncTaskInstance(triggerId: string): Promise<IAsyncTaskInstanceVo[]> {
-  return restProxy<IAsyncTaskInstanceVo[]>({
-    url: `${baseUrl.asyncTasks}/${triggerId}`,
-    method: 'get',
-  });
-}
-
-/**
  * 获取任务实例列表
  * @param businessId
  */
@@ -164,18 +140,6 @@ export function listTaskInstance(businessId: string): Promise<ITaskExecutionReco
 export function listTaskParam(taskId: string): Promise<ITaskParamVo[]> {
   return restProxy<ITaskParamVo[]>({
     url: `${baseUrl.task}/${taskId}/parameters`,
-    method: 'get',
-  });
-}
-
-/**
- * 获取dsl
- * @param workflowRef
- * @param workflowVersion
- */
-export function fetchWorkflow(workflowRef: string, workflowVersion: string): Promise<IWorkflowVo> {
-  return restProxy<IWorkflowVo>({
-    url: `${baseUrl.dsl}/${workflowRef}/${workflowVersion}`,
     method: 'get',
   });
 }

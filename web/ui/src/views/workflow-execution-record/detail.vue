@@ -82,10 +82,6 @@
           <jm-text-viewer v-else :value="data.record?.id" class="value" />
           <div>流程实例ID</div>
         </div>
-        <div class="item">
-          <jm-text-viewer :value="data.record?.workflowVersion || '无'" class="value" />
-          <div>流程版本号</div>
-        </div>
         <jm-tooltip v-if="checkWorkflowRunning(data.record?.status)" content="终止" placement="left">
           <button
             :class="{
@@ -114,13 +110,12 @@ import { IState } from '@/model/modules/workflow-execution-record';
 import { datetimeFormatter } from '@/utils/formatter';
 import { TaskStatusEnum, TriggerTypeEnum, WorkflowExecutionRecordStatusEnum } from '@/api/dto/enumeration';
 import Workflow from '@/views/workflow-execution-record/workflow.vue';
-import { ITaskExecutionRecordVo, IWorkflowExecutionRecordVo } from '@/api/dto/workflow-execution-record';
+import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
 import { executeImmediately } from '@/api/project';
 import sleep from '@/utils/sleep';
 import { onBeforeRouteUpdate, useRouter } from 'vue-router';
 import { terminate, terminateAll } from '@/api/workflow-execution-record';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
-import { IProjectDetailVo } from '@/api/dto/project';
 import { IRootState } from '@/model';
 
 const { mapActions, mapMutations } = createNamespacedHelpers(namespace);
@@ -201,10 +196,10 @@ export default defineComponent({
           loading.value = !loading.value;
         }
 
-        const { status } = state.recordDetail.record as IWorkflowExecutionRecordVo;
+        // const { status } = state.recordDetail.record as IWorkflowExecutionRecordVo;
 
         if (
-          checkWorkflowRunning(status) ||
+          // checkWorkflowRunning(status) ||
           state.recordDetail.taskRecords.find(item => checkTaskRunning(item.status))
         ) {
           console.debug('3秒后刷新');
@@ -263,26 +258,23 @@ export default defineComponent({
     });
 
     const data = computed<{
-      project?: IProjectDetailVo;
-      allRecords: IWorkflowExecutionRecordVo[];
-      record?: IWorkflowExecutionRecordVo;
       taskRecords: ITaskExecutionRecordVo[];
     }>(() => state.recordDetail);
 
-    const showStopAll = computed<boolean>(
-      () =>
-        data.value.allRecords.filter(
-          e =>
-            e.status === WorkflowExecutionRecordStatusEnum.RUNNING ||
-            e.status === WorkflowExecutionRecordStatusEnum.SUSPENDED,
-        ).length >= 2,
-    );
+    // const showStopAll = computed<boolean>(
+    //   () =>
+    //     data.value.allRecords.filter(
+    //       e =>
+    //         e.status === WorkflowExecutionRecordStatusEnum.RUNNING ||
+    //         e.status === WorkflowExecutionRecordStatusEnum.SUSPENDED,
+    //     ).length >= 2,
+    // );
     const clicked = ref<boolean>(false);
     return {
       navScrollBar,
       WorkflowExecutionRecordStatusEnum,
       data,
-      showStopAll,
+      // showStopAll,
       clicked,
       loading,
       ...mapMutations({
@@ -295,43 +287,43 @@ export default defineComponent({
       close: () => {
         router.push(rootState.fromRoute.fullPath);
       },
-      changeRecord: async (record: IWorkflowExecutionRecordVo) => {
-        const { id } = record;
-
-        if (!data.value.record || data.value.record.id === id) {
-          // 忽略
-          return;
-        }
-
-        await router.push({
-          name: 'workflow-execution-record-detail',
-          query: {
-            projectId: props.projectId,
-            workflowExecutionRecordId: id,
-          },
-        });
-
-        // 刷新详情
-        reloadMain();
-      },
+      // changeRecord: async (record: IWorkflowExecutionRecordVo) => {
+      //   const { id } = record;
+      //
+      //   if (!data.value.record || data.value.record.id === id) {
+      //     // 忽略
+      //     return;
+      //   }
+      //
+      //   await router.push({
+      //     name: 'workflow-execution-record-detail',
+      //     query: {
+      //       projectId: props.projectId,
+      //       workflowExecutionRecordId: id,
+      //     },
+      //   });
+      //
+      //   // 刷新详情
+      //   reloadMain();
+      // },
       datetimeFormatter,
       checkWorkflowRunning,
 
       execute: () => {
-        const isWarning = data.value.project?.triggerType === TriggerTypeEnum.WEBHOOK;
-        let msg = '<div>确定要触发吗?</div>';
-        if (isWarning) {
-          msg +=
-            '<div style="color: red; margin-top: 5px; font-size: 12px; line-height: normal;">注意：项目已配置webhook，手动触发可能会导致不可预知的结果，请慎重操作。</div>';
-        }
+        // const isWarning = data.value.project?.triggerType === TriggerTypeEnum.WEBHOOK;
+        // let msg = '<div>确定要触发吗?</div>';
+        // if (isWarning) {
+        //   msg +=
+        //     '<div style="color: red; margin-top: 5px; font-size: 12px; line-height: normal;">注意：项目已配置webhook，手动触发可能会导致不可预知的结果，请慎重操作。</div>';
+        // }
 
         proxy
-          .$confirm(msg, '触发项目执行', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: isWarning ? 'warning' : 'info',
-            dangerouslyUseHTMLString: true,
-          })
+          // .$confirm(msg, '触发项目执行', {
+          //   confirmButtonText: '确定',
+          //   cancelButtonText: '取消',
+          //   type: isWarning ? 'warning' : 'info',
+          //   dangerouslyUseHTMLString: true,
+          // })
           .then(() => {
             executeImmediately(props.projectId)
               .then(async () => {
@@ -353,57 +345,57 @@ export default defineComponent({
               .catch((err: Error) => proxy.$throw(err, proxy));
           });
       },
-      terminateAllRecord: () => {
-        proxy
-          .$confirm('确定要终止执行中/挂起的全部实例吗？', '终止全部', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info',
-          })
-          .then((type: any) => {
-            if (clicked.value) return;
-            if (type === 'confirm') {
-              clicked.value = true;
-            }
-            if (!data.value.record) {
-              return;
-            }
-            terminateAll(data.value.record.workflowRef)
-              .then(() => {
-                proxy.$success('操作成功，正在终止，请稍后');
-                // 刷新详情
-                reloadMain();
-              })
-              .catch((err: Error) => proxy.$throw(err, proxy))
-              .finally(() => {
-                setTimeout(() => {
-                  clicked.value = false;
-                }, 6000);
-              });
-          });
-      },
-      terminate: () => {
-        proxy
-          .$confirm('确定要终止吗?', '终止项目执行', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
-            type: 'info',
-          })
-          .then(() => {
-            if (!data.value.record) {
-              return;
-            }
-
-            terminate(data.value.record.id)
-              .then(() => {
-                proxy.$success('终止成功');
-
-                // 刷新详情
-                reloadMain();
-              })
-              .catch((err: Error) => proxy.$throw(err, proxy));
-          });
-      },
+      // terminateAllRecord: () => {
+      //   proxy
+      //     .$confirm('确定要终止执行中/挂起的全部实例吗？', '终止全部', {
+      //       confirmButtonText: '确定',
+      //       cancelButtonText: '取消',
+      //       type: 'info',
+      //     })
+      //     .then((type: any) => {
+      //       if (clicked.value) return;
+      //       if (type === 'confirm') {
+      //         clicked.value = true;
+      //       }
+      //       if (!data.value.record) {
+      //         return;
+      //       }
+      //       terminateAll(data.value.record.workflowRef)
+      //         .then(() => {
+      //           proxy.$success('操作成功，正在终止，请稍后');
+      //           // 刷新详情
+      //           reloadMain();
+      //         })
+      //         .catch((err: Error) => proxy.$throw(err, proxy))
+      //         .finally(() => {
+      //           setTimeout(() => {
+      //             clicked.value = false;
+      //           }, 6000);
+      //         });
+      //     });
+      // },
+      // terminate: () => {
+      //   proxy
+      //     .$confirm('确定要终止吗?', '终止项目执行', {
+      //       confirmButtonText: '确定',
+      //       cancelButtonText: '取消',
+      //       type: 'info',
+      //     })
+      //     .then(() => {
+      //       if (!data.value.record) {
+      //         return;
+      //       }
+      //
+      //       terminate(data.value.record.id)
+      //         .then(() => {
+      //           proxy.$success('终止成功');
+      //
+      //           // 刷新详情
+      //           reloadMain();
+      //         })
+      //         .catch((err: Error) => proxy.$throw(err, proxy));
+      //     });
+      // },
       goBack() {
         const { fullPath } = rootState.fromRoute;
         router.push(fullPath);

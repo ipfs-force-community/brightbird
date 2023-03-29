@@ -1,6 +1,6 @@
 import { BaseGraph } from '../base-graph';
 import { G6Event, Graph, IBBox, IG6GraphEvent, IShape, Item, LayoutConfig, NodeConfig } from '@antv/g6';
-import { DslTypeEnum, TaskStatusEnum, TriggerTypeEnum } from '@/api/dto/enumeration';
+import { DslTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
 import { INodeDefVo } from '@/api/dto/project';
 import { parse } from '../../model/dsl/g6';
 import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
@@ -71,9 +71,9 @@ function calculateLayout(dslType: DslTypeEnum, nodes: NodeConfig[], direction: G
 export class G6Graph extends BaseGraph {
   private readonly graph: Graph;
 
-  constructor(dsl: string, triggerType: TriggerTypeEnum, nodeInfos: INodeDefVo[],
+  constructor(dsl: string, nodeInfos: INodeDefVo[],
     container: HTMLElement, direction: GraphDirectionEnum) {
-    const { dslType, nodes, edges } = parse(dsl, triggerType, nodeInfos);
+    const { dslType, nodes, edges } = parse(dsl, nodeInfos);
     super(dslType);
 
     const containerParentEl = container.parentElement!;

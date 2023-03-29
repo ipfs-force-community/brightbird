@@ -1,6 +1,5 @@
 import { TriggerTypeEnum } from '@/api/dto/enumeration';
 import { IPageDto } from '@/api/dto/common';
-import { WebhookRequstStateEnum } from '@/api/dto/enumeration';
 
 /**
  * 事件参数vo
@@ -40,24 +39,6 @@ export interface ITriggerWebhookVo
 export interface ITriggerViewingDto
   extends Readonly<IPageDto & {
     projectId: string;
-  }> {
-}
-
-/**
- * WebRequest
- */
-export interface IWebRequestVo
-  extends Readonly<{
-    id: string;
-    projectId: string;
-    workflowRef: string;
-    workflowVersion: string;
-    triggerId: string;
-    userAgent: string;
-    payload: string;
-    statusCode: WebhookRequstStateEnum;
-    errorMsg?: string;
-    requestTime: string;
   }> {
 }
 

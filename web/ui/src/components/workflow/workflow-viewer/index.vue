@@ -56,7 +56,7 @@ import TaskState from './task-state.vue';
 import Toolbar from './toolbar.vue';
 import NodeToolbar from './node-toolbar.vue';
 import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
-import { DslTypeEnum, TaskStatusEnum, TriggerTypeEnum } from '@/api/dto/enumeration';
+import { DslTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
 import { GraphDirectionEnum, GraphTypeEnum, NodeToolbarTabTypeEnum, NodeTypeEnum } from './model/data/enumeration';
 import { INodeMouseoverEvent } from './model/data/common';
 import { sortTasks } from './model/util';
@@ -78,7 +78,6 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    triggerType: String as PropType<TriggerTypeEnum>,
     nodeInfos: {
       type: Array,
       default: () => [],
@@ -124,13 +123,12 @@ export default defineComponent({
 
     const refreshGraph = (direction: GraphDirectionEnum = GraphDirectionEnum.HORIZONTAL) => {
       if (!graph.value) {
-        if (!props.dsl || !props.triggerType || !container.value) {
+        if (!props.dsl || !container.value) {
           return;
         }
 
         workflowGraph.value = new WorkflowGraph(
           props.dsl,
-          props.triggerType,
           props.nodeInfos,
           container.value as HTMLElement,
           direction,
@@ -275,19 +273,19 @@ export default defineComponent({
           count: number;
         }[] = [];
 
-        const tasks = props.tasks.filter(
-          ({ defKey }) => defKey !== 'Start' && defKey !== 'End' && defKey !== 'Condition' && defKey !== 'Switch',
-        );
+        // const tasks = props.tasks.filter(
+        //   ({ defKey }) => defKey !== 'Start' && defKey !== 'End' && defKey !== 'Condition' && defKey !== 'Switch',
+        // );
         const taskMap = new Map();
         // 按开始时间生序排序，保证最后一个是最新的
-        sortTasks(tasks, false).forEach((task: ITaskExecutionRecordVo) => taskMap.set(task.nodeName, task));
+        // sortTasks(tasks, false).forEach((task: ITaskExecutionRecordVo) => taskMap.set(task.nodeName, task));
 
-        Object.keys(TaskStatusEnum).forEach(status =>
-          sArr.push({
-            status,
-            count: status === TaskStatusEnum.INIT ? graph.value?.getAsyncTaskNodeCount() - taskMap.size : 0,
-          }),
-        );
+        // Object.keys(TaskStatusEnum).forEach(status =>
+        //   sArr.push({
+        //     status,
+        //     count: status === TaskStatusEnum.INIT ? graph.value?.getAsyncTaskNodeCount() - taskMap.size : 0,
+        //   }),
+        // );
 
         taskMap.forEach(({ status }: ITaskExecutionRecordVo) => {
           const s = sArr.find(item => item.status === status);

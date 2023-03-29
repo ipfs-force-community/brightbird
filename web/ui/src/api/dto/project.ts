@@ -1,14 +1,8 @@
-import { BaseVo, IPageDto } from '@/api/dto/common';
+import { IPageDto } from '@/api/dto/common';
 import {
-  DslSourceEnum,
   DslTypeEnum,
-  NodeTypeEnum,
   ProjectImporterTypeEnum,
-  ProjectStatusEnum,
-  SortTypeEnum,
-  TriggerTypeEnum,
 } from '@/api/dto/enumeration';
-import internal from "stream";
 
 /**
  * 保存项目dto
@@ -19,8 +13,8 @@ export interface ITestFlowDetail
         name: string;
         createTime: string;
         modifiedTime: string;
-        cases?: Case[];
-        nodes?: Node[];
+        cases: Case[];
+        nodes: Node[];
         groupId: string;
         graph: string;
         description: string;
@@ -29,7 +23,7 @@ export interface ITestFlowDetail
 export interface Node
     extends Readonly<{
         name: string;
-        // category: string;
+        type: string;
         isAnnotateOut: boolean;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
@@ -39,7 +33,7 @@ export interface Node
 export interface Case
     extends Readonly<{
         name: string;
-        // category: string;
+        type: string;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
     }> {}
@@ -100,14 +94,6 @@ export interface IProjectQueryingDto
 export interface ITestFlowIdVo
   extends Readonly<{
     id: string;
-  }> {}
-
-/**
- * 项目webhook vo
- */
-export interface IProjectWebhookVo
-  extends Readonly<{
-    webhook: string;
   }> {}
 
 /**
