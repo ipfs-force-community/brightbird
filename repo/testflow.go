@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -20,6 +21,7 @@ type ITestFlowRepo interface {
 	Save(context.Context, types.TestFlow) (primitive.ObjectID, error)
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
 	ListInGroup(context.Context, *types.PageReq[string]) (*types.PageResp[types.TestFlow], error)
+	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
 type TestFlowRepo struct {
@@ -146,4 +148,18 @@ func (c *TestFlowRepo) Save(ctx context.Context, tf types.TestFlow) (primitive.O
 	}
 
 	return tf.ID, nil
+}
+
+func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
+	tf := &types.TestFlow{}
+	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	if err != nil || err == mongo.ErrNoDocuments {
+		return fmt.Errorf("test flow (%d) not exis", id)
+	}
+
+	_, err = c.caseCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	if err != nil {
+		return err
+	}
+	return nil
 }

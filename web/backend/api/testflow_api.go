@@ -304,4 +304,38 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 
 		c.String(http.StatusOK, id.Hex())
 	})
+	// swagger:route DELETE /testflow/{id} deleteTestFlow
+	//
+	// Delete test flow by id
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//
+	//     Responses:
+	//       200:
+	group.DELETE("/:id", func(c *gin.Context) {
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		err = service.Delete(c, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
 }

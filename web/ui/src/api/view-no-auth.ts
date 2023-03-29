@@ -101,6 +101,13 @@ export function fetchTestFlowDetail(projectId: string): Promise<ITestFlowDetail>
   });
 }
 
+export function deleteTestFlow(projectId: string): Promise<void> {
+  return restProxy({
+    url: `${baseUrl.testflow}/${projectId}`,
+    method: 'delete',
+  });
+}
+
 /**
  * 保存项目
  * @param dto
