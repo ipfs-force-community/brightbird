@@ -26,7 +26,7 @@
             <button class="pipeline-label" @click="dslDialogFlag = true"></button>
           </jm-tooltip>
           <jm-tooltip content="删除" placement="bottom" :disabled="deleting">
-            <button class="jm-icon-button-delete" @click="del(project.id)"></button>
+            <button class="delete-label" @click="del(project.id)"></button>
           </jm-tooltip>
         </div>
       </div>
@@ -302,6 +302,10 @@ export default defineComponent({
 
           &.pipeline-label {
             background-image: url('@/assets/svgs/index/pipeline-label.svg');
+          }
+
+          &.delete-label {
+             background-image: url('@/assets/svgs/btn/del.svg');
           }
 
           &.doing {
