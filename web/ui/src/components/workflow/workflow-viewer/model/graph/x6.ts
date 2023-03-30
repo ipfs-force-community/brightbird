@@ -98,12 +98,6 @@ export class X6Graph extends BaseGraph {
     });
   }
 
-  hideNodeToolbar(nodeRef: string): void {
-    const node = this.getNodeByRef(nodeRef);
-    const imgEl = this.getShapeEl(node.id).querySelector('.img')! as HTMLElement;
-    imgEl.style.boxShadow = '';
-  }
-
   getAsyncTaskNodeCount(): number {
     return this.graph.getNodes()
       .filter(node => [NodeTypeEnum.ASYNC_TASK]
@@ -224,14 +218,6 @@ export class X6Graph extends BaseGraph {
     return nodes;
   }
 
-  private getNodeByRef(nodeRef: string): Node {
-    if ([NodeRefEnum.WEBHOOK, NodeRefEnum.CRON].includes(nodeRef as NodeRefEnum)) {
-      return this.graph.getRootNodes()[0];
-    }
-
-    return this.getTaskNodes()[this.asyncTaskRefs.indexOf(nodeRef)];
-  }
-
   private getShapeEl(nodeId: string): HTMLElement {
     return Array.from(this.graph.container.querySelectorAll('.jm-workflow-x6-vue-shape'))
       .filter(el => (el.getAttribute('data-x6-node-id') === nodeId))[0] as HTMLElement;
@@ -303,5 +289,9 @@ export class X6Graph extends BaseGraph {
       description,
       type,
     };
+  }
+
+  private getNodes() {
+
   }
 }
