@@ -1,5 +1,6 @@
 {
   "Name": "test-case-example",
+  "GroupId":ObjectId("6423aab776cc0ec975113902"),
   "Nodes": [
     {
       "Name"   : "venus-auth-ha",

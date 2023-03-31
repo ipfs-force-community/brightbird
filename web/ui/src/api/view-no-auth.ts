@@ -5,7 +5,7 @@ import {
 } from '@/api/dto/workflow-execution-record';
 import {
   INodeVo, IProcessTemplateVo, ITestFlowDetail,
-  IProjectQueryingDto, IWorkflowVo, ITestFlowIdVo
+  IProjectQueryingDto, IWorkflowVo, ITestFlowIdVo, IGetTestFlowParam
 } from '@/api/dto/project';
 import { IPageDto, IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
@@ -20,7 +20,7 @@ export const baseUrl = {
   log: '/view/logs',
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
-  deployPlugin: '/deploy',
+  plugin: '/plugin',
   testflow: '/testflow',
   parameter: '/view/parameters',
   triggerEvent: '/view/trigger_events',
@@ -39,7 +39,7 @@ const baseHubUrl = {
  */
 export function listProjectGroup(): Promise<IProjectGroupVo[]> {
   return restProxy<IProjectGroupVo[]>({
-    url: `${baseUrl.projectGroup}`,
+    url: `${baseUrl.projectGroup}/list`,
     method: 'get',
   });
 }
@@ -92,10 +92,11 @@ export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
  * 获取项目详情
  * @param projectId
  */
-export function fetchTestFlowDetail(projectId: string): Promise<ITestFlowDetail> {
+export function fetchTestFlowDetail(params: IGetTestFlowParam): Promise<ITestFlowDetail> {
   return restProxy({
-    url: `${baseUrl.testflow}/id/${projectId}`,
+    url: `${baseUrl.testflow}`,
     method: 'get',
+    payload: params,
   });
 }
 
@@ -192,7 +193,7 @@ export function fetchVersion(): Promise<string> {
  */
 export function fetchDeployPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.deployPlugin}/plugins`,
+    url: `${baseUrl.plugin}/deploy`,
     method: 'get',
   });
 }
@@ -203,7 +204,7 @@ export function fetchDeployPlugins(): Promise<INodeVo[]> {
  */
 export function fetchDeployByName(name: string): Promise<INodeVo> {
   return restProxy<INodeVo>({
-    url: `${baseUrl.deployPlugin}/get/${name}`,
+    url: `${baseUrl.plugin}/${name}`,
     method: 'get',
   });
 }
@@ -213,7 +214,7 @@ export function fetchDeployByName(name: string): Promise<INodeVo> {
  */
 export function fetchExecPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.testflow}/plugins`,
+    url: `${baseUrl.plugin}/exec`,
     method: 'get',
   });
 }
@@ -224,7 +225,7 @@ export function fetchExecPlugins(): Promise<INodeVo[]> {
  */
 export function fetchExecByName(name: string): Promise<INodeVo> {
   return restProxy<INodeVo>({
-    url: `${baseUrl.testflow}/get/${name}`,
+    url: `${baseUrl.plugin}/${name}`,
     method: 'get',
   });
 }

@@ -29,6 +29,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	TestID string
 	Config
 }
@@ -75,7 +76,7 @@ func NewVenusSectorManagerDeployer(env *env.K8sEnvDeployer, nodeUrl, messagerUrl
 	authToken, dbPlugin, sendAddress string, minerAddress int64) *VenusSectorManagerDeployer {
 	dbDns := ""
 	if dbPlugin == "sqlxdb" {
-		dbDns = "root:123456@tcp(192.168.200.103:3306)/venus-sector-manager-" + env.TestID() + "?charset=utf8&parseTime=True&loc=Local"
+		dbDns = env.FormatMysqlConnection("venus-sector-manager-" + env.UniqueId(""))
 	}
 	return &VenusSectorManagerDeployer{
 		env: env,
@@ -118,8 +119,9 @@ var f embed.FS
 
 func (deployer *VenusSectorManagerDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		TestID: deployer.env.TestID(),
-		Config: *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		TestID:           deployer.env.TestID(),
+		Config:           *deployer.cfg,
 	}
 
 	// create configMap

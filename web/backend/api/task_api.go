@@ -46,7 +46,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Responses:
 	//       200: listTaskResp
-	group.GET("", func(c *gin.Context) {
+	group.GET("list", func(c *gin.Context) {
 		params := ListTasksReq{}
 		err := c.ShouldBindQuery(&params)
 		if err != nil {

@@ -20,6 +20,12 @@ export interface ITestFlowDetail
         description: string;
   }> {}
 
+  export interface IGetTestFlowParam
+      extends Readonly<{
+          id: string;
+          name: string;
+    }> {}
+
 export interface Node
     extends Readonly<{
         name: string;

@@ -3,7 +3,6 @@ package repo
 import (
 	"context"
 	"fmt"
-	"sort"
 	"time"
 
 	"github.com/hunjixin/brightbird/types"
@@ -13,11 +12,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+type GetTestFlowParams struct {
+	ID   primitive.ObjectID `json:"id"`
+	Name string             `json:"name"`
+}
+
 type ITestFlowRepo interface {
-	GetByName(context.Context, string) (*types.TestFlow, error)
-	GetById(context.Context, primitive.ObjectID) (*types.TestFlow, error)
+	Get(context.Context, *GetTestFlowParams) (*types.TestFlow, error)
 	List(context.Context) (*types.PageResp[types.TestFlow], error)
-	Plugins(context.Context) ([]types.PluginOut, error)
 	Save(context.Context, types.TestFlow) (primitive.ObjectID, error)
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
 	ListInGroup(context.Context, *types.PageReq[string]) (*types.PageResp[types.TestFlow], error)
@@ -25,12 +27,11 @@ type ITestFlowRepo interface {
 }
 
 type TestFlowRepo struct {
-	caseCol         *mongo.Collection
-	execPluginStore ExecPluginStore
+	caseCol *mongo.Collection
 }
 
-func NewTestFlowRepo(db *mongo.Database, execPluginStore ExecPluginStore) *TestFlowRepo {
-	return &TestFlowRepo{caseCol: db.Collection("testflows"), execPluginStore: execPluginStore}
+func NewTestFlowRepo(db *mongo.Database) *TestFlowRepo {
+	return &TestFlowRepo{caseCol: db.Collection("testflows")}
 }
 
 type BasePage struct {
@@ -82,41 +83,21 @@ func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[strin
 	}, nil
 }
 
-func (c *TestFlowRepo) GetByName(ctx context.Context, name string) (*types.TestFlow, error) {
+func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*types.TestFlow, error) {
+	var filter bson.D
+	if len(params.Name) > 0 {
+		filter = append(filter, bson.E{"name", params.Name})
+	}
+	if !params.ID.IsZero() {
+		filter = append(filter, bson.E{"_id", params.ID})
+	}
+
 	tf := &types.TestFlow{}
-	err := c.caseCol.FindOne(ctx, bson.D{{"name", name}}).Decode(tf)
+	err := c.caseCol.FindOne(ctx, filter).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
 	return tf, nil
-}
-
-func (c *TestFlowRepo) GetById(ctx context.Context, id primitive.ObjectID) (*types.TestFlow, error) {
-	tf := &types.TestFlow{}
-	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
-	if err != nil {
-		return nil, err
-	}
-	return tf, nil
-}
-
-func (c *TestFlowRepo) Plugins(ctx context.Context) ([]types.PluginOut, error) {
-	var deployPlugins []types.PluginOut
-	err := c.execPluginStore.Each(func(detail *types.PluginDetail) error {
-		pluginOut, err := getPluginOutput(detail)
-		if err != nil {
-			return err
-		}
-		deployPlugins = append(deployPlugins, pluginOut)
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-	sort.Slice(deployPlugins, func(i, j int) bool {
-		return deployPlugins[i].Name > deployPlugins[j].Name
-	})
-	return deployPlugins, nil
 }
 
 func (c *TestFlowRepo) CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error) {

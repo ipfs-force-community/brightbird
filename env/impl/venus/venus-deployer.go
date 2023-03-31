@@ -24,6 +24,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Config
 }
@@ -104,8 +105,9 @@ var f embed.FS
 
 func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 	//create deployment
 	deployCfg, err := f.Open("venus-node/venus-node-deployment.yaml")

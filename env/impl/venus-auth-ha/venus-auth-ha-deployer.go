@@ -23,6 +23,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Config
 }
@@ -61,14 +62,14 @@ func NewVenusAuthHADeployer(env *env.K8sEnvDeployer, replicas int) *VenusAuthHAD
 		env: env,
 		cfg: &Config{
 			Replicas: replicas, //default
-			MysqlDSN: "root:123456@tcp(192.168.200.103:3306)/venus-auth-" + env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local",
+			MysqlDSN: env.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId("")),
 		},
 	}
 }
 
 func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
-	defaultCfg.MysqlDSN = "root:123456@tcp(192.168.200.103:3306)/venus-auth-" + env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local"
+	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId(""))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err
@@ -116,8 +117,9 @@ var f embed.FS
 
 func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 
 	//create database

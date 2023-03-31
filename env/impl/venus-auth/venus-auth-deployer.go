@@ -17,6 +17,7 @@ import (
 type Config struct{}
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Replicas int
 }
@@ -90,8 +91,9 @@ var f embed.FS
 
 func (deployer *VenusAuthDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Replicas: 1,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Replicas:         1,
 	}
 
 	//create deployment

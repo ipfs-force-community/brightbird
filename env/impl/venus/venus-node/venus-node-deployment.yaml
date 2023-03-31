@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: venus-{{.UniqueId}}
-          image: "filvenus/venus:{{.CodeVersion}}"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
           args: ["daemon","--cmdapiaddr=/ip4/0.0.0.0/tcp/3453", "--genesisfile=/shared-dir/k8stest/devgen.car", "--import-snapshot=/shared-dir/k8stest/dev-snapshot.car", "--network=2k"{{if gt (len .BootstrapPeers) 0}}{{range $i, $a := .BootstrapPeers}},--bootstrap-peers={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
           ports:
             - containerPort: 3453

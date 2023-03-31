@@ -26,6 +26,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Config
 }
@@ -108,8 +109,9 @@ var f embed.FS
 
 func (deployer *MarketClientDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
+		Config:           *deployer.cfg,
 	}
 	//create configmap
 	configMapCfg, err := f.Open("market-client/market-client-configmap.yaml")

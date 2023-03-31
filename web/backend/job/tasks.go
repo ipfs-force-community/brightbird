@@ -21,18 +21,21 @@ type TaskMgr struct {
 	testFlowRepo repo.ITestFlowRepo
 	testRunner   *TestRunnerDeployer
 	imageBuilder *ImageBuilderMgr
-	runnerConfig string
+
+	privateRegistry types.PrivateRegistry
+	runnerConfig    string
 }
 
-func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder *ImageBuilderMgr, runnerConfig string) *TaskMgr {
+func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder *ImageBuilderMgr, runnerConfig string, privateReg types.PrivateRegistry) *TaskMgr {
 	return &TaskMgr{
-		c:            c,
-		jobRepo:      jobRepo,
-		taskRepo:     taskRepo,
-		testFlowRepo: testFlowRepo,
-		testRunner:   testRunner,
-		imageBuilder: imageBuilder,
-		runnerConfig: runnerConfig,
+		c:               c,
+		jobRepo:         jobRepo,
+		taskRepo:        taskRepo,
+		testFlowRepo:    testFlowRepo,
+		testRunner:      testRunner,
+		imageBuilder:    imageBuilder,
+		runnerConfig:    runnerConfig,
+		privateRegistry: privateReg,
 	}
 }
 
@@ -50,15 +53,14 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 		for _, job := range jobs {
 			tasks, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Init}})
 			if err != nil {
-				taskLog.Error("fetch task list fail %v", err)
+				taskLog.Errorf("fetch task list fail %v", err)
 				continue
 			}
 
 			for _, task := range tasks {
 				err = taskMgr.RunOneTask(ctx, task)
 				if err != nil {
-					taskLog.Error("fetch task list fail %v", err)
-					continue
+					taskLog.Errorf("fetch task list fail %v", err)
 				}
 			}
 		}
@@ -76,7 +78,7 @@ func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *types.Task) error 
 	if err != nil {
 		taskLog.Errorf("process task (%s) fail %v", task.ID, err)
 		task.State = types.Error
-		_, err = taskMgr.taskRepo.Save(ctx, task)
+		_, _ = taskMgr.taskRepo.Save(ctx, task)
 		return err
 	}
 	return nil
@@ -108,13 +110,14 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) error {
 		return err
 	}
 
-	testFlow, err := taskMgr.testFlowRepo.GetById(ctx, job.TestFlowId)
+	testFlow, err := taskMgr.testFlowRepo.Get(ctx, &repo.GetTestFlowParams{ID: job.TestFlowId})
 	if err != nil {
 		taskLog.Errorf("get test flow failed %v", err)
 		return err
 	}
 
 	//confirm version and build image.
+	taskLog.Infof("start to build image for testflow %s job %s", testFlow.Name, job.Name)
 	versionMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, job.Versions) //todo maybe move this code to previous step
 	if err != nil {
 		return err
@@ -133,7 +136,8 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) error {
 	}
 
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
-		"TestFlowId": job.TestFlowId.Hex(),
-		"TestId":     string(task.TestId),
+		"TaskID":          task.ID.Hex(),
+		"TestId":          string(task.TestId),
+		"PrivateRegistry": string(taskMgr.privateRegistry),
 	})
 }

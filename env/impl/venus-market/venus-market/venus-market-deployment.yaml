@@ -21,7 +21,7 @@ spec:
               name: shared-dir-v
       containers:
         - name: venus-market-{{.UniqueId}}
-          image: "filvenus/venus-market:{{.CodeVersion}}"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-market:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 41235

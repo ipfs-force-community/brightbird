@@ -1,6 +1,8 @@
 package job
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -43,10 +45,10 @@ type ImageBuilderMgr struct {
 
 	//make inject
 	ffi             *ffiDownloader
-	privateRegistry string
+	privateRegistry types.PrivateRegistry
 }
 
-func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy, githubToken, privateRegistry string) *ImageBuilderMgr {
+func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy, githubToken string, privateRegistry types.PrivateRegistry) *ImageBuilderMgr {
 	return &ImageBuilderMgr{
 		dockerOp:        dockerOp,
 		store:           store,
@@ -76,7 +78,7 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 		}
 		br := <-result
 		if br.Err != nil {
-			return nil, br.Err
+			return nil, fmt.Errorf("build %s failed reason: %v", node.Name, br.Err)
 		}
 		versionMap[node.Name] = br.Version
 	}
@@ -99,14 +101,14 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 				continue
 			}
 
-			builder, ok := mgr.jobMap[buildTask.Name]
+			builder, ok := mgr.jobMap[plugin.Repo]
 			if !ok {
 				log.Infof("target %s not found and create a new builder", buildTask.Name)
 				builder = &VenusImageBuilder{
 					proxy:           mgr.proxy,
 					codeSpace:       mgr.buildSpace,
 					ffi:             mgr.ffi,
-					privateRegistry: mgr.privateRegistry,
+					privateRegistry: string(mgr.privateRegistry),
 				}
 				err := builder.InitRepo(context.Background(), plugin.Repo)
 				if err != nil {
@@ -116,7 +118,7 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 					}
 					continue
 				}
-				mgr.jobMap[buildTask.Name] = builder
+				mgr.jobMap[plugin.Repo] = builder
 			}
 
 			//get master replace back
@@ -128,6 +130,7 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 				}
 				continue
 			}
+			log.Infof("get repo %s commit %s success", buildTask.Name, version)
 
 			//check if images exit
 			hasImage, err := mgr.dockerOp.CheckImageExit(ctx, fmt.Sprintf("filvenus/%s", plugin.ImageTarget), version)
@@ -139,6 +142,7 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 			}
 
 			if !hasImage {
+				log.Infof("try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
 				err := builder.Build(ctx, version)
 				if err != nil {
 					log.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
@@ -147,6 +151,8 @@ func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
 					}
 					continue
 				}
+			} else {
+				log.Infof("node %s (%s) have build image before skip", buildTask.Name, version)
 			}
 
 			buildTask.Result <- BuildResult{
@@ -188,21 +194,28 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) 
 
 	builder.repo, err = git.PlainOpen(builder.repoPath)
 	if err == nil {
-		return err
+		return nil
 	}
 
-	log.Errorf("open git repo %s faile, clean and clone again %v", repoUrl, err)
+	log.Warnf("open git repo %s fail, clean and clone (%s) again %v", repoUrl, builder.repoPath, err)
 	err = os.RemoveAll(builder.repoPath)
 	if err != nil {
 		return err
 	}
 
+	sshFormat, err := toSShFormat(repoUrl)
+	if err != nil {
+		return err
+	}
+
 	_, err = git.PlainCloneContext(ctx, builder.repoPath, false, &git.CloneOptions{
-		URL:             repoUrl,
+		URL:             sshFormat,
 		Progress:        os.Stdout,
 		InsecureSkipTLS: false,
+		//	Depth:           200, //should be enough
 	})
 	if err != nil && err != git.ErrRepositoryAlreadyExists {
+		_ = os.RemoveAll(builder.repoPath) //clean fail repo
 		return err
 	}
 
@@ -229,13 +242,14 @@ func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
 	err = builder.repo.Fetch(&git.FetchOptions{
 		Progress: os.Stdout,
 		// InsecureSkipTLS skips ssl verify if protocol is https
-		InsecureSkipTLS: false,
+		InsecureSkipTLS: true,
+		Force:           true,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return err
 	}
 
-	err = updateSubmodule(workTree)
+	builder.repo, _, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
 		return err
 	}
@@ -323,7 +337,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		return err
 	}
 
-	err = updateSubmodule(workTree)
+	builder.repo, workTree, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
 		return err
 	}
@@ -351,12 +365,17 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 			return err
 		}
 
-		//	tar -C "${__tmp_dir}" -xzf "${__tarball_path}"
-		err = execMakefile(builder.repoPath, "tar", "-xzf", ffiPath, "-C", "./extern/filecoin-ffi")
+		//not working because bug https://github.com/moby/moby/issues/17175
+		err = uncompressFFI(ffiPath, builder.repoPath+"/extern/filecoin-ffi")
 		if err != nil {
-			fmt.Println(err.Error())
 			return err
 		}
+		flagF, err := os.Create(builder.repoPath + "/extern/filecoin-ffi/.install-filcrypto")
+		if err != nil {
+			return err
+		}
+		_ = flagF.Close()
+		log.Infof("%s use ffi file cache", builder.repoPath)
 	}
 
 	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy, "PRIVATE_REGISTRY="+builder.privateRegistry)
@@ -367,24 +386,43 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 	return nil
 }
 
-func updateSubmodule(workTree *git.Worktree) error {
+func updateSubmoduleByCmd(ctx context.Context, dir string) (*git.Repository, *git.Worktree, error) {
+	err := execMakefile(dir, "git", "submodule", "update", "--init", "--recursive")
+	if err != nil {
+		return nil, nil, err
+	}
+
+	repo, err := git.PlainOpen(dir)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return nil, nil, err
+	}
+	return repo, workTree, nil
+}
+
+// have bug https://github.com/go-git/go-git/issues/511
+func updateSubmodule(ctx context.Context, workTree *git.Worktree) error {
 	submodules, err := workTree.Submodules()
 	if err != nil {
 		return err
 	}
+
 	for _, sub := range submodules {
 		status, err := sub.Status()
 		if err != nil {
 			return err
 		}
-		if status.IsClean() {
-			err = sub.Update(&git.SubmoduleUpdateOptions{
-				Init: true,
-				// NoFetch tell to the update command to not fetch new objects from the
-				// remote site.
-				NoFetch:           true,
-				RecurseSubmodules: git.DefaultSubmoduleRecursionDepth,
+
+		if !status.IsClean() {
+			err = sub.UpdateContext(ctx, &git.SubmoduleUpdateOptions{
+				Init:              true,
+				RecurseSubmodules: 5,
 			})
+
 			if err != nil {
 				return err
 			}
@@ -398,8 +436,22 @@ func getRepoNameFromUrl(repoUrl string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	phase := strings.Split(strings.TrimRight(schema.Path, ".git"), "/")
+	phase := strings.Split(strings.TrimSuffix(schema.Path, ".git"), "/")
 	return phase[2], nil
+}
+
+func toSShFormat(repoUrl string) (string, error) {
+	//https://github.com/filecoin-project/venus.git
+	// git@github.com:filecoin-project/venus.git
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	if schema.Scheme == "ssh" {
+		return repoUrl, nil
+	}
+
+	return fmt.Sprintf("git@github.com:%s", schema.Path[1:]), nil
 }
 
 func execMakefile(dir string, name string, arg ...string) error {
@@ -470,4 +522,50 @@ func (downloader ffiDownloader) downloadFFI(ctx context.Context, releaseTag stri
 		return "", err
 	}
 	return filePath, nil
+}
+
+func uncompressFFI(tarPath string, dst string) error {
+	gzipStream, err := os.Open(tarPath)
+	if err != nil {
+		return err
+	}
+
+	uncompressedStream, err := gzip.NewReader(gzipStream)
+	if err != nil {
+		return err
+	}
+
+	tarReader := tar.NewReader(uncompressedStream)
+	for {
+		header, err := tarReader.Next()
+		if err == io.EOF {
+			break
+		}
+
+		if err != nil {
+			return err
+		}
+
+		switch header.Typeflag {
+		case tar.TypeReg:
+			_, fileName := path.Split(header.Name)
+			dstPath := path.Join(dst, fileName)
+			outFile, err := os.Create(dstPath)
+			if err != nil {
+				return err
+			}
+
+			if _, err := io.Copy(outFile, tarReader); err != nil {
+				return err
+			}
+			err = outFile.Close()
+			if err != nil {
+				return err
+			}
+		default:
+			return fmt.Errorf("extractTarGz: uknown type: %d in %s", header.Typeflag, header.Name)
+		}
+
+	}
+	return nil
 }

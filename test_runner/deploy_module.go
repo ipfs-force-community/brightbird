@@ -4,18 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"runtime/debug"
+
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
+	"github.com/modern-go/reflect2"
 	"go.uber.org/fx"
-	"reflect"
-	"runtime/debug"
 )
 
-func DeployFLow(deployers []*types.DeployNode, deployPlugin *types.PluginStore) fx_opt.Option {
+func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) fx_opt.Option {
+
 	opts := []fx_opt.Option{
 		fx_opt.Override(new(types.AdminToken), func(ctx context.Context, k8sEnv *env.K8sEnvDeployer, authDeploy env.IVenusAuthDeployer) (types.AdminToken, error) {
 			endpoint := authDeploy.SvcEndpoint()
@@ -26,7 +29,13 @@ func DeployFLow(deployers []*types.DeployNode, deployPlugin *types.PluginStore) 
 					return "", err
 				}
 			}
-			authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp())
+
+			localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, authDeploy.Pods()[0].GetName(), "/root/.venus-auth/token")
+			if err != nil {
+				return "", err
+			}
+
+			authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), string(localToken))
 			if err != nil {
 				return "", err
 			}
@@ -73,8 +82,10 @@ func DeployFLow(deployers []*types.DeployNode, deployPlugin *types.PluginStore) 
 func getSvcMap(properties ...*types.Property) (map[string]string, error) {
 	var svcMap = make(map[string]string)
 	for _, p := range properties {
-		if val, ok := p.Value.(string); ok && len(val) > 0 {
-			svcMap[p.Name] = val
+		if p != nil && reflect2.IsNil(p.Value) {
+			if val, ok := p.Value.(string); ok && len(val) > 0 {
+				svcMap[p.Name] = val
+			}
 		}
 	}
 	return svcMap, nil
@@ -169,7 +180,7 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 				vals = make([]reflect.Value, 2)
 				vals[0] = reflect.Zero(newOutArgs[0])
 				log.Info("stacktrace from panic:" + string(debug.Stack()))
-				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %v", r))
+				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %s %v", depNode.Name, r))
 			}
 		}()
 
@@ -187,7 +198,7 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 					if err != nil {
 						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
 					}
-					dstVal.FieldByName(fieldName).Set(reflect.ValueOf(val).Elem())
+					dstVal.FieldByName(fieldName).Set(val.Elem())
 				} else {
 					dstVal.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))
 				}

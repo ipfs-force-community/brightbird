@@ -6,10 +6,9 @@ require (
 	github.com/BurntSushi/toml v1.2.1
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/venus v1.10.0-rc2
-	github.com/filecoin-project/venus-auth v1.10.0-rc2
+	github.com/filecoin-project/venus-auth v1.10.2-0.20230322095644-02a0689eea6c
 	github.com/filecoin-project/venus-wallet v1.9.0
 	github.com/gin-gonic/gin v1.9.0
-	github.com/go-co-op/gocron v1.19.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-github/v50 v50.2.0
@@ -21,6 +20,7 @@ require (
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/mittwald/goharbor-client/v5 v5.3.1
+	github.com/modern-go/reflect2 v1.0.2
 	github.com/pelletier/go-toml/v2 v2.0.6
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.2
@@ -73,6 +73,7 @@ require (
 	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
+	github.com/etherlabsio/healthcheck/v2 v2.0.0 // indirect
 	github.com/filecoin-project/go-amt-ipld/v2 v2.1.1-0.20201006184820-924ee87a1349 // indirect
 	github.com/filecoin-project/go-amt-ipld/v3 v3.1.0 // indirect
 	github.com/filecoin-project/go-amt-ipld/v4 v4.0.0 // indirect
@@ -181,7 +182,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -238,6 +238,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/dig v1.16.1 // indirect
+	go.uber.org/goleak v1.2.1 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/arch v0.1.0 // indirect

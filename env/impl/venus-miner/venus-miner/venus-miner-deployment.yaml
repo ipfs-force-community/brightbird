@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-miner-{{.UniqueId}}
-          image: "filvenus/venus-miner:{{.CodeVersion}}"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-miner:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 12308

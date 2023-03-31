@@ -53,7 +53,7 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const fetchedData = await fetchTestFlowDetail(props.id as string);
+          const fetchedData = await fetchTestFlowDetail({id:props.id as string, name:""});
           const rawData = yaml.parse(fetchedData.graph)['raw-data'];
           flowCreateTime.value = fetchedData.createTime
           workflow.value = {
