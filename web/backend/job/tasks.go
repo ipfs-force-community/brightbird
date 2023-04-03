@@ -60,12 +60,14 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				continue
 			}
 			for _, task := range runningTask {
-				err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
+				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
-					//mark pod as fail
-					markFailErr := taskMgr.taskRepo.MarkFail(ctx, task.ID, err.Error())
-					if err != nil {
-						return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+					if restartCount > 5 {
+						// mark pod as fail
+						markFailErr := taskMgr.taskRepo.MarkFail(ctx, task.ID, err.Error())
+						if err != nil {
+							return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+						}
 					}
 				}
 			}

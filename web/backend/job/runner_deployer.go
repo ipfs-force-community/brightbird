@@ -89,27 +89,21 @@ func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.
 	return pod, nil
 }
 
-func (runnerDeployer *TestRunnerDeployer) CheckTestRunner(ctx context.Context, id string) error {
+func (runnerDeployer *TestRunnerDeployer) CheckTestRunner(ctx context.Context, id string) (int, error) {
 	podClient := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace)
 	pod, err := podClient.Get(ctx, id, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return 0, err
 	}
 	if pod.Status.Phase == corev1.PodFailed {
-		return fmt.Errorf("pod error %v", pod.Status.Message)
+		return 0, fmt.Errorf("pod error %v", pod.Status.Message)
 	}
 	for _, container := range pod.Status.ContainerStatuses {
 		if container.LastTerminationState.Terminated != nil && container.LastTerminationState.Terminated.ExitCode != 0 {
-			if container.RestartCount > 10 {
-				err = podClient.Delete(ctx, id, metav1.DeleteOptions{})
-				if err != nil {
-					return err
-				}
-			}
-			return fmt.Errorf("pod error %v", pod.Status.Message)
+			return int(container.RestartCount), fmt.Errorf("pod error %v", pod.Status.Message)
 		}
 	}
-	return nil
+	return 0, nil
 }
 
 func (runnerDeployer *TestRunnerDeployer) GetLogs(ctx context.Context, testId string) error {
