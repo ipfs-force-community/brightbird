@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"runtime/debug"
+	"strings"
 
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
@@ -45,7 +46,7 @@ func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) 
 				Comment: utils.StringPtr("comment admin"),
 				State:   0,
 			})
-			if err != nil {
+			if err != nil && !strings.Contains(err.Error(), "user already exists") {
 				return "", err
 			}
 			adminToken, err := authAPIClient.GenerateToken(ctx, "admin", "admin", "")

@@ -16,11 +16,12 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	AuthUrl        string   `json:"-"`
-	AdminToken     string   `json:"-"`
-	BootstrapPeers []string `json:"-"`
+	AuthUrl        string           `json:"-"`
+	AdminToken     types.AdminToken `json:"-"`
+	BootstrapPeers []string         `json:"-"`
+	Replicas       int              `json:"replicas"`
 
-	Replicas int `json:"replicas"`
+	NetType string `json:"netType"`
 }
 
 type RenderParams struct {
@@ -32,6 +33,7 @@ type RenderParams struct {
 func DefaultConfig() Config {
 	return Config{
 		Replicas: 1,
+		NetType:  "force",
 	}
 }
 
@@ -57,7 +59,7 @@ type VenusDeployer struct {
 	svc        *corev1.Service
 }
 
-func NewVenusDeployer(env *env.K8sEnvDeployer, authUrl string, adminToken string, bootstrapPeers ...string) *VenusDeployer {
+func NewVenusDeployer(env *env.K8sEnvDeployer, authUrl string, adminToken types.AdminToken, bootstrapPeers ...string) *VenusDeployer {
 	return &VenusDeployer{
 		env: env,
 		cfg: &Config{

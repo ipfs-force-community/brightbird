@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
@@ -60,6 +61,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	if err != nil {
 		return err
 	}
+	fmt.Println("aaaaaa", string(keyBytes))
 	var ki vTypes.KeyInfo
 	err = json.Unmarshal(keyBytes, &ki)
 	if err != nil {

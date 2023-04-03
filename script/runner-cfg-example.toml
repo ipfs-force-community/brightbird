@@ -1,6 +1,6 @@
 PluginStore = "./plugins"
 BootstrapPeers = ["/ip4/192.168.200.125/tcp/37963/p2p/12D3KooWHj4eFvS7JWe7A2qKruLM2UHCz4Z1kDABFEjwP26a83oT"]
-MongoUrl = 'mongodb://localhost:27017'
+MongoUrl = 'mongodb://192.168.200.103:27017'
 DbName = 'lidb'
 PrivateRegistry = '192.168.200.175'
 Mysql = "root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci&readTimeout=10s&writeTimeout=10s"

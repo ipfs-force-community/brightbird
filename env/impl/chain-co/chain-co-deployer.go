@@ -16,8 +16,9 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	AuthUrl string   `json:"-"`
-	Nodes   []string `json:"-"`
+	AuthUrl    string   `json:"-"`
+	AdminToken string   `json:"-"`
+	Nodes      []string `json:"-"`
 
 	Replicas int `json:"replicas"`
 }

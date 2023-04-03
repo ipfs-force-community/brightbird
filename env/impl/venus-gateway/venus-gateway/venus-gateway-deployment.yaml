@@ -15,7 +15,7 @@ spec:
       containers:
         - name: venus-gateway-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-gateway:{{.CodeVersion}}"
-          args: ["--listen /ip4/0.0.0.0/tcp/45132", "run"{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}]
+          args: ["--listen /ip4/0.0.0.0/tcp/45132", "run"{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}{{if gt (len .AdminToken) 0}}, --auth-token={{.AdminToken}}{{end}}]
           ports:
             - containerPort: 45132
               protocol: TCP

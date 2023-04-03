@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/hunjixin/brightbird/env"
 	chain_co "github.com/hunjixin/brightbird/env/impl/chain-co"
 	"github.com/hunjixin/brightbird/types"
@@ -11,8 +12,9 @@ import (
 var Info = chain_co.PluginInfo
 
 type DepParams struct {
-	Params          chain_co.Config `optional:"true"`
-	K8sEnv          *env.K8sEnvDeployer
+	Params chain_co.Config `optional:"true"`
+	K8sEnv *env.K8sEnvDeployer
+
 	VenusDep        env.IVenusDeployer
 	VenusAuthDeploy env.IVenusAuthDeployer
 	AdminToken      types.AdminToken
@@ -26,9 +28,10 @@ func Exec(ctx context.Context, depParams DepParams) (env.IChainCoDeployer, error
 	}
 
 	deployer, err := chain_co.DeployerFromConfig(depParams.K8sEnv, chain_co.Config{
-		Replicas: 1,
-		AuthUrl:  depParams.VenusAuthDeploy.SvcEndpoint().ToHttp(),
-		Nodes:    podEndpoints,
+		Replicas:   1,
+		AuthUrl:    depParams.VenusAuthDeploy.SvcEndpoint().ToHttp(),
+		AdminToken: depParams.Params.AdminToken,
+		Nodes:      podEndpoints,
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

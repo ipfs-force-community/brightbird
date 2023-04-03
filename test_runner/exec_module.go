@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/hunjixin/brightbird/fx_opt"
-	"github.com/hunjixin/brightbird/types"
 	"reflect"
 	"runtime/debug"
+
+	"github.com/hunjixin/brightbird/fx_opt"
+	"github.com/hunjixin/brightbird/types"
 )
 
 func GenInvokeExec(plugin *types.PluginDetail, testItem *types.TestItem) (interface{}, error) {
@@ -29,20 +30,23 @@ func GenInvokeExec(plugin *types.PluginDetail, testItem *types.TestItem) (interf
 		//2. set injected values
 		//3. unmarshal pointer value
 		log.Infof("start to exec %s", plugin.Name)
-		ptrParams := reflect.New(plugin.Param)
+		ptrParams := reflect.New(plugin.Param).Elem()
 		//apply new struct values
 		for j := 0; j < newInStruct.NumField(); j++ {
 			field := newInStruct.Field(j)
-			if !field.Anonymous {
-				ptrParams.Elem().FieldByName(field.Name).Set(args[1].FieldByName(field.Name))
+			fieldName := field.Name
+			if fieldName == "Params" {
+				val := reflect.New(field.Type)
+				err := collectParams(testItem.Properties, val.Interface())
+				if err != nil {
+					return []reflect.Value{reflect.ValueOf(err)}
+				}
+				ptrParams.FieldByName(fieldName).Set(val.Elem())
+			} else {
+				ptrParams.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))
 			}
 		}
-		//apply json value
-		err := collectParams(testItem.Properties, ptrParams.Interface())
-		if err != nil {
-			return []reflect.Value{reflect.ValueOf(err)}
-		}
-		args[1] = ptrParams.Elem()
+		args[1] = ptrParams
 		return plugin.Fn.Call(args)
 	}).Interface(), nil
 }

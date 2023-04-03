@@ -252,15 +252,31 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*ty
 	}
 	//merge version
 	for _, node := range testFlow.Nodes {
-		for _, property := range node.Properties {
-			if property.Name == types.CodeVersion {
-				version, ok := task.Versions[node.Name]
-				if !ok {
-					return nil, fmt.Errorf("not found version for deploy %s", node.Name)
-				}
-				property.Value = version
-			}
+		version, ok := task.Versions[node.Name]
+		if !ok {
+			return nil, fmt.Errorf("not found version for deploy %s", node.Name)
+		}
+
+		codeVersionProp := findCodeVersionProperties(node.Properties)
+		if codeVersionProp != nil {
+			codeVersionProp.Value = version
+		} else {
+			node.Properties = append(node.Properties, &types.Property{
+				Name:    types.CodeVersion,
+				Type:    "string",
+				Value:   version,
+				Require: true,
+			})
 		}
 	}
 	return testFlow, nil
+}
+
+func findCodeVersionProperties(properties []*types.Property) *types.Property {
+	for _, property := range properties {
+		if property.Name == types.CodeVersion {
+			return property
+		}
+	}
+	return nil
 }

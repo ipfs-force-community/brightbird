@@ -24,8 +24,13 @@ deploy-plugin:
    		go build --buildmode=plugin -o ./plugins/deploy/$$i.so $(GOFLAGS) ./env/impl/$$i/plugin; \
 	done
 
+.PHONY: runner
+
 runner:
+	rm -f ./runner
 	go build -o testrunner  $(GOFLAGS) ./test_runner
+
+.PHONY: backend
 
 backend:
 	rm -f ./backend
@@ -33,6 +38,7 @@ backend:
 
 build-all: exec-plugin deploy-plugin runner backend
 
-docker:
+docker-runner:
 	docker build -t testrunner  .
-	docker tag testrunner:latest filvenus/testrunner:$(TAG)
+	docker tag testrunner:latest $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
+	docker push $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
