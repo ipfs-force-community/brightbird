@@ -84,7 +84,7 @@ func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[strin
 }
 
 func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*types.TestFlow, error) {
-	var filter bson.M
+	filter := bson.M{}
 	if len(params.Name) > 0 {
 		filter["name"] = params.Name
 	}

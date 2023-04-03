@@ -20,7 +20,6 @@ type ListParams struct {
 type ITaskRepo interface {
 	List(context.Context, ListParams) ([]*types.Task, error)
 	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
-	MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state types.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
 	Get(context.Context, primitive.ObjectID) (*types.Task, error)
@@ -75,19 +74,10 @@ func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state t
 		"$set": bson.M{
 			"state": state,
 		},
-		"$pushAll": bson.M{
-			"logs": logs,
-		},
-	}
-
-	_, err := j.taskCol.UpdateByID(ctx, id, update)
-	return err
-}
-
-func (j *TaskRepo) MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error {
-	update := bson.M{
 		"$push": bson.M{
-			"logs": reason,
+			"logs": bson.M{
+				"$each": logs,
+			},
 		},
 	}
 

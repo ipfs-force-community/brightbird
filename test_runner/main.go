@@ -137,6 +137,13 @@ func run(ctx context.Context, cfg *Config) (err error) {
 	if err != nil {
 		return err
 	}
+	taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
+	if err != nil {
+		return err
+	}
+
+	taskRep := repo.NewTaskRepo(db)
+
 	testflow, err := getTestFLow(ctx, db, cfg.TaskId)
 	if err != nil {
 		return err
@@ -155,8 +162,11 @@ func run(ctx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if err != nil {
-			_ = markFailTask(ctx, db, cfg.TaskId, err)
+			_ = taskRep.MarkState(ctx, taskId, types.Error, err.Error())
+		} else {
+			_ = taskRep.MarkState(ctx, taskId, types.Successful, "run successfully")
 		}
+
 		//todo get logs
 		if cleanErr := cleaner.DoClean(); cleanErr != nil {
 			log.Errorf("clean up failed %v", cleanErr)
@@ -174,13 +184,7 @@ func run(ctx context.Context, cfg *Config) (err error) {
 
 		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
 		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
-		fx_opt.Override(new(*types.Task), func(taskRepo repo.ITaskRepo) (*types.Task, error) {
-			taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
-			if err != nil {
-				return nil, err
-			}
-			return taskRepo.Get(ctx, taskId)
-		}),
+		fx_opt.Override(new(*types.Task), taskRep),
 
 		fx_opt.Override(new(*Config), cfg),
 		fx_opt.Override(new(*mongo.Database), db),
@@ -221,16 +225,6 @@ func getDatabase(ctx context.Context, cfg *Config) (*mongo.Database, error) {
 		return nil, err
 	}
 	return client.Database(cfg.DbName), nil
-}
-
-func markFailTask(ctx context.Context, db *mongo.Database, taskIdStr string, inErr error) error {
-	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
-	if err != nil {
-		return err
-	}
-
-	taskRep := repo.NewTaskRepo(db)
-	return taskRep.MarkFail(ctx, taskId, inErr.Error())
 }
 
 func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*types.TestFlow, error) {

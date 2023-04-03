@@ -6,6 +6,8 @@ import (
 	"os"
 	"time"
 
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
+
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
@@ -62,14 +64,28 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			for _, task := range runningTask {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
-					if restartCount > 5 {
-						// mark pod as fail
-						markFailErr := taskMgr.taskRepo.MarkFail(ctx, task.ID, err.Error())
-						if err != nil {
-							return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+					if errors2.IsNotFound(err) {
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
+						if markFailErr != nil {
+							log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+						}
+						continue
+					} else {
+						if restartCount > 5 {
+							// mark pod as fail and remove this pod
+							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
+							if err != nil {
+								log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+							}
+
+							cleanK8sErr := taskMgr.testRunner.RemovePod(ctx, string(task.TestId))
+							if err != nil {
+								log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
+							}
 						}
 					}
 				}
+				//success state update by runner self
 			}
 
 			// startt init task
@@ -98,7 +114,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *types.Task) error {
 	pod, err := taskMgr.Process(ctx, task)
 	if err != nil {
-		markFailErr := taskMgr.taskRepo.MarkFail(ctx, task.ID, err.Error())
+		markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
 		if err != nil {
 			return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
 		}

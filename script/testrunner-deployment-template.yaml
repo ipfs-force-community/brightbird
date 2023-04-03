@@ -19,7 +19,7 @@ spec:
       volumeMounts:
         - mountPath: /shared-dir
           name: shared-dir-v
-  volumes:
+  volumes:git s
     - name: shared-dir-v
       persistentVolumeClaim:
         claimName: testnet-shared-dir

@@ -115,3 +115,25 @@ func (runnerDeployer *TestRunnerDeployer) CleanAll(ctx context.Context, testId s
 	//clean
 	return nil
 }
+
+func (runnerDeployer *TestRunnerDeployer) RemovePod(ctx context.Context, testId string) error {
+	err := runnerDeployer.k8sClient.AppsV1().Deployments(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	if err != nil {
+		log.Errorf("clean deployment failed %s", err)
+	}
+	err = runnerDeployer.k8sClient.AppsV1().StatefulSets(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	if err != nil {
+		log.Errorf("clean statefuleset failed %s", err)
+	}
+	services, err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).List(ctx, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	if err != nil {
+		log.Errorf("get service failed %s", err)
+	}
+	for _, svc := range services.Items {
+		err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
+		if err != nil {
+			log.Errorf("delete service failed %s", err)
+		}
+	}
+	return nil
+}
