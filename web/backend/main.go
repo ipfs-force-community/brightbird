@@ -194,6 +194,7 @@ func run(ctx context.Context, cfg config.Config) error {
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterGroupRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterJobRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTaskRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterLogRouter),
 
 		//start
 		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, builder *job.ImageBuilderMgr) {

@@ -17,7 +17,7 @@ export const baseUrl = {
   workflow: '/view/workflow_instances',
   asyncTasks: '/view/async_task_instances',
   task: '/view/task_instance',
-  log: '/view/logs',
+  log: '/logs',
   dsl: '/view/workflow',
   processLog: '/view/logs/workflow',
   deployPlugin: '/deploy',
@@ -248,5 +248,12 @@ export function fetchNodeCache(asyncTaskId: string) {
   return restProxy<INodeCacheVo[]>({
     url: `${baseUrl.cache}/async_task_instances/${asyncTaskId}`,
     method: 'post',
+  });
+}
+
+export function fetchPodsLog(podNames: string[]): Promise<string[]> {
+  return restProxy({
+    url: `${baseUrl.log}/get/${podNames}`,
+    method: 'get',
   });
 }
