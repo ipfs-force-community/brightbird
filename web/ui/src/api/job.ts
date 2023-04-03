@@ -43,7 +43,7 @@ export async function updateJob(id: String, dto: IJobUpdateVo): Promise<void> {
  */
 export async function listJobs(): Promise<IJobVo[]> {
     const res = await restProxy({ 
-        url:baseUrl.job,
+        url:`${baseUrl.job}/list`,
         method:"get",
     });
   

@@ -84,12 +84,12 @@ func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[strin
 }
 
 func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*types.TestFlow, error) {
-	var filter bson.D
+	var filter bson.M
 	if len(params.Name) > 0 {
-		filter = append(filter, bson.E{"name", params.Name})
+		filter["name"] = params.Name
 	}
 	if !params.ID.IsZero() {
-		filter = append(filter, bson.E{"_id", params.ID})
+		filter["_id"] = params.ID
 	}
 
 	tf := &types.TestFlow{}

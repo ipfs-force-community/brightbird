@@ -193,7 +193,7 @@ export function fetchVersion(): Promise<string> {
  */
 export function fetchDeployPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.plugin}/deploy`,
+    url: `${baseUrl.plugin}/deploy/list`,
     method: 'get',
   });
 }
@@ -214,7 +214,7 @@ export function fetchDeployByName(name: string): Promise<INodeVo> {
  */
 export function fetchExecPlugins(): Promise<INodeVo[]> {
   return restProxy<INodeVo[]>({
-    url: `${baseUrl.plugin}/exec`,
+    url: `${baseUrl.plugin}/exec/list`,
     method: 'get',
   });
 }

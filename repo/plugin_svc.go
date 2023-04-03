@@ -22,7 +22,7 @@ type PluginSvc struct {
 }
 
 func NewPluginSvc(deployPluginStore DeployPluginStore, execPluginStore ExecPluginStore) *PluginSvc {
-	return &PluginSvc{deployPluginStore: deployPluginStore}
+	return &PluginSvc{deployPluginStore: deployPluginStore, execPluginStore: execPluginStore}
 }
 
 func (p *PluginSvc) DeployPlugins(ctx context.Context) ([]types.PluginOut, error) {
