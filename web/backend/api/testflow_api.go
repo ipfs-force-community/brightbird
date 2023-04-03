@@ -30,6 +30,10 @@ type ListInGroupRequest struct {
 	GroupId string `form:"groupId" binding:"required"`
 }
 
+// GetTestFlowRequest
+// swagger:model getTestFlowRequest
+type GetTestFlowRequest = repo.GetTestFlowParams
+
 // ListTestFlowResp
 // swagger:model listTestFlowResp
 type ListTestFlowResp struct {
@@ -39,61 +43,6 @@ type ListTestFlowResp struct {
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
-
-	// swagger:route GET /testflow/plugins listTestflowPlugins
-	//
-	// Lists all exec plugins.
-	//
-	//     Consumes:
-	//     - application/json
-	//
-	//     Produces:
-	//     - application/json
-	//     - application/text
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Responses:
-	//       200: []pluginOut
-	group.GET("plugins", func(c *gin.Context) {
-		output, err := service.Plugins(c)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.JSON(http.StatusOK, output)
-	})
-
-	// swagger:route GET /testflow/listall listAllTestFlows
-	//
-	// Lists all exec test flows.
-	//
-	//     Consumes:
-	//     - application/json
-	//
-	//     Produces:
-	//     - application/json
-	//     - application/text
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Responses:
-	//       200: []testFlow
-	group.GET("listall", func(c *gin.Context) {
-		output, err := service.List(ctx)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.JSON(http.StatusOK, output)
-	})
-
 	// swagger:route GET /testflow/list/ listTestFlowsInGroup
 	//
 	// Lists exec test flows in specific group.
@@ -188,9 +137,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow/name/{name} getTestFlowByName
+	// swagger:route GET /testflow/{name} getTestFlow
 	//
-	// Get specific test case by name.
+	// Get specific test case by condition.
 	//
 	//     Consumes:
 	//     - application/json
@@ -205,56 +154,27 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Parameters:
 	//       + name: name
-	//         in: path
+	//         in: query
 	//         description: name of test flow
 	//         required: true
 	//         type: string
-	//
-	//     Responses:
-	//       200: testFlow
-	group.GET("name/:name", func(c *gin.Context) {
-		name := c.Param("name")
-		output, err := service.GetByName(ctx, name)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.JSON(http.StatusOK, output)
-	})
-
-	// swagger:route GET /testflow/id/{id} getTestFlowById
-	//
-	// Get specific test case by id.
-	//
-	//     Consumes:
-	//     - application/json
-	//
-	//     Produces:
-	//     - application/json
-	//     - application/text
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Parameters:
 	//       + name: id
-	//         in: path
+	//         in: query
 	//         description: id of test flow
 	//         required: true
 	//         type: string
 	//
 	//     Responses:
 	//       200: testFlow
-	group.GET("id/:id", func(c *gin.Context) {
-		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	group.GET("", func(c *gin.Context) {
+		req := &GetTestFlowRequest{}
+		err := c.ShouldBindQuery(req)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		output, err := service.GetById(ctx, id)
+		output, err := service.Get(ctx, req)
 		if err != nil {
 			c.Error(err)
 			return

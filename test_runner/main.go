@@ -8,13 +8,13 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/BurntSushi/toml"
-	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/env"
 	fx_opt "github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
@@ -28,8 +28,8 @@ var log = logging.Logger("main")
 
 func main() {
 	app := &cli.App{
-		Name:    "lotus-health",
-		Usage:   "Tools for monitoring lotus daemon health",
+		Name:    "test runner",
+		Usage:   "Tools for running tests",
 		Version: version.Version(),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
@@ -39,6 +39,11 @@ func main() {
 			},
 			&cli.StringFlag{
 				Name:  "plugins",
+				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "mysql",
+				Usage: "config mysql template xxx%sxxxx",
 				Value: "",
 			},
 			&cli.StringFlag{
@@ -57,6 +62,10 @@ func main() {
 			&cli.StringFlag{
 				Name:  "taskId",
 				Usage: "test  to running",
+			},
+			&cli.StringFlag{
+				Name:  "priv_reg",
+				Usage: "use private registry",
 			},
 			&cli.StringFlag{
 				Name:  "log-level",
@@ -86,7 +95,7 @@ func main() {
 				cfg.Timeout = c.Int("timeout")
 			}
 			if c.IsSet("taskId") {
-				cfg.TaskId = c.String("testFlowId")
+				cfg.TaskId = c.String("taskId")
 			}
 
 			if c.IsSet("dbName") {
@@ -97,10 +106,22 @@ func main() {
 				cfg.MongoUrl = c.String("mongoUrl")
 			}
 
-			if len(cfg.TaskId) == 0 {
-				return errors.New("test flow id must be specific")
+			if c.IsSet("mysql") {
+				cfg.Mysql = c.String("mysql")
 			}
-			return run(c.Context, cfg)
+
+			if c.IsSet("priv_reg") {
+				cfg.PrivateRegistry = c.String("priv_reg")
+			}
+			if len(cfg.TaskId) == 0 {
+				return errors.New("task id must be specific")
+			}
+
+			if len(cfg.Mysql) == 0 {
+				return errors.New("mysql must set")
+			}
+
+			return run(c.Context, &cfg)
 		},
 	}
 
@@ -111,25 +132,24 @@ func main() {
 	}
 }
 
-func run(ctx context.Context, cfg Config) (err error) {
-	db, err := getDatabase(ctx, cfg.MongoUrl, cfg.DbName)
+func run(ctx context.Context, cfg *Config) (err error) {
+	db, err := getDatabase(ctx, cfg)
 	if err != nil {
-		return
+		return err
 	}
-
-	flow, err := getTestFLow(ctx, db, cfg.TaskId)
+	testflow, err := getTestFLow(ctx, db, cfg.TaskId)
 	if err != nil {
-		return
-	}
-
-	execStore, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
-	if err != nil {
-		return
+		return err
 	}
 
 	deployPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
 	if err != nil {
-		return
+		return err
+	}
+
+	execPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
+	if err != nil {
+		return err
 	}
 
 	cleaner := Cleaner{}
@@ -151,10 +171,31 @@ func run(ctx context.Context, cfg Config) (err error) {
 			}
 			return ctx
 		}),
+
+		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
+		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
+		fx_opt.Override(new(*types.Task), func(taskRepo repo.ITaskRepo) (*types.Task, error) {
+			taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
+			if err != nil {
+				return nil, err
+			}
+			return taskRepo.Get(ctx, taskId)
+		}),
+
+		fx_opt.Override(new(*Config), cfg),
+		fx_opt.Override(new(*mongo.Database), db),
+		fx_opt.Override(new(repo.ITaskRepo), repo.NewTaskRepo),
+		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
+
 		fx_opt.Override(new(types.BootstrapPeers), types.BootstrapPeers(cfg.BootstrapPeers)),
-		fx_opt.Override(new(types.TestId), types.TestId(uuid.New().String()[:8])),
+		fx_opt.Override(new(types.TestId), func(task *types.Task) types.TestId {
+			if len(task.TestId) > 0 {
+				return task.TestId
+			}
+			return types.TestId(uuid.New().String()[:8])
+		}),
 		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {
-			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId))
+			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId), cfg.PrivateRegistry, cfg.Mysql)
 			if err != nil {
 				return nil, err
 			}
@@ -165,8 +206,8 @@ func run(ctx context.Context, cfg Config) (err error) {
 			})
 			return k8sEnv, nil
 		}),
-		DeployFLow(flow.Nodes, deployPlugin),
-		ExecFlow(execStore, flow.Cases),
+		DeployFLow(deployPlugin, testflow.Nodes),
+		ExecFlow(execPlugin, testflow.Cases),
 	)
 	if err != nil {
 		return
@@ -174,12 +215,12 @@ func run(ctx context.Context, cfg Config) (err error) {
 	return stop(ctx)
 }
 
-func getDatabase(ctx context.Context, mongoUrl string, dbName string) (*mongo.Database, error) {
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUrl))
+func getDatabase(ctx context.Context, cfg *Config) (*mongo.Database, error) {
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
 	if err != nil {
 		return nil, err
 	}
-	return client.Database(dbName), nil
+	return client.Database(cfg.DbName), nil
 }
 
 func markFailTask(ctx context.Context, db *mongo.Database, taskIdStr string, inErr error) error {
@@ -198,28 +239,44 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*ty
 		return nil, err
 	}
 	taskRep := repo.NewTaskRepo(db)
-	testflowRepo := repo.NewTestFlowRepo(db, nil)
+	testflowRepo := repo.NewTestFlowRepo(db)
 
 	task, err := taskRep.Get(ctx, taskId)
 	if err != nil {
 		return nil, err
 	}
 
-	testFlow, err := testflowRepo.GetById(ctx, task.TestFlowId)
+	testFlow, err := testflowRepo.Get(ctx, &repo.GetTestFlowParams{ID: task.TestFlowId})
 	if err != nil {
 		return nil, err
 	}
 	//merge version
 	for _, node := range testFlow.Nodes {
-		for _, property := range node.Properties {
-			if property.Name == types.CodeVersion {
-				version, ok := task.Versions[node.Name]
-				if !ok {
-					return nil, fmt.Errorf("not found version for deploy %s", node.Name)
-				}
-				property.Value = version
-			}
+		version, ok := task.Versions[node.Name]
+		if !ok {
+			return nil, fmt.Errorf("not found version for deploy %s", node.Name)
+		}
+
+		codeVersionProp := findCodeVersionProperties(node.Properties)
+		if codeVersionProp != nil {
+			codeVersionProp.Value = version
+		} else {
+			node.Properties = append(node.Properties, &types.Property{
+				Name:    types.CodeVersion,
+				Type:    "string",
+				Value:   version,
+				Require: true,
+			})
 		}
 	}
 	return testFlow, nil
+}
+
+func findCodeVersionProperties(properties []*types.Property) *types.Property {
+	for _, property := range properties {
+		if property.Name == types.CodeVersion {
+			return property
+		}
+	}
+	return nil
 }

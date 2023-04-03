@@ -24,6 +24,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Config
 }
@@ -101,8 +102,9 @@ var f embed.FS
 
 func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
+		Config:           *deployer.cfg,
 	}
 	//create configmap
 	configMapCfg, err := f.Open("venus-wallet/venus-wallet-configmap.yaml")

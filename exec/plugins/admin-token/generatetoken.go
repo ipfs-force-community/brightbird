@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
@@ -21,8 +22,9 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv    *env.K8sEnvDeployer    `json:"-"`
-	VenusAuth env.IVenusAuthDeployer `json:"-"`
+	AdminToken types.AdminToken
+	K8sEnv     *env.K8sEnvDeployer    `json:"-"`
+	VenusAuth  env.IVenusAuthDeployer `json:"-"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -34,7 +36,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 			return err
 		}
 	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp())
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), string(params.AdminToken))
 	if err != nil {
 		return err
 	}

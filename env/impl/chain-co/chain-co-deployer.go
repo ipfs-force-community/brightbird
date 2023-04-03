@@ -16,13 +16,15 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	AuthUrl string   `json:"-"`
-	Nodes   []string `json:"-"`
+	AuthUrl    string   `json:"-"`
+	AdminToken string   `json:"-"`
+	Nodes      []string `json:"-"`
 
 	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 
 	Config
@@ -101,8 +103,9 @@ var f embed.FS
 
 func (deployer *ChainCoDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 	//create deployment
 	deployCfg, err := f.Open("chain-co/chain-co-deployment.yaml")

@@ -61,17 +61,19 @@ func JoinCloser(fns ...CloseFunc) CloseFunc {
 
 // K8sEnvDeployer used to construct a k8s environment and do some k8s operation
 type K8sEnvDeployer struct {
-	k8sClient *kubernetes.Clientset
-	namespace string
-	hostIP    string
-	testID    string
-	k8sCfg    *rest.Config
-	dialCtx   func(ctx context.Context, network, address string) (net.Conn, error)
-	dbs       []string
+	k8sClient         *kubernetes.Clientset
+	namespace         string
+	hostIP            string
+	testID            string
+	privateRegistry   string
+	mysqlConnTemplate string
+	k8sCfg            *rest.Config
+	dialCtx           func(ctx context.Context, network, address string) (net.Conn, error)
+	dbs               []string
 }
 
 // NewK8sEnvDeployer create a new test environment
-func NewK8sEnvDeployer(namespace string, testID string) (*K8sEnvDeployer, error) {
+func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string) (*K8sEnvDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -107,18 +109,37 @@ func NewK8sEnvDeployer(namespace string, testID string) (*K8sEnvDeployer, error)
 		DualStack: true,
 	}).DialContext
 	return &K8sEnvDeployer{
-		k8sCfg:    config,
-		k8sClient: k8sClient,
-		namespace: namespace,
-		testID:    testID,
-		hostIP:    url.Hostname(),
-		dialCtx:   dialCtx,
+		k8sCfg:            config,
+		k8sClient:         k8sClient,
+		namespace:         namespace,
+		testID:            testID,
+		hostIP:            url.Hostname(),
+		dialCtx:           dialCtx,
+		privateRegistry:   privateRegistry,
+		mysqlConnTemplate: mysqlConnTemplate,
 	}, nil
+}
+
+// TestID return a unique test id
+func (env *K8sEnvDeployer) FormatMysqlConnection(dbName string) string {
+	return fmt.Sprintf(env.mysqlConnTemplate, dbName)
+}
+
+// TestID return a unique test id
+func (env *K8sEnvDeployer) BaseRenderParams() BaseRenderParams {
+	return BaseRenderParams{
+		PrivateRegistry: env.privateRegistry,
+	}
 }
 
 // TestID return a unique test id
 func (env *K8sEnvDeployer) TestID() string {
 	return env.testID
+}
+
+// PrivateRegistry
+func (env *K8sEnvDeployer) PrivateRegistry() string {
+	return env.privateRegistry
 }
 
 // UniqueId return a unique id for all deployer

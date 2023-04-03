@@ -16,12 +16,14 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	AuthUrl string `json:"-"`
+	AuthUrl    string           `json:"-"`
+	AdminToken types.AdminToken `json:"-"`
 
 	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	Config
 }
@@ -100,10 +102,12 @@ var f embed.FS
 
 func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 
+	fmt.Println("aaaaaa", renderParams.AdminToken)
 	//create deployment
 	deployCfg, err := f.Open("venus-gateway/venus-gateway-deployment.yaml")
 	if err != nil {

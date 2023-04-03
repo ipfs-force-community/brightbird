@@ -1,3 +1,6 @@
 PluginStore = "./plugins"
-TestFile    = "./script/test-case-example.json"
-BootstrapPeers = ["/ip4/192.168.200.103/tcp/12456/p2p/12D3KooWPcMJaWqb4UxGmTDapG2qKx2RHuFVt1tJE2APM6UF3XHX"]
+BootstrapPeers = ["/ip4/192.168.200.125/tcp/37963/p2p/12D3KooWHj4eFvS7JWe7A2qKruLM2UHCz4Z1kDABFEjwP26a83oT"]
+MongoUrl = 'mongodb://192.168.200.103:27017'
+DbName = 'lidb'
+PrivateRegistry = '192.168.200.175'
+Mysql = "root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci&readTimeout=10s&writeTimeout=10s"

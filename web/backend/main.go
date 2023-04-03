@@ -147,6 +147,7 @@ func run(ctx context.Context, cfg config.Config) error {
 	stop, err := fx_opt.New(ctx,
 		//config
 		fx_opt.Override(new(config.Config), cfg),
+		fx_opt.Override(new(types.PrivateRegistry), NewPrivateRegistry(cfg)),
 
 		fx_opt.Override(new(*gin.Engine), e),
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
@@ -187,6 +188,7 @@ func run(ctx context.Context, cfg config.Config) error {
 
 		//use proxy
 		fx_opt.Override(fx_opt.NextInvoke(), UseProxy),
+		fx_opt.Override(fx_opt.NextInvoke(), UseGitToken),
 		//api
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),

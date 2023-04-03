@@ -27,7 +27,7 @@ export async function getTask(id: String): Promise<ITaskVo> {
  */
 export async function getTaskInJob(req: ListTaskVo): Promise<ITaskVo[]> {
     const res = await restProxy({ 
-        url:`${baseUrl.task}`,
+        url:`${baseUrl.task}/list`,
         payload: req,
         method:"get",
     });

@@ -26,6 +26,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	MysqlDSN string
 	Config
@@ -107,11 +108,12 @@ var f embed.FS
 
 func (deployer *VenusMarketDeployer) Deploy(ctx context.Context) (err error) {
 	renderParmas := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 	if deployer.cfg.UseMysql {
-		renderParmas.MysqlDSN = "root:123456@tcp(192.168.200.103:3306)/venus-auth-" + deployer.env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local"
+		renderParmas.MysqlDSN = deployer.env.FormatMysqlConnection("venus-market-" + deployer.env.UniqueId(""))
 	}
 	//create configmap
 	configMapCfg, err := f.Open("venus-market/venus-market-configmap.yaml")

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-auth-{{.UniqueId}}
-          image: "filvenus/venus-auth:{{.CodeVersion}}"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-auth:{{.CodeVersion}}"
           args: ["run", "--db-type", "mysql", "--mysql-dsn", "{{.MysqlDSN}}"]
           ports:
             - containerPort: 8989

@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: venus-worker-{{.TestID}}
-          image: "filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
           args: ["run"]
           ports:
             - containerPort: 1789

@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-runner
+  name: test-runner-yyy
   labels:
     app: venus-testrunner-pod
     apptype: testrunner
@@ -9,9 +9,9 @@ spec:
   initContainers:
   containers:
     - name: venus-testrunner
-      image: "filvenus/testrunner:0f8e2e77fe3ffee9b873541ae0594cb1cc76366d"
+      image: "192.168.200.175/filvenus/testrunner:e57a212a573dc14f6e74fbea9ba56a42cf389ac9"
       imagePullPolicy: IfNotPresent
-      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/testrunner/config-template.toml", "--plugins=/shared-dir/k8stest/testrunner/plugins", "--testFlowId={{.TestFlowId}}"]
+      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId=642a66387f555d5d3c29d80b"]
       env:
         - name: PRODUCTION
           value: "true"

@@ -21,6 +21,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	TestID string
 	Config
 }
@@ -86,8 +87,9 @@ var f embed.FS
 
 func (deployer *VenusWorkerDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		TestID: deployer.env.TestID(),
-		Config: *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		TestID:           deployer.env.TestID(),
+		Config:           *deployer.cfg,
 	}
 
 	// create configMap

@@ -11,21 +11,42 @@ import (
 )
 
 type IPluginService interface {
-	Plugins(context.Context) ([]types.PluginOut, error)
+	DeployPlugins(context.Context) ([]types.PluginOut, error)
+	ExecPlugins(context.Context) ([]types.PluginOut, error)
 	GetByName(context.Context, string) (*types.PluginOut, error)
 }
 
 type PluginSvc struct {
 	deployPluginStore DeployPluginStore
+	execPluginStore   ExecPluginStore
 }
 
-func NewPluginSvc(deployPluginStore DeployPluginStore) *PluginSvc {
-	return &PluginSvc{deployPluginStore: deployPluginStore}
+func NewPluginSvc(deployPluginStore DeployPluginStore, execPluginStore ExecPluginStore) *PluginSvc {
+	return &PluginSvc{deployPluginStore: deployPluginStore, execPluginStore: execPluginStore}
 }
 
-func (p *PluginSvc) Plugins(ctx context.Context) ([]types.PluginOut, error) {
+func (p *PluginSvc) DeployPlugins(ctx context.Context) ([]types.PluginOut, error) {
 	var deployPlugins []types.PluginOut
 	err := p.deployPluginStore.Each(func(detail *types.PluginDetail) error {
+		pluginOut, err := getPluginOutput(detail)
+		if err != nil {
+			return err
+		}
+		deployPlugins = append(deployPlugins, pluginOut)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(deployPlugins, func(i, j int) bool {
+		return deployPlugins[i].Name > deployPlugins[j].Name
+	})
+	return deployPlugins, nil
+}
+
+func (p *PluginSvc) ExecPlugins(ctx context.Context) ([]types.PluginOut, error) {
+	var deployPlugins []types.PluginOut
+	err := p.execPluginStore.Each(func(detail *types.PluginDetail) error {
 		pluginOut, err := getPluginOutput(detail)
 		if err != nil {
 			return err
@@ -56,6 +77,24 @@ func (p *PluginSvc) GetByName(ctx context.Context, name string) (*types.PluginOu
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	err = p.execPluginStore.Each(func(detail *types.PluginDetail) error {
+		pluginOut, err := getPluginOutput(detail)
+		if err != nil {
+			return err
+		}
+		if pluginOut.Name == name {
+			deployPlugins = &pluginOut
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if deployPlugins == nil {
+		return nil, fmt.Errorf("plugin %s not found", name)
 	}
 	return deployPlugins, nil
 }

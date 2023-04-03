@@ -60,16 +60,16 @@ func NewTestRunnerDeployer(namespace string) (*TestRunnerDeployer, error) {
 	}, nil
 }
 
-func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.File, args any) error {
+func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.File, args any) (*corev1.Pod, error) {
 	data, err := env.QuickRender(f, args)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	deployment := &corev1.Pod{}
 	err = yaml_k8s.Unmarshal(data, deployment)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Infof("runner config %s ...", string(data))
 	name := deployment.Name
@@ -77,10 +77,33 @@ func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.
 	log.Infof("Creating runner %s ...", name)
 	_, err = podClient.Create(ctx, deployment, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	log.Infof("Created runner %s.", name)
-	return nil
+
+	pod, err := podClient.Get(ctx, deployment.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	return pod, nil
+}
+
+func (runnerDeployer *TestRunnerDeployer) CheckTestRunner(ctx context.Context, id string) (int, error) {
+	podClient := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace)
+	pod, err := podClient.Get(ctx, id, metav1.GetOptions{})
+	if err != nil {
+		return 0, err
+	}
+	if pod.Status.Phase == corev1.PodFailed {
+		return 0, fmt.Errorf("pod error %v", pod.Status.Message)
+	}
+	for _, container := range pod.Status.ContainerStatuses {
+		if container.LastTerminationState.Terminated != nil && container.LastTerminationState.Terminated.ExitCode != 0 {
+			return int(container.RestartCount), fmt.Errorf("pod error %v", pod.Status.Message)
+		}
+	}
+	return 0, nil
 }
 
 func (runnerDeployer *TestRunnerDeployer) GetLogs(ctx context.Context, testId string) error {

@@ -55,7 +55,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200: listJobResp
-	group.GET("", func(c *gin.Context) {
+	group.GET("list", func(c *gin.Context) {
 		jobs, err := jobRepo.List(ctx)
 		if err != nil {
 			c.Error(err)
@@ -141,7 +141,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		testflow, err := testFlowRepo.GetById(ctx, job.TestFlowId)
+		testflow, err := testFlowRepo.Get(ctx, &repo.GetTestFlowParams{ID: job.TestFlowId})
 		if err != nil {
 			c.Error(err)
 			return

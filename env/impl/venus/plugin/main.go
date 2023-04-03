@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/impl/venus"
 	"github.com/hunjixin/brightbird/types"
@@ -21,7 +22,7 @@ type DepParams struct {
 func Exec(ctx context.Context, depParams DepParams) (env.IVenusDeployer, error) {
 	deployer, err := venus.DeployerFromConfig(depParams.K8sEnv, venus.Config{
 		AuthUrl:        depParams.VenusAuthDeploy.SvcEndpoint().ToHttp(),
-		AdminToken:     string(depParams.AdminToken),
+		AdminToken:     depParams.AdminToken,
 		BootstrapPeers: depParams.BootstrapPeers,
 	}, depParams.Params)
 	if err != nil {

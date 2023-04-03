@@ -25,6 +25,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	env.BaseRenderParams
 	UniqueId string
 	MysqlDSN string
 	Config
@@ -106,11 +107,12 @@ var f embed.FS
 
 func (deployer *VenusMinerDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
-		UniqueId: deployer.env.UniqueId(""),
-		Config:   *deployer.cfg,
+		BaseRenderParams: deployer.env.BaseRenderParams(),
+		UniqueId:         deployer.env.UniqueId(""),
+		Config:           *deployer.cfg,
 	}
 	if deployer.cfg.UseMysql {
-		renderParams.MysqlDSN = "root:123456@tcp(192.168.200.103:3306)/venus-miner-" + deployer.env.UniqueId("") + "?charset=utf8&parseTime=True&loc=Local"
+		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("venus-miner-" + deployer.env.UniqueId(""))
 	}
 	if len(renderParams.MysqlDSN) > 0 {
 		deployer.env.CreateDatabase(renderParams.MysqlDSN)

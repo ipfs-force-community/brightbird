@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: venus-messager-{{.UniqueId}}
-          image: "filvenus/venus-messager:{{.CodeVersion}}"
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-messager:{{.CodeVersion}}"
           args: ["run", "--listen=/ip4/0.0.0.0/tcp/39812", "--disable-push", --node-url={{.NodeUrl}}, --gateway-url={{.GatewayUrl}} {{if gt (len .AuthToken) 0}}, --auth-token={{.AuthToken}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}{{if gt (len .MysqlDSN) 0}}, "--mysql-dsn={{.MysqlDSN}}"{{end}}]
           ports:
             - containerPort: 39812

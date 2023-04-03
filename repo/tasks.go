@@ -2,8 +2,9 @@ package repo
 
 import (
 	"context"
-	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
+
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,8 @@ type ITaskRepo interface {
 	List(context.Context, ListParams) ([]*types.Task, error)
 	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error
+	MarkState(ctx context.Context, id primitive.ObjectID, state types.State, msg ...string) error
+	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
 	Get(context.Context, primitive.ObjectID) (*types.Task, error)
 	Save(context.Context, *types.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
@@ -67,10 +70,39 @@ func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task,
 	return tf, nil
 }
 
+func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state types.State, logs ...string) error {
+	update := bson.M{
+		"$set": bson.M{
+			"state": state,
+		},
+		"$pushAll": bson.M{
+			"logs": logs,
+		},
+	}
+
+	_, err := j.taskCol.UpdateByID(ctx, id, update)
+	return err
+}
+
 func (j *TaskRepo) MarkFail(ctx context.Context, id primitive.ObjectID, reason string) error {
 	update := bson.M{
 		"$push": bson.M{
 			"logs": reason,
+		},
+	}
+
+	_, err := j.taskCol.UpdateByID(ctx, id, update)
+	return err
+}
+
+func (j *TaskRepo) UpdatePodRunning(ctx context.Context, id primitive.ObjectID, podName string) error {
+	update := bson.M{
+		"$set": bson.M{
+			"state":   types.Running,
+			"podname": podName,
+		},
+		"$push": bson.M{
+			"logs": "submit testrunner successfully",
 		},
 	}
 
@@ -83,6 +115,9 @@ func (j *TaskRepo) Save(ctx context.Context, task *types.Task) (primitive.Object
 		task.ID = primitive.NewObjectID()
 	}
 
+	if task.Logs == nil {
+		task.Logs = []string{} // init logs as aray
+	}
 	count, err := j.taskCol.CountDocuments(ctx, bson.D{{"_id", task.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err

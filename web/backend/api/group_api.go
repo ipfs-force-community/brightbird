@@ -50,7 +50,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//
 	//     Responses:
 	//       200: listGroupResp
-	group.GET("", func(c *gin.Context) {
+	group.GET("/list", func(c *gin.Context) {
 		groups, err := groupSvc.List(ctx)
 		if err != nil {
 			c.Error(err)
