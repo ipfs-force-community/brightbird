@@ -184,11 +184,17 @@ func run(ctx context.Context, cfg *Config) (err error) {
 
 		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
 		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
-		fx_opt.Override(new(*types.Task), taskRep),
+		fx_opt.Override(new(*types.Task), func(taskRepo repo.ITaskRepo) (*types.Task, error) {
+			taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
+			if err != nil {
+				return nil, err
+			}
+			return taskRepo.Get(ctx, taskId)
+		}),
 
 		fx_opt.Override(new(*Config), cfg),
 		fx_opt.Override(new(*mongo.Database), db),
-		fx_opt.Override(new(repo.ITaskRepo), repo.NewTaskRepo),
+		fx_opt.Override(new(repo.ITaskRepo), taskRep),
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 
 		fx_opt.Override(new(types.BootstrapPeers), types.BootstrapPeers(cfg.BootstrapPeers)),

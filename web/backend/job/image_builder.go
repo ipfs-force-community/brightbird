@@ -1,30 +1,29 @@
 package job
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
 	"strings"
+	"sync"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/google/go-github/v50/github"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	giturls "github.com/whilp/git-urls"
+	"golang.org/x/sync/errgroup"
 )
 
 var log = logging.Logger("builder")
 
 type BuildResult struct {
 	Version string
-	Err     error //buffer 1 length
+	Err     error
 }
 type BuildTask struct {
 	Name   string
@@ -33,133 +32,196 @@ type BuildTask struct {
 	Result chan BuildResult //buffer 1 length
 }
 
-type ImageBuilderMgr struct {
-	proxy      string
-	store      repo.DeployPluginStore
-	buildSpace string
-	taskCh     chan BuildTask
-	//todo make build factory if need more build types
-	jobMap map[string]IIMageBuilder
-
-	dockerOp IDockerOperation
-
-	//make inject
-	ffi             *ffiDownloader
-	privateRegistry types.PrivateRegistry
+// ////////////// Builder Worker Provider  ////////////////
+type IBuilderWorkerProvider interface {
+	CreateBuildWorker(ctx context.Context, logger logging.StandardLogger, cfg config.BuildWorkerConfig) (IBuilderWorker, error)
 }
 
-func NewImageBuilderMgr(dockerOp IDockerOperation, store repo.DeployPluginStore, buildSpace, proxy, githubToken string, privateRegistry types.PrivateRegistry) *ImageBuilderMgr {
-	return &ImageBuilderMgr{
-		dockerOp:        dockerOp,
+type BuildWorkerProvider struct {
+	proxy           string
+	dockerOp        IDockerOperation
+	ffi             FFIDownloader
+	privateRegistry types.PrivateRegistry
+	store           repo.DeployPluginStore
+}
+
+func NewBuildWorkerProvider(dockerOp IDockerOperation, store repo.DeployPluginStore, ffi FFIDownloader, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
+	return &BuildWorkerProvider{
 		store:           store,
-		buildSpace:      buildSpace,
+		dockerOp:        dockerOp,
 		proxy:           proxy,
-		jobMap:          map[string]IIMageBuilder{},
-		taskCh:          make(chan BuildTask),
-		ffi:             newFFIDownloader(githubToken),
+		ffi:             ffi,
 		privateRegistry: privateRegistry,
+	}
+}
+
+func (provider *BuildWorkerProvider) CreateBuildWorker(ctx context.Context, logger logging.StandardLogger, builderCfg config.BuildWorkerConfig) (IBuilderWorker, error) {
+	return &BuildWorker{
+		dockerOp:        provider.dockerOp,
+		cfg:             builderCfg,
+		proxy:           provider.proxy,
+		buildMap:        map[string]IIMageBuilder{},
+		ffi:             provider.ffi,
+		privateRegistry: provider.privateRegistry,
+		logger:          logger,
+		store:           provider.store,
+	}, nil
+}
+
+// ////////////// Builder Manager  ////////////////
+type ImageBuilderMgr struct {
+	store      repo.DeployPluginStore
+	workerCfgs []config.BuildWorkerConfig
+	taskCh     chan *BuildTask
+	provider   IBuilderWorkerProvider
+}
+
+func NewImageBuilderMgr(store repo.DeployPluginStore, provider IBuilderWorkerProvider, workerCfgs []config.BuildWorkerConfig) *ImageBuilderMgr {
+	return &ImageBuilderMgr{
+		store:      store,
+		workerCfgs: workerCfgs,
+		provider:   provider,
+		taskCh:     make(chan *BuildTask, len(workerCfgs)*2),
 	}
 }
 
 func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []*types.DeployNode, versions map[string]string) (map[string]string, error) {
 	versionMap := make(map[string]string)
-	for _, node := range deployNodes {
-		plugin, err := mgr.store.GetPlugin(node.Name)
-		if err != nil {
-			return nil, err
-		}
+	mapLk := sync.Mutex{}
 
-		result := make(chan BuildResult, 1)
-		mgr.taskCh <- BuildTask{
-			Name:   node.Name,
-			Repo:   plugin.Repo,
-			Commit: versions[node.Name],
-			Result: result,
-		}
-		br := <-result
-		if br.Err != nil {
-			return nil, fmt.Errorf("build %s failed reason: %v", node.Name, br.Err)
-		}
-		versionMap[node.Name] = br.Version
+	g, _ := errgroup.WithContext(ctx)
+	for _, node := range deployNodes {
+		node := *node //copy
+		g.Go(func() error {
+			plugin, err := mgr.store.GetPlugin(node.Name)
+			if err != nil {
+				return err
+			}
+
+			result := make(chan BuildResult, 1)
+			mgr.taskCh <- &BuildTask{
+				Name:   node.Name,
+				Repo:   plugin.Repo,
+				Commit: versions[node.Name],
+				Result: result,
+			}
+			br := <-result
+			if br.Err != nil {
+				return fmt.Errorf("build %s failed reason: %v", node.Name, br.Err)
+			}
+			mapLk.Lock()
+			defer mapLk.Unlock()
+			versionMap[node.Name] = br.Version
+			return err
+		})
 	}
-	return versionMap, nil
+
+	if err := g.Wait(); err == nil {
+		return versionMap, nil
+	} else {
+		return nil, err
+	}
 }
 
-func (mgr *ImageBuilderMgr) AddBuildTask(task BuildTask) {
+func (mgr *ImageBuilderMgr) AddBuildTask(task *BuildTask) {
 	mgr.taskCh <- task
 }
 
 func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
+	//run worker
+	for _, workerCfg := range mgr.workerCfgs {
+		builder, err := mgr.provider.CreateBuildWorker(ctx, log.With("worker", workerCfg.BuildSpace), workerCfg)
+		if err != nil {
+			return err
+		}
+		go builder.Start(ctx, mgr.taskCh)
+	}
+	return nil
+}
+
+// ////////////// Builder Worker  ////////////////
+
+type IBuilderWorker interface {
+	Start(ctx context.Context, taskCh <-chan *BuildTask)
+}
+
+// BuildWorker implement for local build
+type BuildWorker struct {
+	proxy           string
+	store           repo.DeployPluginStore
+	dockerOp        IDockerOperation
+	buildMap        map[string]IIMageBuilder
+	ffi             FFIDownloader
+	privateRegistry types.PrivateRegistry
+
+	cfg    config.BuildWorkerConfig
+	logger logging.StandardLogger
+}
+
+func (worker *BuildWorker) Start(ctx context.Context, taskCh <-chan *BuildTask) {
+	worker.logger.Infof("worker start wait build task")
 	for {
 		select {
-		case buildTask := <-mgr.taskCh:
-			plugin, err := mgr.store.GetPlugin(buildTask.Name)
-			if err != nil {
-				buildTask.Result <- BuildResult{
-					Err: err,
-				}
-				continue
-			}
-
-			builder, ok := mgr.jobMap[plugin.Repo]
-			if !ok {
-				log.Infof("target %s not found and create a new builder", buildTask.Name)
-				builder = &VenusImageBuilder{
-					proxy:           mgr.proxy,
-					codeSpace:       mgr.buildSpace,
-					ffi:             mgr.ffi,
-					privateRegistry: string(mgr.privateRegistry),
-				}
-				err := builder.InitRepo(context.Background(), plugin.Repo)
-				if err != nil {
-					log.Errorf("init builder for %s failed %v", buildTask.Name, err)
-					buildTask.Result <- BuildResult{
-						Err: err,
-					}
-					continue
-				}
-				mgr.jobMap[plugin.Repo] = builder
-			}
-
-			//get master replace back
-			//todo fetch master commit id and neve save this version to database
-			version, err := builder.FetchCommit(ctx, buildTask.Commit)
-			if err != nil {
-				buildTask.Result <- BuildResult{
-					Err: err,
-				}
-				continue
-			}
-			log.Infof("get repo %s commit %s success", buildTask.Name, version)
-
-			//check if images exit
-			hasImage, err := mgr.dockerOp.CheckImageExit(ctx, fmt.Sprintf("filvenus/%s", plugin.ImageTarget), version)
-			if err != nil {
-				buildTask.Result <- BuildResult{
-					Err: err,
-				}
-				continue
-			}
-
-			if !hasImage {
-				log.Infof("try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
-				err := builder.Build(ctx, version)
-				if err != nil {
-					log.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
-					buildTask.Result <- BuildResult{
-						Err: err,
-					}
-					continue
-				}
-			} else {
-				log.Infof("node %s (%s) have build image before skip", buildTask.Name, version)
-			}
-
+		case buildTask := <-taskCh:
+			version, err := worker.do(ctx, buildTask)
 			buildTask.Result <- BuildResult{
 				Version: version,
+				Err:     err,
 			}
 		}
 	}
+}
+
+func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string, error) {
+	worker.logger.Infof("receive task %s commit %s", buildTask.Name, buildTask.Commit)
+	plugin, err := worker.store.GetPlugin(buildTask.Name)
+	if err != nil {
+		return "", err
+	}
+
+	builder, ok := worker.buildMap[plugin.Repo]
+	if !ok {
+		worker.logger.Infof("target %s not found and create a new builder", buildTask.Name)
+		builder = &VenusImageBuilder{
+			proxy:           worker.proxy,
+			codeSpace:       worker.cfg.BuildSpace,
+			ffi:             worker.ffi,
+			privateRegistry: string(worker.privateRegistry),
+		}
+		err := builder.InitRepo(context.Background(), plugin.Repo)
+		if err != nil {
+			worker.logger.Errorf("init builder for %s failed %v", buildTask.Name, err)
+			return "", err
+		}
+		worker.buildMap[plugin.Repo] = builder
+	}
+
+	//get master replace back
+	//todo fetch master commit id and neve save this version to database
+	version, err := builder.FetchCommit(ctx, buildTask.Commit)
+	if err != nil {
+		return "", err
+	}
+	worker.logger.Infof("get repo %s commit %s success", buildTask.Name, version)
+
+	//check if images exit
+	hasImage, err := worker.dockerOp.CheckImageExit(ctx, fmt.Sprintf("filvenus/%s", plugin.ImageTarget), version)
+	if err != nil {
+		return "", err
+	}
+
+	if !hasImage {
+		worker.logger.Infof("try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
+		err := builder.Build(ctx, version)
+		if err != nil {
+			worker.logger.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
+			return "", err
+		}
+	} else {
+		worker.logger.Infof("node %s (%s) have build image before skip", buildTask.Name, version)
+	}
+
+	return version, nil
 }
 
 type IIMageBuilder interface {
@@ -174,7 +236,7 @@ type VenusImageBuilder struct {
 	repoPath  string
 
 	repo *git.Repository
-	ffi  *ffiDownloader
+	ffi  FFIDownloader
 
 	privateRegistry string
 }
@@ -360,7 +422,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 	}
 
 	if len(ffiVersion) > 0 {
-		ffiPath, err := builder.ffi.downloadFFI(ctx, ffiVersion)
+		ffiPath, err := builder.ffi.DownloadFFI(ctx, ffiVersion)
 		if err != nil {
 			return err
 		}
@@ -386,6 +448,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 	return nil
 }
 
+// have bug https://github.com/go-git/go-git/issues/511
 func updateSubmoduleByCmd(ctx context.Context, dir string) (*git.Repository, *git.Worktree, error) {
 	err := execMakefile(dir, "git", "submodule", "update", "--init", "--recursive")
 	if err != nil {
@@ -404,33 +467,6 @@ func updateSubmoduleByCmd(ctx context.Context, dir string) (*git.Repository, *gi
 	return repo, workTree, nil
 }
 
-// have bug https://github.com/go-git/go-git/issues/511
-func updateSubmodule(ctx context.Context, workTree *git.Worktree) error {
-	submodules, err := workTree.Submodules()
-	if err != nil {
-		return err
-	}
-
-	for _, sub := range submodules {
-		status, err := sub.Status()
-		if err != nil {
-			return err
-		}
-
-		if !status.IsClean() {
-			err = sub.UpdateContext(ctx, &git.SubmoduleUpdateOptions{
-				Init:              true,
-				RecurseSubmodules: 5,
-			})
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-	return nil
-}
-
 func getRepoNameFromUrl(repoUrl string) (string, error) {
 	schema, err := giturls.Parse(repoUrl)
 	if err != nil {
@@ -441,8 +477,6 @@ func getRepoNameFromUrl(repoUrl string) (string, error) {
 }
 
 func toSShFormat(repoUrl string) (string, error) {
-	//https://github.com/filecoin-project/venus.git
-	// git@github.com:filecoin-project/venus.git
 	schema, err := giturls.Parse(repoUrl)
 	if err != nil {
 		return "", err
@@ -464,108 +498,6 @@ func execMakefile(dir string, name string, arg ...string) error {
 	err := cmd.Run()
 	if err != nil {
 		return err
-	}
-	return nil
-}
-
-type ffiDownloader struct {
-	tempPath string
-	token    string
-}
-
-func newFFIDownloader(token string) *ffiDownloader {
-	return &ffiDownloader{
-		tempPath: os.TempDir(),
-		token:    token,
-	}
-}
-func (downloader ffiDownloader) downloadFFI(ctx context.Context, releaseTag string) (string, error) {
-	fileName := releaseTag + "-filecoin-ffi-Linux-standard.tar.gz"
-	filePath := path.Join(downloader.tempPath, fileName)
-
-	_, err := os.Stat(filePath)
-	if err == nil {
-		return filePath, nil
-	}
-	if err != nil && !os.IsNotExist(err) {
-		return "", err
-	}
-
-	client := github.NewTokenClient(ctx, downloader.token)
-	tag, _, err := client.Repositories.GetReleaseByTag(ctx, "filecoin-project", "filecoin-ffi", releaseTag[0:16])
-	if err != nil {
-		return "", err
-	}
-
-	var linuxAssert *github.ReleaseAsset
-	for _, assert := range tag.Assets {
-		if assert.Name != nil && strings.Contains(*assert.Name, "Linux") && assert.URL != nil {
-			linuxAssert = assert
-		}
-	}
-	if linuxAssert == nil {
-		return "", fmt.Errorf("linux release for tag %s not exit", releaseTag)
-	}
-
-	body, _, err := client.Repositories.DownloadReleaseAsset(ctx, "filecoin-project", "filecoin-ffi", *linuxAssert.ID, client.Client())
-	if err != nil {
-		return "", err
-	}
-
-	fs, err := os.Create(filePath)
-	if err != nil {
-		return "", err
-	}
-
-	_, err = io.Copy(fs, body)
-	if err != nil {
-		return "", err
-	}
-	return filePath, nil
-}
-
-func uncompressFFI(tarPath string, dst string) error {
-	gzipStream, err := os.Open(tarPath)
-	if err != nil {
-		return err
-	}
-
-	uncompressedStream, err := gzip.NewReader(gzipStream)
-	if err != nil {
-		return err
-	}
-
-	tarReader := tar.NewReader(uncompressedStream)
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		switch header.Typeflag {
-		case tar.TypeReg:
-			_, fileName := path.Split(header.Name)
-			dstPath := path.Join(dst, fileName)
-			outFile, err := os.Create(dstPath)
-			if err != nil {
-				return err
-			}
-
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				return err
-			}
-			err = outFile.Close()
-			if err != nil {
-				return err
-			}
-		default:
-			return fmt.Errorf("extractTarGz: uknown type: %d in %s", header.Typeflag, header.Name)
-		}
-
 	}
 	return nil
 }

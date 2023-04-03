@@ -77,10 +77,21 @@ func NewPrivateRegistry(cfg config.Config) func() (types.PrivateRegistry, error)
 	}
 }
 
-func NewBuilderMgr(cfg config.Config) func(job.IDockerOperation, repo.DeployPluginStore, types.PrivateRegistry) (*job.ImageBuilderMgr, error) {
-	return func(dockerOp job.IDockerOperation, store repo.DeployPluginStore, privateReg types.PrivateRegistry) (*job.ImageBuilderMgr, error) {
+func NewFFIDownloader(cfg config.Config) func() job.FFIDownloader {
+	return func() job.FFIDownloader {
+		return job.NewFFIDownloader(cfg.GitToken)
+	}
+}
 
-		return job.NewImageBuilderMgr(dockerOp, store, cfg.BuildSpace, cfg.Proxy, cfg.GitToken, privateReg), nil
+func NewBuilderWorkerProvidor(cfg config.Config) func(job.IDockerOperation, job.FFIDownloader, repo.DeployPluginStore, types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+	return func(dockerOp job.IDockerOperation, ffi job.FFIDownloader, store repo.DeployPluginStore, privateReg types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+		return job.NewBuildWorkerProvider(dockerOp, store, ffi, privateReg, cfg.Proxy), nil
+	}
+}
+
+func NewBuilderMgr(cfg config.Config) func(repo.DeployPluginStore, job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+	return func(store repo.DeployPluginStore, provider job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+		return job.NewImageBuilderMgr(store, provider, cfg.BuildWorkers), nil
 	}
 }
 

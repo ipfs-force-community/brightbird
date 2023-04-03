@@ -42,3 +42,8 @@ docker-runner:
 	docker build -t testrunner  .
 	docker tag testrunner:latest $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 	docker push $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
+
+clean:
+	rm -rf ./backend
+	rm -rf ./testrunner
+	rm -rf ./plugins

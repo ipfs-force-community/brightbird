@@ -174,10 +174,13 @@ func run(ctx context.Context, cfg config.Config) error {
 		//deploy plugin
 		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 
-		//job
+		// build
+		fx_opt.Override(new(job.FFIDownloader), NewFFIDownloader(cfg)),
 		fx_opt.Override(new(job.IDockerOperation), NewDockerRegistry(cfg)),
-		fx_opt.Override(new(*cron.Cron), NewCron),
+		fx_opt.Override(new(job.IBuilderWorkerProvider), NewBuilderWorkerProvidor(cfg)),
 		fx_opt.Override(new(*job.ImageBuilderMgr), NewBuilderMgr(cfg)),
+		//job
+		fx_opt.Override(new(*cron.Cron), NewCron),
 		fx_opt.Override(new(*job.TaskMgr), NewTaskMgr(cfg)),
 		fx_opt.Override(new(job.IJobManager), NewJobManager),
 		//data repo

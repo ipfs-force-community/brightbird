@@ -11,6 +11,12 @@ type Config struct {
 	Proxy          string
 	GitToken       string
 	DockerRegistry []DockerRegistry
+
+	BuildWorkers []BuildWorkerConfig
+}
+
+type BuildWorkerConfig struct {
+	BuildSpace string
 }
 
 type DockerRegistry struct {

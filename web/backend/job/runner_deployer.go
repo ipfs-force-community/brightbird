@@ -22,7 +22,6 @@ type TestRunnerDeployer struct {
 	k8sClient *kubernetes.Clientset
 	namespace string
 	k8sCfg    *rest.Config
-	dbs       []string
 }
 
 // NewK8sEnvDeployer create a new test environment
