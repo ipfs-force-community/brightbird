@@ -106,8 +106,6 @@ func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 		UniqueId:         deployer.env.UniqueId(""),
 		Config:           *deployer.cfg,
 	}
-
-	fmt.Println("aaaaaa", renderParams.AdminToken)
 	//create deployment
 	deployCfg, err := f.Open("venus-gateway/venus-gateway-deployment.yaml")
 	if err != nil {

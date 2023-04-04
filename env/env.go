@@ -546,10 +546,12 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 		return "", err
 	}
 
+	errChan := make(chan error)
 	go func() {
 		err = fw.ForwardPorts()
 		if err != nil {
 			log.Errorf("forward port error %v", err)
+			errChan <- err
 		}
 	}()
 
@@ -562,6 +564,8 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 	case <-ctx.Done():
 		return "", errors.New("context cancel")
 	case <-readyCh:
+	case err := <-errChan:
+		return "", err
 	}
 
 	return types.EndpointFromHostPort("127.0.0.1", freePort), nil
@@ -572,20 +576,34 @@ func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
 	if err != nil {
 		log.Errorf("clean deployment failed %s", err)
 	}
+	log.Debug("celan deployment success")
+
 	err = env.k8sClient.AppsV1().StatefulSets(env.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
 	if err != nil {
 		log.Errorf("clean statefuleset failed %s", err)
 	}
+	log.Debug("celan statefulset success")
+
 	services, err := env.k8sClient.CoreV1().Services(env.namespace).List(ctx, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
 	if err != nil {
-		log.Errorf("get service failed %s", err)
+		log.Errorf("clean service failed %s", err)
 	}
+	log.Debug("celan service success")
+
+	err = env.k8sClient.CoreV1().ConfigMaps(env.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
+	if err != nil {
+		log.Errorf("clean configmap failed %s", err)
+	}
+	log.Debug("celan configmap success")
+
 	for _, svc := range services.Items {
 		err := env.k8sClient.CoreV1().Services(env.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
 		if err != nil {
-			log.Errorf("delete service failed %s", err)
+			log.Errorf("clean service failed %s", err)
 		}
 	}
+
+	log.Debug("celan services success")
 
 	for _, dsn := range env.dbs {
 		err = utils.DropDatabase(dsn)
@@ -593,5 +611,6 @@ func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
 			log.Errorf("drop %s failed %s", dsn, err)
 		}
 	}
+	log.Debug("celan database success")
 	return nil
 }
