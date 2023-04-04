@@ -27,7 +27,7 @@ deploy-plugin:
 .PHONY: runner
 
 runner:
-	rm -f ./runner
+	rm -f ./testrunner
 	go build -o testrunner  $(GOFLAGS) ./test_runner
 
 .PHONY: backend

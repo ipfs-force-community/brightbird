@@ -130,6 +130,7 @@ func main() {
 		os.Exit(1)
 		return
 	}
+	log.Info("testrunner completed")
 }
 
 func run(ctx context.Context, cfg *Config) (err error) {

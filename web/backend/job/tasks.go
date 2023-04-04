@@ -48,6 +48,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 	defer tm.Stop()
 
 	for {
+		taskLog.Infof("loop check task status and start new task")
 		//scan tasks to process
 		jobs, err := taskMgr.jobRepo.List(ctx) //todo 数据规模大了 可以考虑采用被动触发的方式 现在这种做法简单一些
 		if err != nil {
@@ -72,6 +73,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 						continue
 					} else {
 						if restartCount > 5 {
+							log.Error("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
 							// mark pod as fail and remove this pod
 							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
 							if err != nil {

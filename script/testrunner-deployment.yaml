@@ -9,9 +9,9 @@ spec:
   initContainers:
   containers:
     - name: venus-testrunner
-      image: "192.168.200.175/filvenus/testrunner:e57a212a573dc14f6e74fbea9ba56a42cf389ac9"
+      image: "192.168.200.175/filvenus/testrunner:1be7b38b7dda0ee53033e553099fcd3796bc12c7"
       imagePullPolicy: IfNotPresent
-      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId=642a66387f555d5d3c29d80b"]
+      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId=642b860898f3792d8fa694d9"]
       env:
         - name: PRODUCTION
           value: "true"
