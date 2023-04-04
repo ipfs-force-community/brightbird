@@ -110,13 +110,14 @@ func (runnerDeployer *TestRunnerDeployer) GetLogs(ctx context.Context, testId st
 	return nil
 }
 
-func (runnerDeployer *TestRunnerDeployer) CleanAll(ctx context.Context, testId string) error {
-	//clean
-	return nil
-}
+func (runnerDeployer *TestRunnerDeployer) CleanTestResource(ctx context.Context, testId string) error {
+	//clean runner
+	err := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	if err != nil {
+		log.Errorf("clean deployment failed %s", err)
+	}
 
-func (runnerDeployer *TestRunnerDeployer) RemovePod(ctx context.Context, testId string) error {
-	err := runnerDeployer.k8sClient.AppsV1().Deployments(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	err = runnerDeployer.k8sClient.AppsV1().Deployments(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
 	if err != nil {
 		log.Errorf("clean deployment failed %s", err)
 	}
@@ -124,9 +125,15 @@ func (runnerDeployer *TestRunnerDeployer) RemovePod(ctx context.Context, testId 
 	if err != nil {
 		log.Errorf("clean statefuleset failed %s", err)
 	}
+
+	err = runnerDeployer.k8sClient.CoreV1().ConfigMaps(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
+	if err != nil {
+		log.Errorf("clean configmap failed %s", err)
+	}
+
 	services, err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).List(ctx, metav1.ListOptions{LabelSelector: "testid=" + testId})
 	if err != nil {
-		log.Errorf("get service failed %s", err)
+		log.Errorf("clean service failed %s", err)
 	}
 	for _, svc := range services.Items {
 		err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})

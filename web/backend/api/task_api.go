@@ -17,7 +17,10 @@ type ListTaskResp []types.Task
 
 // ListTasksReq
 // swagger:model listTasksReq
-type ListTasksReq repo.ListParams
+type ListTasksReq struct {
+	JobId string        `form:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
+	State []types.State `form:"state"`
+}
 
 func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
@@ -54,7 +57,16 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		tasks, err := tasksRepo.List(ctx, repo.ListParams(params))
+		jobId, err := primitive.ObjectIDFromHex(params.JobId)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		tasks, err := tasksRepo.List(ctx, repo.ListParams{
+			JobId: jobId,
+			State: params.State,
+		})
 		if err != nil {
 			c.Error(err)
 			return

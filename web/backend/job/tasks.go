@@ -73,15 +73,15 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 						continue
 					} else {
 						if restartCount > 5 {
-							log.Error("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
+							log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
 							// mark pod as fail and remove this pod
 							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
-							if err != nil {
-								log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+							if markFailErr != nil {
+								log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 							}
 
-							cleanK8sErr := taskMgr.testRunner.RemovePod(ctx, string(task.TestId))
-							if err != nil {
+							cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId))
+							if cleanK8sErr != nil {
 								log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
 							}
 						}
@@ -130,7 +130,7 @@ func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) 
 		return err
 	}
 
-	err = taskMgr.testRunner.CleanAll(ctx, string(task.TestId))
+	err = taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId))
 	if err != nil {
 		return err
 	}

@@ -8,15 +8,19 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
+	"github.com/hunjixin/brightbird/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/BurntSushi/toml"
+
 	"github.com/hunjixin/brightbird/env"
 	fx_opt "github.com/hunjixin/brightbird/fx_opt"
+	"github.com/hunjixin/brightbird/test_runner/runnerctl"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -71,6 +75,10 @@ func main() {
 				Name:  "log-level",
 				Value: "INFO",
 			},
+			&cli.StringFlag{
+				Name:  "listen",
+				Value: "0.0.0.0:5682",
+			},
 		},
 		Action: func(c *cli.Context) error {
 			err := logging.SetLogLevel("*", c.String("log-level"))
@@ -88,12 +96,17 @@ func main() {
 			if err != nil {
 				return err
 			}
+
+			cfg.Listen = c.String("listen")
+
 			if c.IsSet("plugins") {
 				cfg.PluginStore = c.String("plugins")
 			}
+
 			if c.IsSet("timeout") {
 				cfg.Timeout = c.Int("timeout")
 			}
+
 			if c.IsSet("taskId") {
 				cfg.TaskId = c.String("taskId")
 			}
@@ -113,6 +126,7 @@ func main() {
 			if c.IsSet("priv_reg") {
 				cfg.PrivateRegistry = c.String("priv_reg")
 			}
+
 			if len(cfg.TaskId) == 0 {
 				return errors.New("task id must be specific")
 			}
@@ -134,8 +148,8 @@ func main() {
 	os.Exit(0)
 }
 
-func run(ctx context.Context, cfg *Config) (err error) {
-	db, err := getDatabase(ctx, cfg)
+func run(pCtx context.Context, cfg *Config) (err error) {
+	db, err := getDatabase(pCtx, cfg)
 	if err != nil {
 		return err
 	}
@@ -146,7 +160,7 @@ func run(ctx context.Context, cfg *Config) (err error) {
 
 	taskRep := repo.NewTaskRepo(db)
 
-	testflow, err := getTestFLow(ctx, db, cfg.TaskId)
+	testflow, err := getTestFLow(pCtx, db, cfg.TaskId)
 	if err != nil {
 		return err
 	}
@@ -154,9 +168,9 @@ func run(ctx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if err != nil {
-			_ = taskRep.MarkState(ctx, taskId, types.Error, err.Error())
+			_ = taskRep.MarkState(pCtx, taskId, types.Error, err.Error())
 		} else {
-			_ = taskRep.MarkState(ctx, taskId, types.Successful, "run successfully")
+			_ = taskRep.MarkState(pCtx, taskId, types.Successful, "run successfully")
 		}
 
 		//todo get logs
@@ -175,18 +189,15 @@ func run(ctx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
+	ctx, shutdown := CatchShutdown(pCtx, cfg.Timeout)
 	stop, err := fx_opt.New(ctx,
-		fx_opt.Override(new(context.Context), func(lc fx.Lifecycle) context.Context {
-			if cfg.Timeout > 0 {
-				tCtx, _ := context.WithTimeout(ctx, time.Minute*time.Duration(cfg.Timeout))
-				return tCtx
-			}
-			return ctx
-		}),
+		fx_opt.Override(new(types.Shutdown), shutdown),
+		fx_opt.Override(new(context.Context), ctx),
 
+		// plugin
 		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
 		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
-		fx_opt.Override(new(*types.Task), func(taskRepo repo.ITaskRepo) (*types.Task, error) {
+		fx_opt.Override(new(*types.Task), func(ctx context.Context, taskRepo repo.ITaskRepo) (*types.Task, error) {
 			taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
 			if err != nil {
 				return nil, err
@@ -194,11 +205,9 @@ func run(ctx context.Context, cfg *Config) (err error) {
 			return taskRepo.Get(ctx, taskId)
 		}),
 
+		//config
 		fx_opt.Override(new(*Config), cfg),
-		fx_opt.Override(new(*mongo.Database), db),
-		fx_opt.Override(new(repo.ITaskRepo), taskRep),
-		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
-
+		fx_opt.Override(new(types.Endpoint), types.Endpoint(cfg.Listen)),
 		fx_opt.Override(new(types.BootstrapPeers), types.BootstrapPeers(cfg.BootstrapPeers)),
 		fx_opt.Override(new(types.TestId), func(task *types.Task) types.TestId {
 			if len(task.TestId) > 0 {
@@ -206,6 +215,12 @@ func run(ctx context.Context, cfg *Config) (err error) {
 			}
 			return types.TestId(uuid.New().String()[:8])
 		}),
+
+		//database
+		fx_opt.Override(new(*mongo.Database), db),
+		fx_opt.Override(new(repo.ITaskRepo), taskRep),
+		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
+		//k8s
 		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {
 			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId), cfg.PrivateRegistry, cfg.Mysql)
 			if err != nil {
@@ -214,17 +229,24 @@ func run(ctx context.Context, cfg *Config) (err error) {
 
 			cleaner.AddFunc(func() error {
 				log.Infof("start to cleanup k8s resource")
-				return k8sEnv.Clean(ctx)
+				return k8sEnv.Clean(pCtx)
 			})
 			return k8sEnv, nil
 		}),
+
+		//api
+		fx_opt.Override(new(*gin.Engine), gin.Default()),
+		fx_opt.Override(new(*runnerctl.APIController), runnerctl.NewAPIController),
+		fx_opt.Override(fx_opt.NextInvoke(), runnerctl.SetupAPI),
+
+		//exec testflow
 		DeployFLow(deployPlugin, testflow.Nodes),
 		ExecFlow(execPlugin, testflow.Cases),
 	)
 	if err != nil {
 		return
 	}
-	return stop(ctx)
+	return stop(pCtx)
 }
 
 func getDatabase(ctx context.Context, cfg *Config) (*mongo.Database, error) {
@@ -281,4 +303,21 @@ func findCodeVersionProperties(properties []*types.Property) *types.Property {
 		}
 	}
 	return nil
+}
+
+func CatchShutdown(pCtx context.Context, timeout int) (context.Context, types.Shutdown) {
+	innerCtx := pCtx
+	if timeout > 0 {
+		innerCtx, _ = context.WithTimeout(pCtx, time.Minute*time.Duration(timeout))
+	}
+	shutdown := make(types.Shutdown)
+	innerCtx, cancel := context.WithCancel(innerCtx)
+	go func() {
+		fmt.Println("wait shudown")
+		<-shutdown
+		cancel()
+	}()
+
+	go utils.CatchSig(pCtx, shutdown)
+	return innerCtx, shutdown
 }

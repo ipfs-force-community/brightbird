@@ -8,9 +8,12 @@ import (
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/job"
+	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+var jobLogger = logging.Logger("job_api")
 
 // UpdateJobRequest
 // swagger:model updateJobRequest
@@ -35,7 +38,7 @@ type JobDetailResp struct {
 // swagger:model listJobResp
 type ListJobResp []types.Job
 
-func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager) {
+func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager, taskManager *job.TaskMgr) {
 	group := v1group.Group("/job")
 
 	// swagger:route GET /job listJobs
@@ -267,12 +270,43 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			c.Error(err)
 			return
 		}
+
 		err = jobRepo.Delete(c, id)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
+		//remove job
+		err = jobManager.StopJob(ctx, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		/*
+			//remove task
+			tasks, err := taskRepo.List(ctx, repo.ListParams{
+				JobId: id,
+			})
+			if err != nil {
+				c.Error(err)
+				return
+			}
+
+			for _, task := range tasks {
+				err = taskManager.StopOneTask(ctx, task.ID)
+				if err != nil {
+					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
+				}
+			}
+
+			err = taskRepo.DeleteByJobId(ctx, id)
+			if err != nil {
+				c.Error(err)
+				return
+			}
+		*/
 		c.Status(http.StatusOK)
 	})
 

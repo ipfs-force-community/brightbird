@@ -8,12 +8,14 @@ import (
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/robfig/cron/v3"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type IJobManager interface {
 	Start(ctx context.Context) error
 	InsertOrReplaceJob(ctx context.Context, job *types.Job) error
-	StopJob(ctx context.Context, jobId string) error
+	StopJob(ctx context.Context, jobId primitive.ObjectID) error
 }
 
 type IJob interface {
@@ -30,7 +32,7 @@ type JobManager struct {
 	cron       *cron.Cron
 	taskRepo   repo.ITaskRepo
 	jobRepo    repo.IJobRepo
-	runningJob map[string]IJob
+	runningJob map[primitive.ObjectID]IJob
 }
 
 func NewJobManager(cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *JobManager {
@@ -39,7 +41,7 @@ func NewJobManager(cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRe
 		taskRepo:   taskRepo,
 		jobRepo:    jobRepo,
 		lk:         sync.Mutex{},
-		runningJob: make(map[string]IJob),
+		runningJob: make(map[primitive.ObjectID]IJob),
 	}
 }
 
@@ -47,14 +49,14 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 	j.lk.Lock()
 	defer j.lk.Unlock()
 
-	oldJob, ok := j.runningJob[job.ID.String()]
+	oldJob, ok := j.runningJob[job.ID]
 	if ok {
 		err := oldJob.Stop(ctx)
 		if err != nil {
 			log.Errorf("unable to stop old job %s %v", job.ID, err)
 			return err
 		}
-		delete(j.runningJob, job.ID.String())
+		delete(j.runningJob, job.ID)
 	}
 
 	switch job.JobType {
@@ -64,7 +66,7 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 		if err != nil {
 			return err
 		}
-		j.runningJob[job.ID.String()] = jobInstance
+		j.runningJob[job.ID] = jobInstance
 	default:
 		return fmt.Errorf("unsupport job %s", job.ID)
 	}
@@ -90,7 +92,7 @@ func (j *JobManager) Start(ctx context.Context) error {
 	return nil
 }
 
-func (j *JobManager) StopJob(ctx context.Context, jobId string) error {
+func (j *JobManager) StopJob(ctx context.Context, jobId primitive.ObjectID) error {
 	j.lk.Lock()
 	defer j.lk.Unlock()
 	if job, ok := j.runningJob[jobId]; ok {

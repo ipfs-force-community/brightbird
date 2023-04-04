@@ -3,6 +3,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"net"
 	"net/http"
 	"os"
@@ -138,13 +139,14 @@ var runCmd = &cli.Command{
 	},
 }
 
-func run(ctx context.Context, cfg config.Config) error {
+func run(pCtx context.Context, cfg config.Config) error {
 	e := gin.Default()
 	e.Use(corsMiddleWare())
 	e.Use(errorHandleMiddleWare())
 
 	shutdown := make(types.Shutdown)
-	stop, err := fx_opt.New(ctx,
+	stop, err := fx_opt.New(pCtx,
+		fx_opt.Override(new(context.Context), pCtx),
 		//config
 		fx_opt.Override(new(config.Config), cfg),
 		fx_opt.Override(new(types.PrivateRegistry), NewPrivateRegistry(cfg)),
@@ -153,8 +155,7 @@ func run(ctx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
 			return (*api.V1RouterGroup)(e.Group("api/v1"))
 		}),
-		fx_opt.Override(new(context.Context), ctx),
-		fx_opt.Override(new(*mongo.Database), func() (*mongo.Database, error) {
+		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
 			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
 			if err != nil {
 				return nil, err
@@ -215,7 +216,8 @@ func run(ctx context.Context, cfg config.Config) error {
 	if err != nil {
 		return err
 	}
-	go utils.CatchSig(ctx, shutdown)
+
+	go utils.CatchSig(pCtx, shutdown)
 
 	listener, err := net.Listen("tcp", cfg.Listen)
 	if err != nil {
@@ -226,12 +228,13 @@ func run(ctx context.Context, cfg config.Config) error {
 	log.Infof("Start listen api %s", listener.Addr())
 	go func() {
 		err = e.RunListener(listener)
-		if err != nil {
+		if err != nil && errors.Is(err, http.ErrServerClosed) {
 			log.Errorf("listen address fail %s", err)
 		}
 	}()
 	<-shutdown
-	return stop(ctx)
+
+	return stop(pCtx)
 }
 
 func errorHandleMiddleWare() gin.HandlerFunc {

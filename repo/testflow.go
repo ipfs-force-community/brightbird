@@ -13,8 +13,8 @@ import (
 )
 
 type GetTestFlowParams struct {
-	ID   primitive.ObjectID `json:"id"`
-	Name string             `json:"name"`
+	ID   primitive.ObjectID `form:"id"`
+	Name string             `form:"name"`
 }
 
 type ITestFlowRepo interface {
@@ -41,7 +41,7 @@ type BasePage struct {
 }
 
 func (c *TestFlowRepo) List(ctx context.Context) (*types.PageResp[types.TestFlow], error) {
-	cur, err := c.caseCol.Find(ctx, bson.M{})
+	cur, err := c.caseCol.Find(ctx, bson.M{}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[strin
 		return nil, err
 	}
 
-	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": groupId})
+	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": groupId}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}

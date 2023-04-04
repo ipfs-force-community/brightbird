@@ -13,8 +13,8 @@ import (
 )
 
 type ListParams struct {
-	JobId primitive.ObjectID `json:"jobId"`
-	State []types.State      `json:"state"`
+	JobId primitive.ObjectID `form:"jobId"`
+	State []types.State      `form:"state"`
 }
 
 type ITaskRepo interface {
@@ -47,7 +47,7 @@ func (j *TaskRepo) List(ctx context.Context, params ListParams) ([]*types.Task, 
 		filter = append(filter, bson.E{Key: "state", Value: bson.M{"$in": params.State}})
 	}
 
-	cur, err := j.taskCol.Find(ctx, filter)
+	cur, err := j.taskCol.Find(ctx, filter, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}
@@ -132,6 +132,14 @@ func (j *TaskRepo) Save(ctx context.Context, task *types.Task) (primitive.Object
 
 func (j *TaskRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
 	_, err := j.taskCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *TaskRepo) DeleteByJobId(ctx context.Context, jobId primitive.ObjectID) error {
+	_, err := j.taskCol.DeleteMany(ctx, bson.D{{"jobid", jobId}})
 	if err != nil {
 		return err
 	}

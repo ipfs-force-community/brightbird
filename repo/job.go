@@ -30,7 +30,7 @@ func NewJobRepo(db *mongo.Database) *JobRepo {
 }
 
 func (j *JobRepo) List(ctx context.Context) ([]*types.Job, error) {
-	cur, err := j.jobCol.Find(ctx, bson.M{})
+	cur, err := j.jobCol.Find(ctx, bson.M{}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}

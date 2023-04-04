@@ -31,7 +31,7 @@ func NewGroupSvc(db *mongo.Database, testflowSvc ITestFlowRepo) *GroupSvc {
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
-	cur, err := g.groupCol.Find(ctx, bson.M{})
+	cur, err := g.groupCol.Find(ctx, bson.M{}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}

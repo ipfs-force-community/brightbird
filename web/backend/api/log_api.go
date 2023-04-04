@@ -3,10 +3,11 @@ package api
 import (
 	"context"
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"os"
 	"sync"
+
+	"github.com/gin-gonic/gin"
 )
 
 type LogInfo struct {
