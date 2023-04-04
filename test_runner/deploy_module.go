@@ -83,7 +83,7 @@ func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) 
 func getSvcMap(properties ...*types.Property) (map[string]string, error) {
 	var svcMap = make(map[string]string)
 	for _, p := range properties {
-		if p != nil && reflect2.IsNil(p.Value) {
+		if p != nil && !reflect2.IsNil(p.Value) {
 			if val, ok := p.Value.(string); ok && len(val) > 0 {
 				svcMap[p.Name] = val
 			}
@@ -128,7 +128,7 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 	return reflect.StructOf(inDepTypeFields)
 }
 func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (interface{}, string, error) {
-	svcMap, err := getSvcMap(append(depNode.Properties, depNode.Out)...)
+	svcMap, err := getSvcMap(append(depNode.SvcProperties, depNode.Out)...)
 	if err != nil {
 		return nil, "", err
 	}
@@ -185,7 +185,7 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 			}
 		}()
 
-		log.Infof("start to deploy %s", depNode.Name)
+		log.Infof("start to deploy %s name: %s", depNode.Name, svcMap[types.OutLabel])
 		//convert params
 		argT := fnT.In(1)
 		dstVal := reflect.New(argT).Elem()
@@ -198,6 +198,11 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 					err := collectParams(depNode.Properties, val.Interface())
 					if err != nil {
 						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
+					}
+					//set basic svc map
+					svcMapField := val.Elem().FieldByName("SvcMap")
+					if (svcMapField != reflect.Value{}) {
+						svcMapField.Set(reflect.ValueOf(svcMap))
 					}
 					dstVal.FieldByName(fieldName).Set(val.Elem())
 				} else {

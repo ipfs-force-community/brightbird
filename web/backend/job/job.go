@@ -72,6 +72,7 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 }
 
 func (j *JobManager) Start(ctx context.Context) error {
+	return nil
 	jobs, err := j.jobRepo.List(ctx)
 	if err != nil {
 		return err

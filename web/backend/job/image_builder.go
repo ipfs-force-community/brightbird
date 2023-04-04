@@ -112,7 +112,7 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 			mapLk.Lock()
 			defer mapLk.Unlock()
 			versionMap[node.Name] = br.Version
-			return err
+			return nil
 		})
 	}
 
@@ -283,11 +283,7 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) 
 
 	//check again
 	builder.repo, err = git.PlainOpen(builder.repoPath)
-	if err == nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {

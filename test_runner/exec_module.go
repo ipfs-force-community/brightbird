@@ -10,7 +10,7 @@ import (
 )
 
 func GenInvokeExec(plugin *types.PluginDetail, testItem *types.TestItem) (interface{}, error) {
-	svcMap, err := getSvcMap(testItem.Properties...)
+	svcMap, err := getSvcMap(testItem.SvcProperties...)
 	if err != nil {
 		return nil, err
 	}

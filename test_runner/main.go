@@ -149,16 +149,6 @@ func run(ctx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	deployPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
-	if err != nil {
-		return err
-	}
-
-	execPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
-	if err != nil {
-		return err
-	}
-
 	cleaner := Cleaner{}
 	defer func() {
 		if err != nil {
@@ -172,6 +162,16 @@ func run(ctx context.Context, cfg *Config) (err error) {
 			log.Errorf("clean up failed %v", cleanErr)
 		}
 	}()
+
+	deployPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
+	if err != nil {
+		return err
+	}
+
+	execPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
+	if err != nil {
+		return err
+	}
 
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(context.Context), func(lc fx.Lifecycle) context.Context {
