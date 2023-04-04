@@ -19,3 +19,11 @@ spec:
           ports:
             - containerPort: 8989
               protocol: TCP
+          volumeMounts:
+            - name: k8slog
+              mountPath: /k8slog
+      volumes:
+        - name: k8slog
+          hostPath:
+            path: /k8slog/venus-auth-{{.UniqueId}}.log
+            type: DirectoryOrCreate
