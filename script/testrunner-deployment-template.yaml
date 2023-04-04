@@ -11,7 +11,7 @@ spec:
   initContainers:
   containers:
     - name: venus-testrunner
-      image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:347f852d52402c60c512fd5014a3ee4065f2777f"
+      image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:310c68035f537f8502319befff4f7ea45b481090"
       imagePullPolicy: IfNotPresent
       args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId={{.TaskID}}"]
       env:
