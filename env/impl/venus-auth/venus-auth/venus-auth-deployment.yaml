@@ -15,15 +15,16 @@ spec:
       containers:
         - name: venus-auth-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-auth:{{.CodeVersion}}"
-          args: ["run"]
+          args:
+            - "run"
+            - "--log-file=/shared-dir-v/k8slog/venus-auth-{{.UniqueId}}.log"
           ports:
             - containerPort: 8989
               protocol: TCP
           volumeMounts:
-            - name: k8slog
-              mountPath: /k8slog
+            - mountPath: /shared-dir
+              name: shared-dir-v
       volumes:
-        - name: k8slog
-          hostPath:
-            path: /k8slog/venus-auth-{{.UniqueId}}.log
-            type: DirectoryOrCreate
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: testnet-shared-dir
