@@ -126,7 +126,7 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Error(err)
+		log.Error("run tesrt runner fail %v", err)
 		os.Exit(1)
 		return
 	}
