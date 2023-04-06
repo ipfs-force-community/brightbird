@@ -22,7 +22,7 @@
 
       <jm-form-item label="版本设置" prop="version">
         <div v-for="(version, component) in editorForm.versions">
-          <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="editorForm.versions[component]">
+          <jm-input :content=version :placeholder="`填写组件${component}的版本(branch/tag/commit/不填默认主分支)`" v-model="editorForm.versions[component]">
             <template #prepend>{{component}}:</template>
           </jm-input>
         </div>  

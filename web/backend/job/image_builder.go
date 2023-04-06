@@ -369,7 +369,7 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		remoteName := remotes[0].Config().Name
 		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("resolve (%s) to a hash %s", commit, err)
 		}
 		return hash.String(), nil
 	}
