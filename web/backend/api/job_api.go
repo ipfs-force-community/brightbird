@@ -284,29 +284,32 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		/*
-			//remove task
-			tasks, err := taskRepo.List(ctx, repo.ListParams{
-				JobId: id,
-			})
-			if err != nil {
-				c.Error(err)
-				return
-			}
+		//remove task
+		tasks, err := taskRepo.List(ctx, repo.ListParams{
+			JobId: id,
+		})
+		if err != nil {
+			c.Error(err)
+			return
+		}
 
-			for _, task := range tasks {
-				err = taskManager.StopOneTask(ctx, task.ID)
-				if err != nil {
-					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
-				}
-			}
-
-			err = taskRepo.DeleteByJobId(ctx, id)
+		for _, task := range tasks {
+			err = taskManager.StopOneTask(ctx, task.ID)
 			if err != nil {
-				c.Error(err)
-				return
+				jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
 			}
-		*/
+			err = taskRepo.Delete(ctx, task.ID)
+			if err != nil {
+				jobLogger.Warnf("delete task fail %v", err)
+			}
+		}
+
+		err = taskRepo.Delete(ctx, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
 		c.Status(http.StatusOK)
 	})
 

@@ -61,6 +61,9 @@ func (cronJob *CronJob) Run(ctx context.Context) error {
 		thisLog.Infof("job %s save task %s", cronJob.job.ID, id)
 	})
 	cronJob.cronId = &entryId
+	if err == nil {
+		thisLog.Infof("add job %s entry %d", cronJob.job.Name, entryId)
+	}
 	return err
 }
 

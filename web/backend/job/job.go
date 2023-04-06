@@ -16,6 +16,7 @@ type IJobManager interface {
 	Start(ctx context.Context) error
 	InsertOrReplaceJob(ctx context.Context, job *types.Job) error
 	StopJob(ctx context.Context, jobId primitive.ObjectID) error
+	Stop(ctx context.Context) error
 }
 
 type IJob interface {
@@ -96,6 +97,19 @@ func (j *JobManager) StopJob(ctx context.Context, jobId primitive.ObjectID) erro
 	j.lk.Lock()
 	defer j.lk.Unlock()
 	if job, ok := j.runningJob[jobId]; ok {
+		err := job.Stop(ctx)
+		if err != nil {
+			return err
+		}
+		delete(j.runningJob, jobId)
+	}
+	return nil
+}
+
+func (j *JobManager) Stop(ctx context.Context) error {
+	j.lk.Lock()
+	defer j.lk.Unlock()
+	for jobId, job := range j.runningJob {
 		err := job.Stop(ctx)
 		if err != nil {
 			return err
