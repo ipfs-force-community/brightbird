@@ -14,10 +14,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type Config struct{}
+type Config struct {
+	env.BaseConfig
+}
 
 type RenderParams struct {
+	Config
 	env.BaseRenderParams
+
 	UniqueId string
 	Replicas int
 }
@@ -91,6 +95,7 @@ var f embed.FS
 
 func (deployer *VenusAuthDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
+		Config:           *deployer.cfg,
 		BaseRenderParams: deployer.env.BaseRenderParams(),
 		UniqueId:         deployer.env.UniqueId(""),
 		Replicas:         1,

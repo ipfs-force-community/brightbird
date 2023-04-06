@@ -30,8 +30,9 @@ type Config struct {
 
 type RenderParams struct {
 	env.BaseRenderParams
-	TestID string
 	Config
+
+	TestID string
 }
 
 func DefaultConfig() Config {

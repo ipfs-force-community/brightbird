@@ -27,9 +27,10 @@ type Config struct {
 
 type RenderParams struct {
 	env.BaseRenderParams
+	Config
+
 	UniqueId string
 	MysqlDSN string
-	Config
 }
 
 func DefaultConfig() Config {

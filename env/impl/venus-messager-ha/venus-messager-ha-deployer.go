@@ -27,8 +27,9 @@ type Config struct {
 
 type RenderParams struct {
 	env.BaseRenderParams
-	UniqueId string
 	Config
+
+	UniqueId string
 }
 
 func DefaultConfig() Config {
