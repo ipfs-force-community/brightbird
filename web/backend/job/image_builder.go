@@ -297,9 +297,8 @@ func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
 		return err
 	}
 
-	err = builder.repo.Fetch(&git.FetchOptions{
-		Progress: os.Stdout,
-		// InsecureSkipTLS skips ssl verify if protocol is https
+	err = builder.repo.FetchContext(ctx, &git.FetchOptions{
+		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
 		Force:           true,
 	})
@@ -336,11 +335,22 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		if err != nil {
 			return "", err
 		}
-		headHash, err := repo.Head()
+
+		log.Debugf("repo %s master branch to latest", builder.repoPath)
+		err = workTree.PullContext(ctx, &git.PullOptions{
+			Progress:        os.Stdout,
+			InsecureSkipTLS: true,
+			Force:           true,
+		})
+		if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
+			return "", err
+		}
+
+		masterHead, err := repo.Head()
 		if err != nil {
 			return "", err
 		}
-		return headHash.String(), nil
+		return masterHead.Hash().String(), nil
 	}
 
 	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
@@ -349,11 +359,13 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 	}
 
 	if err == plumbing.ErrReferenceNotFound {
+		//branch or tag
 		remotes, err := repo.Remotes()
 		if err != nil {
 			return "", err
 		}
-		//detact remote
+
+		//detect remote
 		remoteName := remotes[0].Config().Name
 		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
 		if err != nil {
@@ -487,6 +499,7 @@ func toSShFormat(repoUrl string) (string, error) {
 func execMakefile(dir string, name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = dir
+	cmd.Env = os.Environ()
 
 	//var out bytes.Buffer
 	cmd.Stdout = os.Stdout
