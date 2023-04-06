@@ -32,7 +32,10 @@ type ListInGroupRequest struct {
 
 // GetTestFlowRequest
 // swagger:model getTestFlowRequest
-type GetTestFlowRequest = repo.GetTestFlowParams
+type GetTestFlowRequest struct {
+	ID   string `form:"id"`
+	Name string `form:"name"`
+}
 
 // ListTestFlowResp
 // swagger:model listTestFlowResp
@@ -174,7 +177,16 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		output, err := service.Get(ctx, req)
+		id, err := primitive.ObjectIDFromHex(req.ID)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		output, err := service.Get(ctx, &repo.GetTestFlowParams{
+			ID:   id,
+			Name: req.Name,
+		})
 		if err != nil {
 			c.Error(err)
 			return
