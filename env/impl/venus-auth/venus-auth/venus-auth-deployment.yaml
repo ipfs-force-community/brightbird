@@ -17,7 +17,6 @@ spec:
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-auth:{{.CodeVersion}}"
           args:
             - "run"
-            - "--log-file=/shared-dir-v/k8slog/venus-auth-{{.UniqueId}}.log"
           ports:
             - containerPort: 8989
               protocol: TCP
@@ -28,3 +27,20 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir
+        - name: pod-logs
+          hostPath:
+            path: /var/log/pods/{{.Release.Namespace}}_{{.Release.Name}}_{{.Name}}_{{.PodUID}}
+            type: Directory
+      initContainers:
+        - name: copy-logs
+          image: busybox
+          command: ["sh", "-c", "cp -R /var/log/pods/* /shared-dir/"]
+          volumeMounts:
+            - name: shared-dir-v
+              mountPath: "/shared-dir"
+            - name: pod-logs
+              mountPath: "/var/log/pods"
+          securityContext:
+            privileged: true
+      securityContext:
+        fsGroup: 1000
