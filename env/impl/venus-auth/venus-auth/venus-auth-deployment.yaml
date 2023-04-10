@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: venus-auth-{{.UniqueId}}
+  namespace: default
 spec:
   replicas: {{.Replicas}}
   selector:
@@ -23,24 +24,18 @@ spec:
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+        - name: log-collector
+          image: busybox
+          command: ["/bin/sh", "-c", "while true; do sleep 1; [ $(find /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 \"name\"}}/*.log -type f -mmin -1 | wc -l) -eq 0 ] || break; done && cp /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 \"name\"}}/*.log /shared-dir/"]
+          volumeMounts:
+            - mountPath: /var/log/pods
+              name: var-log-pods
+            - mountPath: /shared-dir
+              name: shared-dir-v
       volumes:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir
-        - name: pod-logs
+        - name: var-log-pods
           hostPath:
-            path: /var/log/pods/{{.Release.Namespace}}_{{.Release.Name}}_{{.Name}}_{{.PodUID}}
-            type: Directory
-      initContainers:
-        - name: copy-logs
-          image: busybox
-          command: ["sh", "-c", "cp -R /var/log/pods/* /shared-dir/"]
-          volumeMounts:
-            - name: shared-dir-v
-              mountPath: "/shared-dir"
-            - name: pod-logs
-              mountPath: "/var/log/pods"
-          securityContext:
-            privileged: true
-      securityContext:
-        fsGroup: 1000
+            path: /var/log/pods
