@@ -26,7 +26,7 @@ spec:
               name: shared-dir-v
         - name: log-collector
           image: busybox
-          command: ["/bin/sh", "-c", "while true; do sleep 1; [ $(find /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 \"name\"}}/*.log -type f -mmin -1 | wc -l) -eq 0 ] || break; done && cp /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 \"name\"}}/*.log /shared-dir/"]
+          command: [ "/bin/sh", "-c", "while true; do sleep 1; [ $(find /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 'name'}}/*.log -type f -mmin -1 | wc -l) -eq 0 ] || break; done && cp /var/log/pods/{{.metadata.namespace}}_{{.metadata.name}}_{{index .spec.containers 0 'name'}}/*.log /shared-dir/" ]
           volumeMounts:
             - mountPath: /var/log/pods
               name: var-log-pods
