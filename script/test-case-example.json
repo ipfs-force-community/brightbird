@@ -1,257 +1,257 @@
 {
     "_id": ObjectId("6423ab18631f96060039bbc7"),
-    "Name": "test-case-example",
+    "name": "test-case-example",
     "groupId": ObjectId("6423aab776cc0ec975113902"),
-    "Nodes": [
+    "nodes": [
         {
-            "Name": "venus-auth-ha",
-            "Type": "venus-auth",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "venus-auth-ha",
+            "type": "venus-auth",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "Replicas",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": 2,
-                    "Require": true
+                    "name": "Replicas",
+                    "type": "string",
+                    "description": "hel",
+                    "value": 2,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-daemon-ha",
-            "Type": "venus",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ 
+            "name": "venus-daemon-ha",
+            "type": "venus",
+            "isannotateout": false,
+            "svcproperties": [ 
             ],
-            "Out": null,
-            "Properties": [
+            "out": null,
+            "properties": [
                 {
-                    "Name": "Replicas",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": 2,
-                    "Require": true
+                    "name": "Replicas",
+                    "type": "string",
+                    "description": "hel",
+                    "value": 2,
+                    "require": true
                 },
                 {
-                    "Name": "netType",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "force",
-                    "Require": true
+                    "name": "nettype",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "force",
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "chain-co",
-            "Type": "chain-co",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "chain-co",
+            "type": "chain-co",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "Replicas",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": 2,
-                    "Require": true
+                    "name": "Replicas",
+                    "type": "string",
+                    "description": "hel",
+                    "value": 2,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "market-client",
-            "Type": "market-client",
-            "IsAnnotateOut": true,
-            "SvcProperties": [
+            "name": "market-client",
+            "type": "market-client",
+            "isannotateout": true,
+            "svcproperties": [
                 {
-                    "Name": "Wallet",
-                    "Type": "string",
-                    "Description": "",
-                    "Value": "wallet1",
-                    "Require": true
+                    "name": "Wallet",
+                    "type": "string",
+                    "description": "",
+                    "value": "wallet1",
+                    "require": true
                 }
             ],
-            "Out": {
-                "Name": "Out",
-                "Type": "string",
-                "Description": "",
-                "Value": "",
-                "Require": true
+            "out": {
+                "name": "out",
+                "type": "string",
+                "description": "",
+                "value": "",
+                "require": true
             },
-            "Properties": [ ]
+            "properties": [ ]
         },
         {
-            "Name": "venus-market",
-            "Type": "venus-market",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "venus-market",
+            "type": "venus-market",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "UseMysql",
-                    "Type": "bool",
-                    "Description": "hel",
-                    "Value": false,
-                    "Require": true
+                    "name": "UseMysql",
+                    "type": "bool",
+                    "description": "hel",
+                    "value": false,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-gateway",
-            "Type": "venus-gateway",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "venus-gateway",
+            "type": "venus-gateway",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "Replicas",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": 2,
-                    "Require": true
+                    "name": "Replicas",
+                    "type": "string",
+                    "description": "hel",
+                    "value": 2,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-message-ha",
-            "Type": "venus-message",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "venus-message-ha",
+            "type": "venus-message",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "Replicas",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": 2,
-                    "Require": true
+                    "name": "Replicas",
+                    "type": "string",
+                    "description": "hel",
+                    "value": 2,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-miner",
-            "Type": "venus-miner",
-            "IsAnnotateOut": false,
-            "SvcProperties": [ ],
-            "Out": null,
-            "Properties": [
+            "name": "venus-miner",
+            "type": "venus-miner",
+            "isannotateout": false,
+            "svcproperties": [ ],
+            "out": null,
+            "properties": [
                 {
-                    "Name": "UseMysql",
-                    "Type": "bool",
-                    "Description": "hel",
-                    "Value": false,
-                    "Require": true
+                    "name": "UseMysql",
+                    "type": "bool",
+                    "description": "hel",
+                    "value": false,
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-wallet",
-            "Type": "venus-wallet",
-            "IsAnnotateOut": true,
-            "SvcProperties": [ ],
-            "Out": {
-                "Name": "Out",
-                "Type": "string",
-                "Description": "hel",
-                "Value": "wallet1",
-                "Require": true
+            "name": "venus-wallet",
+            "type": "venus-wallet",
+            "isannotateout": true,
+            "svcproperties": [ ],
+            "out": {
+                "name": "out",
+                "type": "string",
+                "description": "hel",
+                "value": "wallet1",
+                "require": true
             },
-            "Properties": [
+            "properties": [
                 {
-                    "Name": "UserName",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "admin",
-                    "Require": true
+                    "name": "UserName",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "admin",
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "venus-wallet",
-            "Type": "venus-wallet",
-            "IsAnnotateOut": true,
-            "SvcProperties": [ ],
-            "Out": {
-                "Name": "Out",
-                "Type": "string",
-                "Description": "hel",
-                "Value": "wallet_new",
-                "Require": true
+            "name": "venus-wallet",
+            "type": "venus-wallet",
+            "isannotateout": true,
+            "svcproperties": [ ],
+            "out": {
+                "name": "out",
+                "type": "string",
+                "description": "hel",
+                "value": "wallet_new",
+                "require": true
             },
-            "Properties": [
+            "properties": [
                 {
-                    "Name": "UserName",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "admin",
-                    "Require": true
+                    "name": "UserName",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "admin",
+                    "require": true
                 }
             ]
         }
     ],
-    "Cases": [
+    "cases": [
         {
-            "Name": "set_password",
-            "SvcProperties": [
+            "name": "set_password",
+            "svcproperties": [
                 {
-                    "Name": "Wallet",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "wallet1",
-                    "Require": true
+                    "name": "Wallet",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "wallet1",
+                    "require": true
                 }
             ],
-            "Properties": [
+            "properties": [
                 {
-                    "Name": "Password",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "123",
-                    "Require": true
+                    "name": "Password",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "123",
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "import_key",
-            "SvcProperties": [
+            "name": "import_key",
+            "svcproperties": [
                 {
-                    "Name": "Wallet",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "wallet1",
-                    "Require": true
+                    "name": "Wallet",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "wallet1",
+                    "require": true
                 }
             ],
-            "Properties": [
+            "properties": [
                 {
-                    "Name": "PrivKey",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "7b2254797065223a22626c73222c22507269766174654b6579223a223959796a636c2b6b736e4f6a2b6c4b386877465a616c4e4838623633626277614e5a4f37623071534456383d227d",
-                    "Require": true
+                    "name": "PrivKey",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "7b2254797065223a22626c73222c22507269766174654b6579223a223959796a636c2b6b736e4f6a2b6c4b386877465a616c4e4838623633626277614e5a4f37623071534456383d227d",
+                    "require": true
                 }
             ]
         },
         {
-            "Name": "test_deploy",
-            "SvcProperties": [
+            "name": "test_deploy",
+            "svcproperties": [
                 {
-                    "Name": "Wallet",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "wallet1",
-                    "Require": true
+                    "name": "Wallet",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "wallet1",
+                    "require": true
                 },
                 {
-                    "Name": "WalletNew",
-                    "Type": "string",
-                    "Description": "hel",
-                    "Value": "wallet_new",
-                    "Require": true
+                    "name": "WalletNew",
+                    "type": "string",
+                    "description": "hel",
+                    "value": "wallet_new",
+                    "require": true
                 }
             ],
-            "Properties": [ ]
+            "properties": [ ]
         }
     ]
 }

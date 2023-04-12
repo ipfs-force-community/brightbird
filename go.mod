@@ -8,8 +8,11 @@ require (
 	github.com/filecoin-project/venus v1.10.0-rc2
 	github.com/filecoin-project/venus-auth v1.10.2-0.20230322095644-02a0689eea6c
 	github.com/filecoin-project/venus-wallet v1.9.0
+	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-git/go-git/v5 v5.6.1
+	github.com/go-logr/logr v1.2.3
+	github.com/go-logr/zapr v1.2.3
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-github/v50 v50.2.0
 	github.com/google/uuid v1.3.0
@@ -21,13 +24,19 @@ require (
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/mittwald/goharbor-client/v5 v5.3.1
 	github.com/modern-go/reflect2 v1.0.2
+	github.com/onsi/ginkgo v1.16.5
+	github.com/onsi/gomega v1.23.0
 	github.com/pelletier/go-toml/v2 v2.0.6
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/saagie/fluent-bit-mongo v0.0.0-20230329131900-c984d3f02519
 	github.com/stretchr/testify v1.8.2
+	github.com/ugorji/go/codec v1.2.9
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/whilp/git-urls v1.0.0
 	go.mongodb.org/mongo-driver v1.11.2
 	go.uber.org/fx v1.19.2
+	go.uber.org/zap v1.23.0
+	golang.org/x/sync v0.1.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/appengine v1.6.7
 	gopkg.in/yaml.v2 v2.4.0
@@ -99,7 +108,6 @@ require (
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
 	github.com/go-kit/log v0.2.1 // indirect
 	github.com/go-logfmt/logfmt v0.6.0 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-openapi/analysis v0.21.4 // indirect
 	github.com/go-openapi/errors v0.20.3 // indirect
@@ -192,6 +200,7 @@ require (
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
+	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.3-0.20211202183452-c5a74bcca799 // indirect
@@ -222,7 +231,8 @@ require (
 	github.com/subosito/gotenv v1.4.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
-	github.com/ugorji/go/codec v1.2.9 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.3.5 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/whyrusleeping/cbor-gen v0.0.0-20221021053955-c138aae13722 // indirect
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 	github.com/whyrusleeping/timecache v0.0.0-20160911033111-cfcb2f1abfee // indirect
@@ -240,12 +250,10 @@ require (
 	go.uber.org/dig v1.16.1 // indirect
 	go.uber.org/goleak v1.2.1 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
-	go.uber.org/zap v1.23.0 // indirect
 	golang.org/x/arch v0.1.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/net v0.8.0 // indirect
 	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/sys v0.6.0 // indirect
 	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/text v0.8.0 // indirect
@@ -254,6 +262,7 @@ require (
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.6 // indirect
+	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect

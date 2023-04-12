@@ -11,7 +11,6 @@ spec:
   containers:
     - name: venus-testrunner
       image: "192.168.200.175/filvenus/testrunner:latest"
-      imagePullPolicy: IfNotPresent
       args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId=642e3d30a54d76f949a81538"]
       env:
         - name: PRODUCTION
@@ -23,3 +22,9 @@ spec:
     - name: shared-dir-v
       persistentVolumeClaim:
         claimName: testnet-shared-dir
+
+
+
+kube.var.log.containers.test-runner-5c772f0a_default_venus-testrunner-6754c52e9e93aaeb0cbbd21b871f35a00b084df4393c4af15adc68783c1b75c2.log: 
+[1681193956.937781737, 
+]

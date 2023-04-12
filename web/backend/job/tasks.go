@@ -57,11 +57,12 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 		}
 		for _, job := range jobs {
 			//check running task state
-			runningTask, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Running}})
+			runningTask, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Running, types.TempError}})
 			if err != nil {
 				taskLog.Errorf("fetch running task list fail %v", err)
 				continue
 			}
+
 			for _, task := range runningTask {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {

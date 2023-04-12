@@ -140,7 +140,7 @@ func main() {
 	}
 
 	if err := app.Run(os.Args); err != nil {
-		log.Error("run tesrt runner fail %v", err)
+		log.Errorf("run test runner fail %v", err)
 		os.Exit(1)
 		return
 	}
@@ -168,7 +168,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if err != nil {
-			_ = taskRep.MarkState(pCtx, taskId, types.Error, err.Error())
+			_ = taskRep.MarkState(pCtx, taskId, types.TempError, err.Error())
 		} else {
 			_ = taskRep.MarkState(pCtx, taskId, types.Successful, "run successfully")
 		}
@@ -188,7 +188,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 	if err != nil {
 		return err
 	}
-
 	ctx, shutdown := CatchShutdown(pCtx, cfg.Timeout)
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(types.Shutdown), shutdown),

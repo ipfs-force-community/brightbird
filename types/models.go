@@ -135,6 +135,7 @@ type State string
 const (
 	Init       State = "init"
 	Running    State = "running"
+	TempError  State = "temperr"
 	Error      State = "error"
 	Successful State = "success"
 )
