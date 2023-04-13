@@ -8,10 +8,10 @@
         <div class="name">{{ jobDetail?.name }}</div>
       </div>
       <div class="count">
-          测试流: {{ jobDetail?.testFlowName }}
+        测试流: {{ jobDetail?.testFlowName }}
       </div>
       <div class="description">
-        描述:<span v-html="(jobDetail?.description || '无').replace(/\n/g, '<br/>')"/>
+        描述:<span v-html="(jobDetail?.description || '无').replace(/\n/g, '<br/>')" />
       </div>
     </div>
     <div class="content">
@@ -21,22 +21,20 @@
         </div>
       </div>
       <div class="task-wrapper">
-        <jm-empty description="暂无任务" :image-size="98" v-if="tasks?.length === 0" />
-            <task-item
-              class="task"
-              v-else
-              v-for="task of tasks"
-              :key="task.id"
-              :task="task"
-            />
+        <jm-empty description="暂无任务" :image-size="98" v-if="pageData.total === 0" />
+        <task-item class="task" v-else v-for="task of pageData.tasks" :key="task.id" :task="task" />
+      </div>
+      <!-- 显示更多 -->
+      <div class="load-more">
+        <jm-load-more :state="loadState" :load-more="btnDown">LoadMore</jm-load-more>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import {getJobDetail} from '@/api/job'
-import {getTaskInJob} from '@/api/tasks'
+import { getJobDetail } from '@/api/job'
+import { getTaskInJob } from '@/api/tasks'
 import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
@@ -44,10 +42,13 @@ import { IRootState } from '@/model';
 import { IJobDetailVo } from '@/api/dto/job';
 
 import { ITaskVo } from '@/api/dto/tasks';
+import { IPageVo } from '@/api/dto/common'
+
+import { StateEnum } from '@/components/load-more/enumeration';
 import TaskItem from "@/views/common/task-item.vue"
 
 export default defineComponent({
-  components: {TaskItem},
+  components: { TaskItem },
   props: {
     id: {
       type: String,
@@ -59,29 +60,75 @@ export default defineComponent({
     const router = useRouter();
     const store = useStore();
     const rootState = store.state as IRootState;
+    const loadState = ref<StateEnum>(StateEnum.NONE);
     const initialized = ref<boolean>(false);
     const loadingTop = ref<boolean>(false);
     const jobDetail = ref<IJobDetailVo>();
-    const tasks = ref<ITaskVo[]>();
+    const pageData = ref<{
+      pageNum: number;
+      pageSize: number;
+      total: number;
+      pages: number;
+      tasks: ITaskVo[];
+    }>({
+      pageNum: 1,
+      pageSize: 10,
+      pages: 0,
+      total: 0,
+      tasks: [],
+    })
 
     const fetchJobDetail = async () => {
       try {
         loadingTop.value = true;
         jobDetail.value = await getJobDetail(props.id)
-        tasks.value = await getTaskInJob({jobId:props.id})
+        const queryTask = await getTaskInJob({ jobId: props.id, pageNum: 1, pageSize: 10 });
+        pageData.value.total = queryTask.total;
+        pageData.value.pages = queryTask.pages;
+        pageData.value.tasks.push(...queryTask.list);
         initialized.value = true;
+        if (queryTask.pages == 1 ) {
+          loadState.value = StateEnum.NO_MORE
+        } else {
+          loadState.value = StateEnum.MORE
+        }
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
         loadingTop.value = false;
       }
     };
+
+
+    // 加载更多
+    const btnDown = async () => {
+      try {
+        if (pageData.value.pageNum < pageData.value.pages) {
+          pageData.value.pageNum++;
+          //  bottomLoading.value = true;
+          const queryTask = await getTaskInJob({ jobId: props.id, pageNum: 1, pageSize: 10 });
+          pageData.value.tasks.push(...queryTask.list);
+          pageData.value.total = queryTask.total;
+          pageData.value.pages = queryTask.pages;
+          loadState.value = StateEnum.MORE;
+        } else {
+          loadState.value = StateEnum.NO_MORE;
+        }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        // bottomLoading.value = false;
+      }
+    };
+
     onMounted(async () => {
       await fetchJobDetail();
     });
     return {
       initialized,
-      tasks,
+      pageData,
+      loadState,
+      btnDown,
       loadingTop,
       close: () => {
         if (!['/', '/job'].includes(rootState.fromRoute.path)) {
@@ -205,6 +252,10 @@ export default defineComponent({
       .task {
         margin-top: -10px;
       }
+    }
+
+    .load-more {
+      text-align: center;
     }
   }
 }

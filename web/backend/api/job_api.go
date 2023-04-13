@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -285,15 +286,19 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		//remove task
-		tasks, err := taskRepo.List(ctx, repo.ListParams{
-			JobId: id,
+		tasks, err := taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+			PageNum:  1,
+			PageSize: math.MaxInt64,
+			Params: repo.ListTaskParams{
+				JobId: id,
+			},
 		})
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		for _, task := range tasks {
+		for _, task := range tasks.List {
 			err = taskManager.StopOneTask(ctx, task.ID)
 			if err != nil {
 				jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)

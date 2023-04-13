@@ -242,8 +242,7 @@ func errorHandleMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		if c.Errors != nil {
-			c.Writer.WriteHeader(http.StatusServiceUnavailable)
-			c.Writer.Write([]byte(c.Errors.String()))
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"message": c.Errors.String()})
 		}
 	}
 }

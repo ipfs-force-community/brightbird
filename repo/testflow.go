@@ -17,12 +17,15 @@ type GetTestFlowParams struct {
 	Name string             `form:"name"`
 }
 
+type ListTestFlowParams struct {
+	GroupID primitive.ObjectID
+}
+
 type ITestFlowRepo interface {
 	Get(context.Context, *GetTestFlowParams) (*types.TestFlow, error)
-	List(context.Context) (*types.PageResp[types.TestFlow], error)
+	List(ctx context.Context, req *types.PageReq[ListTestFlowParams]) (*types.PageResp[types.TestFlow], error)
 	Save(context.Context, types.TestFlow) (primitive.ObjectID, error)
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
-	ListInGroup(context.Context, *types.PageReq[string]) (*types.PageResp[types.TestFlow], error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -34,14 +37,18 @@ func NewTestFlowRepo(db *mongo.Database) *TestFlowRepo {
 	return &TestFlowRepo{caseCol: db.Collection("testflows")}
 }
 
-type BasePage struct {
-	Total   int `json:"total"`
-	Pages   int `json:"pages"`
-	PageNum int `json:"pageNum"`
-}
+func (c *TestFlowRepo) List(ctx context.Context, req *types.PageReq[ListTestFlowParams]) (*types.PageResp[types.TestFlow], error) {
+	filter := bson.D{}
+	if !req.Params.GroupID.IsZero() {
+		filter = append(filter, bson.E{Key: "groupId", Value: req.Params.GroupID})
+	}
 
-func (c *TestFlowRepo) List(ctx context.Context) (*types.PageResp[types.TestFlow], error) {
-	cur, err := c.caseCol.Find(ctx, bson.M{}, sortModifyDesc)
+	count, err := c.caseCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := c.caseCol.Find(ctx, filter, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}
@@ -52,31 +59,7 @@ func (c *TestFlowRepo) List(ctx context.Context) (*types.PageResp[types.TestFlow
 		return nil, err
 	}
 	return &types.PageResp[types.TestFlow]{
-		Total:   len(tf),
-		PageNum: 1,
-		Pages:   1,
-		List:    tf,
-	}, nil
-}
-
-func (c *TestFlowRepo) ListInGroup(ctx context.Context, req *types.PageReq[string]) (*types.PageResp[types.TestFlow], error) {
-	groupId, err := primitive.ObjectIDFromHex(req.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	cur, err := c.caseCol.Find(ctx, bson.M{"groupId": groupId}, sortModifyDesc)
-	if err != nil {
-		return nil, err
-	}
-
-	tf := []types.TestFlow{}
-	err = cur.All(ctx, &tf)
-	if err != nil {
-		return nil, err
-	}
-	return &types.PageResp[types.TestFlow]{
-		Total:   len(tf),
+		Total:   count,
 		PageNum: 1,
 		Pages:   1,
 		List:    tf,

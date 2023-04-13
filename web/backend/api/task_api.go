@@ -11,16 +11,20 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ListTaskResp
-// swagger:model listTaskResp
-type ListTaskResp []types.Task
-
-// ListTasksReq
-// swagger:model listTasksReq
-type ListTasksReq struct {
+// ListTasksParams
+// swagger:model listTasksParams
+type ListTasksParams struct {
 	JobId string        `form:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
 	State []types.State `form:"state"`
 }
+
+// ListTasksReq
+// swagger:model listTasksReq
+type ListTasksReq = types.PageReq[ListTasksParams]
+
+// ListTaskResp
+// swagger:model listTaskResp
+type ListTasksResp = types.PageResp[*types.Task]
 
 func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
@@ -48,24 +52,28 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//         type: string
 	//
 	//     Responses:
-	//       200: listTaskResp
+	//       200: ListTasksResp
 	group.GET("list", func(c *gin.Context) {
 		params := ListTasksReq{}
-		err := c.ShouldBindQuery(&params)
+		err := c.ShouldBindWith(&params, paginationQueryBind)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		jobId, err := primitive.ObjectIDFromHex(params.JobId)
+		jobId, err := primitive.ObjectIDFromHex(params.Params.JobId)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		tasks, err := tasksRepo.List(ctx, repo.ListParams{
-			JobId: jobId,
-			State: params.State,
+		tasks, err := tasksRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+			PageNum:  params.PageNum,
+			PageSize: params.PageSize,
+			Params: repo.ListTaskParams{
+				JobId: jobId,
+				State: params.Params.State,
+			},
 		})
 		if err != nil {
 			c.Error(err)

@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -63,13 +64,20 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				continue
 			}
 			//check running task state
-			runningTask, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Running, types.TempError}})
+			runningTask, err := taskMgr.taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+				PageNum:  1,
+				PageSize: math.MaxInt64,
+				Params: repo.ListTaskParams{
+					JobId: job.ID,
+					State: []types.State{types.Running, types.TempError},
+				},
+			})
 			if err != nil {
 				taskLog.Errorf("fetch running task list fail %v", err)
 				continue
 			}
 
-			for _, task := range runningTask {
+			for _, task := range runningTask.List {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
 					if errors2.IsNotFound(err) {
@@ -98,13 +106,20 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			// startt init task
-			initTasks, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Init}})
+			initTasks, err := taskMgr.taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+				PageNum:  1,
+				PageSize: math.MaxInt64,
+				Params: repo.ListTaskParams{
+					JobId: job.ID,
+					State: []types.State{types.Init},
+				},
+			})
 			if err != nil {
 				taskLog.Errorf("fetch task list fail %v", err)
 				continue
 			}
 
-			for _, task := range initTasks {
+			for _, task := range initTasks.List {
 				err = taskMgr.RunOneTask(ctx, task)
 				if err != nil {
 					taskLog.Errorf("fetch task list fail %v", err)

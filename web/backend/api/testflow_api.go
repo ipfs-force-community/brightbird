@@ -10,26 +10,23 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type BasePageReq struct {
-	PageNum  int `form:"pageNum"`
-	PageSize int `form:"pageSize"`
-}
-
-type BasePageResp struct {
-	Total   int `json:"total"`
-	Pages   int `json:"pages"`
-	PageNum int `json:"pageNum"`
+// ListInGroupParams
+// swagger:model listInGroupParams
+type ListInGroupParams struct {
+	GroupId string `form:"groupId"`
 }
 
 // ListInGroupRequest
 // swagger:model listInGroupRequest
-type ListInGroupRequest struct {
+type ListInGroupRequest = types.PageReq[ListInGroupParams]
+
+/*struct {
 	BasePageReq
 	// the group id of test flow
 	// required: true
 	GroupId string `form:"groupId" binding:"required"`
 }
-
+*/
 // GetTestFlowRequest
 // swagger:model getTestFlowRequest
 type GetTestFlowRequest struct {
@@ -39,10 +36,7 @@ type GetTestFlowRequest struct {
 
 // ListTestFlowResp
 // swagger:model listTestFlowResp
-type ListTestFlowResp struct {
-	BasePageResp
-	List []*types.TestFlow `json:"list"`
-}
+type ListTestFlowResp = types.PageResp[types.TestFlow]
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
@@ -82,15 +76,24 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//       200: listTestFlowResp
 	group.GET("list", func(c *gin.Context) {
 		req := &ListInGroupRequest{}
-		err := c.ShouldBindQuery(req)
+		err := c.ShouldBindWith(req, paginationQueryBind)
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		output, err := service.ListInGroup(ctx, &types.PageReq[string]{
+
+		groupId, err := primitive.ObjectIDFromHex(req.Params.GroupId)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		output, err := service.List(ctx, &types.PageReq[repo.ListTestFlowParams]{
 			PageNum:  req.PageNum,
 			PageSize: req.PageSize,
-			Params:   req.GroupId,
+			Params: repo.ListTestFlowParams{
+				GroupID: groupId,
+			},
 		})
 		if err != nil {
 			c.Error(err)

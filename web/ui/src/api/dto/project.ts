@@ -88,6 +88,7 @@ export interface IProjectImportingDto
 export interface IProjectQueryingDto
   extends Readonly<
     IPageDto & {
+      name?: string;
       groupId: string;
       pageNum?: number;
       pageSize?: number;

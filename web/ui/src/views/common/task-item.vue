@@ -125,6 +125,10 @@ export default defineComponent({
       background-color: #3ebb03;
     }
 
+    &.temperr {
+      background-color: #e0b818;
+    }
+
     &.error {
       background-color: #cf1524;
     }

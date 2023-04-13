@@ -12,13 +12,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type ListParams struct {
+type ListTaskParams struct {
 	JobId primitive.ObjectID `form:"jobId"`
 	State []types.State      `form:"state"`
 }
 
 type ITaskRepo interface {
-	List(context.Context, ListParams) ([]*types.Task, error)
+	List(context.Context, types.PageReq[ListTaskParams]) (*types.PageResp[*types.Task], error)
 	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state types.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
@@ -37,17 +37,22 @@ type TaskRepo struct {
 	taskCol *mongo.Collection
 }
 
-func (j *TaskRepo) List(ctx context.Context, params ListParams) ([]*types.Task, error) {
+func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams]) (*types.PageResp[*types.Task], error) {
 	filter := bson.D{}
-	if !params.JobId.IsZero() {
-		filter = append(filter, bson.E{Key: "jobid", Value: params.JobId})
+	if !params.Params.JobId.IsZero() {
+		filter = append(filter, bson.E{Key: "jobid", Value: params.Params.JobId})
 	}
 
-	if len(params.State) > 0 {
-		filter = append(filter, bson.E{Key: "state", Value: bson.M{"$in": params.State}})
+	if len(params.Params.State) > 0 {
+		filter = append(filter, bson.E{Key: "state", Value: bson.M{"$in": params.Params.State}})
 	}
 
-	cur, err := j.taskCol.Find(ctx, filter, sortModifyDesc)
+	count, err := j.taskCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	cur, err := j.taskCol.Find(ctx, filter, PaginationAndSortByModifiyTimeDesc(params))
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +62,13 @@ func (j *TaskRepo) List(ctx context.Context, params ListParams) ([]*types.Task, 
 	if err != nil {
 		return nil, err
 	}
-	return tf, nil
+
+	return &types.PageResp[*types.Task]{
+		Total:   count,
+		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
+		PageNum: params.PageNum,
+		List:    tf,
+	}, nil
 }
 
 func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task, error) {

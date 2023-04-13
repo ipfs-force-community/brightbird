@@ -7,7 +7,7 @@ import {
   INodeVo, IProcessTemplateVo, ITestFlowDetail,
   IProjectQueryingDto, IWorkflowVo, ITestFlowIdVo, IGetTestFlowParam
 } from '@/api/dto/project';
-import { IPageDto, IPageVo } from '@/api/dto/common';
+import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
 import { IProjectGroupVo } from '@/api/dto/project-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';

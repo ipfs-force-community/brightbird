@@ -37,7 +37,8 @@ export interface ITriggerWebhookVo
  * 分页返回Webhook请求列表 dto
  */
 export interface ITriggerViewingDto
-  extends Readonly<IPageDto & {
+  extends Readonly<IPageDto & { 
+    name?: string;
     projectId: string;
   }> {
 }
