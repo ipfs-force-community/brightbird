@@ -61,7 +61,7 @@ export default defineComponent({
     };
 
     // 初始化任务列表
-    loadPodList();
+    // loadPodList();
 
     return {
       podList,
