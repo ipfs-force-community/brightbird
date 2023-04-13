@@ -44,6 +44,10 @@ func NewTaskRepo(db *mongo.Database) repo.ITaskRepo {
 	return repo.NewTaskRepo(db)
 }
 
+func NewLogRepo(db *mongo.Database) repo.ILogRepo {
+	return repo.NewLogRepo(db)
+}
+
 func NewPlugin(deployPluginStore repo.DeployPluginStore, execPluginStore repo.ExecPluginStore) repo.IPluginService {
 	return repo.NewPluginSvc(deployPluginStore, execPluginStore)
 }

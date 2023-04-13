@@ -56,6 +56,12 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			continue
 		}
 		for _, job := range jobs {
+			//try to remove finish testrunner
+			err := taskMgr.testRunner.RemoveFinishRunner(ctx)
+			if err != nil {
+				taskLog.Errorf("clean finish runner %v", err)
+				continue
+			}
 			//check running task state
 			runningTask, err := taskMgr.taskRepo.List(ctx, repo.ListParams{JobId: job.ID, State: []types.State{types.Running, types.TempError}})
 			if err != nil {

@@ -68,8 +68,24 @@ func FLBPluginInit(ctxPointer unsafe.Pointer) int {
 
 	value.Logger.Info("Initializing plugin", nil)
 
-	value.Config = GetConfig(ctxPointer)
+	cfg := GetConfig(ctxPointer)
+	value.Config = cfg
 
+	value.Logger.Info("Connecting to mongodb", map[string]interface{}{
+		"user": cfg.Database,
+	})
+
+	client, err := mongoDriver.Connect(context.Background(), options.Client().ApplyURI(cfg.URL))
+	if err != nil {
+		value.Logger.Error("error connect mongo", map[string]interface{}{
+			"error": err,
+		})
+
+		return output.FLB_ERROR
+	}
+	db := client.Database(cfg.Database)
+	db.Collection("logs").Indexes().CreateMany(context.Background(), []mongoDriver.IndexModel{{Keys: "kubernetes.labels.testid"}, {Keys: "kubernetes.pod_name"}, {Keys: "time"}})
+	value.Db = db
 	Set(ctxPointer, value)
 
 	msgpack.RegisterExt(0, &EventTime{})
@@ -92,26 +108,8 @@ func FLBPluginFlushCtx(ctxPointer, data unsafe.Pointer, length C.int, tag *C.cha
 
 	logger := value.Logger
 	ctx := log.WithLogger(context.TODO(), logger)
-
-	// Open mongo session
-	config := value.Config.(*Config)
-
-	logger.Info("Connecting to mongodb", map[string]interface{}{
-		"user": config.Database,
-	})
-
-	client, err := mongoDriver.Connect(ctx, options.Client().ApplyURI(config.URL))
-	if err != nil {
-		logger.Error("error connect mongo", map[string]interface{}{
-			"error": err,
-		})
-
-		return output.FLB_ERROR
-	}
-	db := client.Database(config.Database)
-
 	msgPacks := GetBytes(data, int(length)) // Create Fluent Bit decoder
-	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), db); err != nil {
+	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), value.Db); err != nil {
 		logger.Error("Failed to process logs", map[string]interface{}{
 			"error": err,
 		})
@@ -146,8 +144,8 @@ func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database
 		return dec.DecodeMap()
 	})
 	// Iterate Records
-	logCollector := db.Collection("log")
-	documents := []interface{}{}
+	logCollector := db.Collection("logs")
+	var documents []interface{}
 	for {
 		// Extract Record
 		record, err := msgPackToMap(dec)
@@ -161,7 +159,6 @@ func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database
 		}
 
 		total++
-
 		record["tags"] = tag
 		documents = append(documents, record)
 	}

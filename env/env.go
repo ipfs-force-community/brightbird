@@ -172,6 +172,7 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 	}
 
 	env.setCommonLabels(&deployment.ObjectMeta)
+	env.setCommonLabels(&deployment.Spec.Template.ObjectMeta)
 	cfgData, err := yaml.Marshal(deployment)
 	if err != nil {
 		return nil, err
@@ -228,6 +229,7 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	}
 
 	env.setCommonLabels(&statefulSet.ObjectMeta)
+	env.setCommonLabels(&statefulSet.Spec.Template.ObjectMeta)
 	cfgData, err := yaml.Marshal(statefulSet)
 	if err != nil {
 		return nil, err

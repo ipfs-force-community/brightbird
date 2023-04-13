@@ -189,6 +189,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(repo.IGroupRepo), NewGroupRepo),
 		fx_opt.Override(new(repo.IJobRepo), NewJobRepo),
 		fx_opt.Override(new(repo.ITaskRepo), NewTaskRepo),
+		fx_opt.Override(new(repo.ILogRepo), NewLogRepo),
 
 		//use proxy
 		fx_opt.Override(fx_opt.NextInvoke(), UseProxy),

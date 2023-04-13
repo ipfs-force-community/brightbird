@@ -110,11 +110,16 @@ func (runnerDeployer *TestRunnerDeployer) GetLogs(ctx context.Context, testId st
 	return nil
 }
 
+func (runnerDeployer *TestRunnerDeployer) RemoveFinishRunner(ctx context.Context) error {
+	//clean runner status.phase==Succeeded
+	return runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{FieldSelector: "status.phase==Succeeded"})
+}
+
 func (runnerDeployer *TestRunnerDeployer) CleanTestResource(ctx context.Context, testId string) error {
 	//clean runner
 	err := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
 	if err != nil {
-		log.Errorf("clean deployment failed %s", err)
+		log.Errorf("clean pod failed %s", err)
 	}
 
 	err = runnerDeployer.k8sClient.AppsV1().Deployments(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})

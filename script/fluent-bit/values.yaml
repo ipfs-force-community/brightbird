@@ -382,7 +382,7 @@ config:
     [OUTPUT]
         Name mongo
         Match *venus*
-        Database fluend
+        Database lidb
         Url mongodb://192.168.200.103:27017
 
   ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers

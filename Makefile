@@ -12,8 +12,9 @@ debug: $(subst debug,,${MAKECMDGOALS})
 gen-swagger:
 	swagger generate spec -m -o ./swagger.json -w ./web/backend
 
+SWAGGER_ARG=
 swagger-srv: gen-swagger
-	 swagger serve -F swagger  ./swagger.json
+	 swagger serve $(SWAGGER_ARG) -F swagger  ./swagger.json
 
 .PHONY: exec-plugin
 exec-plugin:

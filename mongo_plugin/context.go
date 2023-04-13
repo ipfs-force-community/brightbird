@@ -6,11 +6,13 @@ import (
 
 	"github.com/fluent/fluent-bit-go/output"
 	"github.com/saagie/fluent-bit-mongo/pkg/log"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type Value struct {
 	Logger log.Logger
 	Config interface{}
+	Db     *mongo.Database
 }
 
 func Get(ctxPointer unsafe.Pointer) (*Value, error) {

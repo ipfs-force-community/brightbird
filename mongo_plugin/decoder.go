@@ -45,5 +45,18 @@ func msgPackToMap(dec *msgpack.Decoder) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	return dec.DecodeMap()
+	value, err := dec.DecodeMap()
+	if err != nil {
+		return nil, err
+	}
+
+	if tStr, ok := value["time"]; ok {
+		t, err := time.Parse(time.RFC3339, tStr.(string))
+		if err != nil {
+			return nil, err
+		}
+		value["time"] = t
+	}
+
+	return value, nil
 }
