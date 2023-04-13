@@ -6,7 +6,14 @@
     }"></div>
     <div class="content">
       <div class="content-top">
-        <jm-text-viewer :value="task.name" :class="{ title: true }" />
+        <router-link
+            :to="{
+            name: 'task-detail',
+            query: { taskId: task.id },
+          }"
+        >
+          <jm-text-viewer :value="task.name" :class="{ title: true }" />
+        </router-link>
       </div>
 
       <div class="content-center">
