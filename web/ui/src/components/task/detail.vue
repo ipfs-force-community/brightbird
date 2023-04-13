@@ -28,7 +28,7 @@ import { defineComponent, ref } from 'vue';
 import { listAllPod, getPodLog } from '@/api/view-no-auth';
 
 export default defineComponent({
-  name: 'TaskDetail',
+  name: 'task-detail',
   props: {
     taskId: {
       type: String,
