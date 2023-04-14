@@ -2,28 +2,28 @@
   <div class="task-item">
     <div :class="{
       'state-bar': true,
-      [task.state.toLowerCase()]: true,
+      [formatState(task.state).toLowerCase()]: true,
     }"></div>
     <div class="content">
       <div class="content-top">
-<!--        <router-link-->
-<!--            :to="{-->
-<!--            name: 'task-detail',-->
-<!--            query: { taskId: task.id },-->
-<!--          }"-->
-<!--        >-->
-        <jm-text-viewer :value="task.name" :class="{ title: true }" />
-<!--        </router-link>-->
+        <!--        <router-link-->
+        <!--            :to="{-->
+        <!--            name: 'task-detail',-->
+        <!--            query: { taskId: task.id },-->
+        <!--          }"-->
+        <!--        >-->
+        <jm-text-viewer :value="`${task.name}(${formatState(task.state)})`" :class="{ title: true }" />
+        <!--        </router-link>-->
       </div>
 
       <div class="content-center">
-        <jm-text-viewer class="status" :value="`${task.state || '无'}`" />
+        <jm-text-viewer class="log" v-for="log of latestlog(task.logs)" :value="`${log}`" />
       </div>
 
       <div class="content-bottom">
-        <div class="operation">
-          <jm-tooltip content="停止" placement="bottom">
-            <button class="del" @click="stopTask(task.id)"></button>
+        <div v-if="task.state == 2" class="operation">
+          <jm-tooltip content="停止运行" placement="bottom">
+            <button class="cancel" @click="cancelTask(task.id)"></button>
           </jm-tooltip>
         </div>
       </div>
@@ -33,9 +33,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, PropType, ref, SetupContext } from 'vue';
+import { defineComponent, getCurrentInstance, PropType, SetupContext } from 'vue';
 import JmTextViewer from "@/components/text-viewer/index.vue";
 import { ITaskVo } from '@/api/dto/tasks';
+import { TaskStateEnum } from '@/api/dto/enumeration';
+import { stopTask } from '@/api/tasks'
 
 export default defineComponent({
   components: { JmTextViewer },
@@ -48,11 +50,22 @@ export default defineComponent({
   emits: [],
   setup(props: any, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
-    const stopTask = async (id: string) => {
+    const cancelTask = async (id: string) => {
+      try {
+        await stopTask(id);
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      }
+    }
 
+    const formatState = (state: TaskStateEnum): String => TaskStateEnum.toString(state);
+    const latestlog = (log: String[]): String[] => {
+      return log.slice(log.length-3).reverse();
     }
     return {
-      stopTask,
+      cancelTask,
+      formatState,
+      latestlog,
       props,
     };
   },
@@ -144,11 +157,14 @@ export default defineComponent({
 
     .content-top {
       min-height: 24px;
-     // display: flex;
+      // display: flex;
       align-items: center;
     }
 
     .content-center {
+      .log {
+        font-size: 10px;
+      }
       .status {
         margin-top: 10px;
         display: flex;
@@ -164,6 +180,7 @@ export default defineComponent({
       padding: 10px 0 0;
       border-top: 1px solid #dee4eb;
       display: flex;
+      float: right;
       align-items: center;
       justify-content: space-between;
 
@@ -191,8 +208,8 @@ export default defineComponent({
             border-radius: 4px;
           }
 
-          &.del {
-            background-image: url('@/assets/svgs/btn/del.svg');
+          &.cancel {
+            background-image: url('@/assets/svgs/btn/cancel.svg');
           }
         }
 

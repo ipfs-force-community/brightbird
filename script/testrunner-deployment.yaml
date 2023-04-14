@@ -11,6 +11,7 @@ spec:
   containers:
     - name: venus-testrunner
       image: "192.168.200.175/filvenus/testrunner:latest"
+      imagePullPolicy: Always
       args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId=642e3d30a54d76f949a81538"]
       env:
         - name: PRODUCTION

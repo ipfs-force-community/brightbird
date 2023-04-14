@@ -36,7 +36,7 @@ export async function getTaskInJob(req: IListTaskVo): Promise<IPageVo<ITaskVo>> 
 }
 
 /**
- * 停止人物执行
+ * 停止任务执行
  * @param dto
  */
 export async function stopTask(id: String): Promise<ITaskVo[]> {

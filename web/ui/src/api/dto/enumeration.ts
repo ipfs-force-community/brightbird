@@ -125,9 +125,26 @@ export enum JobEnum {
  * task state枚举类型
  */
 export enum TaskStateEnum {
-	Init        = "init",
-	Running     = "running",
-	Error       = "error",
-	Successful  = "success"
+	Init        = 1,
+	Running     = 2,
+  TempError   = 3,
+	Error       = 4,
+	Successful  = 5,
 }
 
+export namespace TaskStateEnum {
+  export function toString(st: TaskStateEnum): string {
+    switch (st) {
+      case TaskStateEnum.Init:
+        return "init"
+      case TaskStateEnum.Running:
+        return "running"
+      case TaskStateEnum.TempError:
+        return "temperr"
+      case TaskStateEnum.Error:
+        return "error"
+      case TaskStateEnum.Successful:
+        return "success"
+      }
+  }
+}

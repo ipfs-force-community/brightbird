@@ -141,14 +141,35 @@ type CronJobParams struct {
 	CronExpression string `json:"cronExpression"`
 }
 
-type State string
+type State int
+
+func (st State) Stringer() string {
+	return st.String()
+}
+
+func (st State) String() string {
+	switch st {
+	case Init:
+		return "init"
+	case Running:
+		return "running"
+	case TempError:
+		return "temperr"
+	case Error:
+		return "error"
+	case Successful:
+		return "success"
+	}
+	return ""
+}
 
 const (
-	Init       State = "init"
-	Running    State = "running"
-	TempError  State = "temperr"
-	Error      State = "error"
-	Successful State = "success"
+	_ State = iota //skip default 0
+	Init
+	Running
+	TempError
+	Error
+	Successful
 )
 
 // Task

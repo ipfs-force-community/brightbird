@@ -158,19 +158,28 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	taskRep := repo.NewTaskRepo(db)
+	taskRepo := repo.NewTaskRepo(db)
 
 	testflow, err := getTestFLow(pCtx, db, cfg.TaskId)
 	if err != nil {
 		return err
 	}
 
+	task, err := taskRepo.Get(pCtx, taskId)
+	if err != nil {
+		return err
+	}
+
+	if task.State == types.TempError {
+		_ = taskRepo.MarkState(pCtx, taskId, types.Running, "restart")
+	}
+
 	cleaner := Cleaner{}
 	defer func() {
 		if err != nil {
-			_ = taskRep.MarkState(pCtx, taskId, types.TempError, err.Error())
+			_ = taskRepo.MarkState(pCtx, taskId, types.TempError, err.Error())
 		} else {
-			_ = taskRep.MarkState(pCtx, taskId, types.Successful, "run successfully")
+			_ = taskRepo.MarkState(pCtx, taskId, types.Successful, "run successfully")
 		}
 
 		//todo get logs
@@ -196,13 +205,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		// plugin
 		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
 		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
-		fx_opt.Override(new(*types.Task), func(ctx context.Context, taskRepo repo.ITaskRepo) (*types.Task, error) {
-			taskId, err := primitive.ObjectIDFromHex(cfg.TaskId)
-			if err != nil {
-				return nil, err
-			}
-			return taskRepo.Get(ctx, taskId)
-		}),
+		fx_opt.Override(new(*types.Task), task),
 
 		//config
 		fx_opt.Override(new(*Config), cfg),
@@ -217,7 +220,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 
 		//database
 		fx_opt.Override(new(*mongo.Database), db),
-		fx_opt.Override(new(repo.ITaskRepo), taskRep),
+		fx_opt.Override(new(repo.ITaskRepo), taskRepo),
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 		//k8s
 		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {

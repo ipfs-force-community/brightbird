@@ -11,7 +11,8 @@ spec:
   initContainers:
   containers:
     - name: venus-testrunner
-      image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:latest"
+      image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:li"
+      imagePullPolicy: Always
       args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId={{.TaskID}}"]
       env:
         - name: PRODUCTION

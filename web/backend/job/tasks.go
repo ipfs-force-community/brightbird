@@ -81,7 +81,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
 					if errors2.IsNotFound(err) {
-						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, "not found testrunner, maybe delete manually")
 						if markFailErr != nil {
 							log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
 						}
@@ -90,7 +90,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 						if restartCount > 5 {
 							log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
 							// mark pod as fail and remove this pod
-							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
+							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, "failed five times, delete task")
 							if markFailErr != nil {
 								log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 							}
