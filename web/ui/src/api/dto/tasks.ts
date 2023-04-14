@@ -3,6 +3,7 @@ import { IPageDto } from "./common";
 export interface ITaskVo extends Readonly<{
   id: string;
   name: string;
+  podName:string;
   jobId: string;
   testflowId: string;
   testId: string;

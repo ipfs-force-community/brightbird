@@ -21,6 +21,7 @@
       </div>
 
       <div class="content-bottom">
+        <span class="podname">{{task.podName}}</span>
         <div v-if="task.state == 2" class="operation">
           <jm-tooltip content="停止运行" placement="bottom">
             <button class="cancel" @click="cancelTask(task.id)"></button>
@@ -180,10 +181,12 @@ export default defineComponent({
       padding: 10px 0 0;
       border-top: 1px solid #dee4eb;
       display: flex;
-      float: right;
       align-items: center;
       justify-content: space-between;
 
+      .podname {
+      font-size: 10px;
+      }
       .operation {
         min-height: 26px;
         display: flex;
