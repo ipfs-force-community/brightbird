@@ -2,7 +2,7 @@ import { BaseVo } from '@/api/dto/common';
 /**
  * 项目组vo
  */
-export interface IProjectGroupVo
+export interface ITestflowGroupVo
   extends Readonly<
     BaseVo & {
       id: string;
@@ -52,14 +52,6 @@ export interface IProjectGroupSortUpdatingDto
     targetGroupId: string;
   }> {}
 
-/**
- * 项目组添加项目dto
- */
-export interface IProjectGroupAddingDto
-  extends Readonly<{
-      groupId: string;
-    projectIds: string[];
-  }> {}
 
 /**
  * 修改项目组中的项目排序dto

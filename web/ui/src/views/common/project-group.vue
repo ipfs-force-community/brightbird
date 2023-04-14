@@ -6,15 +6,15 @@
           <i
               :class="['jm-icon-button-right', 'prefix', toggle ? 'rotate' : '']"
               :disabled="projectPage.total === 0"
-              @click="saveFoldStatus(toggle, projectGroup.id)"
+              @click="saveFoldStatus(toggle, testflowGroup.id)"
           />
         </span>
       </template>
       <template #title>
         <div class="name">
           <div class="group-name">
-            <router-link :to="{ path: `/project-group/detail/${projectGroup?.id}` }"
-            >{{ projectGroup?.name }}
+            <router-link :to="{ path: `/project-group/detail/${testflowGroup?.id}` }"
+            >{{ testflowGroup?.name }}
             </router-link>
             <span class="desc">（共有 {{ projectPage.total >= 0 ? projectPage.total : 0 }} 个测试流）</span>
           </div>
@@ -22,11 +22,11 @@
       </template>
       <template #default>
         <div>
-          <div class="projects" v-show="toggle&&projects.length > 0">
-            <jm-empty description="暂无测试流" :image-size="98" v-if="projects.length === 0" />
+          <div class="testflows" v-show="toggle&&testflows.length > 0">
+            <jm-empty description="暂无测试流" :image-size="98" v-if="testflows.length === 0" />
             <project-item
               v-else
-              v-for="project of projects"
+              v-for="project of testflows"
               :key="project.id"
               :project="project"
               @triggered="handleProjectTriggered"
@@ -46,17 +46,14 @@ import {
   computed,
   defineComponent,
   getCurrentInstance,
-  inject,
   nextTick,
   onBeforeMount,
-  onBeforeUnmount,
   onUpdated,
   PropType,
   ref,
-  watch,
 } from 'vue';
-import {ITestFlowDetail, ITestFlowIdVo} from '@/api/dto/project';
-import { IProjectGroupVo } from '@/api/dto/project-group';
+import {ITestFlowDetail} from '@/api/dto/project';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { queryTestFlow } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
 import ProjectItem from '@/views/common/project-item.vue';
@@ -69,15 +66,13 @@ import { namespace } from '@/store/modules/project-group';
 import JmSorter from '@/components/sorter/index.vue';
 import noDataImg from '@/assets/svgs/index/no-data.svg';
 import sleep from '@/utils/sleep';
-
-const MAX_AUTO_REFRESHING_OF_NO_RUNNING_COUNT = 5;
-
+ 
 export default defineComponent({
   components: { JmSorter, ProjectItem, Folding },
   props: {
     // 测试流组
-    projectGroup: {
-      type: Object as PropType<IProjectGroupVo>,
+    testflowGroup: {
+      type: Object as PropType<ITestflowGroupVo>,
     },
     // 查询关键字
     name: {
@@ -96,10 +91,10 @@ export default defineComponent({
     // 根据测试流组在vuex中保存的状态，进行展开、折叠间的切换
     const toggle = computed<boolean>(() => {
       // 只有全等于为undefined说明该测试流组一开始根本没有做折叠操作
-      if (projectGroupFoldingMapping[props.projectGroup?.id] === undefined) {
+      if (projectGroupFoldingMapping[props.testflowGroup?.id] === undefined) {
         return true;
       }
-      return projectGroupFoldingMapping[props.projectGroup.id];
+      return projectGroupFoldingMapping[props.testflowGroup.id];
     });
 
     const { proxy } = getCurrentInstance() as any;
@@ -110,12 +105,12 @@ export default defineComponent({
       list: [],
       pageNum: START_PAGE_NUM,
     });
-    const projects = computed<ITestFlowDetail[]>(() => projectPage.value.list);
+    const testflows = computed<ITestFlowDetail[]>(() => projectPage.value.list);
 
     const queryForm = ref<IQueryForm>({
       pageNum: START_PAGE_NUM,
       pageSize:  40 ,
-      groupId: props.projectGroup?.id,
+      groupId: props.testflowGroup?.id,
       name: props.name,
     });
     // 保存单个测试流组的展开折叠状态
@@ -134,7 +129,7 @@ export default defineComponent({
         const { pageSize, pageNum } = queryForm.value;
         // 获得当前已经加载了的总数
         const currentCount = pageSize * pageNum;
-        projectPage.value =  await queryTestFlow({ ...queryForm.value, pageNum: 1, pageSize: currentCount });
+        projectPage.value =  await queryTestFlow({ ...queryForm.value, pageNum: START_PAGE_NUM, pageSize: currentCount });
         console.log(projectPage.value)
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -145,7 +140,7 @@ export default defineComponent({
       projectPage.value = await queryTestFlow({ ...queryForm.value });
       // 测试流组中测试流为空，将其自动折叠
       if (projectPage.value.total === 0) {
-        saveFoldStatus(true, props.projectGroup?.id);
+        saveFoldStatus(true, props.testflowGroup?.id);
       }
       return;
     };
@@ -157,11 +152,11 @@ export default defineComponent({
       await loadProject();
     });
     onUpdated(async () => {
-      if (queryForm.value.name === props.name && queryForm.value.groupId === props.projectGroup?.id) {
+      if (queryForm.value.name === props.name && queryForm.value.groupId === props.testflowGroup?.id) {
         return;
       }
       queryForm.value.name = props.name;
-      queryForm.value.groupId = props.projectGroup?.id;
+      queryForm.value.groupId = props.testflowGroup?.id;
     });
     const currentItem = ref<string>('');
 
@@ -174,15 +169,15 @@ export default defineComponent({
       toggle,
       loading,
       projectPage,
-      projects,
+      testflows,
       queryForm,
       handleProjectSynchronized: async () => {
         // 刷新测试流列表，保留查询状态
         await reloadCurrentProjectList();
       },
       handleProjectDeleted: (id: string) => {
-        const index = projects.value.findIndex(item => item.id === id);
-        projects.value.splice(index, 1);
+        const index = testflows.value.findIndex(item => item.id === id);
+        testflows.value.splice(index, 1);
       },
       handleProjectTriggered: async (id: string) => {
         await sleep(400);
@@ -290,7 +285,7 @@ export default defineComponent({
     }
   }
 
-  .projects {
+  .testflows {
     display: flex;
     flex-wrap: wrap;
 

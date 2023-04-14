@@ -5,11 +5,11 @@ import {
 } from '@/api/dto/workflow-execution-record';
 import {
   INodeVo, IProcessTemplateVo, ITestFlowDetail,
-  IProjectQueryingDto, IWorkflowVo, ITestFlowIdVo, IGetTestFlowParam
+  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam
 } from '@/api/dto/project';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
-import { IProjectGroupVo } from '@/api/dto/project-group';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
 
 export const baseUrl = {
@@ -37,8 +37,8 @@ const baseHubUrl = {
 /**
  * 获取项目组列表
  */
-export function listProjectGroup(): Promise<IProjectGroupVo[]> {
-  return restProxy<IProjectGroupVo[]>({
+export function listTestflowGroup(): Promise<ITestflowGroupVo[]> {
+  return restProxy<ITestflowGroupVo[]>({
     url: `${baseUrl.projectGroup}/list`,
     method: 'get',
   });
@@ -47,7 +47,7 @@ export function listProjectGroup(): Promise<IProjectGroupVo[]> {
 /**
  * 查询项目组详情
  */
-export function getProjectGroup(groupId: string): Promise<IProjectGroupVo> {
+export function getProjectGroup(groupId: string): Promise<ITestflowGroupVo> {
   return restProxy({
     url: `${baseUrl.projectGroup}/${groupId}`,
     method: 'get',
@@ -76,6 +76,19 @@ export function countTestFlows(groupId: string): Promise<number> {
     method: 'get',
   });
 }
+
+/**
+ * 项目组添加项目
+ */
+export function changeTestflowGroup(dto: IChangeTestflowGroupDto): Promise<void> {
+  return restProxy({
+    url: `${baseUrl.testflow}/changegroup`,
+    method: 'post',
+    auth: true,
+    payload: dto,
+  });
+}
+
 
 /**
  * 获取流程模版

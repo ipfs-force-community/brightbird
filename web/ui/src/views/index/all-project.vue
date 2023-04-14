@@ -13,12 +13,12 @@
     <div class="divider-line"></div>
     <div class="project">
       <template v-if="initialized && groupListRefresh">
-        <template v-if="projectGroups.length > 0">
+        <template v-if="testflowGroups.length > 0">
           <project-group
-            v-for="projectGroup in projectGroups"
-            :key="projectGroup.id"
+            v-for="testflowGroup in testflowGroups"
+            :key="testflowGroup.id"
             :sortType="sortType"
-            :project-group="projectGroup"
+            :testflow-group="testflowGroup"
             :pageable="false"
           />
         </template>
@@ -31,8 +31,8 @@
 </template>
 
 <script lang="ts">
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import { listProjectGroup } from '@/api/view-no-auth';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
+import { listTestflowGroup } from '@/api/view-no-auth';
 import ProjectGroup from '@/views/common/project-group.vue';
 import { computed, defineComponent, getCurrentInstance, inject, nextTick, onBeforeMount, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
@@ -47,7 +47,7 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
     const store = useStore();
-    const projectGroups = ref<IProjectGroupVo[]>([]);
+    const testflowGroups = ref<ITestflowGroupVo[]>([]);
     // 已初始化
     const initialized = ref<boolean>(false);
     // 项目名称
@@ -77,12 +77,12 @@ export default defineComponent({
     onBeforeMount(async () => {
       try {
         allProjectLoading.value = true;
-        const projectGroupList = await listProjectGroup();
+        const testflowGroupList = await listTestflowGroup();
         initialized.value = true;
-        projectGroupList.forEach(item => {
+        testflowGroupList.forEach(item => {
           // 通过isShow筛选
           if (item.isShow) {
-            projectGroups.value.push(item);
+            testflowGroups.value.push(item);
           }
         });
       } catch (err) {
@@ -107,7 +107,7 @@ export default defineComponent({
     });
 
     return {
-      projectGroups,
+      testflowGroups,
       projectName,
       searchProject,
       initialized,

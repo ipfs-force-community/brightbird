@@ -14,19 +14,13 @@ import (
 // swagger:model listInGroupParams
 type ListInGroupParams struct {
 	GroupId string `form:"groupId"`
+	Name    string `form:"name"`
 }
 
 // ListInGroupRequest
 // swagger:model listInGroupRequest
 type ListInGroupRequest = types.PageReq[ListInGroupParams]
 
-/*struct {
-	BasePageReq
-	// the group id of test flow
-	// required: true
-	GroupId string `form:"groupId" binding:"required"`
-}
-*/
 // GetTestFlowRequest
 // swagger:model getTestFlowRequest
 type GetTestFlowRequest struct {
@@ -37,6 +31,10 @@ type GetTestFlowRequest struct {
 // ListTestFlowResp
 // swagger:model listTestFlowResp
 type ListTestFlowResp = types.PageResp[types.TestFlow]
+
+// ChangeGroupRequest
+// swagger:model changeGroupRequest
+type ChangeGroupRequest = repo.ChangeTestflowGroup
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
@@ -88,11 +86,12 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		output, err := service.List(ctx, &types.PageReq[repo.ListTestFlowParams]{
+		output, err := service.List(ctx, types.PageReq[repo.ListTestFlowParams]{
 			PageNum:  req.PageNum,
 			PageSize: req.PageSize,
 			Params: repo.ListTestFlowParams{
 				GroupID: groupId,
+				Name:    req.Params.Name,
 			},
 		})
 		if err != nil {
@@ -239,6 +238,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 
 		c.String(http.StatusOK, id.Hex())
 	})
+
 	// swagger:route DELETE /testflow/{id} deleteTestFlow
 	//
 	// Delete test flow by id
@@ -266,6 +266,48 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 		err = service.Delete(c, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
+	// swagger:route POST /changegroup changetestflow
+	//
+	// change testflow group id
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: changGroupRequest
+	//         in: body
+	//         description: params with groupid and testflows
+	//         required: true
+	//         type: changeGroupRequest
+	//         allowEmpty:  false
+	//
+	//     Responses:
+	//       200:
+	group.POST("/changegroup", func(c *gin.Context) {
+		changeTestflowGroup := ChangeGroupRequest{}
+		err := c.ShouldBindJSON(&changeTestflowGroup)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		err = service.ChangeTestflowGroup(ctx, changeTestflowGroup)
 		if err != nil {
 			c.Error(err)
 			return

@@ -42,7 +42,6 @@ import { IRootState } from '@/model';
 import { IJobDetailVo } from '@/api/dto/job';
 
 import { ITaskVo } from '@/api/dto/tasks';
-import { IPageVo } from '@/api/dto/common'
 
 import { StateEnum } from '@/components/load-more/enumeration';
 import TaskItem from "@/views/common/task-item.vue"
@@ -105,15 +104,14 @@ export default defineComponent({
       try {
         if (pageData.value.pageNum < pageData.value.pages) {
           pageData.value.pageNum++;
-          //  bottomLoading.value = true;
-          const queryTask = await getTaskInJob({ jobId: props.id, pageNum: 1, pageSize: 10 });
+          const queryTask = await getTaskInJob({ jobId: props.id, pageNum: pageData.value.pageNum, pageSize: 10 });
           pageData.value.tasks.push(...queryTask.list);
           pageData.value.total = queryTask.total;
           pageData.value.pages = queryTask.pages;
-          loadState.value = StateEnum.MORE;
-        } else {
-          loadState.value = StateEnum.NO_MORE;
-        }
+          if (pageData.value.pageNum == pageData.value.pages) {
+            loadState.value = StateEnum.NO_MORE;
+          }
+        } 
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {

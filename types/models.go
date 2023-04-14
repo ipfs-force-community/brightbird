@@ -43,9 +43,9 @@ type BaseTime struct {
 // PluginOut
 // swagger:model pluginOut
 type PluginOut struct {
-	ID primitive.ObjectID `bson:"_id" json:"id"`
-	BaseTime
-	PluginInfo
+	ID            primitive.ObjectID `bson:"_id" json:"id"`
+	BaseTime      `bson:",inline"`
+	PluginInfo    `bson:",inline"`
 	Properties    []Property `json:"properties"`
 	IsAnnotateOut bool       `json:"isAnnotateOut"`
 	SvcProperties []Property `json:"svcProperties"`
@@ -91,13 +91,13 @@ type TestFlow struct {
 	// required: true
 	// min length: 3
 	Name        string             `json:"name"`
-	GroupId     primitive.ObjectID `json:"groupId" bson:"groupId"` //provent mongo use Id to id
+	GroupId     primitive.ObjectID `json:"groupid" bson:"groupid"` //provent mongo use Id to id
 	Nodes       []*DeployNode      `json:"nodes"`
 	Cases       []*TestItem        `json:"cases"`
 	Graph       string             `json:"graph"`
 	Description string             `json:"description"`
 
-	BaseTime
+	BaseTime `bson:",inline"`
 }
 
 // Group
@@ -111,7 +111,7 @@ type Group struct {
 	IsShow      bool   `json:"isShow"`
 	Description string `json:"description"`
 
-	BaseTime
+	BaseTime `bson:",inline"`
 }
 
 type JobType string
@@ -134,7 +134,7 @@ type Job struct {
 	//cron job params
 	CronJobParams
 
-	BaseTime
+	BaseTime `bson:",inline"`
 }
 
 type CronJobParams struct {
@@ -163,5 +163,5 @@ type Task struct {
 	State      State              `json:"state"`
 	Logs       []string           `json:"logs"`
 	Versions   map[string]string  `json:"versions"` // save a copy of task flow, but task flow update version information in this running
-	BaseTime
+	BaseTime   `bson:",inline"`
 }

@@ -23,7 +23,7 @@
     <div class="project">
       <project-group
         v-if="initialized"
-        :project-group="currentGroup"
+        :testflow-group="currentGroup"
         :name="currentSearchName"
         :pageable="true"
       />
@@ -32,8 +32,8 @@
 </template>
 
 <script lang="ts">
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import { listProjectGroup } from '@/api/view-no-auth';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
+import { listTestflowGroup } from '@/api/view-no-auth';
 import ProjectGroup from '@/views/common/project-group.vue';
 import { computed, defineComponent, inject, onBeforeMount, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -59,19 +59,19 @@ export default defineComponent({
     // 当前搜索关键字-保证第一次搜索正常，传递值赋给当前搜索关键字
     const currentSearchName = ref<string>(props.searchName as string);
     // 项目组
-    const projectGroups = ref<IProjectGroupVo[]>([]);
+    const testflowGroups = ref<ITestflowGroupVo[]>([]);
     // 已初始化
     const initialized = ref<boolean>(false);
     // 当前组
-    const currentGroup = computed<IProjectGroupVo | undefined>(() =>
-      projectGroups.value.find(item => item.id === currentGroupId.value),
+    const currentGroup = computed<ITestflowGroupVo | undefined>(() =>
+      testflowGroups.value.find(item => item.id === currentGroupId.value),
     );
     // 选择框内容
     const groupOptions = ref<{ value: string; label: string }[]>([]);
     onBeforeMount(async () => {
-      projectGroups.value = await listProjectGroup();
+      testflowGroups.value = await listTestflowGroup();
       initialized.value = true;
-      projectGroups.value.forEach(item => {
+      testflowGroups.value.forEach(item => {
         groupOptions.value.push({ value: item.id, label: item.name });
       });
       groupOptions.value.forEach(item => {

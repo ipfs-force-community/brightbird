@@ -65,7 +65,7 @@ import {
   onMounted,
 } from 'vue';
 import { IProjectGroupEditFrom } from '@/model/modules/project-group';
-import { editProjectGroup } from '@/api/project-group';
+import { editProjectGroup } from '@/api/testflow-group';
 
 export default defineComponent({
   emits: ['completed'],

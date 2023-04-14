@@ -15,7 +15,7 @@
         </jm-form-item>
         <jm-form-item label="项目分组" class="group-item" prop="groupId">
           <jm-select v-model="projectInfoForm.groupId" placeholder="请选择项目分组" v-loading="loading">
-            <jm-option v-for="item in projectGroupList" :key="item.id" :label="item.name" :value="item.id" />
+            <jm-option v-for="item in testGroupList" :key="item.id" :label="item.name" :value="item.id" />
           </jm-select>
         </jm-form-item>
         <jm-form-item label="项目描述" class="description-item">
@@ -39,8 +39,8 @@
 <script lang="ts">
 import { defineComponent, onMounted, PropType, ref } from 'vue';
 import { IWorkflow } from '../../model/data/common';
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import { listProjectGroup } from '@/api/view-no-auth';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
+import { listTestflowGroup } from '@/api/view-no-auth';
 
 export interface IProjectInfo {
   name: string;
@@ -67,16 +67,16 @@ export default defineComponent({
 
     const editProjectInfoRef = ref<HTMLFormElement>();
     // 分组列表
-    const projectGroupList = ref<IProjectGroupVo[]>([]);
+    const testGroupList = ref<ITestflowGroupVo[]>([]);
 
     onMounted(async () => {
-      projectGroupList.value = await listProjectGroup();
+      testGroupList.value = await listTestflowGroup();
       loading.value = false;
     });
 
     return {
       editProjectInfoRef,
-      projectGroupList,
+      testGroupList,
       projectInfoForm,
       loading,
       save: () => {

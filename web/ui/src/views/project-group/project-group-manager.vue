@@ -99,13 +99,13 @@ import {
 } from 'vue';
 import GroupCreator from './project-group-creator.vue';
 import GroupEditor from './project-group-editor.vue';
-import {listProjectGroup} from '@/api/view-no-auth';
-import { IProjectGroupVo } from '@/api/dto/project-group';
+import {listTestflowGroup} from '@/api/view-no-auth';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { datetimeFormatter } from '@/utils/formatter';
 import {
   deleteProjectGroup,
   updateProjectGroupShow,
-} from '@/api/project-group';
+} from '@/api/testflow-group';
 import { Mutable } from '@/utils/lib';
 import {
   onBeforeRouteUpdate,
@@ -128,7 +128,7 @@ export default defineComponent({
     const spacing = ref<string>('');
     const creationActivated = ref<boolean>(false);
     const editionActivated = ref<boolean>(false);
-    const projectGroupList = ref<Mutable<IProjectGroupVo>[]>([]);
+    const projectGroupList = ref<Mutable<ITestflowGroupVo>[]>([]);
     const groupName = ref<string>();
     const groupDescription = ref<string>();
     const groupId = ref<string>();
@@ -153,7 +153,7 @@ export default defineComponent({
     const fetchProjectGroup = async () => {
       loading.value = true;
       try {
-        projectGroupList.value = await listProjectGroup()??[];
+        projectGroupList.value = await listTestflowGroup()??[];
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {

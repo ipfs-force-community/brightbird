@@ -29,7 +29,7 @@
         <project-group
           v-if="initialized"
           :is-detail="true"
-          :project-group="testflowGroup"
+          :testflow-group="testflowGroup"
           :pageable="true"
         />
       </div>
@@ -44,8 +44,8 @@
 </template>
 
 <script lang="ts">
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import {getProjectGroup, queryTestFlow} from '@/api/view-no-auth';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
+import {getProjectGroup} from '@/api/view-no-auth';
 import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
 import ProjectAdder from '@/views/project-group/project-adder.vue';
 import ProjectGroup from '@/views/common/project-group.vue';
@@ -73,7 +73,7 @@ export default defineComponent({
     const loadingTop = ref<boolean>(false);
     const isShow = ref<boolean>(true);
     const creationActivated = ref<boolean>(false);
-    const testflowGroup = ref<IProjectGroupVo>();
+    const testflowGroup = ref<ITestflowGroupVo>();
     const reloadMain = inject('reloadMain') as () => void;
     const add = () => {
       creationActivated.value = true;

@@ -1,8 +1,11 @@
 import {
-  IProjectGroupAddingDto,
   IProjectGroupCreatingDto,
   IProjectGroupEditingDto,
-} from '@/api/dto/project-group';
+} from '@/api/dto/testflow-group';
+
+import {
+  IChangeTestflowGroupDto
+} from '@/api/dto/project'
 import { Mutable } from '@/utils/lib';
 
 export interface IProjectGroupCreateFrom
@@ -14,7 +17,7 @@ export interface IProjectGroupEditFrom
 }
 
 export interface IProjectGroupAddingForm
-  extends Mutable<IProjectGroupAddingDto> {
+  extends Mutable<IChangeTestflowGroupDto> {
 }
 
 export interface IState {

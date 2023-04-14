@@ -22,6 +22,7 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/urfave/cli/v2"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/fx"
@@ -156,7 +157,12 @@ func run(pCtx context.Context, cfg config.Config) error {
 			return (*api.V1RouterGroup)(e.Group("api/v1"))
 		}),
 		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
-			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
+			cmdMonitor := &event.CommandMonitor{
+				Started: func(_ context.Context, evt *event.CommandStartedEvent) {
+					log.Infof(evt.Command.String())
+				},
+			}
+			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl).SetMonitor(cmdMonitor))
 			if err != nil {
 				return nil, err
 			}

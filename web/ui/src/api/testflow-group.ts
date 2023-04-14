@@ -3,9 +3,8 @@ import {
   IProjectGroupCreatingDto,
   IProjectGroupEditingDto,
   IProjectGroupSortUpdatingDto,
-  IProjectGroupAddingDto,
-  IProjectSortUpdatingDto,
-} from '@/api/dto/project-group';
+  IChangeTestflowGroupDto,
+} from '@/api/dto/testflow-group';
 const baseUrl = '/group';
 /**
  * 创建项目组
@@ -68,7 +67,7 @@ export function updateProjectGroupSort(
  * @param dto
  */
 export function projectGroupAddProject(
-  dto: IProjectGroupAddingDto,
+  dto: IChangeTestflowGroupDto,
 ): Promise<void> {
   return restProxy({
     url: `${baseUrl}/projects`,
@@ -99,16 +98,5 @@ export function updateProjectGroupShow(groupId: string): Promise<void> {
     url: `${baseUrl}/${groupId}/is_show`,
     method: 'put',
     auth: true,
-  });
-}
-/**
- * 项目组添加项目
- */
-export function addProject(dto: IProjectGroupAddingDto): Promise<void> {
-  return restProxy({
-    url: `${baseUrl}/projects`,
-    method: 'post',
-    auth: true,
-    payload: dto,
   });
 }

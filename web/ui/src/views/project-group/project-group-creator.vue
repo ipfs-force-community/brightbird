@@ -59,7 +59,7 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { IProjectGroupCreateFrom } from '@/model/modules/project-group';
-import { createProjectGroup } from '@/api/project-group';
+import { createProjectGroup } from '@/api/testflow-group';
 
 export default defineComponent({
   emits: ['completed'],

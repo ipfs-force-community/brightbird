@@ -17,7 +17,7 @@
 
         <jm-select 测试流 v-loading="testflowsLoading" :disabled="testflowsLoading" v-model="createForm.testFlowId" @change="onSelectTf"
           placeholder="请选择测试流">
-          <jm-option v-for="item in  testflows?.list" :key="item.id" :label="item.name" :value="item.id" />
+          <jm-option v-for="item in  testflows" :key="item.id" :label="item.name" :value="item.id" />
         </jm-select>
       </jm-form-item>
 
@@ -59,14 +59,16 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { createJob, getJobTypes } from '@/api/job';
-import { listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+import { listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 
+import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
-import { IProjectGroupVo } from '@/api/dto/project-group';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail } from '@/api/dto/project';
 import { IPageVo } from '@/api/dto/common';
+import { number2color } from '@antv/util';
 
 export default defineComponent({
   emits: ['completed'],
@@ -81,13 +83,8 @@ export default defineComponent({
     const testflowsLoading = ref<boolean>(false);
     const jobTypesRef = ref<JobEnum[]>([]);
     const selectGroupId = ref<string>();
-    const groups = ref<IProjectGroupVo[]>([]);
-    const testflows = ref<IPageVo<ITestFlowDetail>>({
-      total: -1,
-      pages: 0,
-      list: [],
-      pageNum: 0,
-    });
+    const groups = ref<ITestflowGroupVo[]>([]);
+    const testflows = ref<ITestFlowDetail[]>([]);
 
     const createForm = ref<Mutable<IJobCreateVo>>({
       name: '',
@@ -140,7 +137,7 @@ export default defineComponent({
     const fetchGroupList = async () => {
       groupLoading.value = true;
       try {
-        groups.value = await listProjectGroup()
+        groups.value = await listTestflowGroup()
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -149,16 +146,29 @@ export default defineComponent({
     }
     fetchGroupList()
 
-
+    const refreshSelect = (testflow: ITestFlowDetail) => {
+      createForm.value.testFlowId = testflow.id??"";       
+          let versions: any= {};
+          testflow?.nodes?.forEach(f=>{
+            versions[f.name] = "";
+          })
+          createForm.value.versions = versions;
+    }
+    
+  
     const changeGroup = async () => {
       testflowsLoading.value = true;
       createForm.value.testFlowId = ""
       try {
-        testflows.value = await queryTestFlow({
+        testflows.value = (await queryTestFlow({
           groupId: selectGroupId.value??"",
-          pageNum: 0,
-          pageSize: 0,
-        })
+          pageNum: START_PAGE_NUM,
+          pageSize: Number.MAX_SAFE_INTEGER,
+        })).list;
+        const firstflow = testflows.value[0];
+        if (firstflow) {
+          refreshSelect(firstflow);
+        }
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -168,11 +178,10 @@ export default defineComponent({
 
     const onSelectTf = async () =>{
       let versions: any= {};
-        const selTf = testflows.value?.list?.find(a=>a.id == createForm.value.testFlowId)
-        selTf?.nodes?.forEach(f=>{
-          versions[f.name] =  "";
-        })
-        createForm.value.versions = versions;
+        const selTf = testflows.value?.find(a=>a.id == createForm.value.testFlowId)
+        if (selTf) {
+          refreshSelect(selTf);
+        }
     }
 
     return {

@@ -83,13 +83,13 @@
 
 <script lang="ts">
 import { IPageVo } from '@/api/dto/common';
-import { IProjectVo } from '@/api/dto/project';
-import { IProjectGroupVo } from '@/api/dto/project-group';
-import { listProjectGroup, queryTestFlow } from '@/api/view-no-auth';
+import { ITestFlowDetail } from '@/api/dto/project';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
+
+import { listTestflowGroup, queryTestFlow, changeTestflowGroup } from '@/api/view-no-auth';
 import { IProjectGroupAddingForm } from '@/model/modules/project-group';
 import { Mutable } from '@/utils/lib';
 import { defineComponent, ref, onMounted, getCurrentInstance, computed } from 'vue';
-import { addProject } from '@/api/project-group';
 import { START_PAGE_NUM } from '@/utils/constants';
 
 export default defineComponent({
@@ -106,23 +106,23 @@ export default defineComponent({
     const createFormRef = ref<any>(null);
     const createForm = ref<IProjectGroupAddingForm>({
       groupId: '',
-      projectIds: [],
+      testflowIds: [],
     });
     const keyword = ref<string>();
     // 被选中的测试流
-    const selectedList = ref<Mutable<IProjectVo[]>>([]);
+    const selectedList = ref<Mutable<ITestFlowDetail[]>>([]);
     const compSelectedList = computed(() => selectedList.value);
     const editorRule = ref<Record<string, any>>({
       groupId: [{ required: true, message: '请选择测试流组', trigger: 'change' }],
     });
-    const projectGroupList = ref<IProjectGroupVo[]>([]);
+    const projectGroupList = ref<ITestflowGroupVo[]>([]);
     // 已选择的测试流数组
-    const selectProject = (item: IProjectVo) => {
+    const selectProject = (item: ITestFlowDetail) => {
       selectedList.value.some(i => i.id === item.id)
         ? (selectedList.value = selectedList.value.filter(i => i.id !== item.id))
         : selectedList.value.push(item);
     };
-    const projectList = ref<IPageVo<IProjectVo>>();
+    const projectList = ref<IPageVo<ITestFlowDetail>>();
     const selectChange = async (groupId: string) => {
       projectList.value = await queryTestFlow({
         groupId,
@@ -155,7 +155,7 @@ export default defineComponent({
       selectedList.value.splice(index, 1);
     };
     onMounted(async () => {
-      projectGroupList.value = await listProjectGroup();
+      projectGroupList.value = await listTestflowGroup();
     });
     const loading = ref<boolean>(false);
     const create = () => {
@@ -163,18 +163,22 @@ export default defineComponent({
         if (!valid) {
           return;
         }
-        const projectIds: string[] = [];
+        const testflowIds: string[] = [];
         // 获取选中数组中的id
-        compSelectedList.value.forEach(item => projectIds.push(item.id));
+        compSelectedList.value.forEach(item => {
+          if (item.id) {
+            testflowIds.push(item.id)
+          }
+        });
         try {
-          if (projectIds.length === 0) {
+          if (testflowIds.length === 0) {
             proxy.$error('请添加测试流');
             return;
           }
           loading.value = true;
-          await addProject({
+          await changeTestflowGroup({
             groupId: props.id,
-            projectIds,
+            testflowIds,
           });
           proxy.$success('测试流添加成功');
           emit('completed');

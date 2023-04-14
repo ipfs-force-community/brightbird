@@ -227,3 +227,13 @@ export interface INodeVo extends Readonly<{
     deprecated: boolean;
 }> {
 }
+
+
+/**
+ * 测试流组添加测试流dto
+ */
+export interface IChangeTestflowGroupDto
+  extends Readonly<{
+      groupId: string;
+      testflowIds: string[];
+  }> {}
