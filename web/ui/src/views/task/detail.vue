@@ -1,5 +1,5 @@
 <template>
-  <div class="task-detail">
+  <div class="task-detail" v-loading="loading">
     <div class="task-list">
       <div
           class="task-item"
@@ -24,26 +24,30 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue';
+import {defineComponent, getCurrentInstance, provide, ref} from 'vue';
 import { listAllPod, getPodLog } from '@/api/view-no-auth';
+import sleep from "@/utils/sleep";
+import {HttpError, TimeoutError} from "@/utils/rest/error";
 
 export default defineComponent({
-  name: 'task-detail',
   props: {
-    taskId: {
+    testId: {
       type: String,
       required: true,
+      default: '21b43a38',
     },
   },
   setup(props: any) {
+    const { proxy } = getCurrentInstance() as any;
     const podList = ref<string[]>([]);
     const selectedPod = ref<string>('');
     const podLog = ref<string[]>([]);
+    const loading = ref<boolean>(false);
 
     // 获取所有任务列表
     const loadPodList = async () => {
       try {
-        const pods = await listAllPod(props.taskId);
+        const pods = await listAllPod(props.testId);
         podList.value = pods;
       } catch (error) {
         console.error(error);
@@ -60,14 +64,42 @@ export default defineComponent({
       }
     };
 
+    const loadData = async (refreshing?: boolean) => {
+      try {
+        await proxy.listAllPod({
+          testId: props.testId,
+        });
+      } catch (err) {
+        if (!refreshing) {
+          throw err;
+        }
+
+        if (err instanceof TimeoutError) {
+          // 忽略超时错误
+          console.warn(err.message);
+        } else if (err instanceof HttpError) {
+          const { response } = err as HttpError;
+
+          if (response && response.status !== 502) {
+            throw err;
+          }
+
+          // 忽略错误
+          console.warn(err.message);
+        }
+      }
+    };
+
+    provide('loadData', loadData);
     // 初始化任务列表
-    // loadPodList();
+    loadPodList();
 
     return {
       podList,
       selectedPod,
       podLog,
       selectTask,
+      loading,
     };
   },
 });

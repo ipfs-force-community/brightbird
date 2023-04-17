@@ -19,14 +19,13 @@ export default [
     props: ({ params: { id } }: RouteLocationNormalizedLoaded) => ({ id }),
   },
   {
-    name: 'workflow-execution-record-detail',
-    path: 'workflow-execution-record/detail',
-    component: () => import('@/views/workflow-execution-record/detail.vue'),
+    name: 'task-detail',
+    path: 'task/detail',
+    component: () => import('@/views/task/detail.vue'),
     props: ({
-      query: { projectId, workflowExecutionRecordId },
+      query: { taskId },
     }: RouteLocationNormalizedLoaded) => ({
-      projectId,
-      workflowExecutionRecordId,
+      taskId,
     }),
     meta: {
       title: '执行记录',
