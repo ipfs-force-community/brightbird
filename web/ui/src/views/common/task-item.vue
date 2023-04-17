@@ -5,16 +5,16 @@
       [formatState(task.state).toLowerCase()]: true,
     }"></div>
     <div class="content">
-      <div class="content-top">
-        <!--        <router-link-->
-        <!--            :to="{-->
-        <!--            name: 'task-detail',-->
-        <!--            query: { taskId: task.id },-->
-        <!--          }"-->
-        <!--        >-->
-        <jm-text-viewer :value="`${task.name}(${formatState(task.state)})`" :class="{ title: true }" />
-        <!--        </router-link>-->
-      </div>
+      <router-link
+          :to="{
+            name: 'task-detail',
+            query: { testId: task.testId },
+          }"
+      >
+        <div class="content-top">
+          <jm-text-viewer :value="task.name" :class="{ title: true }" />
+        </div>
+      </router-link>
 
       <div class="content-center">
         <jm-text-viewer class="log" v-for="log of latestlog(task.logs)" :value="`${log}`" />
