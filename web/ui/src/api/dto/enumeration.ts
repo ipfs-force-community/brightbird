@@ -117,7 +117,7 @@ export enum FailureModeEnum {
  */
 export enum JobEnum {
   CronJob = 'cron_job',
-  Fake = 'fake'
+  Test = 'Test'
 }
 
 

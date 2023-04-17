@@ -41,7 +41,6 @@ type ListJobResp []types.Job
 
 func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager, taskManager *job.TaskMgr) {
 	group := v1group.Group("/job")
-
 	// swagger:route GET /job listJobs
 	//
 	// Lists all jobs.
@@ -372,5 +371,47 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 		c.String(http.StatusOK, id.Hex())
+	})
+
+	// swagger:route POST /run/{jobid} saveJob
+	//
+	// run job immediately
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: jobid
+	//         in: body
+	//         description: job id
+	//         required: true
+	//         type: job
+	//         allowEmpty:  false
+	//
+	//     Responses:
+	//       200:
+	group.POST("/run/:jobid", func(c *gin.Context) {
+		jobIdStr := c.Param("jobid")
+		jobId, err := primitive.ObjectIDFromHex(jobIdStr)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		taskID, err := jobManager.ExecJobImmediately(c, jobId)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.String(http.StatusOK, taskID.Hex())
 	})
 }

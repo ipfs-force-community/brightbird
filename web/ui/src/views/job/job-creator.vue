@@ -66,9 +66,7 @@ import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail } from '@/api/dto/project';
-import { IPageVo } from '@/api/dto/common';
-import { number2color } from '@antv/util';
+import { ITestFlowDetail } from '@/api/dto/testflow.js';
 
 export default defineComponent({
   emits: ['completed'],

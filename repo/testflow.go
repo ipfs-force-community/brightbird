@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type GetTestFlowParams struct {
@@ -40,8 +41,26 @@ type TestFlowRepo struct {
 	caseCol *mongo.Collection
 }
 
-func NewTestFlowRepo(db *mongo.Database) *TestFlowRepo {
-	return &TestFlowRepo{caseCol: db.Collection("testflows")}
+func NewTestFlowRepo(ctx context.Context, db *mongo.Database) (*TestFlowRepo, error) {
+	col := db.Collection("testflows")
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{{Key: "name", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys: bsonx.Doc{{Key: "groupid", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys: bsonx.Doc{
+				{Key: "name", Value: bsonx.Int32(-1)},
+				{Key: "groupid", Value: bsonx.Int32(-1)},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &TestFlowRepo{caseCol: col}, nil
 }
 
 func (c *TestFlowRepo) List(ctx context.Context, params types.PageReq[ListTestFlowParams]) (*types.PageResp[types.TestFlow], error) {

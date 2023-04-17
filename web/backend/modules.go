@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"net/url"
 	"os"
 
@@ -28,24 +29,24 @@ func UseGitToken(cfg config.Config) error {
 	return os.Setenv("GITHUB_TOKEN", cfg.GitToken)
 }
 
-func NewTestFlowRepo(db *mongo.Database) repo.ITestFlowRepo {
-	return repo.NewTestFlowRepo(db)
+func NewTestFlowRepo(ctx context.Context, db *mongo.Database) (repo.ITestFlowRepo, error) {
+	return repo.NewTestFlowRepo(ctx, db)
 }
 
-func NewGroupRepo(db *mongo.Database, testflowSvc repo.ITestFlowRepo) repo.IGroupRepo {
-	return repo.NewGroupSvc(db, testflowSvc)
+func NewGroupRepo(ctx context.Context, db *mongo.Database, testflowSvc repo.ITestFlowRepo) (repo.IGroupRepo, error) {
+	return repo.NewGroupSvc(ctx, db, testflowSvc)
 }
 
-func NewJobRepo(db *mongo.Database) repo.IJobRepo {
-	return repo.NewJobRepo(db)
+func NewJobRepo(ctx context.Context, db *mongo.Database) (repo.IJobRepo, error) {
+	return repo.NewJobRepo(ctx, db)
 }
 
-func NewTaskRepo(db *mongo.Database) repo.ITaskRepo {
-	return repo.NewTaskRepo(db)
+func NewTaskRepo(ctx context.Context, db *mongo.Database) (repo.ITaskRepo, error) {
+	return repo.NewTaskRepo(ctx, db)
 }
 
-func NewLogRepo(db *mongo.Database) repo.ILogRepo {
-	return repo.NewLogRepo(db)
+func NewLogRepo(ctx context.Context, db *mongo.Database) (repo.ILogRepo, error) {
+	return repo.NewLogRepo(ctx, db)
 }
 
 func NewPlugin(deployPluginStore repo.DeployPluginStore, execPluginStore repo.ExecPluginStore) repo.IPluginService {

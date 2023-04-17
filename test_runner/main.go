@@ -158,7 +158,10 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	taskRepo := repo.NewTaskRepo(db)
+	taskRepo, err := repo.NewTaskRepo(pCtx, db)
+	if err != nil {
+		return err
+	}
 
 	testflow, err := getTestFLow(pCtx, db, cfg.TaskId)
 	if err != nil {
@@ -264,9 +267,15 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*ty
 	if err != nil {
 		return nil, err
 	}
-	taskRep := repo.NewTaskRepo(db)
-	testflowRepo := repo.NewTestFlowRepo(db)
+	taskRep, err := repo.NewTaskRepo(ctx, db)
+	if err != nil {
+		return nil, err
+	}
 
+	testflowRepo, err := repo.NewTestFlowRepo(ctx, db)
+	if err != nil {
+		return nil, err
+	}
 	task, err := taskRep.Get(ctx, taskId)
 	if err != nil {
 		return nil, err

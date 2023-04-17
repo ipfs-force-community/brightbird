@@ -15,6 +15,7 @@ import (
 type IJobManager interface {
 	Start(ctx context.Context) error
 	InsertOrReplaceJob(ctx context.Context, job *types.Job) error
+	ExecJobImmediately(ctx context.Context, jobId primitive.ObjectID) (primitive.ObjectID, error)
 	StopJob(ctx context.Context, jobId primitive.ObjectID) error
 	Stop(ctx context.Context) error
 }
@@ -22,6 +23,7 @@ type IJobManager interface {
 type IJob interface {
 	Id() string
 	Run(ctx context.Context) error
+	RunImmediately(ctx context.Context) (primitive.ObjectID, error)
 	Stop(ctx context.Context) error
 }
 
@@ -91,6 +93,16 @@ func (j *JobManager) Start(ctx context.Context) error {
 	j.cron.Start()
 	log.Info("start cron job worker")
 	return nil
+}
+
+func (j *JobManager) ExecJobImmediately(ctx context.Context, jobId primitive.ObjectID) (primitive.ObjectID, error) {
+	j.lk.Lock()
+	defer j.lk.Unlock()
+	if job, ok := j.runningJob[jobId]; ok {
+		return job.RunImmediately(ctx)
+	} else {
+		return primitive.NilObjectID, fmt.Errorf("job %s not running", jobId)
+	}
 }
 
 func (j *JobManager) StopJob(ctx context.Context, jobId primitive.ObjectID) error {

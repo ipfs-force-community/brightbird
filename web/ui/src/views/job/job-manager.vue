@@ -33,6 +33,12 @@
               </router-link>
               <div class="operation">
                 <div
+                  class="run op-item"
+                  @click="
+                    run(i.id)
+                  "
+                ></div>
+                <div
                   class="edit op-item"
                   @click="
                     toEdit(i.id)
@@ -85,6 +91,7 @@ import { IJobVo } from '@/api/dto/job';
 import {
  listJobs,
  deleteJob,
+ execImmediately
 } from '@/api/job';
 import { Mutable } from '@/utils/lib';
 import {
@@ -142,6 +149,9 @@ export default defineComponent({
     const add = () => {
       creationActivated.value = true;
     };
+    const run = async (id:String) => {
+      await execImmediately(id)
+    };
     const toEdit = (
       id: string,
     ) => {
@@ -192,6 +202,7 @@ export default defineComponent({
       creationActivated,
       editionActivated,
       add,
+      run,
       toEdit,
       toDelete,
     };
@@ -404,6 +415,9 @@ export default defineComponent({
                 border-radius: 4px;
               }
 
+              &.run {
+                background-image: url('@/assets/svgs/btn/rocketstart.svg');
+              }
               &.edit {
                 background-image: url('@/assets/svgs/btn/edit.svg');
               }

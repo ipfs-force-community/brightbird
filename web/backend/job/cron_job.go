@@ -33,32 +33,38 @@ func (cronJob *CronJob) Id() string {
 	return cronJob.job.ID.String()
 }
 
+func (cronJob *CronJob) RunImmediately(ctx context.Context) (primitive.ObjectID, error) {
+	thisLog := cronLog.With("job", cronJob.job.ID, "testflow", cronJob.job.TestFlowId)
+	thisLog.Infof("job(%s) start to running", cronJob.job.Name)
+
+	newJob, err := cronJob.jobRepo.IncExecCount(ctx, cronJob.job.ID)
+	if err != nil {
+		thisLog.Errorf("increase job %s exec count fail %w", cronJob.job.ID, err)
+		return primitive.NilObjectID, err
+	}
+
+	id, err := cronJob.taskRepo.Save(ctx, &types.Task{
+		ID:         primitive.NewObjectID(),
+		Name:       cronJob.job.Name + "-" + strconv.Itoa(newJob.ExecCount),
+		JobId:      cronJob.job.ID,
+		TestFlowId: cronJob.job.TestFlowId,
+		State:      types.Init,
+		TestId:     types.TestId(uuid.New().String()[:8]),
+		BaseTime:   types.BaseTime{},
+	})
+	if err != nil {
+		thisLog.Errorf("job %s save task fail %w", cronJob.job.ID, err)
+		return primitive.NilObjectID, err
+	}
+
+	thisLog.Infof("job %s save task %s", cronJob.job.ID, id)
+	return id, nil
+}
+
 func (cronJob *CronJob) Run(ctx context.Context) error {
 	thisLog := cronLog.With("job", cronJob.job.ID, "testflow", cronJob.job.TestFlowId)
 	entryId, err := cronJob.cron.AddFunc(cronJob.job.CronExpression, func() {
-		thisLog.Infof("job(%s) start to running", cronJob.job.Name)
-
-		newJob, err := cronJob.jobRepo.IncExecCount(ctx, cronJob.job.ID)
-		if err != nil {
-			thisLog.Errorf("increase job %s exec count fail %w", cronJob.job.ID, err)
-			return
-		}
-
-		id, err := cronJob.taskRepo.Save(ctx, &types.Task{
-			ID:         primitive.NewObjectID(),
-			Name:       cronJob.job.Name + "-" + strconv.Itoa(newJob.ExecCount),
-			JobId:      cronJob.job.ID,
-			TestFlowId: cronJob.job.TestFlowId,
-			State:      types.Init,
-			TestId:     types.TestId(uuid.New().String()[:8]),
-			BaseTime:   types.BaseTime{},
-		})
-		if err != nil {
-			thisLog.Errorf("job %s save task fail %w", cronJob.job.ID, err)
-			return
-		}
-
-		thisLog.Infof("job %s save task %s", cronJob.job.ID, id)
+		_, _ = cronJob.RunImmediately(ctx)
 	})
 	cronJob.cronId = &entryId
 	if err == nil {

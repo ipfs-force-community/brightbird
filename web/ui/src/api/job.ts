@@ -35,6 +35,16 @@ export async function updateJob(id: String, dto: IJobUpdateVo): Promise<void> {
     });
 }
 
+/**
+ * 立即执行job
+ * @param dto
+ */
+export async function execImmediately(id: String): Promise<String> {
+    return await restProxy({ 
+        url:`${baseUrl.job}/run/${id}`,
+        method:"post",
+    });
+}
 
 
 /**
@@ -64,7 +74,7 @@ export async function getJob(id: String): Promise<IJobVo> {
 }
 
 /**
- * 获取job
+ * 获取job详情
  * @param dto
  */
 export async function getJobDetail(id: String): Promise<IJobDetailVo> {
@@ -77,7 +87,7 @@ export async function getJobDetail(id: String): Promise<IJobDetailVo> {
 }
 
 /**
- * 获取job
+ * 获取job类型
  * @param dto
  */
 export async function getJobTypes(): Promise<JobEnum[]> {
@@ -86,7 +96,7 @@ export async function getJobTypes(): Promise<JobEnum[]> {
 
 
 /**
- * 获取job
+ * 删除job
  * @param dto
  */
 export async function deleteJob(id: String): Promise<IJobVo> {

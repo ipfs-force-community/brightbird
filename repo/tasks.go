@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 
 	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -29,8 +30,26 @@ type ITaskRepo interface {
 
 var _ ITaskRepo = (*TaskRepo)(nil)
 
-func NewTaskRepo(db *mongo.Database) *TaskRepo {
-	return &TaskRepo{taskCol: db.Collection("tasks")}
+func NewTaskRepo(ctx context.Context, db *mongo.Database) (*TaskRepo, error) {
+	col := db.Collection("tasks")
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{{Key: "jobid", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys: bsonx.Doc{{Key: "state", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys: bsonx.Doc{
+				{Key: "jobid", Value: bsonx.Int32(-1)},
+				{Key: "state", Value: bsonx.Int32(-1)},
+			},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &TaskRepo{taskCol: col}, nil
 }
 
 type TaskRepo struct {

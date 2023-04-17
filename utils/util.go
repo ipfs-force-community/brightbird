@@ -62,6 +62,7 @@ LOOP:
 			}
 		}
 	}
+	fmt.Println("recieve signal")
 	done <- struct{}{}
 }
 

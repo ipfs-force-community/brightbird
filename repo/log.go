@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type ILogRepo interface {
@@ -19,8 +20,24 @@ type LogRepo struct {
 
 var _ ILogRepo = (*LogRepo)(nil)
 
-func NewLogRepo(db *mongo.Database) *LogRepo {
-	return &LogRepo{col: db.Collection("logs")}
+func NewLogRepo(ctx context.Context, db *mongo.Database) (*LogRepo, error) {
+	col := db.Collection("logs")
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{{Key: "kubernetes.labels.testid", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys: bsonx.Doc{{Key: "kubernetes.pod_name", Value: bsonx.Int32(-1)}},
+		},
+		{
+			Keys:    bsonx.Doc{{Key: "kubernetes.time", Value: bsonx.Int32(1)}},
+			Options: options.Index().SetExpireAfterSeconds(60 * 60 * 24 * 7), //keep latest one week logs
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &LogRepo{col: col}, nil
 }
 
 func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]string, error) {

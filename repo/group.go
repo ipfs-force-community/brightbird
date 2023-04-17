@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type IGroupRepo interface {
@@ -26,8 +27,17 @@ type GroupSvc struct {
 	testflowSvc ITestFlowRepo
 }
 
-func NewGroupSvc(db *mongo.Database, testflowSvc ITestFlowRepo) *GroupSvc {
-	return &GroupSvc{groupCol: db.Collection("groups"), testflowSvc: testflowSvc}
+func NewGroupSvc(ctx context.Context, db *mongo.Database, testflowSvc ITestFlowRepo) (*GroupSvc, error) {
+	col := db.Collection("groups")
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{{Key: "name", Value: bsonx.Int32(-1)}},
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &GroupSvc{groupCol: col, testflowSvc: testflowSvc}, nil
 }
 
 func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
