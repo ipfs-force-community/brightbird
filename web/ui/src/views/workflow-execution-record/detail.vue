@@ -111,7 +111,6 @@ import { datetimeFormatter } from '@/utils/formatter';
 import { TaskStatusEnum, TriggerTypeEnum, WorkflowExecutionRecordStatusEnum } from '@/api/dto/enumeration';
 import Workflow from '@/views/workflow-execution-record/workflow.vue';
 import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
-import { executeImmediately } from '@/api/project';
 import sleep from '@/utils/sleep';
 import { onBeforeRouteUpdate, useRouter } from 'vue-router';
 import { terminate, terminateAll } from '@/api/workflow-execution-record';
