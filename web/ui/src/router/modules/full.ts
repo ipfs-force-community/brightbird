@@ -23,9 +23,9 @@ export default [
     path: 'task/detail',
     component: () => import('@/views/task/detail.vue'),
     props: ({
-      query: { taskId },
+      query: { testId },
     }: RouteLocationNormalizedLoaded) => ({
-      taskId,
+      testId,
     }),
     meta: {
       title: '执行记录',

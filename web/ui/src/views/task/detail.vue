@@ -34,7 +34,7 @@ export default defineComponent({
     testId: {
       type: String,
       required: true,
-      default: '21b43a38',
+      // default: '39cb76fe',
     },
   },
   setup(props: any) {
@@ -43,6 +43,7 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<string[]>([]);
     const loading = ref<boolean>(false);
+    console.log(props.testId);
 
     // 获取所有任务列表
     const loadPodList = async () => {
