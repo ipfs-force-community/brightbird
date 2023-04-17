@@ -230,7 +230,7 @@ export interface INodeVo extends Readonly<{
 
 
 /**
- * 测试流组添加测试流dto
+ * 测试流组添加dto
  */
 export interface IChangeTestflowGroupDto
   extends Readonly<{

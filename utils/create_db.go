@@ -1,20 +1,48 @@
 package utils
 
 import (
+	"database/sql"
 	"fmt"
-	_ "github.com/go-sql-driver/mysql"
-	"gorm.io/driver/mysql"
-	"gorm.io/gorm"
 	"strings"
+
+	_ "github.com/go-sql-driver/mysql"
 )
+
+func ListDatabase(dsn string) ([]string, error) {
+	slashIndex := strings.LastIndex(dsn, "/")
+	dsnPre := dsn[:slashIndex+1]
+
+	dsnPre = fmt.Sprintf("%s?charset=utf8&parseTime=True&loc=Local", dsnPre)
+
+	db, err := sql.Open("mysql", dsnPre)
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := db.Query("SHOW DATABASES;")
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+	var databases []string
+	for rows.Next() {
+		name := ""
+		err := rows.Scan(&name)
+		if err != nil {
+			return nil, err
+		}
+		databases = append(databases, name)
+	}
+	return databases, nil
+}
 
 func CreateDatabase(dsn string) error {
 	slashIndex := strings.LastIndex(dsn, "/")
 	dsnPre := dsn[:slashIndex+1]
 	dbName := strings.Split(dsn[slashIndex+1:], "?")[0]
 
-	dsnPre = fmt.Sprintf("%s?charset=utf8&parseTime=True&loc=Local", dsnPre)
-	db, err := gorm.Open(mysql.Open(dsnPre), nil)
+	db, err := sql.Open("mysql", dsnPre)
 	if err != nil {
 		return err
 	}
@@ -24,7 +52,8 @@ func CreateDatabase(dsn string) error {
 		dbName,
 	)
 
-	return db.Exec(createSQL).Error
+	_, err = db.Exec(createSQL)
+	return err
 }
 
 func DropDatabase(dsn string) error {
@@ -33,15 +62,16 @@ func DropDatabase(dsn string) error {
 	dbName := strings.Split(dsn[slashIndex+1:], "?")[0]
 
 	dsnPre = fmt.Sprintf("%s?charset=utf8&parseTime=True&loc=Local", dsnPre)
-	db, err := gorm.Open(mysql.Open(dsnPre), nil)
+	db, err := sql.Open("mysql", dsnPre)
 	if err != nil {
 		return err
 	}
 
-	createSQL := fmt.Sprintf(
+	dropSQL := fmt.Sprintf(
 		"DROP DATABASE `%s`;",
 		dbName,
 	)
 
-	return db.Exec(createSQL).Error
+	_, err = db.Exec(dropSQL)
+	return err
 }

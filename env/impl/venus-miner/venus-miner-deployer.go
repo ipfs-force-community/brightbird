@@ -116,7 +116,7 @@ func (deployer *VenusMinerDeployer) Deploy(ctx context.Context) (err error) {
 		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("venus-miner-" + deployer.env.UniqueId(""))
 	}
 	if len(renderParams.MysqlDSN) > 0 {
-		deployer.env.CreateDatabase(renderParams.MysqlDSN)
+		deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
 	}
 	//create configmap
 	configMapCfg, err := f.Open("venus-miner/venus-miner-configmap.yaml")

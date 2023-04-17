@@ -9,7 +9,7 @@ import {
 } from '@/api/dto/project';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
-import { ITestflowGroupVo } from '@/api/dto/testflow-groupp';
+import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { IProjectCacheVo, INodeCacheVo } from '@/api/dto/cache';
 
 export const baseUrl = {

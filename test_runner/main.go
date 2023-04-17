@@ -224,7 +224,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 		//k8s
 		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {
-			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId), cfg.PrivateRegistry, cfg.Mysql)
+			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId), cfg.PrivateRegistry, cfg.Mysql, cfg.SharedDir)
 			if err != nil {
 				return nil, err
 			}

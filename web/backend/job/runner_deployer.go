@@ -21,11 +21,13 @@ import (
 type TestRunnerDeployer struct {
 	k8sClient *kubernetes.Clientset
 	namespace string
+	mysql     string
+	sharedDir string
 	k8sCfg    *rest.Config
 }
 
 // NewK8sEnvDeployer create a new test environment
-func NewTestRunnerDeployer(namespace string) (*TestRunnerDeployer, error) {
+func NewTestRunnerDeployer(namespace string, mysql, sharedDir string) (*TestRunnerDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -116,35 +118,6 @@ func (runnerDeployer *TestRunnerDeployer) RemoveFinishRunner(ctx context.Context
 }
 
 func (runnerDeployer *TestRunnerDeployer) CleanTestResource(ctx context.Context, testId string) error {
-	//clean runner
-	err := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
-	if err != nil {
-		log.Errorf("clean pod failed %s", err)
-	}
-
-	err = runnerDeployer.k8sClient.AppsV1().Deployments(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
-	if err != nil {
-		log.Errorf("clean deployment failed %s", err)
-	}
-	err = runnerDeployer.k8sClient.AppsV1().StatefulSets(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
-	if err != nil {
-		log.Errorf("clean statefuleset failed %s", err)
-	}
-
-	err = runnerDeployer.k8sClient.CoreV1().ConfigMaps(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + testId})
-	if err != nil {
-		log.Errorf("clean configmap failed %s", err)
-	}
-
-	services, err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).List(ctx, metav1.ListOptions{LabelSelector: "testid=" + testId})
-	if err != nil {
-		log.Errorf("clean service failed %s", err)
-	}
-	for _, svc := range services.Items {
-		err := runnerDeployer.k8sClient.CoreV1().Services(runnerDeployer.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
-		if err != nil {
-			log.Errorf("delete service failed %s", err)
-		}
-	}
-	return nil
+	resourceMg := env.NewResourceMgr(runnerDeployer.k8sClient, runnerDeployer.namespace, runnerDeployer.sharedDir, runnerDeployer.mysql, testId)
+	return resourceMg.Clean(ctx)
 }

@@ -124,7 +124,7 @@ func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create database
-	err = deployer.env.CreateDatabase(deployer.cfg.MysqlDSN)
+	err = deployer.env.ResourceMgr().EnsureDatabase(deployer.cfg.MysqlDSN)
 	if err != nil {
 		return err
 	}

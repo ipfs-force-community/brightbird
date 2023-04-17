@@ -6,6 +6,9 @@ type Config struct {
 	DbName      string
 	Listen      string
 
+	Mysql     string
+	SharedDir string
+
 	BuildSpace     string
 	RunnerConfig   string
 	Proxy          string

@@ -69,11 +69,11 @@ type K8sEnvDeployer struct {
 	mysqlConnTemplate string
 	k8sCfg            *rest.Config
 	dialCtx           func(ctx context.Context, network, address string) (net.Conn, error)
-	dbs               []string
+	resouceMgr        IResourceMgr
 }
 
 // NewK8sEnvDeployer create a new test environment
-func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string) (*K8sEnvDeployer, error) {
+func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string, sharedDir string) (*K8sEnvDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -117,6 +117,7 @@ func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, 
 		dialCtx:           dialCtx,
 		privateRegistry:   privateRegistry,
 		mysqlConnTemplate: mysqlConnTemplate,
+		resouceMgr:        NewResourceMgr(k8sClient, namespace, sharedDir, mysqlConnTemplate, testID),
 	}, nil
 }
 
@@ -130,6 +131,11 @@ func (env *K8sEnvDeployer) BaseRenderParams() BaseRenderParams {
 	return BaseRenderParams{
 		PrivateRegistry: env.privateRegistry,
 	}
+}
+
+// TestID return a resource id
+func (env *K8sEnvDeployer) ResourceMgr() IResourceMgr {
+	return env.resouceMgr
 }
 
 // TestID return a unique test id
@@ -501,14 +507,6 @@ func (env *K8sEnvDeployer) ReadSmallFilelInPod(ctx context.Context, podName stri
 	return io.ReadAll(stdOut)
 }
 
-func (env *K8sEnvDeployer) CreateDatabase(dsn string) error {
-	err := utils.CreateDatabase(dsn)
-	if err != nil {
-		env.dbs = append(env.dbs, dsn)
-	}
-	return err
-}
-
 func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
 	for {
 		select {
@@ -574,45 +572,5 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 }
 
 func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
-	err := env.k8sClient.AppsV1().Deployments(env.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
-	if err != nil {
-		log.Errorf("clean deployment failed %s", err)
-	}
-	log.Debug("celan deployment success")
-
-	err = env.k8sClient.AppsV1().StatefulSets(env.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
-	if err != nil {
-		log.Errorf("clean statefuleset failed %s", err)
-	}
-	log.Debug("celan statefulset success")
-
-	services, err := env.k8sClient.CoreV1().Services(env.namespace).List(ctx, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
-	if err != nil {
-		log.Errorf("clean service failed %s", err)
-	}
-	log.Debug("celan service success")
-
-	err = env.k8sClient.CoreV1().ConfigMaps(env.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + env.TestID()})
-	if err != nil {
-		log.Errorf("clean configmap failed %s", err)
-	}
-	log.Debug("celan configmap success")
-
-	for _, svc := range services.Items {
-		err := env.k8sClient.CoreV1().Services(env.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
-		if err != nil {
-			log.Errorf("clean service failed %s", err)
-		}
-	}
-
-	log.Debug("celan services success")
-
-	for _, dsn := range env.dbs {
-		err = utils.DropDatabase(dsn)
-		if err != nil {
-			log.Errorf("drop %s failed %s", dsn, err)
-		}
-	}
-	log.Debug("celan database success")
-	return nil
+	return env.resouceMgr.Clean(ctx)
 }

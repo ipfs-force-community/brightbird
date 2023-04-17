@@ -3,8 +3,12 @@ import {
   IProjectGroupCreatingDto,
   IProjectGroupEditingDto,
   IProjectGroupSortUpdatingDto,
-  IChangeTestflowGroupDto,
-} from '@/api/dto/testflow-group';
+} from '@/api/dto/project-group';
+
+import {
+  IChangeTestflowGroupDto
+} from '@/api/dto/project'
+
 const baseUrl = '/group';
 /**
  * 创建项目组
