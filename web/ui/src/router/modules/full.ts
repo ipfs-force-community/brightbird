@@ -19,19 +19,6 @@ export default [
     props: ({ params: { id } }: RouteLocationNormalizedLoaded) => ({ id }),
   },
   {
-    name: 'task-detail',
-    path: 'task/detail',
-    component: () => import('@/views/task/detail.vue'),
-    props: ({
-      query: { testId },
-    }: RouteLocationNormalizedLoaded) => ({
-      testId,
-    }),
-    meta: {
-      title: '执行记录',
-    },
-  },
-  {
     path: 'example',
     component: () => import('@/views/project/example.vue'),
   },

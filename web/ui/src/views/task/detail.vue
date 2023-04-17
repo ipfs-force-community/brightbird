@@ -17,14 +17,14 @@
       </div>
       <div v-else>
         <div class="pod-log-header">{{ selectedPod.name }} Logs</div>
-        <pre class="pod-log">{{ podLog }}</pre>
+        <textarea class="pod-log" v-model="podLogString"></textarea>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import {defineComponent, getCurrentInstance, provide, ref} from 'vue';
+import {defineComponent, getCurrentInstance, onMounted, provide, ref} from 'vue';
 import { listAllPod, getPodLog } from '@/api/view-no-auth';
 import sleep from "@/utils/sleep";
 import {HttpError, TimeoutError} from "@/utils/rest/error";
@@ -35,6 +35,11 @@ export default defineComponent({
       type: String,
       required: true,
       // default: '39cb76fe',
+    },
+  },
+  computed: {
+    podLogString(): string {
+      return this.podLog.join('\n');
     },
   },
   setup(props: any) {
@@ -93,7 +98,20 @@ export default defineComponent({
 
     provide('loadData', loadData);
     // 初始化任务列表
-    loadPodList();
+    const loadFirstPodLog = async () => {
+      if (podList.value.length > 0) {
+        selectedPod.value = podList.value[0];
+        podLog.value = await getPodLog(selectedPod.value);
+      }
+    };
+
+    onMounted(async () => {
+      // 初始化任务列表
+      await loadPodList();
+
+      // 加载第一个 Pod 的日志
+      await loadFirstPodLog();
+    });
 
     return {
       podList,
@@ -111,19 +129,50 @@ export default defineComponent({
   display: flex;
   justify-content: space-between;
   height: 100%;
+  background-color: #ffffff; /* 设置背景色为白色 */
 
 .task-list {
   width: 30%;
   border-right: 1px solid #ccc;
+  background-color: #f5f5f5;
+  padding: 10px;
+  overflow: auto;
+
+  &::-webkit-scrollbar {
+     width: 8px;
+     height: 8px;
+     background-color: #f5f5f5;
+   }
+
+  &::-webkit-scrollbar-thumb {
+     background-color: #ccc;
+     border-radius: 4px;
+   }
+
+  &::-webkit-scrollbar-track {
+     background-color: #f5f5f5;
+   }
+  }
 
 .task-item {
   padding: 10px;
   cursor: pointer;
+  margin-bottom: 10px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 
-&.selected {
-   background-color: #f0f0f0;
- }
-}
+  &:hover {
+     background-color: #f5f5f5;
+   }
+
+  &.selected {
+     background-color: #e1e1e1;
+
+  &:hover {
+     background-color: #e1e1e1;
+   }
+  }
 }
 
 .task-logs {
@@ -141,7 +190,12 @@ export default defineComponent({
   background-color: #f0f0f0;
   padding: 10px;
   overflow: auto;
-  height: 100%;
+  height: 400px;
+  width: 1050px;
+  resize: none;
+  border: none;
+  outline: none;
+  cursor: default;
 }
 }
 }
