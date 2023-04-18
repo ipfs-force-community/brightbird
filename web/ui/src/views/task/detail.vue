@@ -190,7 +190,7 @@ export default defineComponent({
   background-color: #f0f0f0;
   padding: 10px;
   overflow: auto;
-  height: 400px;
+  height: 700px;
   width: 1050px;
   resize: none;
   border: none;
