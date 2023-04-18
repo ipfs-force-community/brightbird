@@ -107,7 +107,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//     Responses:
 	//       200: task
 	group.GET(":id", func(c *gin.Context) {
-		id, err := primitive.ObjectIDFromHex(c.Query("id"))
+		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
 			c.Error(err)
 			return

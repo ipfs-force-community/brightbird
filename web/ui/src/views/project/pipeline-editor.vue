@@ -10,7 +10,7 @@ import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/comm
 import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
-import { Case, Node} from "@/api/dto/project";
+import { Case, Node} from "@/api/dto/testflow.js";
 import yaml from 'yaml';
 
 export default defineComponent({

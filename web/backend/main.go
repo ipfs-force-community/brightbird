@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -240,7 +241,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		}
 	}()
 	<-shutdown
-
+	fmt.Println("graceful shutdown")
 	return stop(pCtx)
 }
 

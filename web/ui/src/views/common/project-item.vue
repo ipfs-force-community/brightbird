@@ -44,7 +44,7 @@ import WebhookDrawer from './webhook-drawer.vue';
 import CacheDrawer from '@/views/common/cache-drawer.vue';
 import { useRouter } from 'vue-router';
 import JmTextViewer from "@/components/text-viewer/index.vue";
-import {ITestFlowDetail} from "@/api/dto/project";
+import {ITestFlowDetail} from "@/api/dto/testflow";
 import {deleteTestFlow} from "@/api/view-no-auth";
 
 export default defineComponent({

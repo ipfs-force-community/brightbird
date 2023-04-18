@@ -88,6 +88,8 @@ import JobCreator from './job-creator.vue';
 import JobEditor from './job-editor.vue';
 import { datetimeFormatter } from '@/utils/formatter';
 import { IJobVo } from '@/api/dto/job';
+import {getTask} from '@/api/tasks';
+
 import {
  listJobs,
  deleteJob,
@@ -99,7 +101,9 @@ import {
   RouteLocationNormalized,
   RouteLocationNormalizedLoaded,
   useRoute,
+useRouter,
 } from 'vue-router';
+import router from '@/router';
 
 
 export default defineComponent({
@@ -117,6 +121,7 @@ export default defineComponent({
     const jobList = ref<Mutable<IJobVo>[]>([]);
     const currentItem = ref<string>('-1');
     const currentSelected = ref<boolean>(false);
+    const router = useRouter();
 
     const jobId = ref<string>();
 
@@ -149,8 +154,18 @@ export default defineComponent({
     const add = () => {
       creationActivated.value = true;
     };
+
     const run = async (id:String) => {
-      await execImmediately(id)
+      try {
+       const taskId = await execImmediately(id);
+       const task = await getTask(taskId);
+       proxy.$alert(`create new task ${task.name}`);
+       router.push({ name: 'job-detail', params: { id } });
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        loading.value = false;
+      }
     };
     const toEdit = (
       id: string,

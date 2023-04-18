@@ -52,7 +52,7 @@ import {
   PropType,
   ref,
 } from 'vue';
-import {ITestFlowDetail} from '@/api/dto/project';
+import {ITestFlowDetail} from '@/api/dto/testflow.js';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { queryTestFlow } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
