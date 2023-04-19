@@ -1,4 +1,4 @@
-package api_compare
+package main
 
 import (
 	"context"
