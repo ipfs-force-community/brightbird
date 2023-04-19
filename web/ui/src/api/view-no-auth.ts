@@ -6,7 +6,7 @@ import {
 import {
   INodeVo, IProcessTemplateVo, ITestFlowDetail,
   IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam
-} from '@/api/dto/project';
+} from '@/api/dto/testflow';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
