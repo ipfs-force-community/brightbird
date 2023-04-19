@@ -159,7 +159,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
 			return (*api.V1RouterGroup)(e.Group("api/v1"))
 		}),
-		fx_opt.Override(new(modules.WebHookPubsub), NewWebhoobPubsub),
+		fx_opt.Override(new(modules.WebHookPubsub), NewWebhoobPubsub(cfg)),
 
 		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
 			cmdMonitor := &event.CommandMonitor{

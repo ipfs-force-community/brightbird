@@ -8,7 +8,7 @@ export interface IJobIdVo
 export interface IPRMergedEventMatch
 extends Readonly<{
   repo: string;
-  destPattern: string;
+  basePattern: string;
   sourcePattern: string;
 }> {}
 

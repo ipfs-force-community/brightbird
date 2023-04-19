@@ -22,8 +22,6 @@ var tagCreateLog = logging.Logger("tag_create_job")
 
 var _ IJob = (*TagCreateJob)(nil)
 
-const githubUrl = ""
-
 type TagCreateJob struct {
 	jobId        primitive.ObjectID
 	taskRepo     repo.ITaskRepo
@@ -37,7 +35,7 @@ type TagCreateJob struct {
 	logger *zap.SugaredLogger
 }
 
-func NewTagCreateJob(job types.Job, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *TagCreateJob {
+func NewTagCreateJob(job types.Job, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *TagCreateJob {
 
 	return &TagCreateJob{
 		jobId:        job.ID,
@@ -45,8 +43,9 @@ func NewTagCreateJob(job types.Job, deployStore repo.DeployPluginStore, pubsub m
 		pubsub:       pubsub,
 		taskRepo:     taskRepo,
 		jobRepo:      jobRepo,
+		testflowRepo: testflowRepo,
 		deployStore:  deployStore,
-		logger:       tagCreateLog.With("job", job.ID, "testflow", job.TestFlowId),
+		logger:       tagCreateLog.With("type", "TagCreatedJob", "job", job.ID, "testflow", job.TestFlowId),
 	}
 }
 
@@ -74,6 +73,10 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 			return primitive.NilObjectID, err
 		}
 		tags, _, err := tagCreateJob.githubClient.Repositories.ListTags(ctx, owner, repoName, &github.ListOptions{PerPage: 50})
+		if err != nil {
+			return primitive.NilObjectID, err
+		}
+
 		for _, tag := range tags {
 			matched, err := regexp.Match(match.TagPattern, []byte(tag.GetName()))
 			if err != nil {
@@ -104,7 +107,7 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 	return tagCreateJob.generateTaskFromJob(ctx, job)
 }
 
-func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, createEvent *github.CreateEvent) error {
+func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, pushEvent *github.PushEvent) error {
 	job, err := tagCreateJob.jobRepo.Get(ctx, tagCreateJob.jobId)
 	if err != nil {
 		return err
@@ -117,12 +120,12 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, createEvent *gith
 		return err
 	}
 
-	fullName := createEvent.GetRepo().GetFullName()
-	ref := createEvent.GetRef()
+	fullName := pushEvent.GetRepo().GetFullName()
+	ref := pushEvent.GetRef()
 
 	for _, match := range job.TagCreateEventMatchs {
-		if match.Repo == fullName {
-			matched, err := regexp.Match(match.TagPattern, []byte(ref))
+		if strings.Contains(match.Repo, fullName) {
+			matched, err := regexp.MatchString(match.TagPattern, ref)
 			if err != nil {
 				return err
 			}
@@ -156,22 +159,10 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, createEvent *gith
 
 func (tagCreateJob *TagCreateJob) Run(ctx context.Context) error {
 	go func() {
-		for event := range tagCreateJob.pubsub.Sub(modules.WEB_HOOK_TOPIC) {
-			githubEvent := event.(*github.Event)
-			if githubEvent.Type != nil && *githubEvent.Type == "CreateEvent" {
-				payloadEvent, err := githubEvent.ParsePayload()
-				if err != nil {
-					tagCreateJob.logger.Errorf("parser push event failed %v", err)
-					continue
-				}
-
-				createEvent := payloadEvent.(*github.CreateEvent)
-				if createEvent.GetRefType() == "tag" {
-					err = tagCreateJob.execTag(ctx, createEvent)
-					if err != nil {
-						tagCreateJob.logger.Infof("tag exec fail %v", err)
-					}
-				}
+		for event := range tagCreateJob.pubsub.Sub(modules.CREATE_TAG_TOPIC) {
+			err := tagCreateJob.execTag(ctx, event.(*github.PushEvent))
+			if err != nil {
+				tagCreateJob.logger.Infof("tag exec fail %v", err)
 			}
 		}
 	}()

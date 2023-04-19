@@ -1,6 +1,11 @@
 package types
 
 import (
+	"errors"
+	"fmt"
+	"regexp"
+
+	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -141,6 +146,44 @@ type Job struct {
 	BaseTime `bson:",inline"`
 }
 
+func (job Job) CheckParams() error {
+	switch job.JobType {
+	case CronJobType:
+		_, err := cron.ParseStandard(job.CronExpression)
+		return err
+	case PRMergedJobType:
+		for _, match := range job.PRMergedJobParams.PRMergedEventMatchs {
+			if len(match.BasePattern) == 0 || len(match.SourcePattern) == 0 {
+				return errors.New("pr merged job must have dest and source branch")
+			}
+			_, err := regexp.Compile(match.BasePattern)
+			if err != nil {
+				return fmt.Errorf("%s not a correct regex pattern %v", match.BasePattern, err)
+			}
+
+			_, err = regexp.Compile(match.SourcePattern)
+			if err != nil {
+				return fmt.Errorf("%s not a correct regex pattern %v", match.SourcePattern, err)
+			}
+		}
+
+	case TagCreatedJobType:
+		for _, match := range job.TagCreateEventMatchs {
+			if len(match.TagPattern) == 0 {
+				return errors.New("tag create event must have a name")
+			}
+
+			_, err := regexp.Compile(match.TagPattern)
+			if err != nil {
+				return fmt.Errorf("%s not a correct regex pattern %v", match.TagPattern, err)
+			}
+		}
+	default:
+		return fmt.Errorf("unsupport job type")
+	}
+	return nil
+}
+
 type CronJobParams struct {
 	CronExpression string `json:"cronExpression"`
 }
@@ -151,7 +194,7 @@ type PRMergedJobParams struct {
 
 type PRMergedEventMatch struct {
 	Repo          string `json:"repo"`
-	DestPattern   string `json:"destPattern"`
+	BasePattern   string `json:"basePattern"`
 	SourcePattern string `json:"sourcePattern"`
 }
 
@@ -209,4 +252,8 @@ type Task struct {
 	InheritVersions map[string]string  `json:"inheritVersions"` // save a copy of task flow, but task flow update version information in this running
 	CommitMap       map[string]string  `json:"versions"`        // save a copy of task flow, but task flow update version information in this running
 	BaseTime        `bson:",inline"`
+}
+
+func (task Task) InRunning() bool {
+	return task.State == Running || task.State == TempError
 }

@@ -35,23 +35,44 @@
       </jm-form-item>
 
       <jm-form-item v-show="createForm.jobType == JobEnum.CronJob" label="版本设置" prop="version">
-        <div v-for="(version, component) in createForm.versions">
-          <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="createForm.versions[component]">
-            <template #prepend>{{ component }}:</template>
-          </jm-input>
+        <div class="form-inter"  v-for="(version, component) in createForm.versions">
+          <el-row>
+            <el-col :span="4">
+              {{ component }}
+            </el-col>
+            <el-col :span="16">
+              <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="createForm.versions[component]" />
+            </el-col>
+          </el-row>
         </div>
       </jm-form-item>
 
-      <jm-form-item v-show="createForm.jobType == JobEnum.TagCreated" label="" prop="tagCreateEventMatchs">
-        <div v-for="match in createForm.tagCreateEventMatchs">
-          <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/*`" v-model="match.tagPattern">
-            <template #prepend>{{ getGitShort(match.repo) }}</template>
-          </jm-input>
+      <jm-form-item v-show="createForm.jobType == JobEnum.TagCreated" label="tag匹配" prop="tagCreateEventMatchs">
+        <div class="form-inter" v-for="match in createForm.tagCreateEventMatchs">
+          <el-row>
+            <el-col :span="4">
+              {{ getRepoName(match.repo) }}
+            </el-col>
+            <el-col :span="16">
+              <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/.`" v-model="match.tagPattern" />
+            </el-col>
+          </el-row>
         </div>
       </jm-form-item>
 
-
-
+      <jm-form-ite v-show="createForm.jobType == JobEnum.PRMerged" v-for="match in createForm.prMergedEventMatchs" label="分支匹配" prop="tagCreateEventMatchs">
+        <el-row>
+          <el-col :span="4">
+            {{ getRepoName(match.repo) }}
+          </el-col>
+          <el-col :span="8">
+            <jm-input :content=match.basePattern v-model="match.basePattern" />
+          </el-col>
+          <el-col :span="8">
+            <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
+          </el-col>
+        </el-row>
+      </jm-form-ite>
 
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
@@ -74,63 +95,60 @@ import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { createJob, getJobTypes } from '@/api/job';
 import { fetchDeployPlugins, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { START_PAGE_NUM } from '@/utils/constants';
-import { IJobCreateVo, IPRMergedEventMatch, ITagCreateEventMatch } from '@/api/dto/job';
+import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { INodeVo, ITestFlowDetail } from '@/api/dto/testflow.js';
-import { PluginBase } from '@antv/g6-plugin';
-import { url } from 'inspector';
+import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
-  emits: ['completed'],
+  emits: ["completed"],
+  components: { ElRow, ElCol },
   setup(_, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
     const createFormRef = ref<any>(null);
     const jobTypesLoading = ref<boolean>(false);
-
-
     const groupLoading = ref<boolean>(false);
     const testflowsLoading = ref<boolean>(false);
     const jobTypesRef = ref<JobEnum[]>([]);
     const selectGroupId = ref<string>();
     const groups = ref<ITestflowGroupVo[]>([]);
     const testflows = ref<ITestFlowDetail[]>([]);
-
     const createForm = ref<Mutable<IJobCreateVo>>({
-      name: '',
-      testFlowId: '',
+      name: "",
+      testFlowId: "",
       jobType: JobEnum.CronJob,
       description: "",
       versions: {},
-
       cronExpression: "",
       prMergedEventMatchs: [],
       tagCreateEventMatchs: [],
     });
-
     const editorRule = ref<object>({
-      name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
-      testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
-      jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
+      name: [{ required: true, message: "job名称不能为空", trigger: "blur" }],
+      testFlowId: [{ required: true, message: "需要选择测试流", trigger: "blur" }],
+      jobType: [{ required: true, message: "选择job类型", trigger: "blur" }],
     });
+
     const loading = ref<boolean>(false);
     const create = async () => {
       createFormRef.value.validate(async (valid: boolean) => {
         if (!valid) {
           return;
         }
-
         loading.value = true;
         try {
           await createJob(createForm.value);
-          proxy.$success('Job创建成功');
-          emit('completed');
+          proxy.$success("Job创建成功");
+          emit("completed");
           dialogVisible.value = false;
-        } catch (err) {
+        }
+        catch (err) {
           proxy.$throw(err, proxy);
-        } finally {
+        }
+        finally {
           loading.value = false;
         }
       });
@@ -139,42 +157,44 @@ export default defineComponent({
     const initJobTypes = async () => {
       jobTypesLoading.value = true;
       try {
-        jobTypesRef.value = await getJobTypes()
-      } catch (err) {
+        jobTypesRef.value = await getJobTypes();
+      }
+      catch (err) {
         proxy.$throw(err, proxy);
-      } finally {
+      }
+      finally {
         jobTypesLoading.value = false;
       }
-    }
-    initJobTypes()
+    };
 
+    initJobTypes();
 
     const fetchGroupList = async () => {
       groupLoading.value = true;
       try {
-        groups.value = await listTestflowGroup()
-      } catch (err) {
+        groups.value = await listTestflowGroup();
+      }
+      catch (err) {
         proxy.$throw(err, proxy);
-      } finally {
+      }
+      finally {
         groupLoading.value = false;
       }
-    }
-    fetchGroupList()
+    };
+    fetchGroupList();
 
     const refreshSelect = async (testflow: ITestFlowDetail) => {
       createForm.value.testFlowId = testflow.id ?? "";
       let versions: any = {};
       testflow?.nodes?.forEach(f => {
         versions[f.name] = "";
-      })
+      });
       //use for cron
       createForm.value.versions = versions;
-    }
-
-
+    };
     const changeGroup = async () => {
       testflowsLoading.value = true;
-      createForm.value.testFlowId = ""
+      createForm.value.testFlowId = "";
       try {
         testflows.value = (await queryTestFlow({
           groupId: selectGroupId.value ?? "",
@@ -185,50 +205,57 @@ export default defineComponent({
         if (firstflow) {
           refreshSelect(firstflow);
         }
-      } catch (err) {
+      }
+      catch (err) {
         proxy.$throw(err, proxy);
-      } finally {
+      }
+      finally {
         testflowsLoading.value = false;
       }
-    }
-
+    };
     const onSelectJobtype = async () => {
       try {
-        if (createForm.value.jobType == JobEnum.TagCreated) {
-          //fetch plugins
-          const pluginMap = new Map<string, INodeVo>();
-          (await fetchDeployPlugins()).map(a => pluginMap.set(a.name, a))
+        //fetch plugins
+        const pluginMap = new Map<string, INodeVo>();
+        (await fetchDeployPlugins()).map(a => pluginMap.set(a.name, a));
 
-          createForm.value.tagCreateEventMatchs = []
-          const filter = new Set<string>();
-          Object.entries(createForm.value.versions).map(([k, v]) => {
-            const repoName = pluginMap.get(k)?.repo ?? "";
-            if (!filter.has(repoName)) {
-              createForm.value.tagCreateEventMatchs.push({
-                repo: repoName,
-                tagPattern: "",
-              })
-              filter.add(repoName);
-            }
-          })
+        const filter = new Set<string>();
+        Object.entries(createForm.value.versions).map(([k, v]) => {
+          const repoName = pluginMap.get(k)?.repo ?? "";
+          if (!filter.has(repoName)) {
+            filter.add(repoName);
+          }
+        });
+
+        if (createForm.value.jobType == JobEnum.TagCreated) {
+          createForm.value.tagCreateEventMatchs = [];
+          [...filter].map(repoName => createForm.value.tagCreateEventMatchs.push({
+            repo: repoName,
+            tagPattern: "tag/.+",
+          }));
+        } else if (createForm.value.jobType == JobEnum.PRMerged) {
+          createForm.value.prMergedEventMatchs = [];
+          [...filter].map(repoName => createForm.value.prMergedEventMatchs.push({
+            repo: repoName,
+            sourcePattern: "feat\/.+|fix\/.+",
+            basePattern: "master|main",
+          }));
         }
-      } catch (err) {
+      }
+      catch (err) {
         proxy.$throw(err, proxy);
       }
-    }
-
+    };
     const onSelectTf = async () => {
-      const selTf = testflows.value?.find(a => a.id == createForm.value.testFlowId)
+      const selTf = testflows.value?.find(a => a.id == createForm.value.testFlowId);
       if (selTf) {
         refreshSelect(selTf);
       }
-    }
-
-    const getGitShort = (gitURL: string):string=>{
-     const url =  new URL(gitURL);
-      return url.pathname.replace(".git", "").substring(1);
-    }
-
+    };
+    const getRepoName = (gitURL: string): string => {
+      const url = new URL(gitURL);
+      return url.pathname.replace(".git", "").substring(1).split("/")[1];
+    };
     return {
       JobEnum,
       dialogVisible,
@@ -248,9 +275,9 @@ export default defineComponent({
       testflows,
       create,
       //utils
-      getGitShort,
+      getRepoName,
     };
-  },
+  }
 });
 </script>
 
@@ -260,6 +287,11 @@ export default defineComponent({
     margin-bottom: 0px;
     margin-top: -10px;
   }
+}
+
+.form-inter {
+  display: inline-block;
+  width: 100%;
 }
 
 .creator-title {

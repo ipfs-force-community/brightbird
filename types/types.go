@@ -10,3 +10,10 @@ type Shutdown chan struct{}
 func PtrString(str string) *string {
 	return &str
 }
+
+func GetString(str *string) string {
+	if str == nil {
+		return ""
+	}
+	return *str
+}

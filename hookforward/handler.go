@@ -1,36 +1,46 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"io"
 	"net/http"
+
+	"github.com/hunjixin/brightbird/hookforward/webhooklisten"
+	logging "github.com/ipfs/go-log/v2"
 )
 
+var webhookLog = logging.Logger("webhook")
+
 type Handler struct {
-	mirrorPaths []string
+	hookEvents chan *webhooklisten.WebHook
 }
 
-func NewHandler(mirrorPaths []string) (h *Handler, err error) {
+func NewHandler(hookEvents chan *webhooklisten.WebHook) (h *Handler, err error) {
 	h = &Handler{
-		mirrorPaths: mirrorPaths,
+		hookEvents: hookEvents,
 	}
 	return
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	// Log request
-	log.Printf("Incoming webhook from %s %s %s", req.RemoteAddr, req.Method, req.URL)
-	for _, mirrorPath := range h.mirrorPaths {
-		mirrorPath_copy := mirrorPath
-		go func() {
-			req, err := http.NewRequest(http.MethodPost, mirrorPath_copy, req.Body)
-			if err != nil {
-				log.Printf("forward %s hook fail %v", mirrorPath_copy, err)
-			}
-			_, err = http.DefaultClient.Do(req)
-			if err != nil {
-				log.Printf("send hook request %s fail %v", mirrorPath_copy, err)
-			}
-		}()
+	webhookLog.Infof("Incoming webhook from %s %s %s", req.RemoteAddr, req.Method, req.URL)
+
+	data, err := io.ReadAll(req.Body)
+	if err != nil {
+		webhookLog.Errorf("read body fail %s", err)
+		return
 	}
 
+	fmt.Println(string(data))
+
+	webhook := &webhooklisten.WebHook{
+		Header: req.Header,
+		Body:   data,
+	}
+	select {
+	case h.hookEvents <- webhook:
+	default:
+		webhookLog.Infof("hook event channel is full")
+	}
 }

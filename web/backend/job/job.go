@@ -37,17 +37,20 @@ type JobManager struct {
 	cron         *cron.Cron
 	taskRepo     repo.ITaskRepo
 	jobRepo      repo.IJobRepo
+	testflowRepo repo.ITestFlowRepo
+
 	runningJob   map[primitive.ObjectID]IJob
 	pubsub       modules.WebHookPubsub
 	githubClient *github.Client
 	deployStore  repo.DeployPluginStore
 }
 
-func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *JobManager {
+func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *JobManager {
 	return &JobManager{
 		cron:         cron,
 		taskRepo:     taskRepo,
 		jobRepo:      jobRepo,
+		testflowRepo: testflowRepo,
 		lk:           sync.Mutex{},
 		pubsub:       pubsub,
 		githubClient: githubClient,
@@ -79,7 +82,14 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 		}
 		j.runningJob[job.ID] = jobInstance
 	case types.TagCreatedJobType:
-		jobInstance := NewTagCreateJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo)
+		jobInstance := NewTagCreateJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
+		err := jobInstance.Run(ctx)
+		if err != nil {
+			return err
+		}
+		j.runningJob[job.ID] = jobInstance
+	case types.PRMergedJobType:
+		jobInstance := NewPRMergedJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err

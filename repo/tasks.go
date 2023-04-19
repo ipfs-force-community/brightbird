@@ -76,8 +76,8 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 		return nil, err
 	}
 
-	var tf []*types.Task
-	err = cur.All(ctx, &tf)
+	tasks := []*types.Task{} //ensure lisit have value convient for front pages
+	err = cur.All(ctx, &tasks)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 		Total:   count,
 		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
 		PageNum: params.PageNum,
-		List:    tf,
+		List:    tasks,
 	}, nil
 }
 

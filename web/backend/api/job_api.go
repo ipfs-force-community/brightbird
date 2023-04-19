@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"errors"
 	"math"
 	"net/http"
 
@@ -11,7 +10,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
-	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -218,13 +216,10 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		job.CronJobParams = params.CronJobParams
 		job.Versions = params.Versions
 
-		switch job.JobType {
-		case types.CronJobType:
-			_, err = cron.ParseStandard(job.CronExpression)
-			if err != nil {
-				c.Error(err)
-				return
-			}
+		err = job.CheckParams()
+		if err != nil {
+			c.Error(err)
+			return
 		}
 
 		_, err = jobRepo.Save(ctx, job)
@@ -299,13 +294,15 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		for _, task := range tasks.List {
-			err = taskManager.StopOneTask(ctx, task.ID)
-			if err != nil {
-				jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
-			}
-			err = taskRepo.Delete(ctx, task.ID)
-			if err != nil {
-				jobLogger.Warnf("delete task fail %v", err)
+			if task.State == types.Running || task.State == types.TempError {
+				err = taskManager.StopOneTask(ctx, task.ID)
+				if err != nil {
+					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
+				}
+				err = taskRepo.Delete(ctx, task.ID)
+				if err != nil {
+					jobLogger.Warnf("delete task fail %v", err)
+				}
 			}
 		}
 
@@ -351,28 +348,10 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		switch job.JobType {
-		case types.CronJobType:
-			_, err = cron.ParseStandard(job.CronExpression)
-			if err != nil {
-				c.Error(err)
-				return
-			}
-		case types.PRMergedJobType:
-			for _, match := range job.PRMergedJobParams.PRMergedEventMatchs {
-				if len(match.DestPattern) == 0 || len(match.SourcePattern) == 0 {
-					c.Error(errors.New("pr merged job must have dest and source branch"))
-					return
-				}
-			}
-
-		case types.TagCreatedJobType:
-			for _, match := range job.TagCreateEventMatchs {
-				if len(match.TagPattern) == 0 {
-					c.Error(errors.New("tag create event must have a name"))
-					return
-				}
-			}
+		err = job.CheckParams()
+		if err != nil {
+			c.Error(err)
+			return
 		}
 
 		id, err := jobRepo.Save(ctx, job)

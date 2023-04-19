@@ -20,25 +20,48 @@
         </jm-select>
       </jm-form-item>
 
+
       <jm-form-item v-show="jobType == JobEnum.CronJob" label="版本设置" prop="version">
-        <div v-for="(version, component) in editorForm.versions">
-          <jm-input :content=version :placeholder="`填写组件${component}的版本(branch/tag/commit/不填默认主分支)`"
-            v-model="editorForm.versions[component]">
-            <template #prepend>{{ component }}:</template>
-          </jm-input>
+        <div class="form-inter"  v-for="(version, component) in editorForm.versions">
+          <el-row>
+            <el-col :span="4">
+              {{ component }}
+            </el-col>
+            <el-col :span="16">
+              <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="editorForm.versions[component]" />
+            </el-col>
+          </el-row>
         </div>
       </jm-form-item>
 
-
-
-      <jm-form-item v-show="jobType == JobEnum.TagCreated" label="" prop="tagCreateEventMatchs">
-        <div v-for="match in editorForm.tagCreateEventMatchs">
-          <jm-input :content=match.tagPattern :placeholder="`填写代码库${match.repo}的匹配模式 tag/*`"
-            v-model="match.tagPattern">
-            <template #prepend>{{ match.repo }}:</template>
-          </jm-input>
+      <jm-form-item v-show="jobType == JobEnum.TagCreated" label="tag匹配" prop="tagCreateEventMatchs">
+        <div class="form-inter" v-for="match in editorForm.tagCreateEventMatchs">
+          <el-row>
+            <el-col :span="4">
+              {{ getRepoName(match.repo) }}
+            </el-col>
+            <el-col :span="16">
+              <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/.`" v-model="match.tagPattern" />
+            </el-col>
+          </el-row>
         </div>
       </jm-form-item>
+
+      <jm-form-ite v-show="jobType == JobEnum.PRMerged" v-for="match in editorForm.prMergedEventMatchs" label="分支匹配" prop="tagCreateEventMatchs">
+        <el-row>
+          <el-col :span="4">
+            {{ getRepoName(match.repo) }}
+          </el-col>
+          <el-col :span="8">
+            <jm-input :content=match.basePattern v-model="match.basePattern" />
+          </el-col>
+          <el-col :span="8">
+            <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
+          </el-col>
+        </el-row>
+      </jm-form-ite>
+
+
 
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="editorForm.description" clearable maxlength="256" show-word-limit
@@ -73,9 +96,11 @@ import { ITestFlowDetail } from '@/api/dto/testflow.js';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { JobEnum } from '@/api/dto/enumeration';
+import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
   emits: ['completed'],
+  components: { ElRow, ElCol },
   props: {
     id: { type: String, required: true },
   },
@@ -206,6 +231,11 @@ export default defineComponent({
         pageSize: Number.MAX_SAFE_INTEGER,
       })).list
     });
+
+    const getRepoName = (gitURL: string): string => {
+      const url = new URL(gitURL);
+      return url.pathname.replace(".git", "").substring(1).split("/")[1];
+    };
     return {
       dialogVisible,
       editorFormRef,
@@ -223,6 +253,7 @@ export default defineComponent({
       onSelectTf,
       save,
       JobEnum,
+      getRepoName,
     };
   },
 });
@@ -241,6 +272,12 @@ export default defineComponent({
   background-image: url('@/assets/svgs/btn/edit.svg');
   background-repeat: no-repeat;
   background-position: left center;
+}
+
+
+.form-inter {
+  display: inline-block;
+  width: 100%;
 }
 
 .tips {
