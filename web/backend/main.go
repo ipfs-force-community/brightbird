@@ -12,6 +12,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
+	"github.com/google/go-github/v51/github"
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
@@ -20,6 +21,7 @@ import (
 	"github.com/hunjixin/brightbird/web/backend/api"
 	"github.com/hunjixin/brightbird/web/backend/config"
 	"github.com/hunjixin/brightbird/web/backend/job"
+	"github.com/hunjixin/brightbird/web/backend/modules"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"github.com/urfave/cli/v2"
@@ -157,6 +159,8 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
 			return (*api.V1RouterGroup)(e.Group("api/v1"))
 		}),
+		fx_opt.Override(new(modules.WebHookPubsub), NewWebhoobPubsub),
+
 		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
 			cmdMonitor := &event.CommandMonitor{
 				Started: func(_ context.Context, evt *event.CommandStartedEvent) {
@@ -201,6 +205,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		//use proxy
 		fx_opt.Override(fx_opt.NextInvoke(), UseProxy),
 		fx_opt.Override(fx_opt.NextInvoke(), UseGitToken),
+		fx_opt.Override(new(*github.Client), NewGithubClient(cfg)),
 		//api
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),

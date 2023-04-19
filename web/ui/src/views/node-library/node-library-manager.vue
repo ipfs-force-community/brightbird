@@ -115,7 +115,7 @@ import {
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
 import {fetchDeployPlugins, fetchExecPlugins} from "@/api/view-no-auth";
-import {INodeVo} from "@/api/dto/project";
+import {INodeVo} from "@/api/dto/testflow.js";
 
 export default defineComponent({
   components: {},

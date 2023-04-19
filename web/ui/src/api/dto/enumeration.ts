@@ -117,7 +117,8 @@ export enum FailureModeEnum {
  */
 export enum JobEnum {
   CronJob = 'cron_job',
-  Test = 'Test'
+  PRMerged = 'pr_merged_hook',
+  TagCreated = 'tag_created_hook',
 }
 
 

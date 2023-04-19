@@ -14,18 +14,30 @@
           <jm-option v-for="item in groups" :key="item.id" :label="item.name" :value="item.id" />
         </jm-select>
 
-        <jm-select 测试流 v-loading="testflowsLoading" :disabled="testflowsLoading" v-model="editorForm.testFlowId" @change="onSelectTf"
-          placeholder="请选择测试流">
+        <jm-select 测试流 v-loading="testflowsLoading" :disabled="testflowsLoading" v-model="editorForm.testFlowId"
+          @change="onSelectTf" placeholder="请选择测试流">
           <jm-option v-for="item in  testflows" :key="item.id" :label="item.name" :value="item.id" />
         </jm-select>
       </jm-form-item>
 
-      <jm-form-item label="版本设置" prop="version">
+      <jm-form-item v-show="jobType == JobEnum.CronJob" label="版本设置" prop="version">
         <div v-for="(version, component) in editorForm.versions">
-          <jm-input :content=version :placeholder="`填写组件${component}的版本(branch/tag/commit/不填默认主分支)`" v-model="editorForm.versions[component]">
-            <template #prepend>{{component}}:</template>
+          <jm-input :content=version :placeholder="`填写组件${component}的版本(branch/tag/commit/不填默认主分支)`"
+            v-model="editorForm.versions[component]">
+            <template #prepend>{{ component }}:</template>
           </jm-input>
-        </div>  
+        </div>
+      </jm-form-item>
+
+
+
+      <jm-form-item v-show="jobType == JobEnum.TagCreated" label="" prop="tagCreateEventMatchs">
+        <div v-for="match in editorForm.tagCreateEventMatchs">
+          <jm-input :content=match.tagPattern :placeholder="`填写代码库${match.repo}的匹配模式 tag/*`"
+            v-model="match.tagPattern">
+            <template #prepend>{{ match.repo }}:</template>
+          </jm-input>
+        </div>
       </jm-form-item>
 
       <jm-form-item label="描述" prop="description">
@@ -53,13 +65,14 @@ import {
   onMounted,
 } from 'vue';
 
-import {fetchTestFlowDetail, listTestflowGroup, queryTestFlow} from '@/api/view-no-auth';
+import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { IJobUpdateVo } from '@/api/dto/job';
+import { IJobUpdateVo, IPRMergedEventMatch } from '@/api/dto/job';
 import { getJob, updateJob } from '@/api/job'
-import { ITestFlowDetail } from '@/api/dto/project';
+import { ITestFlowDetail } from '@/api/dto/testflow.js';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
+import { JobEnum } from '@/api/dto/enumeration';
 
 export default defineComponent({
   emits: ['completed'],
@@ -70,12 +83,17 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
     const editorFormRef = ref<any>(null);
+    const jobType = ref<JobEnum>(JobEnum.CronJob);
     const editorForm = ref<Mutable<IJobUpdateVo>>({
       testFlowId: "",
       name: "",
       description: "",
-      versions:{"a":"b"},
+      versions: { "a": "b" },
+
+      //cron
       cronExpression: "",
+      prMergedEventMatchs: [],
+      tagCreateEventMatchs: [],
     });
     const editorRule = ref<object>({
       name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }],
@@ -85,7 +103,9 @@ export default defineComponent({
     const fetchJob = async () => {
       loading.value = true;
       try {
-        editorForm.value = await getJob(props.id);
+        const job = await getJob(props.id);
+        editorForm.value = job;
+        jobType.value = job.jobType;
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -104,7 +124,7 @@ export default defineComponent({
       groupLoading.value = true;
       try {
         groups.value = await listTestflowGroup();
-        const testflow = await fetchTestFlowDetail({id:editorForm.value.testFlowId, name:""});
+        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId, name: "" });
         selectGroupId.value = testflow.groupId;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -114,12 +134,12 @@ export default defineComponent({
     }
 
     const refreshSelect = (testflow: ITestFlowDetail) => {
-          editorForm.value.testFlowId = testflow.id??"";       
-          let versions: any= {};
-          testflow?.nodes?.forEach(f=>{
-            versions[f.name] = "";
-          })
-          editorForm.value.versions = versions;
+      editorForm.value.testFlowId = testflow.id ?? "";
+      let versions: any = {};
+      testflow?.nodes?.forEach(f => {
+        versions[f.name] = "";
+      })
+      editorForm.value.versions = versions;
     }
 
     const changeGroup = async () => {
@@ -128,7 +148,7 @@ export default defineComponent({
       editorForm.value.versions = {};
       try {
         testflows.value = (await queryTestFlow({
-          groupId: selectGroupId.value??"",
+          groupId: selectGroupId.value ?? "",
           pageNum: START_PAGE_NUM,
           pageSize: Number.MAX_SAFE_INTEGER,
         })).list;
@@ -143,11 +163,11 @@ export default defineComponent({
       }
     }
 
-    const onSelectTf = async () =>{
-        const selTf = testflows.value?.find(a=>a.id == editorForm.value.testFlowId)
-        if (selTf) {
-          refreshSelect(selTf);
-        }
+    const onSelectTf = async () => {
+      const selTf = testflows.value?.find(a => a.id == editorForm.value.testFlowId)
+      if (selTf) {
+        refreshSelect(selTf);
+      }
     }
 
     const save = async () => {
@@ -155,15 +175,17 @@ export default defineComponent({
         if (!valid) {
           return;
         }
-        const { name, description, testFlowId, versions, cronExpression } = editorForm.value;
+        const { name, description, testFlowId, versions, cronExpression, prMergedEventMatchs, tagCreateEventMatchs } = editorForm.value;
         try {
           loading.value = true;
           await updateJob(props.id, {
-            name:name,
-            testFlowId:testFlowId,
+            name: name,
+            testFlowId: testFlowId,
             description: description,
             versions: versions,
-            cronExpression:cronExpression,
+            cronExpression: cronExpression,
+            prMergedEventMatchs: prMergedEventMatchs,
+            tagCreateEventMatchs: tagCreateEventMatchs,
           });
           proxy.$success('项目分组修改成功');
           emit('completed');
@@ -179,7 +201,7 @@ export default defineComponent({
       await fetchJob()
       await fetchGroupList()
       testflows.value = (await queryTestFlow({
-        groupId: selectGroupId.value??"",
+        groupId: selectGroupId.value ?? "",
         pageNum: START_PAGE_NUM,
         pageSize: Number.MAX_SAFE_INTEGER,
       })).list
@@ -190,6 +212,7 @@ export default defineComponent({
       editorForm,
       editorRule,
       loading,
+      jobType,
 
       selectGroupId,
       groupLoading,
@@ -199,6 +222,7 @@ export default defineComponent({
       changeGroup,
       onSelectTf,
       save,
+      JobEnum,
     };
   },
 });

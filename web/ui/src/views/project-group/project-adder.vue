@@ -83,7 +83,7 @@
 
 <script lang="ts">
 import { IPageVo } from '@/api/dto/common';
-import { ITestFlowDetail } from '@/api/dto/project';
+import { ITestFlowDetail } from '@/api/dto/testflow.js';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 
 import { listTestflowGroup, queryTestFlow, changeTestflowGroup } from '@/api/view-no-auth';

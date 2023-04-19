@@ -2,7 +2,7 @@ import {BaseNode} from './base-node';
 import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
 import {TaskStatusEnum} from '@/api/dto/enumeration';
-import {IPropertyDto} from "@/api/dto/project";
+import {IPropertyDto} from "@/api/dto/testflow";
 
 export interface IAsyncTaskParam {
   readonly ref: string;

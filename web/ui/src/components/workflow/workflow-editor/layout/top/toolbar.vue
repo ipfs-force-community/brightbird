@@ -37,7 +37,7 @@ import { IWorkflow } from '../../model/data/common';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import { cloneDeep } from 'lodash';
 import { compare } from '../../model/util/object';
-import { Case, Node } from '@/api/dto/project';
+import { Case, Node } from '@/api/dto/testflow';
 
 export default defineComponent({
   components: { ProjectPanel },

@@ -117,7 +117,9 @@ type Group struct {
 type JobType string
 
 const (
-	CronJobType JobType = "cron_job"
+	CronJobType       JobType = "cron_job"
+	PRMergedJobType   JobType = "pr_merged_hook"
+	TagCreatedJobType JobType = "tag_created_hook"
 )
 
 // Job
@@ -133,12 +135,33 @@ type Job struct {
 	Versions map[string]string `json:"versions"` // save a version setting for user job specific
 	//cron job params
 	CronJobParams
+	PRMergedJobParams
+	TagCreateJobParams
 
 	BaseTime `bson:",inline"`
 }
 
 type CronJobParams struct {
 	CronExpression string `json:"cronExpression"`
+}
+
+type PRMergedJobParams struct {
+	PRMergedEventMatchs []PRMergedEventMatch `json:"prMergedEventMatchs"`
+}
+
+type PRMergedEventMatch struct {
+	Repo          string `json:"repo"`
+	DestPattern   string `json:"destPattern"`
+	SourcePattern string `json:"sourcePattern"`
+}
+
+type TagCreateJobParams struct {
+	TagCreateEventMatchs []TagCreateEventMatch `json:"tagCreateEventMatchs"`
+}
+
+type TagCreateEventMatch struct {
+	Repo       string `json:"repo"`
+	TagPattern string `json:"tagPattern"`
 }
 
 type State int
@@ -175,14 +198,15 @@ const (
 // Task
 // swagger:model task
 type Task struct {
-	ID         primitive.ObjectID `bson:"_id" json:"id"`
-	Name       string             `json:"name"`
-	PodName    string             `json:"podName"`
-	JobId      primitive.ObjectID `json:"jobId"`
-	TestFlowId primitive.ObjectID `json:"testFlowId"` //save this field for convience, get from job info is alright
-	TestId     TestId             `json:"testId"`
-	State      State              `json:"state"`
-	Logs       []string           `json:"logs"`
-	Versions   map[string]string  `json:"versions"` // save a copy of task flow, but task flow update version information in this running
-	BaseTime   `bson:",inline"`
+	ID              primitive.ObjectID `bson:"_id" json:"id"`
+	Name            string             `json:"name"`
+	PodName         string             `json:"podName"`
+	JobId           primitive.ObjectID `json:"jobId"`
+	TestFlowId      primitive.ObjectID `json:"testFlowId"` //save this field for convience, get from job info is alright
+	TestId          TestId             `json:"testId"`
+	State           State              `json:"state"`
+	Logs            []string           `json:"logs"`
+	InheritVersions map[string]string  `json:"inheritVersions"` // save a copy of task flow, but task flow update version information in this running
+	CommitMap       map[string]string  `json:"versions"`        // save a copy of task flow, but task flow update version information in this running
+	BaseTime        `bson:",inline"`
 }

@@ -4,7 +4,7 @@ import {
   IProjectImportingDto,
   IProjectQueryingDto,
   IProjectSavingDto,
-} from '@/api/dto/project';
+} from '@/api/dto/testflow';
 import { SortTypeEnum } from '@/api/dto/enumeration';
 
 /**

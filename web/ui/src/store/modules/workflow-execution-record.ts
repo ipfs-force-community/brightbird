@@ -5,7 +5,7 @@ import {
   fetchTestFlowDetail,
 } from '@/api/view-no-auth';
 import yaml from 'yaml';
-import {INodeDefVo, ITestFlowDetail} from '@/api/dto/project';
+import {INodeDefVo, ITestFlowDetail} from '@/api/dto/testflow';
 
 /**
  * 命名空间

@@ -2,7 +2,7 @@ import { EdgeConfig, NodeConfig } from '@antv/g6';
 import yaml from 'yaml';
 import { NodeTypeEnum } from '../../model/data/enumeration';
 import { DslTypeEnum } from '@/api/dto/enumeration';
-import { INodeDefVo } from '@/api/dto/project';
+import { INodeDefVo } from '@/api/dto/testflow';
 import shellIcon from '../../svgs/shape/shell.svg';
 import { SHELL_NODE_TYPE } from '../../model/data/common';
 

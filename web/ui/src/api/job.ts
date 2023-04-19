@@ -91,7 +91,7 @@ export async function getJobDetail(id: String): Promise<IJobDetailVo> {
  * @param dto
  */
 export async function getJobTypes(): Promise<JobEnum[]> {
-   return [JobEnum.CronJob, JobEnum.Fake]
+   return [JobEnum.CronJob, JobEnum.PRMerged, JobEnum.TagCreated]
 }
 
 

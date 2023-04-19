@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"math"
 	"net/http"
 
@@ -356,6 +357,21 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			if err != nil {
 				c.Error(err)
 				return
+			}
+		case types.PRMergedJobType:
+			for _, match := range job.PRMergedJobParams.PRMergedEventMatchs {
+				if len(match.DestPattern) == 0 || len(match.SourcePattern) == 0 {
+					c.Error(errors.New("pr merged job must have dest and source branch"))
+					return
+				}
+			}
+
+		case types.TagCreatedJobType:
+			for _, match := range job.TagCreateEventMatchs {
+				if len(match.TagPattern) == 0 {
+					c.Error(errors.New("tag create event must have a name"))
+					return
+				}
 			}
 		}
 

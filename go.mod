@@ -4,7 +4,9 @@ go 1.18
 
 require (
 	github.com/BurntSushi/toml v1.2.1
+	github.com/cskr/pubsub v1.0.2
 	github.com/filecoin-project/go-address v1.1.0
+	github.com/filecoin-project/go-state-types v0.11.0-rc2
 	github.com/filecoin-project/venus v1.11.0-rc1
 	github.com/filecoin-project/venus-auth v1.10.2-0.20230322095644-02a0689eea6c
 	github.com/filecoin-project/venus-wallet v1.9.0
@@ -15,6 +17,7 @@ require (
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/google/go-github/v50 v50.2.0
+	github.com/google/go-github/v51 v51.0.0
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1
 	github.com/hashicorp/go-retryablehttp v0.7.2
@@ -37,6 +40,7 @@ require (
 	go.mongodb.org/mongo-driver v1.11.2
 	go.uber.org/fx v1.19.2
 	go.uber.org/zap v1.23.0
+	golang.org/x/oauth2 v0.7.0
 	golang.org/x/sync v0.1.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/appengine v1.6.7
@@ -102,7 +106,6 @@ require (
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0 // indirect
 	github.com/filecoin-project/go-jsonrpc v0.2.1 // indirect
 	github.com/filecoin-project/go-padreader v0.0.1 // indirect
-	github.com/filecoin-project/go-state-types v0.11.0-rc2 // indirect
 	github.com/filecoin-project/go-statestore v0.2.0 // indirect
 	github.com/filecoin-project/lotus v1.22.0-rc4 // indirect
 	github.com/filecoin-project/specs-actors v0.9.15 // indirect
@@ -288,11 +291,10 @@ require (
 	golang.org/x/arch v0.1.0 // indirect
 	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/net v0.8.0 // indirect
-	golang.org/x/oauth2 v0.6.0 // indirect
-	golang.org/x/sys v0.6.0 // indirect
-	golang.org/x/term v0.6.0 // indirect
-	golang.org/x/text v0.8.0 // indirect
+	golang.org/x/net v0.9.0 // indirect
+	golang.org/x/sys v0.7.0 // indirect
+	golang.org/x/term v0.7.0 // indirect
+	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
 	golang.org/x/tools v0.7.0 // indirect
 	google.golang.org/api v0.81.0 // indirect

@@ -1,7 +1,7 @@
 import { BaseGraph } from '../base-graph';
 import { G6Event, Graph, IBBox, IG6GraphEvent, IShape, Item, LayoutConfig, NodeConfig } from '@antv/g6';
 import { DslTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
-import { INodeDefVo } from '@/api/dto/project';
+import { INodeDefVo } from '@/api/dto/testflow';
 import { parse } from '../../model/dsl/g6';
 import { ITaskExecutionRecordVo } from '@/api/dto/workflow-execution-record';
 import { GraphDirectionEnum, NodeTypeEnum } from '../data/enumeration';

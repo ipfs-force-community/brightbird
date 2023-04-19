@@ -15,30 +15,43 @@
           <jm-option v-for="item in groups" :key="item.id" :label="item.name" :value="item.id" />
         </jm-select>
 
-        <jm-select 测试流 v-loading="testflowsLoading" :disabled="testflowsLoading" v-model="createForm.testFlowId" @change="onSelectTf"
-          placeholder="请选择测试流">
+        <jm-select 测试流 v-loading="testflowsLoading" :disabled="testflowsLoading" v-model="createForm.testFlowId"
+          @change="onSelectTf" placeholder="请选择测试流">
           <jm-option v-for="item in  testflows" :key="item.id" :label="item.name" :value="item.id" />
         </jm-select>
       </jm-form-item>
 
+
+
       <jm-form-item label="类型" prop="jobType">
         <jm-select v-loading="jobTypesLoading" :disabled="jobTypesLoading" v-model="createForm.jobType"
-          placeholder="请选择Job类型">
+          @change="onSelectJobtype" placeholder="请选择Job类型">
           <jm-option v-for="item in jobTypesRef" :key="item" :label="item" :value="item" />
         </jm-select>
       </jm-form-item>
 
-      <jm-form-item label="cron表达式"  v-show="createForm.jobType === JobEnum.CronJob" prop="cronExpression">
+      <jm-form-item label="cron表达式" v-show="createForm.jobType === JobEnum.CronJob" prop="cronExpression">
         <jm-input v-model="createForm.cronExpression" clearable placeholder="请输入Cron表达式" />
       </jm-form-item>
 
-      <jm-form-item label="版本设置" prop="version">
+      <jm-form-item v-show="createForm.jobType == JobEnum.CronJob" label="版本设置" prop="version">
         <div v-for="(version, component) in createForm.versions">
           <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="createForm.versions[component]">
-            <template #prepend>{{component}}:</template>
+            <template #prepend>{{ component }}:</template>
           </jm-input>
-        </div>  
+        </div>
       </jm-form-item>
+
+      <jm-form-item v-show="createForm.jobType == JobEnum.TagCreated" label="" prop="tagCreateEventMatchs">
+        <div v-for="match in createForm.tagCreateEventMatchs">
+          <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/*`" v-model="match.tagPattern">
+            <template #prepend>{{ getGitShort(match.repo) }}</template>
+          </jm-input>
+        </div>
+      </jm-form-item>
+
+
+
 
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
@@ -59,14 +72,15 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { createJob, getJobTypes } from '@/api/job';
-import { listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
-
+import { fetchDeployPlugins, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { START_PAGE_NUM } from '@/utils/constants';
-import { IJobCreateVo } from '@/api/dto/job';
+import { IJobCreateVo, IPRMergedEventMatch, ITagCreateEventMatch } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail } from '@/api/dto/testflow.js';
+import { INodeVo, ITestFlowDetail } from '@/api/dto/testflow.js';
+import { PluginBase } from '@antv/g6-plugin';
+import { url } from 'inspector';
 
 export default defineComponent({
   emits: ['completed'],
@@ -89,8 +103,11 @@ export default defineComponent({
       testFlowId: '',
       jobType: JobEnum.CronJob,
       description: "",
-      versions:{},
+      versions: {},
+
       cronExpression: "",
+      prMergedEventMatchs: [],
+      tagCreateEventMatchs: [],
     });
 
     const editorRule = ref<object>({
@@ -144,22 +161,23 @@ export default defineComponent({
     }
     fetchGroupList()
 
-    const refreshSelect = (testflow: ITestFlowDetail) => {
-      createForm.value.testFlowId = testflow.id??"";       
-          let versions: any= {};
-          testflow?.nodes?.forEach(f=>{
-            versions[f.name] = "";
-          })
-          createForm.value.versions = versions;
+    const refreshSelect = async (testflow: ITestFlowDetail) => {
+      createForm.value.testFlowId = testflow.id ?? "";
+      let versions: any = {};
+      testflow?.nodes?.forEach(f => {
+        versions[f.name] = "";
+      })
+      //use for cron
+      createForm.value.versions = versions;
     }
-    
-  
+
+
     const changeGroup = async () => {
       testflowsLoading.value = true;
       createForm.value.testFlowId = ""
       try {
         testflows.value = (await queryTestFlow({
-          groupId: selectGroupId.value??"",
+          groupId: selectGroupId.value ?? "",
           pageNum: START_PAGE_NUM,
           pageSize: Number.MAX_SAFE_INTEGER,
         })).list;
@@ -174,12 +192,41 @@ export default defineComponent({
       }
     }
 
-    const onSelectTf = async () =>{
-      let versions: any= {};
-        const selTf = testflows.value?.find(a=>a.id == createForm.value.testFlowId)
-        if (selTf) {
-          refreshSelect(selTf);
+    const onSelectJobtype = async () => {
+      try {
+        if (createForm.value.jobType == JobEnum.TagCreated) {
+          //fetch plugins
+          const pluginMap = new Map<string, INodeVo>();
+          (await fetchDeployPlugins()).map(a => pluginMap.set(a.name, a))
+
+          createForm.value.tagCreateEventMatchs = []
+          const filter = new Set<string>();
+          Object.entries(createForm.value.versions).map(([k, v]) => {
+            const repoName = pluginMap.get(k)?.repo ?? "";
+            if (!filter.has(repoName)) {
+              createForm.value.tagCreateEventMatchs.push({
+                repo: repoName,
+                tagPattern: "",
+              })
+              filter.add(repoName);
+            }
+          })
         }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      }
+    }
+
+    const onSelectTf = async () => {
+      const selTf = testflows.value?.find(a => a.id == createForm.value.testFlowId)
+      if (selTf) {
+        refreshSelect(selTf);
+      }
+    }
+
+    const getGitShort = (gitURL: string):string=>{
+     const url =  new URL(gitURL);
+      return url.pathname.replace(".git", "").substring(1);
     }
 
     return {
@@ -196,9 +243,12 @@ export default defineComponent({
       groups,
       changeGroup,
       onSelectTf,
+      onSelectJobtype,
       testflowsLoading,
       testflows,
       create,
+      //utils
+      getGitShort,
     };
   },
 });
