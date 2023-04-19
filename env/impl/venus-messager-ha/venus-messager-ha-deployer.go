@@ -118,7 +118,7 @@ func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error)
 	}
 
 	//create database
-	err = deployer.env.ResourceMgr().CreateDatabase(renderParams.MysqlDSN)
+	err = deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
 	if err != nil {
 		return err
 	}
