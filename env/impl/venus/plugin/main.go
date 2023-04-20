@@ -34,9 +34,5 @@ func Exec(ctx context.Context, depParams DepParams) (env.IVenusDeployer, error) 
 		return nil, err
 	}
 
-	err = env.SyncWait(ctx, depParams.K8sEnv, deployer, string(depParams.AdminToken))
-	if err != nil {
-		return nil, err
-	}
 	return deployer, nil
 }

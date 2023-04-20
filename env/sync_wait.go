@@ -6,14 +6,16 @@ import (
 
 	v1 "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
+	"github.com/hunjixin/brightbird/types"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // SyncWait returns when ChainHead is within 20 epochs of the expected height
-func SyncWait(ctx context.Context, k8sEnv *K8sEnvDeployer, venusDep IVenusDeployer, adminToken string) error {
-	endpoint := venusDep.SvcEndpoint()
+func SyncWait(ctx context.Context, k8sEnv *K8sEnvDeployer, pod corev1.Pod, adminToken string) error {
+	endpoint := types.EndpointFromString(pod.Status.PodIP)
 	if Debug {
 		var err error
-		endpoint, err = k8sEnv.PortForwardPod(ctx, venusDep.Pods()[0].GetName(), int(venusDep.Svc().Spec.Ports[0].Port))
+		endpoint, err = k8sEnv.PortForwardPod(ctx, pod.Name, 3453)
 		if err != nil {
 			return err
 		}
