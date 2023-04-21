@@ -31,9 +31,11 @@ type TestCaseParams struct {
 	Params struct {
 		Permission string `json:"permission"`
 	} `optional:"true"`
-	AdminToken types.AdminToken
-	K8sEnv     *env.K8sEnvDeployer    `json:"-"`
-	VenusAuth  env.IVenusAuthDeployer `json:"-"`
+	AdminToken  types.AdminToken
+	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
+	VenusAuth   env.IVenusAuthDeployer   `json:"-"`
+	Venus       env.IVenusDeployer       `json:"-"`
+	VenusWallet env.IVenusWalletDeployer `json:"-"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -65,7 +67,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	}
 	fmt.Println(token)
 
-	permission, err := checkPermission(ctx, endpoint.ToMultiAddr(), token)
+	permission, err := checkPermission(ctx, token, params)
 	if err != nil {
 		return err
 	}
@@ -75,14 +77,22 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	return nil
 }
 
-func checkPermission(ctx context.Context, addr string, token string) (string, error) {
-	chainRpc, closer, err := chain.DialFullNodeRPC(ctx, addr, token, nil)
+func checkPermission(ctx context.Context, token string, params TestCaseParams) (string, error) {
+	endpoint := params.Venus.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.Venus.Pods()[0].GetName(), int(params.Venus.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return "", err
+		}
+	}
+	chainRpc, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
 		return "", err
 	}
 	defer closer()
 
-	walletAddr, err := createWallet(ctx, addr, token)
+	walletAddr, err := createWallet(ctx, params)
 	if err != nil {
 		return "", err
 	}
@@ -123,9 +133,23 @@ func checkPermission(ctx context.Context, addr string, token string) (string, er
 	return "", nil
 }
 
-func createWallet(ctx context.Context, addr string, token string) (address.Address, error) {
+func createWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
 
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, addr, token, nil)
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	if err != nil {
+		return address.Undef, err
+	}
+
+	endpoint := params.VenusWallet.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return address.Undef, err
+		}
+	}
+
+	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
 		return address.Undef, err
 	}
