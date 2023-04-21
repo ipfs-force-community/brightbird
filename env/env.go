@@ -507,7 +507,7 @@ func (env *K8sEnvDeployer) ReadSmallFilelInPod(ctx context.Context, podName stri
 	return io.ReadAll(stdOut)
 }
 
-// ReadSmallFilelInPod read small file content from pod, dont not use this function to read big file
+// ExecRemoteCmd execute remote server command in pod
 func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cmd []string) ([]byte, error) {
 	req := env.k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
 		Namespace(env.namespace).SubResource("exec")
