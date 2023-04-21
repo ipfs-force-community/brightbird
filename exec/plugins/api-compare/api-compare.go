@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
@@ -34,12 +35,34 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	cliCtx := &cli.Context{
 		Context: ctx,
 	}
-	cliCtx.Set("venus-url", params.Params.venusUrl)
-	cliCtx.Set("venus-token", params.Params.venusToken)
-	cliCtx.Set("lotus-url", params.Params.lotusUrl)
-	cliCtx.Set("lotus-token", params.Params.lotusToken)
-	cliCtx.Set("stop-height", params.Params.stopHeight)
-	cliCtx.Set("enable-eth-rpc", params.Params.enableEthRpc)
+	if params.Params.venusUrl != "" {
+		cliCtx.Set("venus-url", params.Params.venusUrl)
+	}
+	if params.Params.venusToken != "" {
+		cliCtx.Set("venus-token", params.Params.venusToken)
+	}
 
-	return cmd.Run(cliCtx)
+	if params.Params.lotusUrl != "" {
+		cliCtx.Set("lotus-url", params.Params.lotusUrl)
+	}
+
+	if params.Params.lotusToken != "" {
+		cliCtx.Set("lotus-token", params.Params.lotusToken)
+	}
+
+	if params.Params.stopHeight != "" {
+		cliCtx.Set("stop-height", params.Params.stopHeight)
+	}
+
+	if params.Params.enableEthRpc != "" {
+		cliCtx.Set("enable-eth-rpc", params.Params.enableEthRpc)
+	}
+
+	err := cmd.Run(cliCtx)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	return nil
 }
