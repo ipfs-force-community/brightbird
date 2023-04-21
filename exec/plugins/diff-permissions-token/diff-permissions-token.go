@@ -20,10 +20,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "diff_permissions_token",
+	Name:        "admin/sign/write/read token ",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "diff permissions token",
+	Description: "generate diff permissions token",
 }
 
 type TestCaseParams struct {

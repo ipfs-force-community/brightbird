@@ -11,10 +11,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "venus-auth-test",
+	Name:        "api_compare",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "compare venus and lotus api",
+	Description: "api compare",
 }
 
 type TestCaseParams struct {

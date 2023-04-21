@@ -9,7 +9,7 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "add-miner",
+	Name:        "add_miner",
 	Version:     version.Version(),
 	Category:    types.TestExec,
 	Description: "user add miner",
