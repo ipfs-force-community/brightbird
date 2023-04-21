@@ -9,10 +9,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "test_deploy",
+	Name:        "check_sync",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "generate admin token",
+	Description: "check if sync successed",
 }
 
 type TestCaseParams struct {

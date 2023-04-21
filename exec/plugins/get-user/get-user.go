@@ -11,7 +11,7 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "get-user",
+	Name:        "get_user",
 	Version:     version.Version(),
 	Category:    types.TestExec,
 	Description: "get user name",
