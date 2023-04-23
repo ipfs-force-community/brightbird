@@ -26,9 +26,6 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	Params struct {
-		Permission string `json:"permission"`
-	} `optional:"true"`
 	AdminToken   types.AdminToken
 	K8sEnv       *env.K8sEnvDeployer       `json:"-"`
 	VenusAuth    env.IVenusAuthDeployer    `json:"-"`
@@ -39,19 +36,19 @@ type TestCaseParams struct {
 func Exec(ctx context.Context, params TestCaseParams) error {
 	authToken, err := CreateAuthToken(ctx, params)
 	if err != nil {
-		fmt.Printf("create wallet failed: %v\n", err)
+		fmt.Printf("create auth token failed: %v\n", err)
 		return err
 	}
 
 	_, err = CreateWallet(ctx, params)
 	if err != nil {
-		fmt.Printf("create miner failed: %v\n", err)
+		fmt.Printf("create wallet failed: %v\n", err)
 		return err
 	}
 
 	err = GetWalletInfo(ctx, params, authToken)
 	if err != nil {
-		fmt.Printf("get miner info failed: %v\n", err)
+		fmt.Printf("get wallet info failed: %v\n", err)
 		return err
 	}
 
