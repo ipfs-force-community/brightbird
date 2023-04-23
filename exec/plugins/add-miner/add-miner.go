@@ -29,12 +29,65 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
-
-	walletAddr, err := createWallet(ctx, params)
+	walletAddr, err := CreateWallet(ctx, params)
 	if err != nil {
+		fmt.Printf("create wallet failed: %v\n", err)
 		return err
 	}
 
+	minerAddr, err := CreateMiner(ctx, params, walletAddr)
+	if err != nil {
+		fmt.Printf("create miner failed: %v\n", err)
+		return err
+	}
+
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr)
+	if err != nil {
+		fmt.Printf("get miner info failed: %v\n", err)
+		return err
+	}
+	fmt.Println("miner info: %v", minerInfo)
+
+	return nil
+}
+
+func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	if err != nil {
+		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
+	}
+
+	endpoint := params.VenusWallet.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
+		}
+	}
+
+	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
+	if err != nil {
+		return address.Undef, fmt.Errorf("dial iFullAPI rpc failed: %w\n", err)
+	}
+	defer closer()
+
+	password := "123456"
+	err = walletRpc.SetPassword(ctx, password)
+	if err != nil {
+		return address.Undef, fmt.Errorf("set password failed: %w\n", err)
+	}
+
+	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
+	if err != nil {
+		return address.Undef, fmt.Errorf("create wallet failed: %w\n", err)
+	}
+	fmt.Printf("wallet: %v\n", walletAddr)
+
+	return walletAddr, nil
+}
+
+func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {
 	cmd := []string{
 		"./venus-sector-manager",
 		"util",
@@ -43,62 +96,28 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 		"--sector-size=32GiB",
 		"--exid=" + string(rune(rand.Intn(1000))),
 	}
-
 	cmd = append(cmd, "--from="+walletAddr.String())
-	fmt.Println(cmd)
 
 	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), cmd)
 	if err != nil {
-		return err
+		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
 
+	return string(minerAddr), nil
+}
+
+func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
 	getMinerCmd := []string{
 		"./venus-sector-manager",
 		"util",
 		"miner",
 		"info",
-		string(minerAddr),
+		minerAddr,
 	}
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), getMinerCmd)
 	if err != nil {
-		return err
-	}
-	fmt.Println(minerInfo)
-	return nil
-}
-
-func createWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
-	if err != nil {
-		fmt.Println("请提供venus_wallet组件")
-		return address.Undef, err
+		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
-	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
-		if err != nil {
-			return address.Undef, err
-		}
-	}
-
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
-	if err != nil {
-		return address.Undef, err
-	}
-	defer closer()
-
-	password := "123456"
-	err = walletRpc.SetPassword(ctx, password)
-	if err != nil {
-		return address.Undef, err
-	}
-	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
-	if err != nil {
-		return address.Undef, err
-	}
-	fmt.Println("wallet:", walletAddr)
-	return walletAddr, nil
+	return string(minerInfo), nil
 }
