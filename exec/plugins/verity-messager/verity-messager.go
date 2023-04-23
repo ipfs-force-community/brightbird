@@ -14,10 +14,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "verity_gateway",
+	Name:        "verity_message",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "verity gateway if normal",
+	Description: "verity message if normal",
 }
 
 type TestCaseParams struct {
