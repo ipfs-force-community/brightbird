@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-chain-co-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
+  serviceName: venus-chain-co-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-chain-co-{{.UniqueId}}-pod
@@ -19,3 +20,17 @@ spec:
           ports:
             - containerPort: 1234
               protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name:  venus-chain-co
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-chain-co-pvc # name+podname
+        labels:
+          app: venus-chain-co-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100M

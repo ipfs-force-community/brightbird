@@ -331,11 +331,27 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 	}
 
 	if len(commit) == 0 {
-		cfg, err := repo.Config()
+		branches, err := repo.Branches()
 		if err != nil {
 			return "", err
 		}
-		masterBranch := cfg.Init.DefaultBranch
+
+		masterBranch := "master"
+		err = branches.ForEach(func(branch *plumbing.Reference) error {
+			switch true {
+			case branch.Name().Short() == "master":
+				masterBranch = "master"
+			case branch.Name().Short() == "trunk":
+				masterBranch = "trunk"
+			default:
+				masterBranch = "main"
+			}
+			return nil
+		})
+		if err != nil {
+			return "", err
+		}
+
 		err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
 		if err != nil {
 			return "", err

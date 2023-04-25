@@ -56,10 +56,10 @@ type VenusSectorManagerDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	configMap  *corev1.ConfigMap
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	configMap    *corev1.ConfigMap
+	pods         []corev1.Pod
+	statefulSets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
@@ -105,7 +105,11 @@ func (deployer *VenusSectorManagerDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusSectorManagerDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusSectorManagerDeployer) StatefulSet() []*appv1.StatefulSet {
+	return deployer.statefulSets
 }
 
 func (deployer *VenusSectorManagerDeployer) Svc() *corev1.Service {
@@ -136,18 +140,18 @@ func (deployer *VenusSectorManagerDeployer) Deploy(ctx context.Context) (err err
 	}
 
 	// create deployment
-	deployCfg, err := f.Open("venus-sector-manager/venus-sector-manager-deployment.yaml")
+	deployCfg, err := f.Open("venus-sector-manager/venus-sector-manager-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulset, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulSets = append(deployer.statefulSets, statefulset)
 
 	// create service
-	svcCfg, err := f.Open("venus-sector-manager/venus-sector-manager-service.yaml")
+	svcCfg, err := f.Open("venus-sector-manager/venus-sector-manager-headless.yaml")
 	deployer.svc, err = deployer.env.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
 		return err

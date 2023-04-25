@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-wallet-{{.UniqueId}}
 spec:
   replicas: 1
+  serviceName: venus-wallet-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-wallet-{{.UniqueId}}-pod
@@ -20,6 +21,8 @@ spec:
             - containerPort: 5678
               protocol: TCP
           volumeMounts:
+            - mountPath: /root
+              name: venus-wallet-pvc
             - name: venus-wallet-vol
               mountPath: "/root/.venus_wallet/config.toml"
               subPath: "config.toml"
@@ -30,3 +33,14 @@ spec:
             items:
               - key: config.toml
                 path: config.toml
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-wallet-pvc # name+podname
+        labels:
+          app: venus-wallet-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi

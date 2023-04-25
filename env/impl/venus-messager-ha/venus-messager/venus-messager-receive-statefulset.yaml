@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-messager-receive-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
+  serviceName: venus-messager-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-messager-{{.UniqueId}}-pod
@@ -20,3 +21,17 @@ spec:
           ports:
             - containerPort: 39812
               protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: venus-messager-receive-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-messager-receive-pvc # name+podname
+        labels:
+          app: venus-messager-receive-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Mi

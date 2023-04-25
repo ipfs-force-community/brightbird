@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-miner-{{.UniqueId}}
 spec:
   replicas: 1
+  serviceName: venus-miner-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-miner-{{.UniqueId}}-pod
@@ -20,13 +21,26 @@ spec:
             - containerPort: 12308
               protocol: TCP
           volumeMounts:
-            - name: marketcfg
+            - mountPath: /root
+              name: venus-miner-pvc
+            - name: venus-miner-cfg
               mountPath: "/root/.venusminer/config.toml"
               subPath: "config.toml"
       volumes:
-        - name: marketcfg
+        - name: venus-miner-cfg
           configMap:
             name: venus-miner-cfg-{{.UniqueId}}
             items:
               - key: config.toml
                 path: config.toml
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-miner-pvc # name+podname
+        labels:
+          app: venus-miner-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi

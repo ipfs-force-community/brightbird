@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-gateway-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
+  serviceName: venus-gateway-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-gateway-{{.UniqueId}}-pod
@@ -19,3 +20,17 @@ spec:
           ports:
             - containerPort: 45132
               protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: venus-gateway-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-gateway-pvc # name+podname
+        labels:
+          app: venus-gateway-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi

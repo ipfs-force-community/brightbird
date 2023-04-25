@@ -55,9 +55,9 @@ type VenusDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	pods         []corev1.Pod
+	statefulSets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func NewVenusDeployer(env *env.K8sEnvDeployer, authUrl string, adminToken types.AdminToken, bootstrapPeers ...string) *VenusDeployer {
@@ -92,7 +92,11 @@ func (deployer *VenusDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusDeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulSets
 }
 
 func (deployer *VenusDeployer) Svc() *corev1.Service {
@@ -113,15 +117,15 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 		Config:           *deployer.cfg,
 	}
 	//create deployment
-	deployCfg, err := f.Open("venus-node/venus-node-deployment.yaml")
+	deployCfg, err := f.Open("venus-node/venus-node-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulSets = append(deployer.statefulSets, statefulSet)
 
 	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", deployer.env.UniqueId("")))
 	if err != nil {
@@ -129,7 +133,7 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create service
-	svcCfg, err := f.Open("venus-node/venus-node-service.yaml")
+	svcCfg, err := f.Open("venus-node/venus-node-headless.yaml")
 	if err != nil {
 		return err
 	}

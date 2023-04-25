@@ -53,9 +53,9 @@ type VenusAuthHADeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	pods        []corev1.Pod
+	statefulSet []*appv1.StatefulSet
+	svc         *corev1.Service
 }
 
 func NewVenusAuthHADeployer(env *env.K8sEnvDeployer, replicas int) *VenusAuthHADeployer {
@@ -102,7 +102,11 @@ func (deployer *VenusAuthHADeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusAuthHADeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusAuthHADeployer) StatefulSet() []*appv1.StatefulSet {
+	return deployer.statefulSet
 }
 
 func (deployer *VenusAuthHADeployer) Svc() *corev1.Service {
@@ -130,15 +134,15 @@ func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create deployment
-	deployCfg, err := f.Open("venus-auth/venus-auth-ha-deployment.yaml")
+	deployCfg, err := f.Open("venus-auth/venus-auth-ha-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulSet = append(deployer.statefulSet, statefulSet)
 
 	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-auth-%s-pod", deployer.env.UniqueId("")))
 	if err != nil {
@@ -146,7 +150,7 @@ func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create service
-	svcCfg, err := f.Open("venus-auth/venus-auth-service.yaml")
+	svcCfg, err := f.Open("venus-auth/venus-auth-headless.yaml")
 	if err != nil {
 		return err
 	}

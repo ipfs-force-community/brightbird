@@ -54,10 +54,10 @@ type VenusMarketDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	configMap  *corev1.ConfigMap
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	configMap    *corev1.ConfigMap
+	pods         []corev1.Pod
+	statefulSets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func NewVenusMarketDeployer(env *env.K8sEnvDeployer, authUrl, nodeUrl, gatewayUrl, messagerUrl, authToken string) *VenusMarketDeployer {
@@ -93,7 +93,11 @@ func (deployer *VenusMarketDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusMarketDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusMarketDeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulSets
 }
 
 func (deployer *VenusMarketDeployer) Svc() *corev1.Service {
@@ -127,15 +131,15 @@ func (deployer *VenusMarketDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create deployment
-	deployCfg, err := f.Open("venus-market/venus-market-deployment.yaml")
+	deployCfg, err := f.Open("venus-market/venus-market-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParmas)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParmas)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulSets = append(deployer.statefulSets, statefulSet)
 
 	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-market-%s-pod", deployer.env.UniqueId("")))
 	if err != nil {
@@ -143,7 +147,7 @@ func (deployer *VenusMarketDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create service
-	svcCfg, err := f.Open("venus-market/venus-market-service.yaml")
+	svcCfg, err := f.Open("venus-market/venus-market-headless.yaml")
 	if err != nil {
 		return err
 	}

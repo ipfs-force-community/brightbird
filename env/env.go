@@ -236,6 +236,10 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 
 	env.setCommonLabels(&statefulSet.ObjectMeta)
 	env.setCommonLabels(&statefulSet.Spec.Template.ObjectMeta)
+	for _, pvc := range statefulSet.Spec.VolumeClaimTemplates {
+		env.setCommonLabels(&pvc.ObjectMeta)
+	}
+
 	cfgData, err := yaml.Marshal(statefulSet)
 	if err != nil {
 		return nil, err

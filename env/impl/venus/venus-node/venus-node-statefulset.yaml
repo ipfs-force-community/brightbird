@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: venus-{{.UniqueId}}-deployment
+  name: venus-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
+  serviceName: venus-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-{{.UniqueId}}-pod
@@ -28,7 +29,20 @@ spec:
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+            - mountPath: /root
+              name: venus-pvc
       volumes:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-pvc # name+podname
+        labels:
+          app: venus-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 10Gi

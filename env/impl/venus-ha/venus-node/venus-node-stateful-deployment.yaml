@@ -29,7 +29,20 @@ spec:
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+            - mountPath: /root
+              name: venus-ha-pvc
       volumes:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-ha-pvc # name+podname
+        labels:
+          app: venus-ha-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 10Gi

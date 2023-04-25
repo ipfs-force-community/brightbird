@@ -2,6 +2,7 @@ package env
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/hunjixin/brightbird/utils"
@@ -95,7 +96,7 @@ func (resourceMgr *ResourceMgr) Clean(ctx context.Context) error {
 
 	for _, db := range databases {
 		if strings.Contains(db, resourceMgr.testId) {
-			err = utils.DropDatabase(db)
+			err = utils.DropDatabase(fmt.Sprintf(resourceMgr.mysqlUrl, db))
 			if err != nil {
 				log.Errorf("drop %s databases failed %s", db, err)
 			}

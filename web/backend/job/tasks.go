@@ -122,7 +122,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			for _, task := range initTasks.List {
 				err = taskMgr.RunOneTask(ctx, task)
 				if err != nil {
-					taskLog.Errorf("fetch task list fail %v", err)
+					taskLog.Errorf("run task list fail %v", err)
 				}
 			}
 		}

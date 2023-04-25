@@ -197,33 +197,6 @@ func (tagCreateJob *TagCreateJob) Stop(_ context.Context) error {
 	return nil
 }
 
-func getReposInJob(deployStore types.PluginStore, testflow types.TestFlow) ([]string, error) {
-	var repos []string
-	for _, node := range testflow.Nodes {
-		plugin, err := deployStore.GetPlugin(node.Name)
-		if err != nil {
-			return nil, err
-		}
-
-		shortRepo, err := toShortRepoName(plugin.Repo)
-		if err != nil {
-			return nil, err
-		}
-
-		repos = append(repos, shortRepo)
-	}
-	return repos, nil
-}
-
-func toShortRepoName(repoUrl string) (string, error) {
-	schema, err := giturls.Parse(repoUrl)
-	if err != nil {
-		return "", err
-	}
-
-	return schema.Path[1:], nil
-}
-
 func toGitOwnerAndRepo(repoUrl string) (string, string, error) {
 	schema, err := giturls.Parse(repoUrl)
 	if err != nil {

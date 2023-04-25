@@ -28,5 +28,5 @@ data:
       Token = "{{.WalletToken}}"
 kind: ConfigMap
 metadata:
-  name: venus-market-client-cfg-{{.UniqueId}}
+  name: market-client-cfg-{{.UniqueId}}
   namespace: default

@@ -55,10 +55,10 @@ type MarketClientDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	configMap  *corev1.ConfigMap
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	configMap    *corev1.ConfigMap
+	pods         []corev1.Pod
+	statefulsets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func NewMarketClientDeployer(env *env.K8sEnvDeployer, nodeUrl, nodeToken, walletUrl, walletToken string, clientAddr address.Address) *MarketClientDeployer {
@@ -94,7 +94,11 @@ func (deployer *MarketClientDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *MarketClientDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *MarketClientDeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulsets
 }
 
 func (deployer *MarketClientDeployer) Svc() *corev1.Service {
@@ -125,23 +129,23 @@ func (deployer *MarketClientDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create deployment
-	deployCfg, err := f.Open("market-client/market-client-deployment.yaml")
+	deployCfg, err := f.Open("market-client/market-client-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulsets = append(deployer.statefulsets, statefulSet)
 
-	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-market-client-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
+	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("market-client-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
 	if err != nil {
 		return err
 	}
 
 	//create service
-	svcCfg, err := f.Open("market-client/market-client-service.yaml")
+	svcCfg, err := f.Open("market-client/market-client-headless.yaml")
 	if err != nil {
 		return err
 	}

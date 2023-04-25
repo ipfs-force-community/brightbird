@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: market-client-{{.UniqueId}}
+spec:
+  replicas: 1
+  serviceName: market-client-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: market-client-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: market-client-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: market-client-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/market-client:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: 41231
+              protocol: TCP
+            - containerPort: 34123
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: market-client-pvc
+            - name: market-client-cfg-vol
+              mountPath: "/root/.marketclient/config.toml"
+              subPath: "config.toml"
+      volumes:
+        - name: market-client-cfg-vol
+          configMap:
+            name: market-client-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+  volumeClaimTemplates:
+    - metadata:
+        name: market-client-pvc # name+podname
+        labels:
+          app: market-client-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Gi

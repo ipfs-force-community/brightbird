@@ -55,9 +55,9 @@ type VenusMessagerHADeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	pods        []corev1.Pod
+	statefulSet []*appv1.StatefulSet
+	svc         *corev1.Service
 }
 
 func NewVenusMessagerHADeployer(env *env.K8sEnvDeployer, replicas int, nodeUrl, authUrl, gatewayUrl, authToken string) *VenusMessagerHADeployer {
@@ -96,7 +96,11 @@ func (deployer *VenusMessagerHADeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusMessagerHADeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusMessagerHADeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulSet
 }
 
 func (deployer *VenusMessagerHADeployer) Svc() *corev1.Service {
@@ -124,32 +128,32 @@ func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error)
 	}
 
 	//create deploymnet for one node to push
-	pushCfg, err := f.Open("venus-messager/venus-messager-push-deployment.yaml")
+	pushCfg, err := f.Open("venus-messager/venus-messager-push-statefulset.yaml")
 	if err != nil {
 		return err
 	}
 
 	cfgCopy := renderParams
 	cfgCopy.Replicas = 1
-	deployment, err := deployer.env.RunDeployment(ctx, pushCfg, cfgCopy)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, pushCfg, cfgCopy)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = []*appv1.Deployment{deployment}
+	deployer.statefulSet = []*appv1.StatefulSet{statefulSet}
 	if renderParams.Replicas > 1 {
 		//deploy other node just service for others
-		receiveCfg, err := f.Open("venus-messager/venus-messager-receive-deployment.yaml")
+		receiveCfg, err := f.Open("venus-messager/venus-messager-receive-statefulset.yaml")
 		if err != nil {
 			return err
 		}
 
 		cfgCopy = renderParams
 		cfgCopy.Replicas--
-		deployment, err := deployer.env.RunDeployment(ctx, receiveCfg, cfgCopy)
+		statefulSet, err := deployer.env.RunStatefulSets(ctx, receiveCfg, cfgCopy)
 		if err != nil {
 			return err
 		}
-		deployer.deployment = append(deployer.deployment, deployment)
+		deployer.statefulSet = append(deployer.statefulSet, statefulSet)
 	}
 
 	pods, err := deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-messager-%s-pod", deployer.env.UniqueId("")))
@@ -159,7 +163,7 @@ func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error)
 	deployer.pods = pods
 
 	//create service
-	svcCfg, err := f.Open("venus-messager/venus-messager-service.yaml")
+	svcCfg, err := f.Open("venus-messager/venus-messager-headless.yaml")
 	if err != nil {
 		return err
 	}

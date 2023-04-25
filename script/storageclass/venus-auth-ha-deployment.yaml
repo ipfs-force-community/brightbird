@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: venus-auth-aaaaa
+spec:
+  replicas: 1
+  serviceName: venus-auth-aaaaa-svc
+  selector:
+    matchLabels:
+      app: venus-auth-aaaaa-pod
+      testid: aaaa
+  template:
+    metadata:
+      labels:
+        app: venus-auth-aaaaa-pod
+        testid: aaaa
+    spec:
+      containers:
+        - name: venus-auth-aaaaa
+          image: "192.168..175/filvenus/venus-auth:latest"
+          args: ["run"]
+          ports:
+            - containerPort: 8989
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: venus-auth-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-auth-pvc
+        labels:
+          app: venus-auth-aaaaa-pvc
+          testid: aaaa
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
