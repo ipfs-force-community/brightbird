@@ -46,7 +46,7 @@ import { IWorkflow } from './model/data/common';
 import { Graph, Node } from '@antv/x6';
 import registerCustomVueShape from './shape/custom-vue-shape';
 import { WorkflowValidator } from './model/workflow-validator';
-import {Case} from "@/api/dto/project";
+import {Case} from "@/api/dto/testflow";
 
 // 注册自定义x6元素
 registerCustomVueShape();

@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/go-github/v51/github"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/web/backend/modules"
 	"github.com/robfig/cron/v3"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,19 +34,28 @@ var _ IJobManager = (*JobManager)(nil)
 type JobManager struct {
 	lk sync.Mutex
 
-	cron       *cron.Cron
-	taskRepo   repo.ITaskRepo
-	jobRepo    repo.IJobRepo
-	runningJob map[primitive.ObjectID]IJob
+	cron         *cron.Cron
+	taskRepo     repo.ITaskRepo
+	jobRepo      repo.IJobRepo
+	testflowRepo repo.ITestFlowRepo
+
+	runningJob   map[primitive.ObjectID]IJob
+	pubsub       modules.WebHookPubsub
+	githubClient *github.Client
+	deployStore  repo.DeployPluginStore
 }
 
-func NewJobManager(cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *JobManager {
+func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *JobManager {
 	return &JobManager{
-		cron:       cron,
-		taskRepo:   taskRepo,
-		jobRepo:    jobRepo,
-		lk:         sync.Mutex{},
-		runningJob: make(map[primitive.ObjectID]IJob),
+		cron:         cron,
+		taskRepo:     taskRepo,
+		jobRepo:      jobRepo,
+		testflowRepo: testflowRepo,
+		lk:           sync.Mutex{},
+		pubsub:       pubsub,
+		githubClient: githubClient,
+		deployStore:  deployStore,
+		runningJob:   make(map[primitive.ObjectID]IJob),
 	}
 }
 
@@ -65,6 +76,20 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 	switch job.JobType {
 	case types.CronJobType:
 		jobInstance := NewCronJob(*job, j.cron, j.taskRepo, j.jobRepo)
+		err := jobInstance.Run(ctx)
+		if err != nil {
+			return err
+		}
+		j.runningJob[job.ID] = jobInstance
+	case types.TagCreatedJobType:
+		jobInstance := NewTagCreateJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
+		err := jobInstance.Run(ctx)
+		if err != nil {
+			return err
+		}
+		j.runningJob[job.ID] = jobInstance
+	case types.PRMergedJobType:
+		jobInstance := NewPRMergedJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err

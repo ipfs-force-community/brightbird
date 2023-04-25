@@ -10,7 +10,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
-	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -217,13 +216,10 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		job.CronJobParams = params.CronJobParams
 		job.Versions = params.Versions
 
-		switch job.JobType {
-		case types.CronJobType:
-			_, err = cron.ParseStandard(job.CronExpression)
-			if err != nil {
-				c.Error(err)
-				return
-			}
+		err = job.CheckParams()
+		if err != nil {
+			c.Error(err)
+			return
 		}
 
 		_, err = jobRepo.Save(ctx, job)
@@ -298,13 +294,15 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		for _, task := range tasks.List {
-			err = taskManager.StopOneTask(ctx, task.ID)
-			if err != nil {
-				jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
-			}
-			err = taskRepo.Delete(ctx, task.ID)
-			if err != nil {
-				jobLogger.Warnf("delete task fail %v", err)
+			if task.State == types.Running || task.State == types.TempError {
+				err = taskManager.StopOneTask(ctx, task.ID)
+				if err != nil {
+					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
+				}
+				err = taskRepo.Delete(ctx, task.ID)
+				if err != nil {
+					jobLogger.Warnf("delete task fail %v", err)
+				}
 			}
 		}
 
@@ -350,13 +348,10 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			return
 		}
 
-		switch job.JobType {
-		case types.CronJobType:
-			_, err = cron.ParseStandard(job.CronExpression)
-			if err != nil {
-				c.Error(err)
-				return
-			}
+		err = job.CheckParams()
+		if err != nil {
+			c.Error(err)
+			return
 		}
 
 		id, err := jobRepo.Save(ctx, job)

@@ -2,7 +2,7 @@ import yaml from 'yaml';
 import { BaseGraph } from './base-graph';
 import { G6Graph } from './graph/g6';
 import { X6Graph } from './graph/x6';
-import { INodeDefVo } from '@/api/dto/project';
+import { INodeDefVo } from '@/api/dto/testflow';
 import { GraphDirectionEnum } from './data/enumeration';
 
 export class WorkflowGraph {

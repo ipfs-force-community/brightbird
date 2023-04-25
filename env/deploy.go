@@ -2,6 +2,7 @@ package env
 
 import (
 	"context"
+
 	"github.com/hunjixin/brightbird/types"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -18,6 +19,7 @@ type IVenusMinerDeployer IDeployer
 type IVenusWalletDeployer IDeployer
 type IVenusSectorManagerDeployer IDeployer
 type IVenusWorkerDeployer IDeployer
+type ITestDeployer IDeployer
 
 type IDeployer interface {
 	Name() string

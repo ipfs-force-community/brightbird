@@ -5,19 +5,36 @@ export interface IJobIdVo
     id: string;
   }> {}
 
+export interface IPRMergedEventMatch
+extends Readonly<{
+  repo: string;
+  basePattern: string;
+  sourcePattern: string;
+}> {}
+
+export interface ITagCreateEventMatch
+extends Readonly<{
+  repo: string;
+  tagPattern: string;
+}> {}
+  
 export interface IJobVo extends Readonly<{
     id: string;
     testFlowId: string;
     name: string;
     jobType: JobEnum;
     description: string;
-    cronExpression: string;
     versions: Map<string, string>;
+
+    cronExpression: string;
+    prMergedEventMatchs: IPRMergedEventMatch[];
+    tagCreateEventMatchs: ITagCreateEventMatch[];
+
     createTime:string;
     modifiedTime:string;
   }> {
   }
-
+  
   export interface IJobDetailVo extends Readonly<{
     id: string;
     testFlowId: string;
@@ -26,8 +43,12 @@ export interface IJobVo extends Readonly<{
     groupName:string;
     jobType: JobEnum;
     description: string;
-    cronExpression: string;
     versions: Map<string, string>;
+
+    cronExpression: string;
+    prMergedEventMatchs: IPRMergedEventMatch[];
+    tagCreateEventMatchs: ITagCreateEventMatch[];
+
     createTime:string;
     modifiedTime:string;
   }> {
@@ -40,7 +61,10 @@ export interface IJobCreateVo extends Readonly<{
     jobType: JobEnum;
     description: string;
     versions: any;
+
     cronExpression: string;
+    prMergedEventMatchs: IPRMergedEventMatch[];
+    tagCreateEventMatchs: ITagCreateEventMatch[];
     }> {
 }
 
@@ -49,6 +73,9 @@ export interface IJobUpdateVo extends Readonly<{
     testFlowId: string;
     description: string;
     versions:  any;
+   
     cronExpression: string;
+    prMergedEventMatchs: IPRMergedEventMatch[];
+    tagCreateEventMatchs: ITagCreateEventMatch[];
     }> {
 }

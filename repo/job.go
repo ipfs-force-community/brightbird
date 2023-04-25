@@ -45,12 +45,12 @@ func (j *JobRepo) List(ctx context.Context) ([]*types.Job, error) {
 		return nil, err
 	}
 
-	var tf []*types.Job
-	err = cur.All(ctx, &tf)
+	jobs := []*types.Job{}
+	err = cur.All(ctx, &jobs)
 	if err != nil {
 		return nil, err
 	}
-	return tf, nil
+	return jobs, nil
 }
 
 func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Job, error) {

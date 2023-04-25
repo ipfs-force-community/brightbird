@@ -3,11 +3,11 @@ import {
   IProjectGroupCreatingDto,
   IProjectGroupEditingDto,
   IProjectGroupSortUpdatingDto,
-} from '@/api/dto/project-group';
+} from '@/api/dto/testflow-group';
 
 import {
   IChangeTestflowGroupDto
-} from '@/api/dto/project'
+} from '@/api/dto/testflow'
 
 const baseUrl = '/group';
 /**

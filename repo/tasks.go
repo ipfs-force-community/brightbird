@@ -20,7 +20,7 @@ type ListTaskParams struct {
 
 type ITaskRepo interface {
 	List(context.Context, types.PageReq[ListTaskParams]) (*types.PageResp[*types.Task], error)
-	UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
+	UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state types.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
 	Get(context.Context, primitive.ObjectID) (*types.Task, error)
@@ -76,8 +76,8 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 		return nil, err
 	}
 
-	var tf []*types.Task
-	err = cur.All(ctx, &tf)
+	tasks := []*types.Task{} //ensure lisit have value convient for front pages
+	err = cur.All(ctx, &tasks)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 		Total:   count,
 		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
 		PageNum: params.PageNum,
-		List:    tf,
+		List:    tasks,
 	}, nil
 }
 
@@ -176,10 +176,10 @@ func (j *TaskRepo) DeleteByJobId(ctx context.Context, jobId primitive.ObjectID) 
 	return nil
 }
 
-func (j *TaskRepo) UpdateVersion(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error {
+func (j *TaskRepo) UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error {
 	update := bson.M{
 		"$set": bson.M{
-			"versions": versionMap,
+			"commitmap": versionMap,
 		},
 	}
 	_, err := j.taskCol.UpdateByID(ctx, id, update)

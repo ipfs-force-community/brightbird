@@ -331,7 +331,12 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 	}
 
 	if len(commit) == 0 {
-		err = workTree.Checkout(&git.CheckoutOptions{Force: true}) //git checkout master
+		cfg, err := repo.Config()
+		if err != nil {
+			return "", err
+		}
+		masterBranch := cfg.Init.DefaultBranch
+		err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
 		if err != nil {
 			return "", err
 		}

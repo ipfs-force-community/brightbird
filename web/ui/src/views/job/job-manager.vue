@@ -103,7 +103,6 @@ import {
   useRoute,
 useRouter,
 } from 'vue-router';
-import router from '@/router';
 
 
 export default defineComponent({

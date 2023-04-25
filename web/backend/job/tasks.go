@@ -105,7 +105,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				//success state update by runner self
 			}
 
-			// startt init task
+			// start init task
 			initTasks, err := taskMgr.taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
 				PageNum:  1,
 				PageSize: math.MaxInt64,
@@ -180,13 +180,13 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) (*corev1.
 
 	//confirm version and build image.
 	taskLog.Infof("start to build image for testflow %s job %s", testFlow.Name, job.Name)
-	versionMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, job.Versions) //todo maybe move this code to previous step
+	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, task.InheritVersions) //todo maybe move this code to previous step
 	if err != nil {
 		return nil, err
 	}
 
 	//save testflow as task params
-	err = taskMgr.taskRepo.UpdateVersion(ctx, task.ID, versionMap)
+	err = taskMgr.taskRepo.UpdateCommitMap(ctx, task.ID, commitMap)
 	if err != nil {
 		return nil, err
 	}

@@ -46,12 +46,12 @@ func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
 		return nil, err
 	}
 
-	var tf []*types.Group
-	err = cur.All(ctx, &tf)
+	groups := []*types.Group{}
+	err = cur.All(ctx, &groups)
 	if err != nil {
 		return nil, err
 	}
-	return tf, nil
+	return groups, nil
 }
 
 func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*types.Group, error) {

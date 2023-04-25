@@ -219,6 +219,7 @@ export interface INodeVo extends Readonly<{
     version: string;
     category: string;
     description: string;
+    repo: string;
     path: string;
     isAnnotateOut: boolean;
     properties: IPropertyDto[];

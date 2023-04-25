@@ -43,7 +43,7 @@ export async function globalErrorHandler(
       case 403:
       case 404:
       case 503:
-        alert(error.message)
+        proxy.$error(error.message);
         break;
       case 500: {
         // 如果发送请求时的路由地址发生变化不做路由跳转

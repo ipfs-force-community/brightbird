@@ -30,7 +30,7 @@ func NewCronJob(job types.Job, cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo
 }
 
 func (cronJob *CronJob) Id() string {
-	return cronJob.job.ID.String()
+	return cronJob.job.ID.Hex()
 }
 
 func (cronJob *CronJob) RunImmediately(ctx context.Context) (primitive.ObjectID, error) {
