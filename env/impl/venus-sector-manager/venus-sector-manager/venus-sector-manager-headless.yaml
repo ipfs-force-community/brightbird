@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: venus-sector-manager-{{.TestID}}-service
+  name: venus-sector-manager-{{.TestID}}-svc
 spec:
-  type: ClusterIP
+  clusterIP: None
   selector:
     app: venus-sector-manager-{{.TestID}}-pod
   ports:

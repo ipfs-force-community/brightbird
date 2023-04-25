@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: venus-auth-{{.UniqueId}}-service
 spec:
-  type: ClusterIP
+  clusterIP: None
   selector:
     app: venus-auth-{{.UniqueId}}-pod
   ports:

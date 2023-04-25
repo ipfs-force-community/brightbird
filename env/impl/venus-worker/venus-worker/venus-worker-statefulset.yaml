@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-worker-{{.TestID}}
 spec:
   replicas: 1
+  serviceName: venus-worker-{{.TestID}}-svc
   selector:
     matchLabels:
       app: venus-worker-{{.TestID}}-pod
@@ -20,6 +21,8 @@ spec:
             - containerPort: 1789
               protocol: TCP
           volumeMounts:
+            - mountPath: /root
+              name: venus-worker-pvc
             - name: venus-worker.toml
               mountPath: "/root/.venus-worker/venus-worker.toml"
               subPath: "venus-worker.toml"
@@ -35,3 +38,14 @@ spec:
         - name: shared-dir-v
             persistentVolumeClaim:
               claimName: testnet-shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-worker-pvc # name+podname
+        labels:
+          app: venus-worker-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 10Gi

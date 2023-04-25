@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-market-{{.UniqueId}}-deployment
 spec:
   replicas: 1
+  serviceName: venus-market-{{.UniqueId}}-svc
   selector:
     matchLabels:
       app: venus-market-{{.UniqueId}}-pod
@@ -29,6 +30,8 @@ spec:
             - containerPort: 58418
               protocol: TCP
           volumeMounts:
+            - mountPath: /root
+              name: venus-market-pvc
             - name: marketcfg
               mountPath: "/root/.venusmarket/config.toml"
               subPath: "config.toml"
@@ -44,3 +47,14 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-market-pvc # name+podname
+        labels:
+          app: venus-market-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Gi

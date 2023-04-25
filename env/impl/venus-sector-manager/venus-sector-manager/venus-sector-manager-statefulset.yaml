@@ -1,9 +1,10 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: venus-sector-manager-{{.TestID}}
 spec:
   replicas: 1
+  serviceName: venus-sector-manager-{{.TestID}}-svc
   selector:
     matchLabels:
       app: venus-sector-manager-{{.TestID}}-pod
@@ -20,6 +21,8 @@ spec:
             - containerPort: 1789
               protocol: TCP
           volumeMounts:
+            - mountPath: /root
+              name: venus-messager-receive-pvc
             - name: sector-manager-cfg
               mountPath: "/root/.venus-sector-manager/sector-manager.cfg"
               subPath: "sector-manager.cfg"
@@ -35,3 +38,14 @@ spec:
         - name: shared-dir-v
             persistentVolumeClaim:
               claimName: testnet-shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-messager-receive-pvc # name+podname
+        labels:
+          app: venus-messager-receive-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 300Mi

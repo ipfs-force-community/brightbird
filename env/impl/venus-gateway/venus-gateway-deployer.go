@@ -52,9 +52,9 @@ type VenusGatewayDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	pods         []corev1.Pod
+	statefulSets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func NewVenusGatewayDeployer(env *env.K8sEnvDeployer, replicas int, authUrl string) *VenusGatewayDeployer {
@@ -87,7 +87,11 @@ func (deployer *VenusGatewayDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusGatewayDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusGatewayDeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulSets
 }
 
 func (deployer *VenusGatewayDeployer) Svc() *corev1.Service {
@@ -108,15 +112,15 @@ func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 		Config:           *deployer.cfg,
 	}
 	//create deployment
-	deployCfg, err := f.Open("venus-gateway/venus-gateway-deployment.yaml")
+	deployCfg, err := f.Open("venus-gateway/venus-gateway-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulSets = append(deployer.statefulSets, statefulSet)
 
 	pods, err := deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-gateway-%s-pod", deployer.env.UniqueId("")))
 	if err != nil {
@@ -125,7 +129,7 @@ func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 	deployer.pods = pods
 
 	//create service
-	svcCfg, err := f.Open("venus-gateway/venus-gateway-service.yaml")
+	svcCfg, err := f.Open("venus-gateway/venus-gateway-headless.yaml")
 	if err != nil {
 		return err
 	}

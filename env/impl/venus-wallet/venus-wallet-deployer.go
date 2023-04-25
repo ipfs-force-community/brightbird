@@ -51,10 +51,10 @@ type VenusWalletDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	configMap  *corev1.ConfigMap
-	pods       []corev1.Pod
-	deployment []*appv1.Deployment
-	svc        *corev1.Service
+	configMap    *corev1.ConfigMap
+	pods         []corev1.Pod
+	statefulsets []*appv1.StatefulSet
+	svc          *corev1.Service
 }
 
 func NewVenusWalletDeployer(env *env.K8sEnvDeployer, gatewayUrl, userToken string, supportAccounts ...string) *VenusWalletDeployer {
@@ -87,7 +87,11 @@ func (deployer *VenusWalletDeployer) Pods() []corev1.Pod {
 }
 
 func (deployer *VenusWalletDeployer) Deployment() []*appv1.Deployment {
-	return deployer.deployment
+	return nil
+}
+
+func (deployer *VenusWalletDeployer) StatefulSets() []*appv1.StatefulSet {
+	return deployer.statefulsets
 }
 
 func (deployer *VenusWalletDeployer) Svc() *corev1.Service {
@@ -118,15 +122,15 @@ func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create deployment
-	deployCfg, err := f.Open("venus-wallet/venus-wallet-deployment.yaml")
+	deployCfg, err := f.Open("venus-wallet/venus-wallet-statefulset.yaml")
 	if err != nil {
 		return err
 	}
-	deployment, err := deployer.env.RunDeployment(ctx, deployCfg, renderParams)
+	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return err
 	}
-	deployer.deployment = append(deployer.deployment, deployment)
+	deployer.statefulsets = append(deployer.statefulsets, statefulSet)
 
 	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
 	if err != nil {
@@ -134,7 +138,7 @@ func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
 	}
 
 	//create service
-	svcCfg, err := f.Open("venus-wallet/venus-wallet-service.yaml")
+	svcCfg, err := f.Open("venus-wallet/venus-wallet-headless.yaml")
 	if err != nil {
 		return err
 	}
