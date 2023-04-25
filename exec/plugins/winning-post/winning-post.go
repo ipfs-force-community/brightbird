@@ -19,10 +19,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "add_miner",
+	Name:        "winning_post",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "user add miner",
+	Description: "check miner winning post if success.",
 }
 
 type TestCaseParams struct {
