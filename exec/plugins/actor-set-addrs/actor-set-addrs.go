@@ -4,14 +4,22 @@ import (
 	"context"
 	"fmt"
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/venus/venus-shared/actors"
+	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
+	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/libp2p/go-libp2p/core/peer"
+	ma "github.com/multiformats/go-multiaddr"
 	"go.uber.org/fx"
 	"math/rand"
+	"strings"
 )
 
 var Info = types.PluginInfo{
@@ -30,6 +38,7 @@ type TestCaseParams struct {
 	VenusWallet                env.IVenusWalletDeployer        `json:"-" svcname:"Wallet"`
 	VenusMiner                 env.IVenusMinerDeployer         `json:"-"`
 	VenusSectorManagerDeployer env.IVenusSectorManagerDeployer `json:"-"`
+	Venus                      env.IVenusDeployer              `json:"-"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -164,9 +173,86 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 		return addrs.String(), nil
 	}
 
-	for _, peer := range addrs.Addrs {
-		fmt.Printf("%s/p2p/%s\n", peer, addrs.ID)
+	MessageParams, err := ConstructParams(addrs)
+	if err != nil {
+		return "", err
 	}
 
+	maddr, err := address.NewFromString(minerAddr)
+	if err != nil {
+		return "", nil
+	}
+
+	minfo, err := GetMinerInfo(ctx, params, maddr)
+	if err != nil {
+		return "", err
+	}
+
+	mid, err := client.MessagerPushMessage(ctx, &vtypes.Message{
+		To:       maddr,
+		From:     minfo.Worker,
+		Value:    vtypes.NewInt(0),
+		GasLimit: 0,
+		Method:   builtin.MethodsMiner.ChangeMultiaddrs,
+		Params:   MessageParams,
+	}, nil)
+	if err != nil {
+		return "", err
+	}
+
+	fmt.Printf("Requested multiaddrs change in message %s\n", mid)
+
 	return "", err
+}
+
+func ConstructParams(address peer.AddrInfo) (param []byte, err error) {
+	addr := ""
+	for _, peer := range address.Addrs {
+		if strings.HasPrefix(peer.String(), "/ip4/192") {
+			addr = peer.String()
+			break
+		}
+	}
+
+	maddr, err := ma.NewMultiaddr(addr)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse %q as a multiaddr: %w", addr, err)
+	}
+	maddrNop2p, strip := ma.SplitFunc(maddr, func(c ma.Component) bool {
+		return c.Protocol().Code == ma.P_P2P
+	})
+	if strip != nil {
+		fmt.Println("Stripping peerid ", strip, " from ", maddr)
+	}
+
+	var addrs []abi.Multiaddrs
+	addrs = append(addrs, maddrNop2p.Bytes())
+
+	params, err := actors.SerializeParams(&vtypes.ChangeMultiaddrsParams{NewMultiaddrs: addrs})
+	if err != nil {
+		return nil, err
+	}
+	return params, nil
+}
+
+func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Address) (vtypes.MinerInfo, error) {
+	endpoint := params.Venus.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.Venus.Pods()[0].GetName(), int(params.Venus.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return vtypes.MinerInfo{}, err
+		}
+	}
+	client, closer, err := v1api.NewFullNodeRPC(ctx, endpoint.ToHttp(), nil)
+	if err != nil {
+		return vtypes.MinerInfo{}, err
+	}
+	defer closer()
+
+	minfo, err := client.StateMinerInfo(ctx, maddr, vtypes.EmptyTSK)
+	if err != nil {
+		return vtypes.MinerInfo{}, err
+	}
+	return minfo, nil
 }
