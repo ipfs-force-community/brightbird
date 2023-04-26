@@ -16,10 +16,8 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/libp2p/go-libp2p/core/peer"
-	ma "github.com/multiformats/go-multiaddr"
 	"go.uber.org/fx"
 	"math/rand"
-	"strings"
 )
 
 var Info = types.PluginInfo{
@@ -173,7 +171,9 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 		return addrs.String(), nil
 	}
 
-	MessageParams, err := ConstructParams(addrs)
+	pid := addrs.ID
+
+	MessageParams, err := ConstructParams(pid)
 	if err != nil {
 		return "", err
 	}
@@ -205,30 +205,9 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 	return "", err
 }
 
-func ConstructParams(address peer.AddrInfo) (param []byte, err error) {
-	addr := ""
-	for _, peer := range address.Addrs {
-		if strings.HasPrefix(peer.String(), "/ip4/192") {
-			addr = peer.String()
-			break
-		}
-	}
+func ConstructParams(pid peer.ID) (param []byte, err error) {
 
-	maddr, err := ma.NewMultiaddr(addr)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse %q as a multiaddr: %w", addr, err)
-	}
-	maddrNop2p, strip := ma.SplitFunc(maddr, func(c ma.Component) bool {
-		return c.Protocol().Code == ma.P_P2P
-	})
-	if strip != nil {
-		fmt.Println("Stripping peerid ", strip, " from ", maddr)
-	}
-
-	var addrs []abi.Multiaddrs
-	addrs = append(addrs, maddrNop2p.Bytes())
-
-	params, err := actors.SerializeParams(&vtypes.ChangeMultiaddrsParams{NewMultiaddrs: addrs})
+	params, err := actors.SerializeParams(&vtypes.ChangePeerIDParams{NewID: abi.PeerID(pid)})
 	if err != nil {
 		return nil, err
 	}
