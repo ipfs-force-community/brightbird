@@ -13,6 +13,16 @@ spec:
       labels:
         app: market-client-{{.UniqueId}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.marketclient/; cp /root/config.tmp /root/.marketclient/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: market-client-pvc
+            - name: market-client-cfg-vol
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
       containers:
         - name: market-client-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/market-client:{{.CodeVersion}}"
@@ -26,7 +36,7 @@ spec:
             - mountPath: /root
               name: market-client-pvc
             - name: market-client-cfg-vol
-              mountPath: "/root/.marketclient/config.toml"
+              mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
         - name: market-client-cfg-vol

@@ -14,6 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
@@ -24,6 +25,7 @@ import (
 	"gopkg.in/yaml.v2"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"
@@ -126,13 +128,6 @@ func (env *K8sEnvDeployer) FormatMysqlConnection(dbName string) string {
 	return fmt.Sprintf(env.mysqlConnTemplate, dbName)
 }
 
-// TestID return a unique test id
-func (env *K8sEnvDeployer) BaseRenderParams() BaseRenderParams {
-	return BaseRenderParams{
-		PrivateRegistry: env.privateRegistry,
-	}
-}
-
 // TestID return a resource id
 func (env *K8sEnvDeployer) ResourceMgr() IResourceMgr {
 	return env.resouceMgr
@@ -146,6 +141,16 @@ func (env *K8sEnvDeployer) TestID() string {
 // PrivateRegistry
 func (env *K8sEnvDeployer) PrivateRegistry() string {
 	return env.privateRegistry
+}
+
+// NameSpace
+func (env *K8sEnvDeployer) NameSpace() string {
+	return env.namespace
+}
+
+// K8sClient
+func (env *K8sEnvDeployer) K8sClient() *kubernetes.Clientset {
+	return env.k8sClient
 }
 
 // UniqueId return a unique id for all deployer
@@ -164,11 +169,21 @@ func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
 	objectMeta.Labels["apptype"] = "venus"
 }
 
+func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []v1.Pod) error {
+	for _, pod := range pods {
+		err := env.k8sClient.CoreV1().Pods(env.namespace).Delete(ctx, pod.GetName(), metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // RunDeployment deploy k8s's deployment from specific yaml config
 func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args any) (*appv1.Deployment, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render deployment fail 5w", err)
 	}
 
 	deployment := &appv1.Deployment{}
@@ -181,18 +196,33 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 	env.setCommonLabels(&deployment.Spec.Template.ObjectMeta)
 	cfgData, err := yaml.Marshal(deployment)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("market yaml to deployment %w", err)
 	}
 	log.Debug("deployment(%s) yaml config", deployment.GetName(), string(cfgData))
 
 	name := deployment.Name
 	deploymentClient := env.k8sClient.AppsV1().Deployments(env.namespace)
-	log.Infof("Creating deployment %s ...", name)
-	_, err = deploymentClient.Create(ctx, deployment, metav1.CreateOptions{})
+
+	_, err = deploymentClient.Get(ctx, deployment.GetName(), metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		if errors2.IsNotFound(err) {
+			log.Infof("Creating deployment %s ...", name)
+			_, err = deploymentClient.Create(ctx, deployment, metav1.CreateOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("create deployment fail %w", err)
+			}
+			log.Infof("Created deployment %s.", name)
+		} else {
+			return nil, err
+		}
+	} else {
+		log.Infof("Deployment already exit try to update %s ", deployment.GetName())
+		_, err = deploymentClient.Update(ctx, deployment, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("update deployment fail %w", err)
+		}
+		log.Infof("Updated deployment %s.", name)
 	}
-	log.Infof("Created deployment %s.", name)
 
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
@@ -207,7 +237,7 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 				if errors2.IsNotFound(err) {
 					continue
 				}
-				return nil, err
+				return nil, fmt.Errorf("get deployment fail %w", err)
 			}
 
 			replicas := int32(1)
@@ -221,17 +251,33 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 	}
 }
 
+func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, stateName string) error {
+	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
+	statefulSet, err := statefulSetClient.Get(ctx, stateName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("get statefulset(%s) fail %w", stateName, err)
+	}
+
+	log.Infof("Try to update %s ", stateName)
+	_, err = statefulSetClient.Update(ctx, statefulSet, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("update statefulset(%s) %w", stateName, err)
+	}
+	log.Infof("Updated statefulSet %s.", stateName)
+	return nil
+}
+
 // RunDeployment deploy k8s's deployment from specific yaml config
 func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args any) (*appv1.StatefulSet, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render statefulset fail %w", err)
 	}
 
 	statefulSet := &appv1.StatefulSet{}
 	err = yaml_k8s.Unmarshal(data, statefulSet)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("marshal to statefulset fail %w", err)
 	}
 
 	env.setCommonLabels(&statefulSet.ObjectMeta)
@@ -244,16 +290,31 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("statefulset(%s) yaml config", statefulSet.GetName(), string(cfgData))
+	log.Debugf("statefulset(%s) yaml config %s", statefulSet.GetName(), string(cfgData))
 
 	name := statefulSet.Name
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
-	log.Infof("Creating statefulSet %s ...", name)
-	_, err = statefulSetClient.Create(ctx, statefulSet, metav1.CreateOptions{})
+
+	_, err = statefulSetClient.Get(ctx, statefulSet.GetName(), metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		if errors2.IsNotFound(err) {
+			log.Infof("Creating statefulSet %s ...", name)
+			_, err = statefulSetClient.Create(ctx, statefulSet, metav1.CreateOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("create statefulset(%s) fail %w", name, err)
+			}
+			log.Infof("Created statefulSet %s.", name)
+		} else {
+			return nil, err
+		}
+	} else {
+		log.Infof("Statefulset already exit try to update %s ", statefulSet.GetName())
+		_, err = statefulSetClient.Update(ctx, statefulSet, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("update statefulset(%s) fail %w", name, err)
+		}
+		log.Infof("Updated statefulSet %s.", name)
 	}
-	log.Infof("Created statefulSet %s.\n", name)
 
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
@@ -268,7 +329,7 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 				if errors2.IsNotFound(err) {
 					continue
 				}
-				return nil, err
+				return nil, fmt.Errorf("get statefulset(%s) fail %w", statefulSet.GetName(), err)
 			}
 
 			if dep.Status.ReadyReplicas == *statefulSet.Spec.Replicas {
@@ -280,17 +341,17 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	}
 }
 
-// CreateConfigMap create config map for app
-func (env *K8sEnvDeployer) CreateConfigMap(ctx context.Context, f fs.File, args any) (*corev1.ConfigMap, error) {
+// RunConfigMap create config map for app
+func (env *K8sEnvDeployer) RunConfigMap(ctx context.Context, f fs.File, args any) (*corev1.ConfigMap, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render configmap fail %w", err)
 	}
 
 	configMap := &corev1.ConfigMap{}
 	err = yaml_k8s.Unmarshal(data, configMap)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal to configmap fail %w", err)
 	}
 
 	env.setCommonLabels(&configMap.ObjectMeta)
@@ -298,29 +359,44 @@ func (env *K8sEnvDeployer) CreateConfigMap(ctx context.Context, f fs.File, args 
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("configmap(%s) yaml config", configMap.GetName(), string(cfgData))
+	log.Debugf("configmap(%s) yaml config %s", configMap.GetName(), string(cfgData))
 
 	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
-	log.Infof("Creating configmap %s ...", configMap.GetName())
-	result, err := configMapClient.Create(ctx, configMap, metav1.CreateOptions{})
+	name := configMap.GetName()
+	_, err = configMapClient.Get(ctx, configMap.GetName(), metav1.GetOptions{})
 	if err != nil {
-		return nil, err
+		if errors2.IsNotFound(err) {
+			log.Infof("Creating configmap %s ...", name)
+			_, err := configMapClient.Create(ctx, configMap, metav1.CreateOptions{})
+			if err != nil {
+				return nil, fmt.Errorf("create configmap(%s) fail %w", name, err)
+			}
+			log.Infof("Created configmap %s.", name)
+		} else {
+			return nil, err
+		}
+	} else {
+		log.Infof("ConfigMap already exit try to update %s ", name)
+		_, err = configMapClient.Update(ctx, configMap, metav1.UpdateOptions{})
+		if err != nil {
+			return nil, fmt.Errorf("update configmap(%s) fail %w", name, err)
+		}
 	}
-	log.Infof("Created configmap %s.", result.GetObjectMeta().GetName())
-	return configMap, nil
+
+	return configMapClient.Get(ctx, configMap.GetName(), metav1.GetOptions{})
 }
 
 // RunService deploy k8s's service from specific yaml config
 func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any) (*corev1.Service, error) {
 	data, err := QuickRender(fs, args)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("render service fail %w", err)
 	}
 
 	serviceCfg := &corev1.Service{}
 	err = yaml_k8s.Unmarshal(data, serviceCfg)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unmarshal to service fail %w", err)
 	}
 
 	env.setCommonLabels(&serviceCfg.ObjectMeta)
@@ -328,21 +404,27 @@ func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any)
 	if err != nil {
 		return nil, err
 	}
-	log.Debug("service(%s) yaml config", serviceCfg.GetName(), string(cfgData))
+
+	svcName := serviceCfg.GetName()
+	log.Debugf("service(%s) yaml config %s", svcName, string(cfgData))
 
 	serviceClient := env.k8sClient.CoreV1().Services(env.namespace)
-	log.Infof("Creating service %s ...", serviceCfg.GetName())
-	result, err := serviceClient.Create(ctx, serviceCfg, metav1.CreateOptions{})
+	log.Infof("Creating service %s ...", svcName)
+	_, err = serviceClient.Create(ctx, serviceCfg, metav1.CreateOptions{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create service(%s) fail %w", svcName, env)
 	}
-	log.Infof("Created service %s", result.GetObjectMeta().GetName())
-	return serviceClient.Get(ctx, serviceCfg.GetName(), metav1.GetOptions{})
+	log.Infof("Created service %s", svcName)
+	return serviceClient.Get(ctx, svcName, metav1.GetOptions{})
 }
 
 func (env *K8sEnvDeployer) WaitForServiceReady(ctx context.Context, dep IDeployer) (types.Endpoint, error) {
 	serviceClient := env.k8sClient.CoreV1().Services(env.namespace)
-	name := dep.Svc().GetName()
+	svc, err := dep.Svc(ctx)
+	if err != nil {
+		return "", err
+	}
+	name := svc.GetName()
 
 	ticker := time.NewTicker(time.Second * 5)
 	defer ticker.Stop()
@@ -359,7 +441,7 @@ LOOP:
 				if errors2.IsNotFound(err) {
 					continue
 				}
-				return "", err
+				return "", fmt.Errorf("get service of %s fail %w", name, err)
 			}
 
 			endpoints, err := env.k8sClient.CoreV1().Endpoints(env.namespace).Get(ctx, name, metav1.GetOptions{})
@@ -367,7 +449,7 @@ LOOP:
 				if errors2.IsNotFound(err) {
 					continue
 				}
-				return "", err
+				return "", fmt.Errorf("get endpoint of %s fail %w", name, err)
 			}
 			log.Infof("service %v", service.Spec)
 			if len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0 {
@@ -392,7 +474,6 @@ LOOP:
 		}
 	}
 
-	var err error
 	if !Debug {
 		err = env.WaitEndpointReady(ctx, endpoint)
 		if err != nil {
@@ -400,13 +481,18 @@ LOOP:
 		}
 	}
 
+	port := svc.Spec.Ports[0].Port
 	if Debug {
+		pods, err := dep.Pods(ctx)
+		if err != nil {
+			return "", fmt.Errorf("get pod of %s fail %w", dep.Name(), err)
+		}
 		//forward a pod to local machine
 		for {
 			//todo port forward was quite unstable, try more
-			forwardPort, err := env.PortForwardPod(ctx, dep.Pods()[0].GetName(), int(dep.Svc().Spec.Ports[0].Port))
+			forwardPort, err := env.PortForwardPod(ctx, pods[0].GetName(), int(port))
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("port forward of pod %s fail %w", pods[0].GetName(), err)
 			}
 			err = env.WaitForAPIReady(ctx, forwardPort) // todo move this try logic to WaitForAPIReady
 			if err != nil {
@@ -466,13 +552,49 @@ func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
 	return "", fmt.Errorf("not support service type %s", svc.GetName())
 }
 
-func (env *K8sEnvDeployer) GetPodsByLabel(ctx context.Context, deployAppLabel string) ([]corev1.Pod, error) {
+func (env *K8sEnvDeployer) GetConfigMap(ctx context.Context, cfgMapName, cfgFileName string) ([]byte, error) {
+	cfgMap, err := env.k8sClient.CoreV1().ConfigMaps(env.namespace).Get(ctx, cfgMapName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	data, ok := cfgMap.BinaryData[cfgFileName]
+	if !ok {
+		return nil, fmt.Errorf("config %s not found in configmap %s", cfgFileName, cfgMapName)
+	}
+	return data, nil
+}
+
+func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey string, cfgValue []byte) error {
+	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
+	cfgMap, err := configMapClient.Get(ctx, cfgMapName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+
+	cfgMap.BinaryData[cfgKey] = cfgValue
+
+	_, err = configMapClient.Update(ctx, cfgMap, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+	return err
+}
+
+func (env *K8sEnvDeployer) GetPodsByLabel(ctx context.Context, deployAppLabel ...string) ([]corev1.Pod, error) {
 	podClient := env.k8sClient.CoreV1().Pods(env.namespace)
-	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: "app=" + deployAppLabel})
+	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: "app in (" + strings.Join(deployAppLabel, ",") + ")"})
 	if err != nil {
 		return nil, err
 	}
 	return podList.Items, nil
+}
+
+func (env *K8sEnvDeployer) GetStatefulSet(ctx context.Context, name string) (*appv1.StatefulSet, error) {
+	return env.k8sClient.AppsV1().StatefulSets(env.namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
+func (env *K8sEnvDeployer) GetSvc(ctx context.Context, name string) (*corev1.Service, error) {
+	return env.k8sClient.CoreV1().Services(env.namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 // ReadSmallFilelInPod read small file content from pod, dont not use this function to read big file
@@ -512,7 +634,7 @@ func (env *K8sEnvDeployer) ReadSmallFilelInPod(ctx context.Context, podName stri
 }
 
 // ExecRemoteCmd execute remote server command in pod
-func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cmd []string) ([]byte, error) {
+func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cmd ...string) ([]byte, error) {
 	req := env.k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
 		Namespace(env.namespace).SubResource("exec")
 	option := &corev1.PodExecOptions{

@@ -3,6 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"os"
+	"strings"
+	"text/tabwriter"
+
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/retrievalmarket"
@@ -15,10 +20,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
-	"math/rand"
-	"os"
-	"strings"
-	"text/tabwriter"
 )
 
 var Info = types.PluginInfo{
@@ -76,8 +77,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
@@ -135,8 +144,16 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 func StorageGetAsk(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
@@ -167,7 +184,17 @@ func StorageGetAsk(ctx context.Context, params TestCaseParams, mAddr address.Add
 }
 
 func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	pods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	svc, err := params.VenusWallet.Svc(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, pods[0].GetName())
 	if err != nil {
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
@@ -175,7 +202,7 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
 		}
@@ -213,7 +240,12 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 	}
 	cmd = append(cmd, "--from="+walletAddr.String())
 
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), cmd)
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
 	if err != nil {
 		return address.Undef, fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
@@ -233,7 +265,13 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 		"info",
 		minerAddr.String(),
 	}
-	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), getMinerCmd)
+
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
 		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}

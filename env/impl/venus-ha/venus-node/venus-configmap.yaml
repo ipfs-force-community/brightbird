@@ -1,0 +1,96 @@
+apiVersion: v1
+data:
+  config.json: |
+      {
+      "api": {
+              "venusAuthURL": "{{.AuthUrl}}",
+              "venusAuthToken": "{{.AdminToken}}",
+              "apiAddress": "/ip4/0.0.0.0/tcp/3453",
+              "accessControlAllowOrigin": [
+                      "http://localhost:8080",
+                      "https://localhost:8080",
+                      "http://127.0.0.1:8080",
+                      "https://127.0.0.1:8080"
+              ],
+              "accessControlAllowCredentials": false,
+              "accessControlAllowMethods": [
+                      "GET",
+                      "POST",
+                      "PUT"
+              ]
+      },
+      "bootstrap": {
+              "addresses": [{{if gt (len .BootstrapPeers) 0}}"{{join .BootstrapPeers "\",\""}}"{{end}}],
+              "minPeerThreshold": 0,
+              "period": "30s"
+      },
+      "datastore": {
+              "type": "badgerds",
+              "path": "badger"
+      },
+      "mpool": {
+              "maxNonceGap": 100,
+              "maxFee": "10 FIL"
+      },
+      "parameters": {
+              "networkType": 7,
+              "allowableClockDriftSecs": 1
+      },
+      "observability": {
+              "metrics": {
+                      "prometheusEnabled": false,
+                      "reportInterval": "5s",
+                      "prometheusEndpoint": "/ip4/0.0.0.0/tcp/9400"
+              },
+              "tracing": {
+                      "jaegerTracingEnabled": false,
+                      "probabilitySampler": 1,
+                      "jaegerEndpoint": "localhost:6831",
+                      "servername": "venus-node"
+              }
+      },
+      "swarm": {
+              "address": "/ip4/0.0.0.0/tcp/0"
+      },
+      "walletModule": {
+              "defaultAddress": "\u003cempty\u003e",
+              "passphraseConfig": {
+                      "scryptN": 2097152,
+                      "scryptP": 1
+              },
+              "remoteEnable": false,
+              "remoteBackend": ""
+      },
+      "slashFilter": {
+              "type": "local",
+              "mysql": {
+                      "connectionString": "",
+                      "maxOpenConn": 0,
+                      "maxIdleConn": 0,
+                      "connMaxLifeTime": 0,
+                      "debug": false
+              }
+      },
+      "rateLimit": {
+              "RedisEndpoint": "",
+              "user": "",
+              "pwd": "",
+              "enable": false
+      },
+      "fevm": {
+              "enableEthRPC": false,
+              "ethTxHashMappingLifetimeDays": 0,
+              "event": {
+                      "enableRealTimeFilterAPI": false,
+                      "enableHistoricFilterAPI": false,
+                      "filterTTL": "24h0m0s",
+                      "maxFilters": 100,
+                      "maxFilterResults": 10000,
+                      "maxFilterHeightRange": 2880,
+                      "databasePath": ""
+              }
+      }
+      }
+kind: ConfigMap
+metadata:
+  name: venus-ha-cfg-{{.UniqueId}}

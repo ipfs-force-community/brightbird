@@ -13,6 +13,16 @@ spec:
       labels:
         app: venus-wallet-{{.UniqueId}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venus_wallet; cp /root/config.tmp /root/.venus_wallet/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: venus-wallet-pvc
+            - name: venus-wallet-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
       containers:
         - name: venus-wallet-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-wallet:{{.CodeVersion}}"
@@ -23,11 +33,11 @@ spec:
           volumeMounts:
             - mountPath: /root
               name: venus-wallet-pvc
-            - name: venus-wallet-vol
-              mountPath: "/root/.venus_wallet/config.toml"
+            - name: venus-wallet-cfg
+              mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
-        - name: venus-wallet-vol
+        - name: venus-wallet-cfg
           configMap:
             name: venus-wallet-cfg-{{.UniqueId}}
             items:

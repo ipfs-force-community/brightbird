@@ -9,12 +9,17 @@ import (
 )
 
 type IVenusDeployer IDeployer
-type IChainCoDeployer IDeployer
+type IChainCoDeployer interface {
+	IDeployer
+}
+
 type IMarketClientDeployer IDeployer
 type IVenusAuthDeployer IDeployer
 type IVenusGatewayDeployer IDeployer
 type IVenusMarketDeployer IDeployer
-type IVenusMessageDeployer IDeployer
+type IVenusMessageDeployer interface {
+	IDeployer
+}
 type IVenusMinerDeployer IDeployer
 type IVenusWalletDeployer IDeployer
 type IVenusSectorManagerDeployer IDeployer
@@ -23,9 +28,23 @@ type ITestDeployer IDeployer
 
 type IDeployer interface {
 	Name() string
-	Pods() []corev1.Pod
-	Deployment() []*appv1.Deployment
-	Svc() *corev1.Service
+	Pods(context.Context) ([]corev1.Pod, error)
+	StatefulSet(context.Context) (*appv1.StatefulSet, error)
+	Svc(context.Context) (*corev1.Service, error)
 	SvcEndpoint() types.Endpoint
-	Deploy(ctx context.Context) (err error)
+	Deploy(context.Context) (err error)
+
+	GetConfig(ctx context.Context) (interface{}, error)
+	Update(ctx context.Context, updateCfg interface{}) error
 }
+
+//// The following types are used for components without configuration files or implemation with other lanaguage
+
+// ChainCoUpdate
+type ChainCoConfig struct {
+	Nodes     []string
+	AuthUrl   string
+	AuthToken string
+}
+
+type VenusWorkerConfig string //just mock here

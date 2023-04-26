@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
@@ -59,8 +60,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func CreateAuthToken(ctx context.Context, params TestCaseParams) (adminToken string, err error) {
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusAuth.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.VenusAuth.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}
@@ -88,7 +97,17 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (adminToken str
 }
 
 func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	pods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	svc, err := params.VenusWallet.Svc(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, pods[0].GetName())
 	if err != nil {
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
@@ -96,7 +115,7 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
 		}
@@ -126,8 +145,16 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string) error {
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusAuth.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusAuth.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

@@ -81,6 +81,18 @@ func (resourceMgr *ResourceMgr) Clean(ctx context.Context) error {
 	}
 	log.Debug("celan configmap success")
 
+	err = resourceMgr.k8sClient.CoreV1().PersistentVolumeClaims(resourceMgr.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + resourceMgr.testId})
+	if err != nil {
+		log.Errorf("clean pvc failed %s", err)
+	}
+	log.Debug("celan pv success")
+
+	err = resourceMgr.k8sClient.CoreV1().PersistentVolumes().DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{LabelSelector: "testid=" + resourceMgr.testId})
+	if err != nil {
+		log.Errorf("clean pv failed %s", err)
+	}
+	log.Debug("celan pv success")
+
 	for _, svc := range services.Items {
 		err := resourceMgr.k8sClient.CoreV1().Services(resourceMgr.namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
 		if err != nil {

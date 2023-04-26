@@ -13,6 +13,18 @@ spec:
       labels:
         app: venus-worker-{{.TestID}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venus-worker; cp /root/config.tmp /root/.venus-worker/venus-worker.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: venus-worker-pvc
+            - name: sector-worker-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "venus-worker.toml"
+            - mountPath: /shared-dir
+              name: shared-dir-v
       containers:
         - name: venus-worker-{{.TestID}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
@@ -23,11 +35,11 @@ spec:
           volumeMounts:
             - mountPath: /root
               name: venus-worker-pvc
-            - name: venus-worker.toml
-              mountPath: "/root/.venus-worker/venus-worker.toml"
+            - name: sector-worker-cfg
+              mountPath: "/root/config.tmp"
               subPath: "venus-worker.toml"
             - mountPath: /shared-dir
-                name: shared-dir-v
+              name: shared-dir-v
       volumes:
         - name: sector-worker-cfg
           configMap:

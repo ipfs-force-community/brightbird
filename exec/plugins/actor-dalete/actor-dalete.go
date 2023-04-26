@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"text/tabwriter"
+
 	"github.com/filecoin-project/go-address"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	mkTypes "github.com/filecoin-project/venus/venus-shared/types/market"
@@ -11,7 +13,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
-	"text/tabwriter"
 )
 
 var Info = types.PluginInfo{
@@ -53,8 +54,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, error) {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return address.Undef, err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return address.Undef, err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, err
 		}
@@ -89,8 +98,16 @@ func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, e
 func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
@@ -114,8 +131,16 @@ func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Addre
 func actorList(ctx context.Context, params TestCaseParams, mAddr address.Address) (string, error) {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}

@@ -1,56 +1,56 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: venus-gateway-{{.UniqueId}}
+  name: venus-messager-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
-  serviceName: venus-gateway-{{.UniqueId}}-svc
+  serviceName: venus-messager-{{.UniqueId}}-svc
   selector:
     matchLabels:
-      app: venus-gateway-{{.UniqueId}}-pod
+      app: venus-messager-{{.UniqueId}}-pod
   template:
     metadata:
       labels:
-        app: venus-gateway-{{.UniqueId}}-pod
+        app: venus-messager-{{.UniqueId}}-pod
     spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.venusgateway; cp /root/config.tmp /root/.venusgateway/config.toml"]
+          command: ['sh', '-c', "mkdir -p /root/.venus-messager; cp /root/config.tmp /root/.venus-messager/config.toml"]
           volumeMounts:
             - mountPath: /root
-              name: venus-gateway-pvc
-            - name: venus-gateway-cfg
+              name: venus-messager-pvc
+            - name: venus-messager-ha-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       containers:
-        - name: venus-gateway-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-gateway:{{.CodeVersion}}"
+        - name: venus-messager-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-messager:{{.CodeVersion}}"
           args: ["run"]
           ports:
-            - containerPort: 45132
+            - containerPort: 39812
               protocol: TCP
           volumeMounts:
             - mountPath: /root
-              name: venus-gateway-pvc
-            - name: venus-gateway-cfg
+              name: venus-messager-pvc
+            - name: venus-messager-ha-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
-        - name: venus-gateway-cfg
+        - name: venus-messager-ha-cfg
           configMap:
-            name: venus-gateway-{{.UniqueId}}
+            name: venus-messager-ha-{{.UniqueId}}
             items:
               - key: config.toml
-                path: config.toml  
+                path: config.toml   
   volumeClaimTemplates:
     - metadata:
-        name: venus-gateway-pvc # name+podname
+        name: venus-messager-pvc # name+podname
         labels:
-          app: venus-gateway-{{.UniqueId}}-pvc
+          app: venus-messager-{{.UniqueId}}-pvc
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: "nfs-client"
         resources:
           requests:
-            storage: 100Mi
+            storage: 1Mi

@@ -13,6 +13,18 @@ spec:
       labels:
         app: venus-sector-manager-{{.TestID}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venus-sector-manager; cp /root/sector-manager.tmp /root/.venus-sector-manager/sector-manager.cfg"]
+          volumeMounts:
+            - mountPath: /root
+              name: venus-messager-receive-pvc
+            - name: sector-manager-cfg
+              mountPath: "/root/sector-manager.tmp"
+              subPath: "sector-manager.cfg"
+            - mountPath: /shared-dir
+              name: shared-dir-v
       containers:
         - name: venus-sector-manager-{{.TestID}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-sector-manager:{{.CodeVersion}}"
@@ -24,10 +36,10 @@ spec:
             - mountPath: /root
               name: venus-messager-receive-pvc
             - name: sector-manager-cfg
-              mountPath: "/root/.venus-sector-manager/sector-manager.cfg"
+              mountPath: "/root/sector-manager.tmp"
               subPath: "sector-manager.cfg"
             - mountPath: /shared-dir
-                name: shared-dir-v
+              name: shared-dir-v
       volumes:
         - name: sector-manager-cfg
           configMap:

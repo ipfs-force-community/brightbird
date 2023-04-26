@@ -44,13 +44,14 @@ func (cronJob *CronJob) RunImmediately(ctx context.Context) (primitive.ObjectID,
 	}
 
 	id, err := cronJob.taskRepo.Save(ctx, &types.Task{
-		ID:         primitive.NewObjectID(),
-		Name:       cronJob.job.Name + "-" + strconv.Itoa(newJob.ExecCount),
-		JobId:      cronJob.job.ID,
-		TestFlowId: cronJob.job.TestFlowId,
-		State:      types.Init,
-		TestId:     types.TestId(uuid.New().String()[:8]),
-		BaseTime:   types.BaseTime{},
+		ID:              primitive.NewObjectID(),
+		Name:            cronJob.job.Name + "-" + strconv.Itoa(newJob.ExecCount),
+		JobId:           cronJob.job.ID,
+		TestFlowId:      cronJob.job.TestFlowId,
+		State:           types.Init,
+		TestId:          types.TestId(uuid.New().String()[:8]),
+		BaseTime:        types.BaseTime{},
+		InheritVersions: cronJob.job.Versions,
 	})
 	if err != nil {
 		thisLog.Errorf("job %s save task fail %w", cronJob.job.ID, err)

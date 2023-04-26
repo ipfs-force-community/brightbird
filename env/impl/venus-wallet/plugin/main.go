@@ -29,8 +29,16 @@ func Exec(ctx context.Context, depParams DepParams) (env.IVenusWalletDeployer, e
 	if len(depParams.Params.UserName) > 0 {
 		endpoint := depParams.VenusAuth.SvcEndpoint()
 		if env.Debug {
-			var err error
-			endpoint, err = depParams.K8sEnv.PortForwardPod(ctx, depParams.VenusAuth.Pods()[0].GetName(), int(depParams.VenusAuth.Svc().Spec.Ports[0].Port))
+			venusAuthPods, err := depParams.VenusAuth.Pods(ctx)
+			if err != nil {
+				return nil, err
+			}
+
+			svc, err := depParams.VenusAuth.Svc(ctx)
+			if err != nil {
+				return nil, err
+			}
+			endpoint, err = depParams.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 			if err != nil {
 				return nil, err
 			}

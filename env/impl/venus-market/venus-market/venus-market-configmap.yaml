@@ -16,7 +16,7 @@ data:
       ListenAddresses = ["/ip4/0.0.0.0/tcp/58418", "/ip6/::/tcp/0"]
       AnnounceAddresses = []
       NoAnnounceAddresses = []
-      PrivateKey = "08011240f236fea11af6baa73757e9009392d59443ac0d3b3b9fcc6213b4fd0ef46768b7f8367d48599bb0f868af3931898b8b773722626848544223381b859f99db4d86"
+      PrivateKey = ""
 
     [Node]
       Url = "{{.NodeUrl}}"

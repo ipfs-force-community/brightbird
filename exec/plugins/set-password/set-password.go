@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
@@ -28,15 +29,23 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	walletPods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return err
+	}
+
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, walletPods[0].GetName())
 	if err != nil {
 		return err
 	}
 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		svc, err := params.VenusWallet.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, walletPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

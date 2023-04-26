@@ -14,6 +14,18 @@ spec:
         app: venus-market-{{.UniqueId}}-pod
     spec:
       initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venusmarket; cp /root/config.tmp /root/.venusmarket/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: venus-market-pvc
+            - name: marketcfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+      initContainers:
         - name: create-piece-dir
           image: busybox:1.28
           command: [ 'sh', '-c', "mkdir -p /shared-dir/k8stest/piece-{{.UniqueId}}" ]
@@ -33,7 +45,7 @@ spec:
             - mountPath: /root
               name: venus-market-pvc
             - name: marketcfg
-              mountPath: "/root/.venusmarket/config.toml"
+              mountPath: "/root/config.tmp"
               subPath: "config.toml"
             - mountPath: /shared-dir
               name: shared-dir-v

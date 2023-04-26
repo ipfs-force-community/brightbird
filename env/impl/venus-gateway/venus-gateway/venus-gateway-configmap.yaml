@@ -1,0 +1,41 @@
+apiVersion: v1
+data:
+  config.toml: |
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/45132"
+
+    [Auth]
+      Token = "{{.AdminToken}}"
+      URL = "{{.AuthUrl}}"
+
+    [Metrics]
+      Enabled = false
+
+      [Metrics.Exporter]
+        Type = "prometheus"
+
+        [Metrics.Exporter.Graphite]
+          Host = "127.0.0.1"
+          Namespace = "gateway"
+          Port = 4569
+          ReportingPeriod = "10s"
+
+        [Metrics.Exporter.Prometheus]
+          EndPoint = "/ip4/0.0.0.0/tcp/4569"
+          Namespace = "gateway"
+          Path = "/debug/metrics"
+          RegistryType = "define"
+          ReportingPeriod = "10s"
+
+    [RateLimit]
+      Redis = ""
+
+    [Trace]
+      JaegerEndpoint = ""
+      JaegerTracingEnabled = false
+      ProbabilitySampler = 1.0
+      ServerName = "venus-gateway"
+
+kind: ConfigMap
+metadata:
+  name: venus-gateway-{{.UniqueId}}

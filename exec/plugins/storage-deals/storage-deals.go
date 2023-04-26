@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
+
 	"github.com/filecoin-project/go-address"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
@@ -13,7 +15,6 @@ import (
 	"github.com/hunjixin/brightbird/version"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/fx"
-	"math/rand"
 )
 
 var Info = types.PluginInfo{
@@ -64,7 +65,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 }
 
 func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	pods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	svc, err := params.VenusWallet.Svc(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, pods[0].GetName())
 	if err != nil {
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
@@ -72,7 +82,7 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
 		}
@@ -110,7 +120,12 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 	}
 	cmd = append(cmd, "--from="+walletAddr.String())
 
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), cmd)
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
 	if err != nil {
 		return address.Undef, fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
@@ -130,7 +145,13 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 		"info",
 		minerAddr.String(),
 	}
-	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), getMinerCmd)
+
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
 		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
@@ -141,8 +162,17 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.Address) error {
 	endpoint := params.MarketClient.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.MarketClient.Pods()[0].GetName(), int(params.MarketClient.Svc().Spec.Ports[0].Port))
+		pods, err := params.MarketClient.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.MarketClient.Svc(ctx)
+		if err != nil {
+			return err
+		}
+
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
@@ -155,8 +185,17 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 
 	venusEndpoint := params.Venus.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.Venus.Pods()[0].GetName(), int(params.Venus.Svc().Spec.Ports[0].Port))
+		pods, err := params.Venus.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.Venus.Svc(ctx)
+		if err != nil {
+			return err
+		}
+
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

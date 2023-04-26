@@ -31,7 +31,16 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	venusWallethPods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return err
+	}
+
+	svc, err := params.VenusWallet.Svc(ctx)
+	if err != nil {
+		return err
+	}
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, venusWallethPods[0].GetName())
 	if err != nil {
 		return err
 	}
@@ -39,7 +48,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusWallethPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

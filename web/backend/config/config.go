@@ -1,17 +1,19 @@
 package config
 
 type Config struct {
-	PluginStore string
-	MongoUrl    string
-	DbName      string
-	Listen      string
+	PluginStore  string
+	SharedDir    string
+	RunnerConfig string
+
+	MongoUrl string
+	DbName   string
+	Listen   string
 
 	WebhookUrl string
 	Mysql      string
-	SharedDir  string
 
-	BuildSpace     string
-	RunnerConfig   string
+	BuildSpace string
+
 	Proxy          string
 	GitToken       string
 	DockerRegistry []DockerRegistry
