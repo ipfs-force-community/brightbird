@@ -6,15 +6,20 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
+	"github.com/filecoin-project/venus-auth/auth"
+	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/filecoin-project/venus/venus-shared/actors"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
+	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
 	"go.uber.org/fx"
@@ -39,6 +44,7 @@ type TestCaseParams struct {
 	VenusMiner                 env.IVenusMinerDeployer         `json:"-"`
 	VenusSectorManagerDeployer env.IVenusSectorManagerDeployer `json:"-"`
 	Venus                      env.IVenusDeployer              `json:"-"`
+	VenusMessage               env.IVenusMessageDeployer       `json:"-"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
@@ -68,6 +74,75 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 		return err
 	}
 	fmt.Printf("set actor address message id is: %v\n", messageId)
+
+	err = VertifyMessageIfVaild(ctx, params, messageId)
+	if err != nil {
+		fmt.Printf("set actor address failed: %v\n", err)
+		return err
+	}
+
+	return nil
+}
+
+func CreateAuthToken(ctx context.Context, params TestCaseParams) (adminToken string, err error) {
+	endpoint := params.VenusAuth.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return "", err
+		}
+	}
+
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), string(params.AdminToken))
+	if err != nil {
+		return "", err
+	}
+	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
+		Name:    "admin",
+		Comment: utils.StringPtr("comment admin"),
+		State:   0,
+	})
+	if err != nil {
+		return "", err
+	}
+
+	adminToken, err = authAPIClient.GenerateToken(ctx, "admin", "admin", "")
+	if err != nil {
+		return "", err
+	}
+
+	return adminToken, nil
+}
+
+func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId cid.Cid) error {
+
+	authToken, err := CreateAuthToken(ctx, params)
+	if err != nil {
+		fmt.Printf("create auth token failed: %v\n", err)
+		return err
+	}
+
+	endpoint := params.VenusMessage.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMessage.Pods()[0].GetName(), int(params.VenusMessage.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return err
+		}
+	}
+
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	if err != nil {
+		return err
+	}
+	defer closer()
+
+	msg, err := client.GetMessageBySignedCid(ctx, messageId)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Message: %v\n", msg)
 
 	return nil
 }
@@ -153,42 +228,42 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 	return string(minerAddr), nil
 }
 
-func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
+func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
 		if err != nil {
-			return "", err
+			return cid.Undef, err
 		}
 	}
 	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
 	if err != nil {
-		return "", err
+		return cid.Undef, err
 	}
 	defer closer()
 
 	addrs, err := client.NetAddrsListen(ctx)
 	if err != nil && addrs.Addrs != nil {
-		return addrs.String(), nil
+		return cid.Undef, nil
 	}
 
 	MessageParams, err := ConstructParams(addrs)
 	if err != nil {
-		return "", err
+		return cid.Undef, err
 	}
 
 	maddr, err := address.NewFromString(minerAddr)
 	if err != nil {
-		return "", nil
+		return cid.Undef, nil
 	}
 
 	minfo, err := GetMinerInfo(ctx, params, maddr)
 	if err != nil {
-		return "", err
+		return cid.Undef, err
 	}
 
-	mid, err := client.MessagerPushMessage(ctx, &vtypes.Message{
+	messageid, err := client.MessagerPushMessage(ctx, &vtypes.Message{
 		To:       maddr,
 		From:     minfo.Worker,
 		Value:    vtypes.NewInt(0),
@@ -197,12 +272,12 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 		Params:   MessageParams,
 	}, nil)
 	if err != nil {
-		return "", err
+		return cid.Undef, err
 	}
 
-	fmt.Printf("Requested multiaddrs change in message %s\n", mid)
+	fmt.Printf("Requested multiaddrs change in message %s\n", messageid)
 
-	return "", err
+	return messageid, nil
 }
 
 func ConstructParams(address peer.AddrInfo) (param []byte, err error) {
