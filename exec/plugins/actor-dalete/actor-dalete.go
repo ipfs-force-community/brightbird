@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"github.com/filecoin-project/go-address"
@@ -10,6 +11,7 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
+	"text/tabwriter"
 )
 
 var Info = types.PluginInfo{
@@ -40,6 +42,11 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 		return err
 	}
 
+	id, err := actorList(ctx, params, mAddr)
+	if id == "" {
+		fmt.Printf("actor delete err: %v\n", err)
+		return err
+	}
 	return nil
 }
 
@@ -102,4 +109,37 @@ func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Addre
 	fmt.Printf("delete miner %s success\n", mAddr)
 
 	return err
+}
+
+func actorList(ctx context.Context, params TestCaseParams, mAddr address.Address) (string, error) {
+	endpoint := params.VenusMarket.SvcEndpoint()
+	if env.Debug {
+		var err error
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		if err != nil {
+			return "", err
+		}
+	}
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	if err != nil {
+		return "", err
+	}
+	defer closer()
+
+	miners, err := client.ActorList(ctx)
+	if err != nil {
+		return "", nil
+	}
+
+	buf := &bytes.Buffer{}
+	tw := tabwriter.NewWriter(buf, 2, 4, 2, ' ', 0)
+	_, _ = fmt.Fprintln(tw, "miner\taccount")
+	for _, miner := range miners {
+		_, _ = fmt.Fprintf(tw, "%s\t%s\n", miner.Addr.String(), miner.Account)
+		if miner.Addr == mAddr {
+			return miner.Addr.String(), nil
+		}
+	}
+
+	return "", err
 }
