@@ -25,10 +25,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "actor-list",
+	Name:        "storage-deals-set-ask",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "actor list",
+	Description: "storage deals set-ask",
 }
 
 type TestCaseParams struct {
