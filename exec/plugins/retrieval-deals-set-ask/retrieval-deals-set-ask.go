@@ -2,17 +2,15 @@ package main
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-fil-markets/retrievalmarket"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/venus/pkg/constants"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
-	"github.com/filecoin-project/venus/venus-shared/types/market"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
@@ -21,7 +19,6 @@ import (
 	"os"
 	"strings"
 	"text/tabwriter"
-	"time"
 )
 
 var Info = types.PluginInfo{
@@ -67,7 +64,7 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 		return err
 	}
 
-	err = StorageAskGet(ctx, params, minerAddr)
+	err = StorageGetAsk(ctx, params, minerAddr)
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
 		return err
@@ -91,79 +88,51 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 	}
 	defer closer()
 
-	isUpdate := true
-	storageAsk, err := client.MarketGetAsk(ctx, mAddr)
+	ask, err := client.MarketGetRetrievalAsk(ctx, mAddr)
 	if err != nil {
 		if !strings.Contains(err.Error(), "record not found") {
 			return err
 		}
-		storageAsk = &market.SignedStorageAsk{}
-		isUpdate = false
+		ask = &retrievalmarket.Ask{}
 	}
 
-	pri, err := vTypes.ParseFIL("0.000000001")
+	price_str := "0.0000001"
+	price, err := vTypes.ParseFIL(price_str)
 	if err != nil {
 		return err
 	}
+	ask.PricePerByte = vTypes.BigDiv(vTypes.BigInt(price), vTypes.NewInt(1<<30))
 
-	vpri, err := vTypes.ParseFIL("0")
+	unseal_price := "0.0000001"
+	unsealPrice, err := vTypes.ParseFIL(unseal_price)
 	if err != nil {
 		return err
 	}
+	ask.UnsealPrice = abi.TokenAmount(unsealPrice)
 
-	dur, err := time.ParseDuration("720h0m0s")
+	payment_interval := "100MB"
+	paymentInterval, err := units.RAMInBytes(payment_interval)
 	if err != nil {
-		return fmt.Errorf("cannot parse duration: %w", err)
+		return err
 	}
+	ask.PaymentInterval = uint64(paymentInterval)
 
-	qty := dur.Seconds() / float64(constants.MainNetBlockDelaySecs)
-
-	min, err := units.RAMInBytes("1KB")
+	payment_interval_increase := "100"
+	paymentIntervalIncrease, err := units.RAMInBytes(payment_interval_increase)
 	if err != nil {
-		return fmt.Errorf("cannot parse min-piece-size to quantity of bytes: %w", err)
+		return err
 	}
+	ask.PaymentIntervalIncrease = uint64(paymentIntervalIncrease)
 
-	if min < 256 {
-		return errors.New("minimum piece size (w/bit-padding) is 256B")
-	}
-
-	max, err := units.RAMInBytes("32GiB")
+	err = client.MarketSetRetrievalAsk(ctx, mAddr, ask)
 	if err != nil {
-		return fmt.Errorf("cannot parse max-piece-size to quantity of bytes: %w", err)
-	}
-
-	ssize, err := client.ActorSectorSize(ctx, mAddr)
-	if err != nil {
-		return fmt.Errorf("get miner's size %w", err)
-	}
-
-	smax := int64(ssize)
-
-	if max == 0 {
-		max = smax
-	}
-
-	if max > smax {
-		return fmt.Errorf("max piece size (w/bit-padding) %s cannot exceed miner sector size %s", vTypes.SizeStr(vTypes.NewInt(uint64(max))), vTypes.SizeStr(vTypes.NewInt(uint64(smax))))
-	}
-
-	if isUpdate {
-		storageAsk.Ask.Price = vTypes.BigInt(pri)
-		storageAsk.Ask.VerifiedPrice = vTypes.BigInt(vpri)
-		storageAsk.Ask.MinPieceSize = abi.PaddedPieceSize(min)
-		storageAsk.Ask.MaxPieceSize = abi.PaddedPieceSize(max)
-		return client.MarketSetAsk(ctx, mAddr, storageAsk.Ask.Price, storageAsk.Ask.VerifiedPrice, abi.ChainEpoch(qty), storageAsk.Ask.MinPieceSize, storageAsk.Ask.MaxPieceSize)
-	}
-
-	err = client.MarketSetAsk(ctx, mAddr, vTypes.BigInt(pri), vTypes.BigInt(vpri), abi.ChainEpoch(qty), abi.PaddedPieceSize(min), abi.PaddedPieceSize(max))
-	if err != nil {
-		return fmt.Errorf("market set ask err %w", err)
+		return err
 	}
 
 	return err
 }
 
-func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
+func StorageGetAsk(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
 		var err error
