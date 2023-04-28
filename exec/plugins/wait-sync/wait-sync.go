@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
@@ -23,7 +24,12 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
-	for _, pod := range params.Venus.Pods() {
+	pods, err := params.Venus.Pods(ctx)
+	if err != nil {
+		return err
+	}
+
+	for _, pod := range pods {
 		err := env.SyncWait(ctx, params.K8sEnv, pod, string(params.AdminToken))
 		if err != nil {
 			return err

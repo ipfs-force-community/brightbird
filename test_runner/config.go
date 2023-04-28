@@ -1,7 +1,9 @@
 package main
 
 type Config struct {
-	PluginStore    string
+	PluginStore string
+	SharedDir   string
+
 	BootstrapPeers []string
 	Timeout        int
 	Listen         string
@@ -9,8 +11,8 @@ type Config struct {
 	MongoUrl string
 	DbName   string
 
-	Mysql           string
-	SharedDir       string
+	Mysql string
+
 	TaskId          string
 	PrivateRegistry string
 }

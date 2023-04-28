@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/hunjixin/brightbird/env"
 	market_client "github.com/hunjixin/brightbird/env/impl/market-client"
 	"github.com/hunjixin/brightbird/types"
@@ -21,7 +22,11 @@ type DepParams struct {
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IMarketClientDeployer, error) {
-	walletToken, err := env.ReadWalletToken(ctx, depParams.K8sEnv, depParams.WalletDeploy.Pods()[0].GetName())
+	pods, err := depParams.WalletDeploy.Pods(ctx)
+	if err != nil {
+		return nil, err
+	}
+	walletToken, err := env.ReadWalletToken(ctx, depParams.K8sEnv, pods[0].GetName())
 	if err != nil {
 		return nil, err
 	}

@@ -21,10 +21,18 @@ type DepParams struct {
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IChainCoDeployer, error) {
-	podDNS := env.GetPodDNS(depParams.VenusDep.Svc(), depParams.VenusDep.Pods()...)
+	pods, err := depParams.VenusDep.Pods(ctx)
+	if err != nil {
+		return nil, err
+	}
+	svc, err := depParams.VenusDep.Svc(ctx)
+	if err != nil {
+		return nil, err
+	}
+	podDNS := env.GetPodDNS(svc, pods...)
 	podEndpoints := make([]string, len(podDNS))
 	for index, dns := range podDNS {
-		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", depParams.AdminToken, dns, depParams.VenusDep.Svc().Spec.Ports[0].Port)
+		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", depParams.AdminToken, dns, svc.Spec.Ports[0].Port)
 	}
 
 	deployer, err := chain_co.DeployerFromConfig(depParams.K8sEnv, chain_co.Config{

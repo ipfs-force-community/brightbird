@@ -28,10 +28,20 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
+	venusAuthPods, err := params.VenusAuth.Pods(ctx)
+	if err != nil {
+		return err
+	}
+
+	svc, err := params.VenusAuth.Svc(ctx)
+	if err != nil {
+		return err
+	}
+
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

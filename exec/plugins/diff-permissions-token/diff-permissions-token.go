@@ -41,8 +41,16 @@ type TestCaseParams struct {
 func Exec(ctx context.Context, params TestCaseParams) error {
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		venusAuthPods, err := params.VenusAuth.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusAuth.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
@@ -80,8 +88,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func checkPermission(ctx context.Context, token string, params TestCaseParams) (string, error) {
 	endpoint := params.Venus.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.Venus.Pods()[0].GetName(), int(params.Venus.Svc().Spec.Ports[0].Port))
+		venusPods, err := params.Venus.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.Venus.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}
@@ -134,8 +150,16 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 }
 
 func createWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
+	venusWalletPods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
 
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	svc, err := params.Venus.Svc(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, venusWalletPods[0].GetName())
 	if err != nil {
 		return address.Undef, err
 	}
@@ -143,7 +167,7 @@ func createWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusWalletPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, err
 		}

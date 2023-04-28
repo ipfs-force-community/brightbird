@@ -14,10 +14,22 @@ spec:
       labels:
         app: venus-{{.UniqueId}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venus; cp /root/config.tmp /root/.venus/config.json"]
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+            - mountPath: /root
+              name: venus-pvc
+            - name: venuscfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.json"
       containers:
         - name: venus-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
-          args: ["daemon","--cmdapiaddr=/ip4/0.0.0.0/tcp/3453", "--genesisfile=/shared-dir/k8stest/devgen.car", "--import-snapshot=/shared-dir/k8stest/dev-snapshot.car", "--network={{.NetType}}"{{if gt (len .BootstrapPeers) 0}}{{range $i, $a := .BootstrapPeers}},--bootstrap-peers={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}{{if gt (len .AdminToken) 0}}, --auth-token={{.AdminToken}}{{end}}]
+          args: [{{range $i, $a := .Args}} {{$a}} {{end}}]
           ports:
             - containerPort: 3453
               protocol: TCP
@@ -31,7 +43,16 @@ spec:
               name: shared-dir-v
             - mountPath: /root
               name: venus-pvc
+            - name: venuscfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.json"
       volumes:
+        - name: venuscfg
+          configMap:
+            name: venus-cfg-{{.UniqueId}}
+            items:
+              - key: config.json
+                path: config.json
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: testnet-shared-dir

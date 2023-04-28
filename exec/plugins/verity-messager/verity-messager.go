@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
@@ -48,8 +49,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func CreateAuthToken(ctx context.Context, params TestCaseParams) (adminToken string, err error) {
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusAuth.Pods()[0].GetName(), int(params.VenusAuth.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusAuth.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.VenusAuth.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}
@@ -79,8 +88,16 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (adminToken str
 func CreateMessage(ctx context.Context, params TestCaseParams, authToken string) error {
 	endpoint := params.VenusMessage.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMessage.Pods()[0].GetName(), int(params.VenusMessage.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusAuth.Pods(ctx)
+		if err != nil {
+			return err
+		}
+
+		svc, err := params.VenusAuth.Svc(ctx)
+		if err != nil {
+			return err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}

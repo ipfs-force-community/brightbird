@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
@@ -39,8 +40,16 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMarket.Pods()[0].GetName(), int(params.VenusMarket.Svc().Spec.Ports[0].Port))
+		pods, err := params.VenusMarket.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.VenusMarket.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}

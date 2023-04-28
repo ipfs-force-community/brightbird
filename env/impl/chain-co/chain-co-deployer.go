@@ -24,8 +24,10 @@ type Config struct {
 }
 
 type RenderParams struct {
-	env.BaseRenderParams
 	Config
+
+	PrivateRegistry string
+	Args            []string
 
 	UniqueId string
 }
@@ -51,9 +53,8 @@ type ChainCoDeployer struct {
 
 	svcEndpoint types.Endpoint
 
-	pods         []corev1.Pod
-	statefulSets []*appv1.StatefulSet
-	svc          *corev1.Service
+	statefulSetName string
+	svcName         string
 }
 
 func NewChainCoDeployer(env *env.K8sEnvDeployer, replicas int, authUrl string, ipEndpoints ...string) *ChainCoDeployer {
@@ -67,7 +68,7 @@ func NewChainCoDeployer(env *env.K8sEnvDeployer, replicas int, authUrl string, i
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IChainCoDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
@@ -82,20 +83,16 @@ func (deployer *ChainCoDeployer) Name() string {
 	return PluginInfo.Name
 }
 
-func (deployer *ChainCoDeployer) Pods() []corev1.Pod {
-	return deployer.pods
+func (deployer *ChainCoDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-chain-co-%s-pod", deployer.env.UniqueId("")))
 }
 
-func (deployer *ChainCoDeployer) Deployment() []*appv1.Deployment {
-	return nil
+func (deployer *ChainCoDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
+	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
 }
 
-func (deployer *ChainCoDeployer) StatefulSets() []*appv1.StatefulSet {
-	return deployer.statefulSets
-}
-
-func (deployer *ChainCoDeployer) Svc() *corev1.Service {
-	return deployer.svc
+func (deployer *ChainCoDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
+	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
 func (deployer *ChainCoDeployer) SvcEndpoint() types.Endpoint {
@@ -106,11 +103,8 @@ func (deployer *ChainCoDeployer) SvcEndpoint() types.Endpoint {
 var f embed.FS
 
 func (deployer *ChainCoDeployer) Deploy(ctx context.Context) (err error) {
-	renderParams := RenderParams{
-		BaseRenderParams: deployer.env.BaseRenderParams(),
-		UniqueId:         deployer.env.UniqueId(""),
-		Config:           *deployer.cfg,
-	}
+	renderParams := deployer.buildRenderParams(deployer.cfg.Nodes, "")
+
 	//create deployment
 	deployCfg, err := f.Open("chain-co/chain-co-statefulset.yaml")
 	if err != nil {
@@ -121,26 +115,82 @@ func (deployer *ChainCoDeployer) Deploy(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	deployer.statefulSets = append(deployer.statefulSets, statefulSet)
-
-	deployer.pods, err = deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-chain-co-%s-pod", deployer.env.UniqueId("")))
-	if err != nil {
-		return err
-	}
+	deployer.statefulSetName = statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("chain-co/chain-co-headless.yaml")
 	if err != nil {
 		return err
 	}
-	deployer.svc, err = deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
 		return err
 	}
+	deployer.svcName = svc.GetName()
 
 	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
 	if err != nil {
 		return err
 	}
 	return nil
+}
+
+func (deployer *ChainCoDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+	return &env.ChainCoConfig{
+		Nodes:     deployer.cfg.Nodes,
+		AuthUrl:   deployer.cfg.AuthUrl,
+		AuthToken: deployer.cfg.AdminToken,
+	}, nil
+}
+
+func (deployer *ChainCoDeployer) Update(ctx context.Context, updateCfg interface{}) error {
+	if updateCfg != nil {
+		update := updateCfg.(*env.ChainCoConfig)
+		//update params
+		deployer.cfg.Nodes = update.Nodes
+		deployer.cfg.AuthUrl = update.AuthUrl
+		deployer.cfg.AdminToken = update.AuthToken
+
+		//restart
+		renderParams := deployer.buildRenderParams(update.Nodes, update.AuthUrl)
+		// create deployment
+		deployCfg, err := f.Open("chain-co/chain-co-statefulset.yaml")
+		if err != nil {
+			return err
+		}
+
+		_, err = deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+		return err
+	}
+
+	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (deployer *ChainCoDeployer) buildRenderParams(nodes []string, authUrl string) RenderParams {
+	var args []string
+	for _, node := range deployer.cfg.Nodes {
+		args = append(args, "--node")
+		args = append(args, node)
+	}
+
+	if len(authUrl) > 0 {
+		args = append(args, "--auth")
+		args = append(args, deployer.cfg.AuthUrl)
+	} else {
+		if len(deployer.cfg.AuthUrl) > 0 {
+			args = append(args, "--auth")
+			args = append(args, deployer.cfg.AuthUrl)
+		}
+	}
+
+	return RenderParams{
+		Config:          *deployer.cfg,
+		PrivateRegistry: deployer.env.PrivateRegistry(),
+		Args:            args,
+		UniqueId:        deployer.env.UniqueId(""),
+	}
 }

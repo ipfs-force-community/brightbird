@@ -357,7 +357,7 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 			return "", err
 		}
 
-		log.Debugf("repo %s master branch to latest", builder.repoPath)
+		log.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
 		err = workTree.PullContext(ctx, &git.PullOptions{
 			Progress:        os.Stdout,
 			InsecureSkipTLS: true,

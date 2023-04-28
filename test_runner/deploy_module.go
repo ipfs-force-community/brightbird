@@ -23,15 +23,23 @@ func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) 
 	opts := []fx_opt.Option{
 		fx_opt.Override(new(types.AdminToken), func(ctx context.Context, k8sEnv *env.K8sEnvDeployer, authDeploy env.IVenusAuthDeployer) (types.AdminToken, error) {
 			endpoint := authDeploy.SvcEndpoint()
+			venusAuthPods, err := authDeploy.Pods(ctx)
+			if err != nil {
+				return "", err
+			}
+
+			svc, err := authDeploy.Svc(ctx)
+			if err != nil {
+				return "", err
+			}
 			if env.Debug {
-				var err error
-				endpoint, err = k8sEnv.PortForwardPod(ctx, authDeploy.Pods()[0].GetName(), int(authDeploy.Svc().Spec.Ports[0].Port))
+				endpoint, err = k8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
 				if err != nil {
 					return "", err
 				}
 			}
 
-			localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, authDeploy.Pods()[0].GetName(), "/root/.venus-auth/token")
+			localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, venusAuthPods[0].GetName(), "/root/.venus-auth/token")
 			if err != nil {
 				return "", err
 			}
@@ -182,6 +190,8 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 				vals[0] = reflect.Zero(newOutArgs[0])
 				log.Info("stacktrace from panic:" + string(debug.Stack()))
 				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %s %v", depNode.Name, r))
+			} else {
+				log.Infof("completed deploy %s name: %s", depNode.Name, svcMap[types.OutLabel])
 			}
 		}()
 

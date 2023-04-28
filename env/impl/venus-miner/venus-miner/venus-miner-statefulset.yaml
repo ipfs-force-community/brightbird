@@ -13,6 +13,16 @@ spec:
       labels:
         app: venus-miner-{{.UniqueId}}-pod
     spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venusminer; cp /root/config.tmp /root/.venusminer/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: venus-miner-pvc
+            - name: venus-miner-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
       containers:
         - name: venus-miner-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-miner:{{.CodeVersion}}"
@@ -24,7 +34,7 @@ spec:
             - mountPath: /root
               name: venus-miner-pvc
             - name: venus-miner-cfg
-              mountPath: "/root/.venusminer/config.toml"
+              mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
         - name: venus-miner-cfg

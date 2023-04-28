@@ -164,7 +164,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
 			cmdMonitor := &event.CommandMonitor{
 				Started: func(_ context.Context, evt *event.CommandStartedEvent) {
-					log.Infof(evt.Command.String())
+					log.Debugf(evt.Command.String())
 				},
 			}
 			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl).SetMonitor(cmdMonitor))

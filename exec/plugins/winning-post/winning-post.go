@@ -4,6 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"math/rand"
+	"os"
+	"regexp"
+
 	"github.com/filecoin-project/go-address"
 	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
@@ -13,9 +17,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
-	"math/rand"
-	"os"
-	"regexp"
 )
 
 var Info = types.PluginInfo{
@@ -53,25 +54,35 @@ func Exec(ctx context.Context, params TestCaseParams) error {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return err
 	}
-	fmt.Println("miner info: %v", minerInfo)
+	fmt.Printf("miner info: %v\n", minerInfo)
 
 	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr)
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
-	fmt.Println("miner info: %v", getMiner)
+	fmt.Printf("miner info: %v\n", getMiner)
 
 	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr)
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
-	fmt.Println("winning post message is: %v", WinningPostMsg)
+	fmt.Printf("winning post message is: %v\n", WinningPostMsg)
 
 	return nil
 }
 
 func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, params.VenusWallet.Pods()[0].GetName())
+	pods, err := params.VenusWallet.Pods(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	svc, err := params.VenusWallet.Svc(ctx)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, pods[0].GetName())
 	if err != nil {
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
@@ -79,7 +90,7 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusWallet.Pods()[0].GetName(), int(params.VenusWallet.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
 		}
@@ -117,7 +128,11 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 	}
 	cmd = append(cmd, "--from="+walletAddr.String())
 
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), cmd)
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return "", err
+	}
+	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
 	if err != nil {
 		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
@@ -133,7 +148,12 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 		"info",
 		minerAddr,
 	}
-	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, params.VenusSectorManagerDeployer.Pods()[0].GetName(), getMinerCmd)
+	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
 		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
 	}
@@ -142,11 +162,20 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 }
 
 func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
+	pods, err := params.VenusMiner.Pods(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	svc, err := params.VenusMiner.Svc(ctx)
+	if err != nil {
+		return "", err
+	}
 
 	endpoint := params.VenusMiner.SvcEndpoint()
 	if env.Debug {
 		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMiner.Pods()[0].GetName(), int(params.VenusMiner.Svc().Spec.Ports[0].Port))
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}
@@ -172,8 +201,17 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken string) (string, error) {
 	endpoint := params.VenusMessage.SvcEndpoint()
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, params.VenusMessage.Pods()[0].GetName(), int(params.VenusMessage.Svc().Spec.Ports[0].Port))
+		messagePods, err := params.VenusMessage.Pods(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		svc, err := params.VenusMessage.Svc(ctx)
+		if err != nil {
+			return "", err
+		}
+
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, messagePods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return "", err
 		}

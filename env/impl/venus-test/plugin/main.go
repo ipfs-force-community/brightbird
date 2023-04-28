@@ -38,18 +38,27 @@ type VenusTestDeploy struct {
 func (dep *VenusTestDeploy) Name() string {
 	return "venus-test"
 }
-func (dep *VenusTestDeploy) Pods() []corev1.Pod {
-	return nil
+func (dep *VenusTestDeploy) Pods(ctx context.Context) ([]corev1.Pod, error) {
+	return nil, nil
 }
-func (dep *VenusTestDeploy) Deployment() []*appv1.Deployment {
-	return nil
+
+func (dep *VenusTestDeploy) Svc(_ context.Context) (*corev1.Service, error) {
+	return nil, nil
 }
-func (dep *VenusTestDeploy) Svc() *corev1.Service {
-	return nil
+
+func (dep *VenusTestDeploy) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
+	return nil, nil
 }
 func (dep *VenusTestDeploy) SvcEndpoint() types.Endpoint {
 	return ""
 }
 func (dep *VenusTestDeploy) Deploy(ctx context.Context) (err error) {
+	return nil
+}
+
+func (dep *VenusTestDeploy) GetConfig(ctx context.Context) (interface{}, error) {
+	return nil, nil
+}
+func (dep *VenusTestDeploy) Update(ctx context.Context, updateCfg interface{}) error {
 	return nil
 }

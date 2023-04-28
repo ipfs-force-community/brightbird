@@ -1,5 +1,5 @@
 PluginStore = "./plugins"
-BootstrapPeers = ["/ip4/192.168.200.125/tcp/37963/p2p/12D3KooWHj4eFvS7JWe7A2qKruLM2UHCz4Z1kDABFEjwP26a83oT"]
+BootstrapPeers = ["/ip4/192.168.200.24/tcp/33273/p2p/12D3KooWLGdpt2A2WJvMpBVYn3pazrn7TFp1QRnGrt8KZUmFGYUL"]
 MongoUrl = 'mongodb://192.168.200.103:27017'
 DbName = 'lidb'
 PrivateRegistry = '192.168.200.175'
