@@ -36,6 +36,9 @@ spec:
             - name: venus-wallet--pro-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
+            - mountPath: /root/bls.key
+              name: venus-wallet-pro-key
+              subPath: "fbls.key"
       volumes:
         - name: venus-wallet-pro-cfg
           configMap:
@@ -43,6 +46,9 @@ spec:
             items:
               - key: config.toml
                 path: config.toml
+        - name: venus-wallet-pro-key
+          secret:
+            secretName: venus-wallet-pro-key-{{.UniqueId}}
   volumeClaimTemplates:
     - metadata:
         name: venus-wallet-pro-pvc # name+podname
