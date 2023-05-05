@@ -29,7 +29,8 @@ type RenderParams struct {
 
 	PrivateRegistry string
 	Args            []string
-	UniqueId        string
+
+	UniqueId string
 }
 
 func DefaultConfig() Config {
