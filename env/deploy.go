@@ -22,6 +22,7 @@ type IVenusMessageDeployer interface {
 }
 type IVenusMinerDeployer IDeployer
 type IVenusWalletDeployer IDeployer
+type IVenusWalletProDeployer IDeployer
 type IVenusSectorManagerDeployer IDeployer
 type IVenusWorkerDeployer IDeployer
 type ITestDeployer IDeployer

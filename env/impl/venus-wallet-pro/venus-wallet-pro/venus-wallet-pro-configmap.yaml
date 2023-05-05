@@ -1,0 +1,30 @@
+apiVersion: v1
+data:
+  config.toml: |
+    # Default config:
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/5678/http"
+
+    [DB]
+      Conn = "/root/.venus_wallet/keystore.sqlit"
+      Type = "sqlite"
+      DebugMode = true
+
+    [JWT]
+      Token = "65794a68624763694f694a49557a49314e694973496e523563434936496b705856434a392e65794a42624778766479493657794a795a57466b4969776964334a70644755694c434a7a615764754969776959575274615734695858302e6d52705a43684867643478705f394e763537424675504c704d376e7a5a374f6a435845556d483663675a59"
+      Secret = "ff2e2df1f687e6809e51019e7131c540534bcabc65172faf84cdbeeb6f076440"
+
+    [Factor]
+      ScryptN = 262144
+      ScryptP = 1
+
+    [SignFilter]
+      Expr = ""
+
+    [APIRegisterHub]
+      RegisterAPI = ["{{.GatewayUrl}}"]
+      Token = "{{.UserToken}}"
+kind: ConfigMap
+metadata:
+  name: venus-wallet-cfg-{{.UniqueId}}
+  namespace: default

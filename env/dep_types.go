@@ -10,6 +10,7 @@ const (
 	VenusMessage       DeployType = "venus-message"
 	VenusMiner         DeployType = "venus-miner"
 	VenusWallet        DeployType = "venus-wallet"
+	VenusWalletPro     DeployType = "venus-wallet-pro"
 	VenusSectorManager DeployType = "venus-sector-manager"
 	VenusWorker        DeployType = "venus-worker"
 )
