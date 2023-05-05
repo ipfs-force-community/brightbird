@@ -19,11 +19,9 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	GatewayUrl string `json:"-"`
-	UserToken  string `json:"-"`
+	MysqlDSN string `json:"-"`
 
-	UserName        string `json:"userName"`
-	CreateIfNotExit bool   `json:"createIfNotExit"`
+	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {
@@ -31,12 +29,14 @@ type RenderParams struct {
 
 	PrivateRegistry string
 	Args            []string
-
-	UniqueId string
+	UniqueId        string
 }
 
 func DefaultConfig() Config {
-	return Config{}
+	return Config{
+		Replicas: 1,
+		MysqlDSN: "",
+	}
 }
 
 var PluginInfo = types.PluginInfo{
@@ -44,7 +44,7 @@ var PluginInfo = types.PluginInfo{
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Repo:        "",
-	ImageTarget: "venus-wallet",
+	ImageTarget: "venus-wallet-pro",
 	Description: "",
 }
 
@@ -61,17 +61,19 @@ type VenusWalletProDeployer struct {
 	svcName         string
 }
 
-func NewVenusWalletProDeployer(env *env.K8sEnvDeployer, gatewayUrl, userToken string, supportAccounts ...string) *VenusWalletProDeployer {
+func NewVenusWalletProDeployer(env *env.K8sEnvDeployer, replicas int) *VenusWalletProDeployer {
 	return &VenusWalletProDeployer{
 		env: env,
 		cfg: &Config{
-			GatewayUrl: gatewayUrl,
-			UserToken:  userToken,
+			Replicas: replicas, //default
+			MysqlDSN: env.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId("")),
 		},
 	}
 }
 
 func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusWalletProDeployer, error) {
+	defaultCfg := DefaultConfig()
+	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId(""))
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err
@@ -87,7 +89,7 @@ func (deployer *VenusWalletProDeployer) Name() string {
 }
 
 func (deployer *VenusWalletProDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-pro-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
 }
 
 func (deployer *VenusWalletProDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -110,8 +112,14 @@ func (deployer *VenusWalletProDeployer) Deploy(ctx context.Context) (err error) 
 		UniqueId:        deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
 		Config:          *deployer.cfg,
 	}
+	//create database
+	err = deployer.env.ResourceMgr().EnsureDatabase(deployer.cfg.MysqlDSN)
+	if err != nil {
+		return err
+	}
+
 	//create configmap
-	configMapCfg, err := f.Open("venus-wallet-pro/venus-wallet-configmap.yaml")
+	configMapCfg, err := f.Open("venus-wallet-pro/venus-wallet-pro-configmap.yaml")
 	if err != nil {
 		return err
 	}
@@ -122,7 +130,7 @@ func (deployer *VenusWalletProDeployer) Deploy(ctx context.Context) (err error) 
 	deployer.configMapName = configMap.GetName()
 
 	//create deployment
-	deployCfg, err := f.Open("venus-wallet-pro/venus-wallet-statefulset.yaml")
+	deployCfg, err := f.Open("venus-wallet-pro/venus-wallet-pro-statefulset.yaml")
 	if err != nil {
 		return err
 	}
@@ -133,7 +141,7 @@ func (deployer *VenusWalletProDeployer) Deploy(ctx context.Context) (err error) 
 	deployer.statefulSetName = statefulSet.GetName()
 
 	//create service
-	svcCfg, err := f.Open("venus-wallet-pro/venus-wallet-headless.yaml")
+	svcCfg, err := f.Open("venus-wallet-pro/venus-wallet-pro-headless.yaml")
 	if err != nil {
 		return err
 	}

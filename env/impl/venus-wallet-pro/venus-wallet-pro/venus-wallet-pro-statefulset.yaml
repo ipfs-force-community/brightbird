@@ -1,53 +1,53 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: venus-wallet-{{.UniqueId}}
+  name: venus-wallet-pro-{{.UniqueId}}
 spec:
   replicas: 1
-  serviceName: venus-wallet-{{.UniqueId}}-svc
+  serviceName: venus-wallet-pro-{{.UniqueId}}-svc
   selector:
     matchLabels:
-      app: venus-wallet-{{.UniqueId}}-pod
+      app: venus-wallet-pro-{{.UniqueId}}-pod
   template:
     metadata:
       labels:
-        app: venus-wallet-{{.UniqueId}}-pod
+        app: venus-wallet-pro-{{.UniqueId}}-pod
     spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.venus_wallet; cp /root/config.tmp /root/.venus_wallet/config.toml"]
+          command: ['sh', '-c', "mkdir -p /root/.venus_wallet_pro; cp /root/config.tmp /root/.venus_wallet_pro/config.toml"]
           volumeMounts:
             - mountPath: /root
-              name: venus-wallet-pvc
-            - name: venus-wallet-cfg
+              name: venus-wallet-pro-pvc
+            - name: venus-wallet-pro-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       containers:
-        - name: venus-wallet-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-wallet:{{.CodeVersion}}"
+        - name: venus-wallet-pro-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-wallet-pro:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 5678
               protocol: TCP
           volumeMounts:
             - mountPath: /root
-              name: venus-wallet-pvc
-            - name: venus-wallet-cfg
+              name: venus-wallet-pro-pvc
+            - name: venus-wallet--pro-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
-        - name: venus-wallet-cfg
+        - name: venus-wallet-pro-cfg
           configMap:
-            name: venus-wallet-cfg-{{.UniqueId}}
+            name: venus-wallet-pro-cfg-{{.UniqueId}}
             items:
               - key: config.toml
                 path: config.toml
   volumeClaimTemplates:
     - metadata:
-        name: venus-wallet-pvc # name+podname
+        name: venus-wallet-pro-pvc # name+podname
         labels:
-          app: venus-wallet-{{.UniqueId}}-pvc
+          app: venus-wallet-pro-{{.UniqueId}}-pvc
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: "nfs-client"
