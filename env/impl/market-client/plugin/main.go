@@ -11,17 +11,16 @@ import (
 var Info = market_client.PluginInfo
 
 type DepParams struct {
-	K8sEnv       *env.K8sEnvDeployer
-	VenusDep     env.IVenusDeployer
-	WalletDeploy env.IVenusWalletDeployer `svcname:"Wallet"`
-	AdminToken   types.AdminToken
-
 	Params market_client.Config `optional:"true"`
 
-	types.AnnotateOut
+	VenusDep     env.IDeployer `svcname:"Venus"`
+	WalletDeploy env.IDeployer `svcname:VenusWallet`
+
+	K8sEnv     *env.K8sEnvDeployer
+	AdminToken types.AdminToken
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IMarketClientDeployer, error) {
+func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	pods, err := depParams.WalletDeploy.Pods(ctx)
 	if err != nil {
 		return nil, err

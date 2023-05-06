@@ -49,7 +49,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusWalletDeployer = (*VenusWalletDeployer)(nil)
+var _ env.IDeployer = (*VenusWalletDeployer)(nil)
 
 type VenusWalletDeployer struct {
 	env *env.K8sEnvDeployer
@@ -72,7 +72,7 @@ func NewVenusWalletDeployer(env *env.K8sEnvDeployer, gatewayUrl, userToken strin
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusWalletDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

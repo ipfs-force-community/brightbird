@@ -46,7 +46,7 @@ var PluginInfo = types.PluginInfo{
 	ImageTarget: "chain-co",
 }
 
-var _ env.IChainCoDeployer = (*ChainCoDeployer)(nil)
+var _ env.IDeployer = (*ChainCoDeployer)(nil)
 
 type ChainCoDeployer struct {
 	env *env.K8sEnvDeployer
@@ -69,7 +69,7 @@ func NewChainCoDeployer(env *env.K8sEnvDeployer, replicas int, authUrl string, i
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IChainCoDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

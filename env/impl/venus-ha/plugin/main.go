@@ -11,15 +11,16 @@ import (
 var Info = venus_ha.PluginInfo
 
 type DepParams struct {
-	Params    venus_ha.Config `optional:"true"`
-	K8sEnv    *env.K8sEnvDeployer
-	VenusAuth env.IVenusAuthDeployer
+	Params venus_ha.Config `optional:"true"`
 
+	VenusAuth env.IDeployer `svcname:"VenusAuth"`
+
+	K8sEnv         *env.K8sEnvDeployer
 	AdminToken     types.AdminToken
 	BootstrapPeers types.BootstrapPeers
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IVenusDeployer, error) {
+func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	deployer, err := venus_ha.DeployerFromConfig(depParams.K8sEnv, venus_ha.Config{
 		AuthUrl:        depParams.VenusAuth.SvcEndpoint().ToHttp(),
 		AdminToken:     depParams.AdminToken,

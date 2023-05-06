@@ -26,8 +26,8 @@ type TestCaseParams struct {
 	Params struct {
 		PrivKey string `json:"privKey"`
 	} `optional:"true"`
-	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
-	VenusWallet env.IVenusWalletDeployer `json:"-" svcname:"Wallet"`
+	K8sEnv      *env.K8sEnvDeployer `json:"-"`
+	VenusWallet env.IDeployer       `json:"-" svcname:"VenusAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

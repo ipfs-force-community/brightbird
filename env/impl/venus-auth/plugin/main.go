@@ -4,19 +4,18 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
-	venus_wallet_pro "github.com/hunjixin/brightbird/env/impl/venus-wallet-pro"
+	venus_auth "github.com/hunjixin/brightbird/env/impl/venus-auth"
 )
 
-var Info = venus_wallet_pro.PluginInfo
+var Info = venus_auth.PluginInfo
 
 type DepParams struct {
-	Params venus_wallet_pro.Config `optional:"true"`
+	Params venus_auth.Config `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-
-	deployer, err := venus_wallet_pro.DeployerFromConfig(depParams.K8sEnv, venus_wallet_pro.Config{
+	deployer, err := venus_auth.DeployerFromConfig(depParams.K8sEnv, venus_auth.Config{
 		Replicas: 1,
 	}, depParams.Params)
 	if err != nil {

@@ -28,10 +28,10 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	AdminToken   types.AdminToken
-	K8sEnv       *env.K8sEnvDeployer       `json:"-"`
-	VenusAuth    env.IVenusAuthDeployer    `json:"-"`
-	VenusGateway env.IVenusGatewayDeployer `json:"-"`
-	VenusWallet  env.IVenusWalletDeployer  `json:"-"`
+	K8sEnv       *env.K8sEnvDeployer `json:"-"`
+	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	VenusGateway env.IDeployer       `json:"-" svcname:"VenusGateway"`
+	VenusWallet  env.IDeployer       `json:"-" svcname:"VenusWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

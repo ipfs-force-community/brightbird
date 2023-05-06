@@ -51,7 +51,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusMarketDeployer = (*VenusMarketDeployer)(nil)
+var _ env.IDeployer = (*VenusMarketDeployer)(nil)
 
 type VenusMarketDeployer struct {
 	env *env.K8sEnvDeployer
@@ -77,7 +77,7 @@ func NewVenusMarketDeployer(env *env.K8sEnvDeployer, authUrl, nodeUrl, gatewayUr
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusMarketDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

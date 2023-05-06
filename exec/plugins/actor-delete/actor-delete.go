@@ -24,13 +24,24 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	AdminToken  types.AdminToken
-	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
-	VenusMarket env.IVenusMarketDeployer `json:"-"`
+	K8sEnv      *env.K8sEnvDeployer `json:"-"`
+	VenusMarket env.IDeployer       `json:"-" svcname:"VenusMarket"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) error {
+var _ env.IExec = (*ActorDeleteExec)(nil)
 
+type ActorDeleteExec struct {
+}
+
+func (p *ActorDeleteExec) Name() string {
+	return Info.Name
+}
+
+func (p *ActorDeleteExec) Params(string) (interface{}, error) {
+	return nil, nil
+}
+
+func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	mAddr, err := actorUpsert(ctx, params)
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)

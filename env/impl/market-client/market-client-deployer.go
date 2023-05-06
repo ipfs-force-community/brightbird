@@ -77,7 +77,7 @@ func NewMarketClientDeployer(env *env.K8sEnvDeployer, nodeUrl, nodeToken, wallet
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, depCfg Config, frontCfg Config) (env.IMarketClientDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, depCfg Config, frontCfg Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), depCfg, frontCfg)
 	if err != nil {
 		return nil, err

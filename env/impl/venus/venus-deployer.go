@@ -52,7 +52,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusDeployer = (*VenusDeployer)(nil)
+var _ env.IDeployer = (*VenusDeployer)(nil)
 
 type VenusDeployer struct {
 	env *env.K8sEnvDeployer
@@ -77,7 +77,7 @@ func NewVenusDeployer(env *env.K8sEnvDeployer, authUrl string, adminToken types.
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

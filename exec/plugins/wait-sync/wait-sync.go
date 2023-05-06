@@ -20,7 +20,7 @@ type TestCaseParams struct {
 	fx.In
 	AdminToken types.AdminToken
 	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	Venus      env.IVenusDeployer  `json:"-" svcname:"Wallet"`
+	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

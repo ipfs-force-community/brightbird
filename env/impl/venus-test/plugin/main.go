@@ -28,7 +28,7 @@ type DepParams struct {
 	K8sEnv *env.K8sEnvDeployer
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.ITestDeployer, error) {
+func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	return &VenusTestDeploy{}, nil
 }
 

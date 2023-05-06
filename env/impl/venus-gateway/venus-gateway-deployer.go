@@ -48,7 +48,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusGatewayDeployer = (*VenusGatewayDeployer)(nil)
+var _ env.IDeployer = (*VenusGatewayDeployer)(nil)
 
 type VenusGatewayDeployer struct {
 	env *env.K8sEnvDeployer
@@ -71,7 +71,7 @@ func NewVenusGatewayDeployer(env *env.K8sEnvDeployer, replicas int, authUrl stri
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusGatewayDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

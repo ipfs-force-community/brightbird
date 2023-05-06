@@ -25,8 +25,8 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	AdminToken  types.AdminToken
-	K8sEnv      *env.K8sEnvDeployer      `json:"-"`
-	VenusMarket env.IVenusMarketDeployer `json:"-"`
+	K8sEnv      *env.K8sEnvDeployer `json:"-"`
+	VenusMarket env.IDeployer       `json:"-" svcname:"VenusMarket"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

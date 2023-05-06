@@ -27,9 +27,9 @@ type TestCaseParams struct {
 		//Permission string `json:"permission"`
 	} `optional:"true"`
 	AdminToken types.AdminToken
-	K8sEnv     *env.K8sEnvDeployer    `json:"-"`
-	VenusAuth  env.IVenusAuthDeployer `json:"-"`
-	Venus      env.IVenusDeployer     `json:"-"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	VenusAuth  env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

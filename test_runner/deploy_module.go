@@ -1,69 +1,19 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"reflect"
 	"runtime/debug"
-	"strings"
 
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
-	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/modern-go/reflect2"
 	"go.uber.org/fx"
 )
 
 func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) fx_opt.Option {
-
-	opts := []fx_opt.Option{
-		fx_opt.Override(new(types.AdminToken), func(ctx context.Context, k8sEnv *env.K8sEnvDeployer, authDeploy env.IVenusAuthDeployer) (types.AdminToken, error) {
-			endpoint := authDeploy.SvcEndpoint()
-			venusAuthPods, err := authDeploy.Pods(ctx)
-			if err != nil {
-				return "", err
-			}
-
-			svc, err := authDeploy.Svc(ctx)
-			if err != nil {
-				return "", err
-			}
-			if env.Debug {
-				endpoint, err = k8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-				if err != nil {
-					return "", err
-				}
-			}
-
-			localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, venusAuthPods[0].GetName(), "/root/.venus-auth/token")
-			if err != nil {
-				return "", err
-			}
-
-			authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), string(localToken))
-			if err != nil {
-				return "", err
-			}
-
-			_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-				Name:    "admin",
-				Comment: utils.StringPtr("comment admin"),
-				State:   0,
-			})
-			if err != nil && !strings.Contains(err.Error(), "user already exists") {
-				return "", err
-			}
-			adminToken, err := authAPIClient.GenerateToken(ctx, "admin", "admin", "")
-			if err != nil {
-				return "", err
-			}
-			return types.AdminToken(adminToken), nil
-		}),
-	}
+	opts := []fx_opt.Option{}
 	for _, dep := range deployers {
 		plugin, err := deployPlugin.GetPlugin(dep.Name)
 		if err != nil {
@@ -135,51 +85,52 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 	})
 	return reflect.StructOf(inDepTypeFields)
 }
-func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (interface{}, string, error) {
-	svcMap, err := getSvcMap(append(depNode.SvcProperties, depNode.Out)...)
-	if err != nil {
-		return nil, "", err
-	}
-	newInStruct := convertInjectParams(plugin.Param, svcMap)
-	//make function type
-	isAnnotateOut := types.IsAnnotateOut(reflect.New(plugin.Param).Elem().Interface())
-	fnT := plugin.Fn.Type()
+
+func convertResultType(fnT reflect.Type, svcMap map[string]string) ([]reflect.Type, error) {
 	var newOutArgs []reflect.Type
 	var outTag string
 	{
 		//todo opt for more return values ?
 		numOut := fnT.NumOut()
 		if numOut != 2 {
-			return nil, "", fmt.Errorf("return values must be (val, error) format")
+			return nil, fmt.Errorf("return values must be (val, error) format")
 		}
-		if isAnnotateOut {
-			outTag = svcMap[types.OutLabel]
-			resultFields := []reflect.StructField{
-				{
-					Name:      "OutVal",
-					Type:      fnT.Out(0),
-					Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, outTag)),
-					Offset:    0,
-					Index:     []int{int(0)},
-					Anonymous: false,
-				},
-			}
-			resultFields = append(resultFields, reflect.StructField{
-				Name:      "Out",
-				Type:      reflect.TypeOf(fx.Out{}),
-				Offset:    1,
-				Index:     []int{int(1)},
-				Anonymous: true,
-			})
-			resultStruct := reflect.StructOf(resultFields)
-			newOutArgs = append(newOutArgs, resultStruct)
-			newOutArgs = append(newOutArgs, types.ErrT)
-		} else {
-			for i := 0; i < numOut; i++ {
-				argT := fnT.Out(i)
-				newOutArgs = append(newOutArgs, argT)
-			}
+		outTag = svcMap[types.OutLabel]
+		resultFields := []reflect.StructField{
+			{
+				Name:      "_OutVal", //just placeorder
+				Type:      fnT.Out(0),
+				Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, outTag)),
+				Offset:    0,
+				Index:     []int{int(0)},
+				Anonymous: false,
+			},
 		}
+		resultFields = append(resultFields, reflect.StructField{
+			Name:      "Out",
+			Type:      reflect.TypeOf(fx.Out{}),
+			Offset:    1,
+			Index:     []int{int(1)},
+			Anonymous: true,
+		})
+		resultStruct := reflect.StructOf(resultFields)
+		newOutArgs = append(newOutArgs, resultStruct)
+		newOutArgs = append(newOutArgs, types.ErrT)
+	}
+	return newOutArgs, nil
+}
+
+func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (interface{}, string, error) {
+	svcMap, err := getSvcMap(append(depNode.SvcProperties, depNode.Out)...)
+	if err != nil {
+		return nil, "", err
+	}
+
+	fnT := plugin.Fn.Type()
+	newInStruct := convertInjectParams(plugin.Param, svcMap)
+	newOutArgs, err := convertResultType(fnT, svcMap)
+	if err != nil {
+		return nil, "", err
 	}
 
 	newFn := reflect.FuncOf([]reflect.Type{types.CtxT, newInStruct}, newOutArgs, false)
@@ -224,17 +175,12 @@ func GenInjectFunc(plugin *types.PluginDetail, depNode *types.DeployNode) (inter
 		//call plugin
 		results := plugin.Fn.Call([]reflect.Value{args[0], dstVal})
 		//convert result
-		if isAnnotateOut {
-			//todo check error result
-			if !results[1].IsNil() {
-				return []reflect.Value{reflect.Zero(newOutArgs[0]), results[1]}
-			}
-			destResultVal := reflect.New(newOutArgs[0]).Elem()
-			destResultVal.Field(0).Set(results[0])
-			return []reflect.Value{destResultVal, results[1]}
-		} else {
-			return results
+		if !results[1].IsNil() {
+			return []reflect.Value{reflect.Zero(newOutArgs[0]), results[1]}
 		}
+		destResultVal := reflect.New(newOutArgs[0]).Elem()
+		destResultVal.Field(0).Set(results[0])
+		return []reflect.Value{destResultVal, results[1]}
 	}).Interface(), outTag, nil
 }
 

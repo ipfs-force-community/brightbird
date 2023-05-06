@@ -50,7 +50,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusMinerDeployer = (*VenusMinerDeployer)(nil)
+var _ env.IDeployer = (*VenusMinerDeployer)(nil)
 
 type VenusMinerDeployer struct {
 	env *env.K8sEnvDeployer
@@ -76,7 +76,7 @@ func NewVenusMinerDeployer(env *env.K8sEnvDeployer, nodeUrl, authUrl, authToken 
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusMinerDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

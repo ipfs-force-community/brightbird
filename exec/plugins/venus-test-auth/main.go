@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
@@ -17,7 +18,7 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	VenusWallet env.IVenusAuthDeployer `json:"-"`
+	VenusWallet env.IDeployer `json:"-" svcname:"VenusWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

@@ -15,12 +15,13 @@ type DepParams struct {
 	Params chain_co.Config `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer
 
-	VenusDep        env.IVenusDeployer
-	VenusAuthDeploy env.IVenusAuthDeployer
-	AdminToken      types.AdminToken
+	VenusDep        env.IDeployer `svcname:"Venus"`
+	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth"`
+
+	AdminToken types.AdminToken
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IChainCoDeployer, error) {
+func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	pods, err := depParams.VenusDep.Pods(ctx)
 	if err != nil {
 		return nil, err

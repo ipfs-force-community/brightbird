@@ -49,7 +49,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusWalletProDeployer = (*VenusWalletProDeployer)(nil)
+var _ env.IDeployer = (*VenusWalletProDeployer)(nil)
 
 type VenusWalletProDeployer struct {
 	env *env.K8sEnvDeployer
@@ -72,7 +72,7 @@ func NewVenusWalletProDeployer(env *env.K8sEnvDeployer, replicas int) *VenusWall
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusWalletProDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
 	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId(""))
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)

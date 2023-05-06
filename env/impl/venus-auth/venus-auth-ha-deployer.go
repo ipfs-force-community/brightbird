@@ -49,7 +49,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusAuthDeployer = (*VenusAuthHADeployer)(nil)
+var _ env.IDeployer = (*VenusAuthHADeployer)(nil)
 
 type VenusAuthHADeployer struct {
 	env *env.K8sEnvDeployer
@@ -72,7 +72,7 @@ func NewVenusAuthHADeployer(env *env.K8sEnvDeployer, replicas int) *VenusAuthHAD
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusAuthDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
 	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId(""))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)

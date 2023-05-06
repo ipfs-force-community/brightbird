@@ -54,7 +54,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusMessageDeployer = (*VenusMessagerHADeployer)(nil)
+var _ env.IDeployer = (*VenusMessagerHADeployer)(nil)
 
 type VenusMessagerHADeployer struct {
 	env *env.K8sEnvDeployer
@@ -82,7 +82,7 @@ func NewVenusMessagerHADeployer(env *env.K8sEnvDeployer, replicas int, nodeUrl, 
 	}
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusMessageDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
 	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-messager-ha-" + env.UniqueId(""))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)

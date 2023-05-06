@@ -19,10 +19,10 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv         *env.K8sEnvDeployer       `json:"-"`
-	MarketClient   env.IMarketClientDeployer `json:"-"`
-	VenusWallet    env.IVenusWalletDeployer  `json:"-" svcname:"Wallet"`
-	VenusWalletNew env.IVenusWalletDeployer  `json:"-" svcname:"WalletNew"`
+	K8sEnv         *env.K8sEnvDeployer `json:"-"`
+	MarketClient   env.IDeployer       `json:"-" svcname:"MarketClient"`
+	VenusWallet    env.IDeployer       `json:"-" svcname:"VenusWallet"`
+	VenusWalletNew env.IDeployer       `json:"-" svcname:"VenusWalletNew"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

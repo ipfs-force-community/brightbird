@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
@@ -23,8 +24,8 @@ type TestCaseParams struct {
 	Params struct {
 		AuthorizerURL string `json:"authorizer_url"`
 	} `optional:"true"`
-	K8sEnv         *env.K8sEnvDeployer         `json:"-"`
-	VenusWalletPro env.IVenusWalletProDeployer `json:"-"`
+	K8sEnv         *env.K8sEnvDeployer `json:"-"`
+	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
 }
 
 // Exec

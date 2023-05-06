@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
@@ -27,9 +28,9 @@ type TestCaseParams struct {
 	Params     struct {
 		AuthorizerURL string `json:"authorizer_url"`
 	} `optional:"true"`
-	K8sEnv         *env.K8sEnvDeployer         `json:"-"`
-	VenusWalletPro env.IVenusWalletProDeployer `json:"-"`
-	VenusAuth      env.IVenusAuthDeployer
+	K8sEnv         *env.K8sEnvDeployer `json:"-"`
+	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
+	VenusAuth      env.IDeployer       `json:"-" svcname:"VenusAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {

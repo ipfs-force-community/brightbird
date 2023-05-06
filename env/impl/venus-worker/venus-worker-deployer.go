@@ -43,7 +43,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IVenusWorkerDeployer = (*VenusWorkerDeployer)(nil)
+var _ env.IDeployer = (*VenusWorkerDeployer)(nil)
 
 type VenusWorkerDeployer struct {
 	env *env.K8sEnvDeployer
@@ -56,7 +56,7 @@ type VenusWorkerDeployer struct {
 	svcName         string
 }
 
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IVenusWorkerDeployer, error) {
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
 	if err != nil {
 		return nil, err

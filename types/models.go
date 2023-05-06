@@ -52,7 +52,6 @@ type PluginOut struct {
 	BaseTime      `bson:",inline"`
 	PluginInfo    `bson:",inline"`
 	Properties    []Property `json:"properties"`
-	IsAnnotateOut bool       `json:"isAnnotateOut"`
 	SvcProperties []Property `json:"svcProperties"`
 	Out           *Property  `json:"out"`
 }
@@ -71,9 +70,7 @@ type DeployNode struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name string `json:"name"`
-
-	IsAnnotateOut bool        `json:"isAnnotateOut"`
+	Name          string      `json:"name"`
 	Properties    []*Property `json:"properties"`
 	SvcProperties []*Property `json:"svcProperties"`
 	Out           *Property   `json:"out"`

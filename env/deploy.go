@@ -8,25 +8,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type IVenusDeployer IDeployer
-type IChainCoDeployer interface {
-	IDeployer
-}
-
-type IMarketClientDeployer IDeployer
-type IVenusAuthDeployer IDeployer
-type IVenusGatewayDeployer IDeployer
-type IVenusMarketDeployer IDeployer
-type IVenusMessageDeployer interface {
-	IDeployer
-}
-type IVenusMinerDeployer IDeployer
-type IVenusWalletDeployer IDeployer
-type IVenusWalletProDeployer IDeployer
-type IVenusSectorManagerDeployer IDeployer
-type IVenusWorkerDeployer IDeployer
-type ITestDeployer IDeployer
-
 type IDeployer interface {
 	Name() string
 	Pods(context.Context) ([]corev1.Pod, error)
@@ -37,6 +18,12 @@ type IDeployer interface {
 
 	GetConfig(ctx context.Context) (interface{}, error)
 	Update(ctx context.Context, updateCfg interface{}) error
+	Params(string) (interface{}, error)
+}
+
+type IExec interface {
+	Name() string
+	Params(string) (interface{}, error)
 }
 
 //// The following types are used for components without configuration files or implemation with other lanaguage

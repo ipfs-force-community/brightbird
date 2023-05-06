@@ -19,7 +19,7 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	Tester env.ITestDeployer `json:"-"`
+	Tester env.IDeployer `json:"-" svcname:"Test"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) error {
