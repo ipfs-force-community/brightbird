@@ -665,6 +665,45 @@ func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cm
 	return io.ReadAll(stdOut)
 }
 
+// ExecRemoteCmd execute remote server command in pod
+func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName string, cmd ...string) ([]byte, error) {
+	req := env.k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
+		Namespace(env.namespace).SubResource("exec")
+	option := &corev1.PodExecOptions{
+		Command: cmd,
+		Stdin:   false,
+		Stdout:  true,
+		Stderr:  true,
+		TTY:     true,
+	}
+	req.VersionedParams(
+		option,
+		scheme.ParameterCodec,
+	)
+	exec, err := remotecommand.NewSPDYExecutor(env.k8sCfg, "POST", req.URL())
+	if err != nil {
+		return nil, err
+	}
+
+	username := "ipfsman"
+	password := "1"
+
+	stdOut := bytes.NewBuffer(nil)
+	stdIn := bytes.NewBuffer(nil)
+	stdIn.WriteString(fmt.Sprintf("%s\n%s\n", username, password))
+
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdin:  stdIn,
+		Stdout: stdOut,
+		Stderr: os.Stderr,
+		Tty:    true,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return io.ReadAll(stdOut)
+}
+
 func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
 	for {
 		select {
