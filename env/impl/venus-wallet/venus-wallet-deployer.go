@@ -29,6 +29,7 @@ type Config struct {
 type RenderParams struct {
 	Config
 
+	NameSpace       string
 	PrivateRegistry string
 	Args            []string
 
@@ -107,6 +108,7 @@ var f embed.FS
 
 func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
+		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		UniqueId:        deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
 		Config:          *deployer.cfg,

@@ -33,6 +33,7 @@ type Config struct {
 type RenderParams struct {
 	Config
 
+	NameSpace       string
 	PrivateRegistry string
 	Args            []string
 	UniqueId        string
@@ -147,6 +148,7 @@ var f embed.FS
 
 func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
+		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		UniqueId:        deployer.env.UniqueId(""),
 		Config:          *deployer.cfg,

@@ -37,13 +37,19 @@ func main() {
 		Version: version.Version(),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
-				Name:     "config",
-				Value:    "",
-				Required: true,
+				Name:  "config",
+				Value: "",
+			},
+			&cli.StringSliceFlag{
+				Name: "bootPeer",
 			},
 			&cli.StringFlag{
 				Name:  "plugins",
 				Value: "",
+			},
+			&cli.StringFlag{
+				Name:  "namespace",
+				Value: "default",
 			},
 			&cli.StringFlag{
 				Name:  "mysql",
@@ -51,12 +57,16 @@ func main() {
 				Value: "",
 			},
 			&cli.StringFlag{
-				Name:  "mongo",
+				Name:  "mongoUrl",
 				Value: "mongodb://localhost:27017",
 			},
 			&cli.StringFlag{
 				Name:  "dbName",
 				Value: "testplateform",
+			},
+			&cli.StringFlag{
+				Name:  "tmpPath",
+				Value: "",
 			},
 			&cli.IntFlag{
 				Name:  "timeout",
@@ -68,11 +78,11 @@ func main() {
 				Usage: "test  to running",
 			},
 			&cli.StringFlag{
-				Name:  "priv_reg",
+				Name:  "privReg",
 				Usage: "use private registry",
 			},
 			&cli.StringFlag{
-				Name:  "log-level",
+				Name:  "logLevel",
 				Value: "INFO",
 			},
 			&cli.StringFlag{
@@ -81,20 +91,22 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			err := logging.SetLogLevel("*", c.String("log-level"))
+			err := logging.SetLogLevel("*", c.String("logLevel"))
 			if err != nil {
 				return err
 			}
 
-			configPath := c.String("config")
-			configFileContent, err := os.ReadFile(configPath)
-			if err != nil {
-				return err
-			}
 			cfg := Config{}
-			err = toml.Unmarshal(configFileContent, &cfg)
-			if err != nil {
-				return err
+			if c.IsSet("config") {
+				configPath := c.String("config")
+				configFileContent, err := os.ReadFile(configPath)
+				if err != nil {
+					return err
+				}
+				err = toml.Unmarshal(configFileContent, &cfg)
+				if err != nil {
+					return err
+				}
 			}
 
 			cfg.Listen = c.String("listen")
@@ -107,12 +119,20 @@ func main() {
 				cfg.Timeout = c.Int("timeout")
 			}
 
+			if c.IsSet("namespace") {
+				cfg.NameSpace = c.String("namespace")
+			}
+
 			if c.IsSet("taskId") {
 				cfg.TaskId = c.String("taskId")
 			}
 
 			if c.IsSet("dbName") {
-				cfg.DbName = c.String("dbBane")
+				cfg.DbName = c.String("dbName")
+			}
+
+			if c.IsSet("tmpPath") {
+				cfg.TmpPath = c.String("tmpPath")
 			}
 
 			if c.IsSet("mongoUrl") {
@@ -123,8 +143,12 @@ func main() {
 				cfg.Mysql = c.String("mysql")
 			}
 
-			if c.IsSet("priv_reg") {
-				cfg.PrivateRegistry = c.String("priv_reg")
+			if c.IsSet("privReg") {
+				cfg.PrivateRegistry = c.String("privReg")
+			}
+
+			if c.IsSet("bootPeer") {
+				cfg.BootstrapPeers = c.StringSlice("bootPeer")
 			}
 
 			if len(cfg.TaskId) == 0 {
@@ -227,7 +251,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 		//k8s
 		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {
-			k8sEnv, err := env.NewK8sEnvDeployer("default", string(testId), cfg.PrivateRegistry, cfg.Mysql, cfg.SharedDir)
+			k8sEnv, err := env.NewK8sEnvDeployer(cfg.NameSpace, string(testId), cfg.PrivateRegistry, cfg.Mysql, cfg.TmpPath)
 			if err != nil {
 				return nil, err
 			}

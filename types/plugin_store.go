@@ -9,7 +9,11 @@ import (
 	"reflect"
 	"strings"
 	"sync"
+
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var pluginLog = logging.Logger("plugins")
 
 type Category string
 
@@ -132,6 +136,7 @@ var CtxT = reflect.TypeOf((*context.Context)(nil)).Elem()
 var NilVal = reflect.ValueOf(nil)
 
 func LoadPlugins(dir string) (*PluginStore, error) {
+	pluginLog.Infof("load plugin from %s", dir)
 	dirEntries, err := os.ReadDir(dir)
 	if err != nil {
 		return nil, err

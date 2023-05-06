@@ -16,7 +16,7 @@ data:
     
     [[Common.PieceStores]]
     Name = "local"
-    Path = "/shared-dir/k8stest/piece-{{.TestID}}"
+    Path = "/shared-dir/m-piece/piece-{{.TestID}}"
     #Plugin = ""
     #PluginName = "s3store"
     [Common.PieceStores.Meta]

@@ -26,6 +26,7 @@ type Config struct {
 type RenderParams struct {
 	Config
 
+	NameSpace       string
 	PrivateRegistry string
 	Args            []string
 
@@ -188,6 +189,7 @@ func (deployer *ChainCoDeployer) buildRenderParams(nodes []string, authUrl strin
 	}
 
 	return RenderParams{
+		NameSpace:       deployer.env.NameSpace(),
 		Config:          *deployer.cfg,
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            args,

@@ -25,6 +25,7 @@ spec:
               subPath: "venus-worker.toml"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       containers:
         - name: venus-worker-{{.TestID}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
@@ -40,6 +41,7 @@ spec:
               subPath: "venus-worker.toml"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       volumes:
         - name: sector-worker-cfg
           configMap:
@@ -49,7 +51,7 @@ spec:
                 path: venus-worker.toml
         - name: shared-dir-v
             persistentVolumeClaim:
-              claimName: testnet-shared-dir
+              claimName: shared-dir
   volumeClaimTemplates:
     - metadata:
         name: venus-worker-pvc # name+podname

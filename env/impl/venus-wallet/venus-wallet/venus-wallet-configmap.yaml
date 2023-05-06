@@ -27,4 +27,3 @@ data:
 kind: ConfigMap
 metadata:
   name: venus-wallet-cfg-{{.UniqueId}}
-  namespace: default

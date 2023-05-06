@@ -1,6 +1,7 @@
 apiVersion: v1
 kind: Pod
 metadata:
+  namespace: {{.NameSpace}}
   name: test-runner-{{.TestId}}
   labels:
     app: venus-testrunner-pod
@@ -13,14 +14,15 @@ spec:
     - name: venus-testrunner
       image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:li"
       imagePullPolicy: Always
-      args: ["--log-level=DEBUG","--config=/shared-dir/k8stest/config-template.toml", "--plugins=/shared-dir/k8stest/plugins", "--taskId={{.TaskID}}"]
+      args: [{{.Args}}]
       env:
         - name: PRODUCTION
           value: "true"
       volumeMounts:
         - mountPath: /shared-dir
           name: shared-dir-v
+          subPath: {{.NameSpace}}
   volumes:
     - name: shared-dir-v
       persistentVolumeClaim:
-        claimName: testnet-shared-dir
+        claimName: shared-dir

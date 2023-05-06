@@ -21,6 +21,7 @@ spec:
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
             - mountPath: /root
               name: venus-ha-pvc
             - name: venushacfg
@@ -29,7 +30,7 @@ spec:
       containers:
         - name: venus-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
-          args: [{{range $i, $a := .Args}} {{$a}} {{end}}]
+          args: [{{join .Args ","}}]
           ports:
             - containerPort: 3453
               protocol: TCP
@@ -41,6 +42,7 @@ spec:
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
             - mountPath: /root
               name: venus-ha-pvc
             - name: venushacfg
@@ -55,7 +57,7 @@ spec:
                 path: config.json
         - name: shared-dir-v
           persistentVolumeClaim:
-            claimName: testnet-shared-dir
+            claimName: shared-dir
   volumeClaimTemplates:
     - metadata:
         name: venus-ha-pvc # name+podname

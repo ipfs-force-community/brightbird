@@ -17,7 +17,7 @@ type IResourceMgr interface {
 }
 
 type ResourceMgr struct {
-	basePath string //shared root dir
+	tmpPath  string //shared root dir
 	mysqlUrl string //Mysql connection string
 
 	k8sClient *kubernetes.Clientset
@@ -25,10 +25,10 @@ type ResourceMgr struct {
 	testId    string
 }
 
-func NewResourceMgr(k8sClient *kubernetes.Clientset, namespace, basePath, mysqlUrl, testId string) *ResourceMgr {
+func NewResourceMgr(k8sClient *kubernetes.Clientset, namespace, tmpPath, mysqlUrl, testId string) *ResourceMgr {
 	return &ResourceMgr{
 		k8sClient: k8sClient,
-		basePath:  basePath,
+		tmpPath:   tmpPath,
 		mysqlUrl:  mysqlUrl,
 		namespace: namespace,
 		testId:    testId,

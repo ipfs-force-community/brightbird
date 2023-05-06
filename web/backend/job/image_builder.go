@@ -306,6 +306,43 @@ func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
 		return err
 	}
 
+	//exec git pull on main branch avoid confict on specific branch
+	branches, err := builder.repo.Branches()
+	if err != nil {
+		return err
+	}
+
+	masterBranch := "master"
+	err = branches.ForEach(func(branch *plumbing.Reference) error {
+		switch true {
+		case branch.Name().Short() == "master":
+			masterBranch = "master"
+		case branch.Name().Short() == "trunk":
+			masterBranch = "trunk"
+		default:
+			masterBranch = "main"
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
+	if err != nil {
+		return err
+	}
+
+	log.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
+	err = workTree.PullContext(ctx, &git.PullOptions{
+		Progress:        os.Stdout,
+		InsecureSkipTLS: true,
+		Force:           true,
+	})
+	if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
+		return err
+	}
+
 	builder.repo, _, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
 		return err
@@ -325,48 +362,8 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		return "", err
 	}
 
-	workTree, err := repo.Worktree()
-	if err != nil {
-		return "", err
-	}
-
 	if len(commit) == 0 {
-		branches, err := repo.Branches()
-		if err != nil {
-			return "", err
-		}
-
-		masterBranch := "master"
-		err = branches.ForEach(func(branch *plumbing.Reference) error {
-			switch true {
-			case branch.Name().Short() == "master":
-				masterBranch = "master"
-			case branch.Name().Short() == "trunk":
-				masterBranch = "trunk"
-			default:
-				masterBranch = "main"
-			}
-			return nil
-		})
-		if err != nil {
-			return "", err
-		}
-
-		err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
-		if err != nil {
-			return "", err
-		}
-
-		log.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
-		err = workTree.PullContext(ctx, &git.PullOptions{
-			Progress:        os.Stdout,
-			InsecureSkipTLS: true,
-			Force:           true,
-		})
-		if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
-			return "", err
-		}
-
+		//use head directly
 		masterHead, err := repo.Head()
 		if err != nil {
 			return "", err
@@ -374,19 +371,20 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		return masterHead.Hash().String(), nil
 	}
 
+	//resolve commit
 	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
 	if err == nil {
 		return hash.String(), nil
 	}
 
 	if err == plumbing.ErrReferenceNotFound {
-		//branch or tag
+		//resolve branch or tag
 		remotes, err := repo.Remotes()
 		if err != nil {
 			return "", err
 		}
 
-		//detect remote
+		//detect remote   default Origin
 		remoteName := remotes[0].Config().Name
 		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
 		if err != nil {

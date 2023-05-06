@@ -25,13 +25,15 @@ spec:
               subPath: "config.toml"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       initContainers:
         - name: create-piece-dir
           image: busybox:1.28
-          command: [ 'sh', '-c', "mkdir -p /shared-dir/k8stest/piece-{{.UniqueId}}" ]
+          command: [ 'sh', '-c', "mkdir -p /shared-dir/m-piece/piece-{{.UniqueId}}" ]
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       containers:
         - name: venus-market-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-market:{{.CodeVersion}}"
@@ -49,6 +51,7 @@ spec:
               subPath: "config.toml"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       volumes:
         - name: marketcfg
           configMap:
@@ -58,7 +61,7 @@ spec:
                 path: config.toml
         - name: shared-dir-v
           persistentVolumeClaim:
-            claimName: testnet-shared-dir
+            claimName: shared-dir
   volumeClaimTemplates:
     - metadata:
         name: venus-market-pvc # name+podname
