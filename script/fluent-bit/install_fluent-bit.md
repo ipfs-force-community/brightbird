@@ -1,6 +1,6 @@
 
 ```sh
- helm --namespace platform install -f ./values.yaml fluent-bit fluent/fluent-bit
+ helm install -f ./values.yaml fluent-bit fluent/fluent-bit
 ```
 
 ```forward

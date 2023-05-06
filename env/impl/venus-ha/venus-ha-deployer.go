@@ -29,6 +29,7 @@ type Config struct {
 type RenderParams struct {
 	Config
 
+	NameSpace       string
 	PrivateRegistry string
 	Args            []string
 
@@ -114,6 +115,7 @@ var f embed.FS
 
 func (deployer *VenusHADeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
+		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		UniqueId:        deployer.env.UniqueId(""),
 		Args:            deployer.buildArgs(deployer.cfg.BootstrapPeers),
@@ -208,11 +210,10 @@ func (deployer *VenusHADeployer) Update(ctx context.Context, updateCfg interface
 }
 
 func (deployer *VenusHADeployer) buildArgs(bootstrapPeers []string) []string {
-	//"daemon","--cmdapiaddr=/ip4/0.0.0.0/tcp/3453", "--genesisfile=/shared-dir/k8stest/devgen.car", "--import-snapshot=/shared-dir/k8stest/dev-snapshot.car", "--network={{.NetType}}"{{if gt (len .BootstrapPeers) 0}}{{range $i, $a := .BootstrapPeers}},--bootstrap-peers={{$a}}{{end}}{{end}}{{if gt (len .AuthUrl) 0}}, --auth-url={{.AuthUrl}}{{end}}{{if gt (len .AdminToken) 0}}, --auth-token={{.AdminToken}}{{end}}
 	args := []string{
 		"daemon",
-		"--genesisfile=/shared-dir/k8stest/devgen.car",
-		"--import-snapshot=/shared-dir/k8stest/dev-snapshot.car",
+		"--genesisfile=/shared-dir/devgen.car",
+		"--import-snapshot=/shared-dir/dev-snapshot.car",
 		"--network=" + deployer.cfg.NetType,
 	}
 	return args

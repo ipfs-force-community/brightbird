@@ -25,6 +25,7 @@ spec:
               subPath: "sector-manager.cfg"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       containers:
         - name: venus-sector-manager-{{.TestID}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-sector-manager:{{.CodeVersion}}"
@@ -40,6 +41,7 @@ spec:
               subPath: "sector-manager.cfg"
             - mountPath: /shared-dir
               name: shared-dir-v
+              subPath: {{.NameSpace}}
       volumes:
         - name: sector-manager-cfg
           configMap:
@@ -49,7 +51,7 @@ spec:
                 path: sector-manager.cfg
         - name: shared-dir-v
             persistentVolumeClaim:
-              claimName: testnet-shared-dir
+              claimName: shared-dir
   volumeClaimTemplates:
     - metadata:
         name: venus-messager-receive-pvc # name+podname

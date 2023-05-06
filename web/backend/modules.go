@@ -146,7 +146,7 @@ func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, bus modu
 
 func NewTaskMgr(cfg config.Config) func(*cron.Cron, repo.IJobRepo, repo.ITaskRepo, repo.ITestFlowRepo, *job.TestRunnerDeployer, *job.ImageBuilderMgr, types.PrivateRegistry) *job.TaskMgr {
 	return func(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *job.TestRunnerDeployer, imageBuilder *job.ImageBuilderMgr, privateReg types.PrivateRegistry) *job.TaskMgr {
-		return job.NewTaskMgr(c, jobRepo, taskRepo, testFlowRepo, testRunner, imageBuilder, cfg.RunnerConfig, privateReg)
+		return job.NewTaskMgr(cfg, c, jobRepo, taskRepo, testFlowRepo, testRunner, imageBuilder, cfg.RunnerConfig, privateReg)
 	}
 }
 

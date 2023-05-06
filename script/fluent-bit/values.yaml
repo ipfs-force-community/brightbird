@@ -350,7 +350,7 @@ config:
         Parsers_File parsers.conf
         Parsers_File custom_parsers.conf
         HTTP_Server On
-        Plugins_File /shared-dir/k8stest/log_plugins.conf
+        Plugins_File /shared-dir/log_plugins.conf
         HTTP_Listen 0.0.0.0
         HTTP_Port {{ .Values.metricsPort }}
         Health_Check On
@@ -441,7 +441,7 @@ daemonSetVolumes:
       type: File
   - name: shared-dir-v
     persistentVolumeClaim:
-      claimName: testnet-shared-dir
+      claimName: shared-dir
 
 daemonSetVolumeMounts:
   - name: varlog
@@ -454,6 +454,7 @@ daemonSetVolumeMounts:
     readOnly: true
   - name: shared-dir-v
     mountPath: /shared-dir
+    subPath: default
 
 args: []
 

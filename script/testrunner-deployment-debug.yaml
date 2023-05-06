@@ -15,8 +15,9 @@ spec:
     volumeMounts:
       - mountPath: /shared-dir
         name: shared-dir-v
+        subPath: default
   restartPolicy: Always
   volumes:
   - name: shared-dir-v
     persistentVolumeClaim:
-      claimName: testnet-shared-dir
+      claimName: shared-dir

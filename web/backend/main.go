@@ -181,7 +181,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		}),
 		//k8s env
 		fx_opt.Override(new(*job.TestRunnerDeployer), func(lc fx.Lifecycle) (*job.TestRunnerDeployer, error) {
-			return job.NewTestRunnerDeployer("default", cfg.Mysql, cfg.SharedDir)
+			return job.NewTestRunnerDeployer(cfg.NameSpace, cfg.Mysql, cfg.LogPath)
 		}),
 		//deploy plugin
 		fx_opt.Override(new(repo.IPluginService), NewPlugin),

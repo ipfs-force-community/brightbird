@@ -120,7 +120,7 @@ func WaitForWebHookEvent(ctx context.Context, remoteUrl string) (chan *WebHook, 
 
 				err = listen(c)
 				if err != nil {
-					hookListenLog.Error("liste fail wait to restart %v", err)
+					hookListenLog.Errorf("listen fail wait to restart %v", err)
 				}
 			}
 		}

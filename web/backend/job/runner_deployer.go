@@ -22,12 +22,12 @@ type TestRunnerDeployer struct {
 	k8sClient *kubernetes.Clientset
 	namespace string
 	mysql     string
-	sharedDir string
+	logPath   string
 	k8sCfg    *rest.Config
 }
 
 // NewK8sEnvDeployer create a new test environment
-func NewTestRunnerDeployer(namespace string, mysql, sharedDir string) (*TestRunnerDeployer, error) {
+func NewTestRunnerDeployer(namespace string, mysql, logPath string) (*TestRunnerDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -58,6 +58,7 @@ func NewTestRunnerDeployer(namespace string, mysql, sharedDir string) (*TestRunn
 		k8sCfg:    config,
 		k8sClient: k8sClient,
 		namespace: namespace,
+		logPath:   logPath,
 	}, nil
 }
 
@@ -66,13 +67,12 @@ func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.
 	if err != nil {
 		return nil, err
 	}
-
+	log.Infof("runner config %s", string(data))
 	deployment := &corev1.Pod{}
 	err = yaml_k8s.Unmarshal(data, deployment)
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("runner config %s ...", string(data))
 	name := deployment.Name
 	podClient := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace)
 	log.Infof("Creating runner %s ...", name)
@@ -118,6 +118,6 @@ func (runnerDeployer *TestRunnerDeployer) RemoveFinishRunner(ctx context.Context
 }
 
 func (runnerDeployer *TestRunnerDeployer) CleanTestResource(ctx context.Context, testId string) error {
-	resourceMg := env.NewResourceMgr(runnerDeployer.k8sClient, runnerDeployer.namespace, runnerDeployer.sharedDir, runnerDeployer.mysql, testId)
+	resourceMg := env.NewResourceMgr(runnerDeployer.k8sClient, runnerDeployer.namespace, runnerDeployer.logPath, runnerDeployer.mysql, testId)
 	return resourceMg.Clean(ctx)
 }

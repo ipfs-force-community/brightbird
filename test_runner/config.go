@@ -1,8 +1,9 @@
 package main
 
 type Config struct {
+	NameSpace   string
 	PluginStore string
-	SharedDir   string
+	TmpPath     string
 
 	BootstrapPeers []string
 	Timeout        int

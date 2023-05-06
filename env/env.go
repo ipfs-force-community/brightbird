@@ -75,7 +75,7 @@ type K8sEnvDeployer struct {
 }
 
 // NewK8sEnvDeployer create a new test environment
-func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string, sharedDir string) (*K8sEnvDeployer, error) {
+func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string, tmpPath string) (*K8sEnvDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -119,7 +119,7 @@ func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, 
 		dialCtx:           dialCtx,
 		privateRegistry:   privateRegistry,
 		mysqlConnTemplate: mysqlConnTemplate,
-		resouceMgr:        NewResourceMgr(k8sClient, namespace, sharedDir, mysqlConnTemplate, testID),
+		resouceMgr:        NewResourceMgr(k8sClient, namespace, tmpPath, mysqlConnTemplate, testID),
 	}, nil
 }
 
@@ -165,8 +165,23 @@ func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
 	if objectMeta.Labels == nil {
 		objectMeta.Labels = map[string]string{}
 	}
+	objectMeta.Namespace = env.namespace
 	objectMeta.Labels["testid"] = env.TestID()
 	objectMeta.Labels["apptype"] = "venus"
+}
+
+func (env *K8sEnvDeployer) setPrivateRegistry(statefulSet *corev1.PodTemplateSpec) {
+	for _, c := range statefulSet.Spec.Containers {
+		if len(env.privateRegistry) > 0 {
+			c.Image = fmt.Sprintf("%s/%s", env.privateRegistry, c.Image)
+		}
+	}
+
+	for _, c := range statefulSet.Spec.InitContainers {
+		if len(env.privateRegistry) > 0 {
+			c.Image = fmt.Sprintf("%s/%s", env.privateRegistry, c.Image)
+		}
+	}
 }
 
 func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []v1.Pod) error {
@@ -194,6 +209,7 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 
 	env.setCommonLabels(&deployment.ObjectMeta)
 	env.setCommonLabels(&deployment.Spec.Template.ObjectMeta)
+	env.setPrivateRegistry(&deployment.Spec.Template)
 	cfgData, err := yaml.Marshal(deployment)
 	if err != nil {
 		return nil, fmt.Errorf("market yaml to deployment %w", err)
@@ -282,6 +298,7 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 
 	env.setCommonLabels(&statefulSet.ObjectMeta)
 	env.setCommonLabels(&statefulSet.Spec.Template.ObjectMeta)
+	env.setPrivateRegistry(&statefulSet.Spec.Template)
 	for _, pvc := range statefulSet.Spec.VolumeClaimTemplates {
 		env.setCommonLabels(&pvc.ObjectMeta)
 	}
@@ -412,7 +429,7 @@ func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any)
 	log.Infof("Creating service %s ...", svcName)
 	_, err = serviceClient.Create(ctx, serviceCfg, metav1.CreateOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("create service(%s) fail %w", svcName, env)
+		return nil, fmt.Errorf("create service(%s) fail %w", svcName, err)
 	}
 	log.Infof("Created service %s", svcName)
 	return serviceClient.Get(ctx, svcName, metav1.GetOptions{})

@@ -24,6 +24,7 @@ type Config struct {
 type RenderParams struct {
 	Config
 
+	NameSpace       string
 	PrivateRegistry string
 	Args            []string
 
@@ -90,6 +91,7 @@ var f embed.FS
 
 func (deployer *VenusWorkerDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
+		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		TestID:          deployer.env.TestID(),
 		Config:          *deployer.cfg,

@@ -11,6 +11,7 @@ import (
 
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -29,10 +30,12 @@ type TaskMgr struct {
 
 	privateRegistry types.PrivateRegistry
 	runnerConfig    string
+	cfg             config.Config
 }
 
-func NewTaskMgr(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder *ImageBuilderMgr, runnerConfig string, privateReg types.PrivateRegistry) *TaskMgr {
+func NewTaskMgr(cfg config.Config, c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *TestRunnerDeployer, imageBuilder *ImageBuilderMgr, runnerConfig string, privateReg types.PrivateRegistry) *TaskMgr {
 	return &TaskMgr{
+		cfg:             cfg,
 		c:               c,
 		jobRepo:         jobRepo,
 		taskRepo:        taskRepo,
@@ -196,10 +199,21 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) (*corev1.
 	if err != nil {
 		return nil, err
 	}
-
+	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
+	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s"`,
+		taskMgr.cfg.NameSpace,
+		taskMgr.cfg.DbName,
+		taskMgr.cfg.MongoUrl,
+		taskMgr.cfg.Mysql,
+		taskMgr.privateRegistry,
+		task.ID.Hex())
+	for _, p := range taskMgr.cfg.BootstrapPeers {
+		args += fmt.Sprintf(` , "--bootPeer=%s" `, string(p))
+	}
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
-		"TaskID":          task.ID.Hex(),
-		"TestId":          string(task.TestId),
+		"NameSpace":       taskMgr.cfg.NameSpace,
 		"PrivateRegistry": string(taskMgr.privateRegistry),
+		"TestId":          string(task.TestId),
+		"Args":            args,
 	})
 }

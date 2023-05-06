@@ -45,7 +45,7 @@ data:
     [[PieceStorage.Fs]]
       Name = "local"
       ReadOnly = false
-      Path = "/shared-dir/k8stest/piece-{{.U}}"
+      Path = "/shared-dir/m-piece/piece-{{.U}}"
      
 
     [DAGStore]
