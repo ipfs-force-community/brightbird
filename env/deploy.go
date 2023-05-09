@@ -2,11 +2,16 @@ package env
 
 import (
 	"context"
+	"errors"
+	"reflect"
 
 	"github.com/hunjixin/brightbird/types"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
+
+var IDeployerT = reflect.TypeOf((*IDeployer)(nil)).Elem()
+var IExecT = reflect.TypeOf((*IExec)(nil)).Elem()
 
 type IDeployer interface {
 	Name() string
@@ -18,12 +23,32 @@ type IDeployer interface {
 
 	GetConfig(ctx context.Context) (interface{}, error)
 	Update(ctx context.Context, updateCfg interface{}) error
-	Params(string) (interface{}, error)
+	Param(string) (interface{}, error)
 }
 
 type IExec interface {
-	Name() string
-	Params(string) (interface{}, error)
+	Param(string) (interface{}, error)
+}
+
+var ErrParamsNotFound = errors.New("not found")
+
+type SimpleExec map[string]interface{}
+
+func NewSimpleExec() *SimpleExec {
+	return (*SimpleExec)(&map[string]interface{}{})
+}
+
+func (exec SimpleExec) Add(key string, val interface{}) SimpleExec {
+	exec[key] = val
+	return exec
+}
+
+func (exec SimpleExec) Param(key string) (interface{}, error) {
+	val, ok := exec[key]
+	if !ok {
+		return nil, ErrParamsNotFound
+	}
+	return val, nil
 }
 
 //// The following types are used for components without configuration files or implemation with other lanaguage

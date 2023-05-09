@@ -198,7 +198,7 @@ func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []v1.Pod) error {
 func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args any) (*appv1.Deployment, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
-		return nil, fmt.Errorf("render deployment fail 5w", err)
+		return nil, fmt.Errorf("render deployment fail %w", err)
 	}
 
 	deployment := &appv1.Deployment{}

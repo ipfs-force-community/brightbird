@@ -66,6 +66,14 @@ type Property struct {
 	Require     bool        `json:"require"`
 }
 
+// SharedPropertyInNode just use to get shared field between deploynode and testitem, no pratical usage
+type SharedPropertyInNode interface {
+	GetName() string
+	GetProperties() []*Property
+	GetSvcProperties() []*Property
+	GetOut() *Property
+}
+
 type DeployNode struct {
 	// the name for this test flow
 	// required: true
@@ -76,6 +84,11 @@ type DeployNode struct {
 	Out           *Property   `json:"out"`
 }
 
+func (n DeployNode) GetName() string               { return n.Name }
+func (n DeployNode) GetProperties() []*Property    { return n.Properties }
+func (n DeployNode) GetSvcProperties() []*Property { return n.SvcProperties }
+func (n DeployNode) GetOut() *Property             { return n.Out }
+
 type TestItem struct {
 	// the name for this test flow
 	// required: true
@@ -83,7 +96,13 @@ type TestItem struct {
 	Name          string      `json:"name"`
 	Properties    []*Property `json:"properties"`
 	SvcProperties []*Property `json:"svcProperties"`
+	Out           *Property   `json:"out"`
 }
+
+func (n TestItem) GetName() string               { return n.Name }
+func (n TestItem) GetProperties() []*Property    { return n.Properties }
+func (n TestItem) GetSvcProperties() []*Property { return n.SvcProperties }
+func (n TestItem) GetOut() *Property             { return n.Out }
 
 // TestFlow
 // swagger:model testFlow

@@ -42,7 +42,6 @@ export class AsyncTask extends BaseNode {
   out: IPropertyDto;
   createTime: string;
   modifiedTime: string;
-  isAnnotateOut: boolean;
 
   constructor(
       name: string,
@@ -55,7 +54,6 @@ export class AsyncTask extends BaseNode {
       svcProperties: IPropertyDto[],
       createTime = '',
       modifiedTime = '',
-      isAnnotateOut = false,
       out: IPropertyDto,
   ) {
     super(
@@ -70,14 +68,13 @@ export class AsyncTask extends BaseNode {
     this.svcProperties = svcProperties;
     this.createTime = createTime;
     this.modifiedTime = modifiedTime;
-    this.isAnnotateOut = isAnnotateOut;
     this.out = out;
   }
 
   static build(
-      { name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, isAnnotateOut, out}: any,
+      { name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, out}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, isAnnotateOut, out);
+    return new AsyncTask(name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, out);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types

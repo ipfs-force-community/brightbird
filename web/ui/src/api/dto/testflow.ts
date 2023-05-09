@@ -30,7 +30,6 @@ export interface Node
     extends Readonly<{
         name: string;
         type: string;
-        isAnnotateOut: boolean;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
         out:IPropertyDto;
@@ -42,6 +41,7 @@ export interface Case
         type: string;
         properties: IPropertyDto[];
         svcProperties: IPropertyDto[];
+        out:IPropertyDto;
     }> {}
 
 /**
@@ -221,7 +221,6 @@ export interface INodeVo extends Readonly<{
     description: string;
     repo: string;
     path: string;
-    isAnnotateOut: boolean;
     properties: IPropertyDto[];
     svcProperties: IPropertyDto[];
     out:IPropertyDto;

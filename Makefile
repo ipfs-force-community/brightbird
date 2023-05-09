@@ -18,18 +18,18 @@ swagger-srv: gen-swagger
 
 .PHONY: exec-plugin
 exec-plugin:
-	@for i in $$(ls exec/plugins|grep $(COMPONENT)); do \
+	@for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
 		rm -f ./plugins/exec/$$i.so;\
-   		cmd="go build --buildmode=plugin -o ./plugins/exec/$$i.so $(subst ",\",$(GOFLAGS)) ./exec/plugins/$$i"; \
+   		cmd="go build --buildmode=plugin -o ./plugins/exec/$$i.so $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done
 
 .PHONY: deploy-plugin
 deploy-plugin:
-	@for i in $$(ls env/impl|grep $(COMPONENT)); do \
+	@for i in $$(ls pluginsrc/deploy|grep $(COMPONENT)); do \
 		rm -f ./plugins/deploy/$$i.so;\
-   		cmd="go build --buildmode=plugin -o ./plugins/deploy/$$i.so $(subst ",\",$(GOFLAGS)) ./env/impl/$$i/plugin"; \
+   		cmd="go build --buildmode=plugin -o ./plugins/deploy/$$i.so $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done
