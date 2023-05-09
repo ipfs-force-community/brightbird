@@ -101,8 +101,6 @@ func (p *PluginSvc) GetByName(ctx context.Context, name string) (*types.PluginOu
 
 func getPluginOutput(detail *types.PluginDetail) (types.PluginOut, error) {
 	var pluginOut = types.PluginOut{}
-	isAnnotateOut := types.IsAnnotateOut(reflect.New(detail.Param).Elem().Interface())
-	pluginOut.IsAnnotateOut = isAnnotateOut
 	pluginOut.PluginInfo = *detail.PluginInfo
 	numFields := detail.Param.NumField()
 
@@ -129,13 +127,10 @@ func getPluginOutput(detail *types.PluginDetail) (types.PluginOut, error) {
 		}
 	}
 	pluginOut.SvcProperties = svcProperties
-	if isAnnotateOut {
-		outType := detail.Fn.Type().Out(0)
-		pluginOut.Out = &types.Property{
-			Name:        "Out",
-			Type:        strings.TrimRight(strings.TrimLeft(outType.Name(), "I"), "Deployer"),
-			Description: "",
-		}
+	pluginOut.Out = &types.Property{
+		Name:        "Out",
+		Type:        "string",
+		Description: "",
 	}
 	return pluginOut, nil
 }

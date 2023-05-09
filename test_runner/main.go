@@ -203,6 +203,9 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 
 	cleaner := Cleaner{}
 	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic when run testrunner %v", r)
+		}
 		if err != nil {
 			_ = taskRepo.MarkState(pCtx, taskId, types.TempError, err.Error())
 		} else {

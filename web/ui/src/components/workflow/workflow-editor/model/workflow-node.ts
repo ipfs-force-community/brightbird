@@ -16,7 +16,7 @@ export class WorkflowNode {
     const nodes = await fetchDeployPlugins();
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, NodeTypeEnum.ASYNC_TASK, item.icon,
         NodeGroupEnum.DEPLOY, item.version, item.category, item.properties, item.svcProperties, item.createTime,
-        item.modifiedTiem, item.isAnnotateOut, item.out));
+        item.modifiedTiem, item.out));
 
     return {
       content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
@@ -27,7 +27,7 @@ export class WorkflowNode {
     const nodes = await fetchExecPlugins();
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, NodeTypeEnum.ASYNC_TASK, item.icon,
         NodeGroupEnum.DEPLOY, item.version, item.category, item.properties, item.svcProperties, item.createTime,
-        item.modifiedTiem, item.isAnnotateOut, item.out));
+        item.modifiedTiem, item.out));
     return {
       content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
     };

@@ -139,15 +139,15 @@ export default defineComponent({
                 if (jsonObject.category === 'Exec') {
                   const CaseObj: Case = {
                     name: jsonObject.name,
-                    properties: jsonObject.properties,
+                    properties: jsonObject.inputs,
                     svcProperties: jsonObject.svcProperties,
+                    out: jsonObject.out,
                   };
                   caseList.push(CaseObj);
                 } else if (jsonObject.category === 'Deployer') {
                   const NodeObj: Node = {
                     name: jsonObject.name,
-                    isAnnotateOut: jsonObject.isAnnotateOut,
-                    properties: jsonObject.properties,
+                    properties: jsonObject.inputs,
                     svcProperties: jsonObject.svcProperties,
                     out: jsonObject.out,
                   };
@@ -193,15 +193,15 @@ export default defineComponent({
             if (jsonObject.category === 'Exec') {
               const CaseObj: Case = {
                 name: jsonObject.name,
-                properties: jsonObject.properties,
+                properties: jsonObject.inputs,
                 svcProperties: jsonObject.svcProperties,
+                out: jsonObject.out,
               };
               caseList.push(CaseObj);
             } else if (jsonObject.category === 'Deployer') {
               const NodeObj: Node = {
                 name: jsonObject.name,
-                isAnnotateOut: jsonObject.isAnnotateOut,
-                properties: jsonObject.properties,
+                properties: jsonObject.inputs,
                 svcProperties: jsonObject.svcProperties,
                 out: jsonObject.out,
               };

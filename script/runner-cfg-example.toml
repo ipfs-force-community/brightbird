@@ -1,3 +1,4 @@
+NameSpace= "production"
 PluginStore = "./plugins"
 BootstrapPeers = ["/ip4/192.168.200.24/tcp/33273/p2p/12D3KooWLGdpt2A2WJvMpBVYn3pazrn7TFp1QRnGrt8KZUmFGYUL"]
 MongoUrl = 'mongodb://192.168.200.103:27017'
