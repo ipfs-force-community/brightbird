@@ -13,7 +13,7 @@ type DepParams struct {
 	Params market_client.Config `optional:"true"`
 
 	VenusDep        env.IDeployer `svcname:"Venus"`
-	WalletDeploy    env.IDeployer `svcname:VenusWallet`
+	WalletDeploy    env.IDeployer `svcname:"VenusWallet"`
 	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth"`
 
 	K8sEnv *env.K8sEnvDeployer

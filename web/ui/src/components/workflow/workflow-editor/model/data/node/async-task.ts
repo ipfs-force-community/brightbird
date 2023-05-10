@@ -36,7 +36,7 @@ export function checkDefaultIcon(icon: string) {
 export class AsyncTask extends BaseNode {
   groupType: NodeGroupEnum;
   version: string;
-  category: string;
+  pluginType: string;
   readonly inputs: IPropertyDto[];
   readonly svcProperties: IPropertyDto[];
   out: IPropertyDto;
@@ -49,7 +49,7 @@ export class AsyncTask extends BaseNode {
       icon = '',
       groupType: NodeGroupEnum,
       version = '',
-      category = '',
+      pluginType = '',
       inputs: IPropertyDto[],
       svcProperties: IPropertyDto[],
       createTime = '',
@@ -63,7 +63,7 @@ export class AsyncTask extends BaseNode {
     );
     this.groupType = groupType;
     this.version = version;
-    this.category = category;
+    this.pluginType = pluginType;
     this.inputs = inputs;
     this.svcProperties = svcProperties;
     this.createTime = createTime;
@@ -72,9 +72,9 @@ export class AsyncTask extends BaseNode {
   }
 
   static build(
-      { name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, out}: any,
+      { name, type, icon, groupType, version, pluginType, inputs, svcProperties, createTime, modifiedTime, out}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, groupType, version, category, inputs, svcProperties, createTime, modifiedTime, out);
+    return new AsyncTask(name, type, icon, groupType, version, pluginType, inputs, svcProperties, createTime, modifiedTime, out);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types

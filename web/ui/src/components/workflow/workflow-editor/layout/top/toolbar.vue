@@ -136,7 +136,7 @@ export default defineComponent({
                   return;
                 }
                 const jsonObject = JSON.parse(cell.data);
-                if (jsonObject.category === 'Exec') {
+                if (jsonObject.pluginType === 'Exec') {
                   const CaseObj: Case = {
                     name: jsonObject.name,
                     properties: jsonObject.inputs,
@@ -144,7 +144,7 @@ export default defineComponent({
                     out: jsonObject.out,
                   };
                   caseList.push(CaseObj);
-                } else if (jsonObject.category === 'Deployer') {
+                } else if (jsonObject.pluginType === 'Deployer') {
                   const NodeObj: Node = {
                     name: jsonObject.name,
                     properties: jsonObject.inputs,
