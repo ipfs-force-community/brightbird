@@ -5,15 +5,20 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "test_deploy",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "generate admin token",
 }
 
@@ -37,7 +42,17 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	fmt.Println("Wallet", params.VenusWallet.SvcEndpoint())
-	fmt.Println("WalletNew", params.VenusWalletNew.SvcEndpoint())
+	wallet, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	walletNew, err := params.VenusWalletNew.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("Wallet", wallet)
+	fmt.Println("WalletNew", walletNew)
 	return env.NewSimpleExec(), nil
 }

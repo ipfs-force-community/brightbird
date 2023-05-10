@@ -5,14 +5,16 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"time"
 
+	"github.com/hunjixin/brightbird/env/plugin"
+
+	"github.com/hunjixin/brightbird/models"
+
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
@@ -187,6 +189,11 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
+	pluginRepo, err := repo.NewPluginSvc(pCtx, db)
+	if err != nil {
+		return err
+	}
+
 	testflow, err := getTestFLow(pCtx, db, cfg.TaskId)
 	if err != nil {
 		return err
@@ -197,8 +204,8 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	if task.State == types.TempError {
-		_ = taskRepo.MarkState(pCtx, taskId, types.Running, "restart")
+	if task.State == models.TempError {
+		_ = taskRepo.MarkState(pCtx, taskId, models.Running, "restart")
 	}
 
 	cleaner := Cleaner{}
@@ -207,9 +214,9 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 			err = fmt.Errorf("panic when run testrunner %v", r)
 		}
 		if err != nil {
-			_ = taskRepo.MarkState(pCtx, taskId, types.TempError, err.Error())
+			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())
 		} else {
-			_ = taskRepo.MarkState(pCtx, taskId, types.Successful, "run successfully")
+			_ = taskRepo.MarkState(pCtx, taskId, models.Successful, "run successfully")
 		}
 
 		//todo get logs
@@ -218,34 +225,28 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		}
 	}()
 
-	deployPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
-	if err != nil {
-		return err
+	initParams := &env.K8sInitParams{
+		Namespace:         cfg.NameSpace,
+		TestID:            string(task.TestId),
+		PrivateRegistry:   cfg.PrivateRegistry,
+		MysqlConnTemplate: cfg.Mysql,
+		TmpPath:           cfg.TmpPath,
 	}
-
-	execPlugin, err := types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
-	if err != nil {
-		return err
-	}
+	initNodes := InitedNode{}
 	ctx, shutdown := CatchShutdown(pCtx, cfg.Timeout)
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(types.Shutdown), shutdown),
 		fx_opt.Override(new(context.Context), ctx),
 
 		// plugin
-		fx_opt.Override(new(repo.DeployPluginStore), deployPlugin),
-		fx_opt.Override(new(repo.ExecPluginStore), execPlugin),
-		fx_opt.Override(new(*types.Task), task),
+		fx_opt.Override(new(*models.Task), task),
 
 		//config
 		fx_opt.Override(new(*Config), cfg),
 		fx_opt.Override(new(types.Endpoint), types.Endpoint(cfg.Listen)),
 		fx_opt.Override(new(types.BootstrapPeers), types.BootstrapPeers(cfg.BootstrapPeers)),
-		fx_opt.Override(new(types.TestId), func(task *types.Task) types.TestId {
-			if len(task.TestId) > 0 {
-				return task.TestId
-			}
-			return types.TestId(uuid.New().String()[:8])
+		fx_opt.Override(new(types.TestId), func(task *models.Task) types.TestId {
+			return task.TestId
 		}),
 
 		//database
@@ -253,17 +254,15 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(new(repo.ITaskRepo), taskRepo),
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 		//k8s
-		fx_opt.Override(new(*env.K8sEnvDeployer), func(lc fx.Lifecycle, testId types.TestId) (*env.K8sEnvDeployer, error) {
-			k8sEnv, err := env.NewK8sEnvDeployer(cfg.NameSpace, string(testId), cfg.PrivateRegistry, cfg.Mysql, cfg.TmpPath)
-			if err != nil {
-				return nil, err
-			}
-
+		fx_opt.Override(new(*env.K8sEnvDeployer), func() (*env.K8sEnvDeployer, error) {
+			return env.NewK8sEnvDeployer(*initParams)
+		}),
+		fx_opt.Override(fx_opt.NextInvoke(), func(lc fx.Lifecycle, k8sEnv *env.K8sEnvDeployer) error {
 			cleaner.AddFunc(func() error {
 				log.Infof("start to cleanup k8s resource")
 				return k8sEnv.Clean(pCtx)
 			})
-			return k8sEnv, nil
+			return nil
 		}),
 
 		//api
@@ -272,8 +271,8 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(fx_opt.NextInvoke(), runnerctl.SetupAPI),
 
 		//exec testflow
-		DeployFLow(deployPlugin, testflow.Nodes),
-		ExecFlow(execPlugin, testflow.Cases),
+		DeployFLow(pCtx, initNodes, pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Nodes),
+		ExecFlow(pCtx, initNodes, pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Cases),
 	)
 	if err != nil {
 		return
@@ -282,14 +281,20 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 }
 
 func getDatabase(ctx context.Context, cfg *Config) (*mongo.Database, error) {
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl))
+	cmdMonitor := &event.CommandMonitor{
+		Started: func(_ context.Context, evt *event.CommandStartedEvent) {
+			log.Debugf(evt.Command.String())
+		},
+	}
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl).SetMonitor(cmdMonitor))
 	if err != nil {
 		return nil, err
 	}
 	return client.Database(cfg.DbName), nil
 }
 
-func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*types.TestFlow, error) {
+func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*models.TestFlow, error) {
 	taskId, err := primitive.ObjectIDFromHex(taskIdStr)
 	if err != nil {
 		return nil, err
@@ -319,12 +324,12 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*ty
 			return nil, fmt.Errorf("not found version for deploy %s", node.Name)
 		}
 
-		codeVersionProp := findCodeVersionProperties(node.Properties)
+		codeVersionProp := plugin.FindCodeVersionProperties(node.Properties)
 		if codeVersionProp != nil {
 			codeVersionProp.Value = version
 		} else {
 			node.Properties = append(node.Properties, &types.Property{
-				Name:    types.CodeVersion,
+				Name:    plugin.CodeVersionPropName,
 				Type:    "string",
 				Value:   version,
 				Require: true,
@@ -332,15 +337,6 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*ty
 		}
 	}
 	return testFlow, nil
-}
-
-func findCodeVersionProperties(properties []*types.Property) *types.Property {
-	for _, property := range properties {
-		if property.Name == types.CodeVersion {
-			return property
-		}
-	}
-	return nil
 }
 
 func CatchShutdown(pCtx context.Context, timeout int) (context.Context, types.Shutdown) {
@@ -356,6 +352,6 @@ func CatchShutdown(pCtx context.Context, timeout int) (context.Context, types.Sh
 		cancel()
 	}()
 
-	go utils.CatchSig(pCtx, shutdown)
+	go types.CatchSig(pCtx, shutdown)
 	return innerCtx, shutdown
 }

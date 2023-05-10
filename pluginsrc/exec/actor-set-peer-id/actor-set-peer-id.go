@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -12,17 +13,22 @@ import (
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "actor-set-peer-id",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "actor set peer-id",
 }
 
@@ -46,7 +52,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	messageId, err := SetActorAddr(ctx, params, minerAddr.(string))
+	messageId, err := SetActorAddr(ctx, params, minerAddr.String())
 	if err != nil {
 		fmt.Printf("set actor address failed: %v\n", err)
 		return nil, err
@@ -68,7 +74,10 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		return err
 	}
 
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.VenusMessage.Pods(ctx)
 		if err != nil {
@@ -85,7 +94,7 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		}
 	}
 
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.(string), nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -101,7 +110,10 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 }
 
 func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return cid.Undef, err
+	}
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -124,13 +136,12 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 	}
 	defer closer()
 
-	addrs, err := params.NewAddrsListen.Param("NewAddrsListen")
-	if err != nil && addrs.(peer.AddrInfo).Addrs != nil {
+	addrs, err := client.NetAddrsListen(ctx)
+	if err != nil && addrs.Addrs != nil {
 		return cid.Undef, nil
 	}
-	fmt.Printf("market net listen is: %v\n", addrs.(peer.AddrInfo))
 
-	pid := addrs.(peer.AddrInfo).ID
+	pid := addrs.ID
 
 	MessageParams, err := ConstructParams(pid)
 	if err != nil {
@@ -174,7 +185,10 @@ func ConstructParams(pid peer.ID) (param []byte, err error) {
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Address) (vtypes.MinerInfo, error) {
-	endpoint := params.Venus.SvcEndpoint()
+	endpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return vtypes.MinerInfo{}, err
+	}
 	if env.Debug {
 		pods, err := params.Venus.Pods(ctx)
 		if err != nil {

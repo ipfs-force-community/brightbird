@@ -99,7 +99,7 @@ import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { INodeVo, ITestFlowDetail } from '@/api/dto/testflow.js';
+import { ITestFlowDetail, PluginOut } from '@/api/dto/testflow.js';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
@@ -216,7 +216,7 @@ export default defineComponent({
     const onSelectJobtype = async () => {
       try {
         //fetch plugins
-        const pluginMap = new Map<string, INodeVo>();
+        const pluginMap = new Map<string, PluginOut>();
         (await fetchDeployPlugins()).map(a => pluginMap.set(a.name, a));
 
         const filter = new Set<string>();

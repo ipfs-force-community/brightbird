@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go.uber.org/fx"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -18,15 +19,19 @@ import (
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/filecoin-project/venus/venus-shared/types/market"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "storage-deals-set-ask",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "storage deals set-ask",
 }
 
@@ -68,7 +73,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -163,7 +172,11 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 }
 
 func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {

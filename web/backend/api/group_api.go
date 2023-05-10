@@ -2,33 +2,14 @@ package api
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// updateGroupRequest
-// swagger:model updateGroupRequest
-type UpdateGroupRequest struct {
-	Name        string `json:"name"`
-	IsShow      bool   `json:"isShow"`
-	Description string `json:"description"`
-}
-
-// GroupResp
-// swagger:model groupResp
-type GroupResp struct {
-	*types.Group
-	TestFlowCount int `json:"testFlowCount"`
-}
-
-// ListGroupResp
-// swagger:model listGroupResp
-type ListGroupResp []GroupResp
 
 func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc repo.IGroupRepo, testFlowSvc repo.ITestFlowRepo) {
 	group := v1group.Group("/group")
@@ -50,13 +31,14 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//
 	//     Responses:
 	//       200: listGroupResp
+	//		 503: apiError
 	group.GET("/list", func(c *gin.Context) {
 		groups, err := groupSvc.List(ctx)
 		if err != nil {
 			c.Error(err)
 			return
 		}
-		groupOutList := make([]GroupResp, len(groups))
+		groupOutList := make([]models.GroupResp, len(groups))
 		for i, group := range groups {
 			count, err := testFlowSvc.CountByGroup(ctx, group.ID)
 			if err != nil {
@@ -64,7 +46,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 				return
 			}
 
-			groupOutList[i] = GroupResp{
+			groupOutList[i] = models.GroupResp{
 				Group:         group,
 				TestFlowCount: int(count),
 			}
@@ -72,7 +54,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 		c.JSON(http.StatusOK, groupOutList)
 	})
 
-	// swagger:route Get /group/{id} getTestFlow
+	// swagger:route Get /group/{id} getGroupById
 	//
 	// Get specific group by id.
 	//
@@ -88,14 +70,15 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//     Deprecated: false
 	//
 	//     Parameters:
-	//       + name: name
+	//       + name: id
 	//         in: path
-	//         description: name of test flow
+	//         description: id of group
 	//         required: true
 	//         type: string
 	//
 	//     Responses:
 	//       200: groupResp
+	//		 503: apiError
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -115,7 +98,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 			return
 		}
 
-		c.JSON(http.StatusOK, GroupResp{
+		c.JSON(http.StatusOK, models.GroupResp{
 			Group:         group,
 			TestFlowCount: int(count),
 		})
@@ -146,8 +129,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("", func(c *gin.Context) {
-		testFlow := types.Group{}
+		testFlow := models.Group{}
 		err := c.ShouldBindJSON(&testFlow)
 		if err != nil {
 			c.Error(err)
@@ -181,7 +165,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//     Parameters:
 	//       + name: id
 	//         in: path
-	//         description: id of  group
+	//         description: id of group
 	//         required: true
 	//         type: string
 	//       + name: group
@@ -193,6 +177,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -200,7 +185,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 			return
 		}
 
-		req := UpdateGroupRequest{}
+		req := models.UpdateGroupRequest{}
 		err = c.ShouldBindJSON(&req)
 		if err != nil {
 			c.Error(err)
@@ -250,6 +235,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {

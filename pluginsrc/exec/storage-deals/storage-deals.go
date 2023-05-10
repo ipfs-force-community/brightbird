@@ -3,21 +3,27 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/fx"
+
 	"github.com/filecoin-project/go-address"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/libp2p/go-libp2p/core/peer"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "storage-deals",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "storage-deals",
 }
 
@@ -76,7 +82,10 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 }
 
 func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.Address) error {
-	endpoint := params.MarketClient.SvcEndpoint()
+	endpoint, err := params.MarketClient.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.MarketClient.Pods(ctx)
 		if err != nil {
@@ -99,7 +108,11 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 	}
 	defer closer()
 
-	venusEndpoint := params.Venus.SvcEndpoint()
+	venusEndpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.Venus.Pods(ctx)
 		if err != nil {

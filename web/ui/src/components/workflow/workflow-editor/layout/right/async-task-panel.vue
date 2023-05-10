@@ -15,7 +15,7 @@
           >
             <jm-option v-for="item in versionList.versions" :key="item" :label="item" :value="item" />
           </jm-select>
-          <div v-if="form.version? !versionLoading : false" class="version-description">
+          <div v-if="form.version ? !versionLoading : false" class="version-description">
             {{ form.version }}
           </div>
         </jm-form-item>
@@ -67,7 +67,7 @@
         <div class="outputs-container set-padding" v-else-if="tabFlag === 2">
           <div v-if="form.out">
             <div class="label">
-              <i class="required-icon" v-if="form.out.required"></i>
+              <i class="required-icon" v-if="form.out.require"></i>
               {{ form.out.type }}
               <jm-tooltip placement="top" v-if="form.out.description" :append-to-body="false" :content="form.out.description">
                 <i class="jm-icon-button-help"></i>

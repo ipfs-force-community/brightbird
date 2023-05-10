@@ -1,28 +1,63 @@
 package main
 
 import (
+	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path"
 	"reflect"
-	"runtime/debug"
 	"strconv"
+	"syscall"
+
+	"github.com/hunjixin/brightbird/types"
+
+	"github.com/google/uuid"
+
+	"github.com/hunjixin/brightbird/env/plugin"
+
+	"github.com/hunjixin/brightbird/env"
+
+	"github.com/hunjixin/brightbird/repo"
 
 	"github.com/hunjixin/brightbird/fx_opt"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/modern-go/reflect2"
 	"go.uber.org/fx"
 )
 
-func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) fx_opt.Option {
+type InitedNode map[string]string
+
+func DeployFLow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, deployers []*types.DeployNode) fx_opt.Option {
 	var opts []fx_opt.Option
 	for _, dep := range deployers {
-		plugin, err := deployPlugin.GetPlugin(dep.Name)
+		deployPlugin, err := pluginRepo.GetPlugin(ctx, dep.Name, dep.Version)
 		if err != nil {
-			opts = append(opts, fx_opt.Error(err))
+			opts = append(opts, fx_opt.Error(fmt.Errorf("unable to get plugin %s %s %w", dep.Name, dep.Version, err)))
 			break
 		}
 
-		newFn, resultTag, err := GenInjectFunc(plugin, dep)
+		for _, dep := range dep.Dependencies {
+			sockPath := initedNode[dep.Value]
+			dep.SockPath = sockPath
+		}
+
+		codeVersionProp := plugin.FindCodeVersionProperties(dep.Properties)
+		instanceName := dep.InstanceName.Value
+		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
+		params := &plugin.InitParams{
+			K8sInitParams: *k8sEnvParams,
+			BaseConfig: env.BaseConfig{
+				CodeVersion:  codeVersionProp.Value.(string),
+				InstanceName: instanceName,
+			},
+			SockPath:     tmpFName,
+			Dependencies: dep.Dependencies,
+			Properties:   dep.Properties,
+		}
+		initedNode[instanceName] = tmpFName
+
+		newFn, err := makeDeployPluginSetupFunc(params, path.Join(pluginStore, deployPlugin.Path), instanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -32,23 +67,42 @@ func DeployFLow(deployPlugin *types.PluginStore, deployers []*types.DeployNode) 
 			ty  reflect.Type
 			tag string
 		}{
-			ty:  plugin.Fn.Type().Out(0),
-			tag: resultTag,
+			ty:  MasterDeployInvokerT,
+			tag: instanceName,
 		}, newFn))
 	}
 	return fx_opt.Options(opts...)
 }
 
-func ExecFlow(pluginStore *types.PluginStore, testItems []*types.TestItem) fx_opt.Option {
+func ExecFlow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, testItems []*types.TestItem) fx_opt.Option {
 	var opts []fx_opt.Option
 	var invokeFields []reflect.StructField
 	for index, dep := range testItems {
-		plugin, err := pluginStore.GetPlugin(dep.Name)
+		execPlugin, err := pluginRepo.GetPlugin(ctx, dep.Name, dep.Version)
 		if err != nil {
-			opts = append(opts, fx_opt.Error(err))
+			opts = append(opts, fx_opt.Error(fmt.Errorf("unable to get plugin %s %s %w", dep.Name, dep.Version, err)))
 			break
 		}
-		newFn, resultTag, err := GenInjectFunc(plugin, dep)
+
+		instanceName := dep.InstanceName.Value
+		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
+		for _, dep := range dep.Dependencies {
+			sockPath := initedNode[dep.Value]
+			dep.SockPath = sockPath
+		}
+		params := &plugin.InitParams{
+			K8sInitParams: *k8sEnvParams,
+			BaseConfig: env.BaseConfig{
+				CodeVersion:  "", //exec have no code version
+				InstanceName: instanceName,
+			},
+			SockPath:     tmpFName,
+			Dependencies: dep.Dependencies,
+			Properties:   dep.Properties,
+		}
+		initedNode[instanceName] = tmpFName
+
+		newFn, err := makeExecPluginSetupFunc(params, path.Join(pluginStore, execPlugin.Path), instanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -58,13 +112,14 @@ func ExecFlow(pluginStore *types.PluginStore, testItems []*types.TestItem) fx_op
 			ty  reflect.Type
 			tag string
 		}{
-			ty:  plugin.Fn.Type().Out(0),
-			tag: resultTag,
+			ty:  MasterExecInvokerT,
+			tag: instanceName,
 		}, newFn))
+
 		invokeFields = append(invokeFields, reflect.StructField{
 			Name:      "N" + strconv.Itoa(index), //just placeorder
-			Type:      plugin.Fn.Type().Out(0),
-			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, resultTag)),
+			Type:      MasterExecInvokerT,
+			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, instanceName)),
 			Offset:    0,
 			Index:     []int{index},
 			Anonymous: false,
@@ -86,164 +141,246 @@ func ExecFlow(pluginStore *types.PluginStore, testItems []*types.TestItem) fx_op
 	return fx_opt.Options(opts...)
 }
 
-func GenInjectFunc(plugin *types.PluginDetail, depNode types.SharedPropertyInNode) (interface{}, string, error) {
-	svcMap, err := getSvcMap(append(depNode.GetSvcProperties(), depNode.GetOut())...)
+func makeDeployPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceName string) (interface{}, error) {
+	// prepare params
+	//start exec
+	//return interface type
+	retType := reflect.StructOf([]reflect.StructField{
+		{
+			Name:      "Instance", //just placeorder
+			Type:      MasterDeployInvokerT,
+			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, instanceName)),
+			Offset:    0,
+			Index:     []int{0},
+			Anonymous: false,
+		},
+		{
+			Name:      "In",
+			Type:      reflect.TypeOf(fx.Out{}),
+			Offset:    1,
+			Index:     []int{1},
+			Anonymous: true,
+		},
+	})
+
+	depedencyT, err := makeDedenciesType(params.Dependencies)
 	if err != nil {
-		return nil, "", err
+		return nil, err
+	}
+	fnT := reflect.FuncOf([]reflect.Type{depedencyT}, []reflect.Type{retType, types.ErrT}, false)
+	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
+		process, err := runPluginAndWaitForReady(params, pluginPath)
+		if err != nil {
+			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}
+		}
+
+		deployer, err := SetupMasterDeploy(params.SockPath, process) //used to give argument
+		if err != nil {
+			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}
+		}
+
+		retVal := reflect.New(retType).Elem()
+		retVal.Field(0).Set(reflect.ValueOf(deployer))
+		return []reflect.Value{retVal, types.NilError}
+	}).Interface(), nil
+
+}
+
+func makeDedenciesType(depedencies []*types.DependencyProperty) (reflect.Type, error) {
+	depedenceiesFields := []reflect.StructField{
+		{
+			Name:      "In",
+			Type:      reflect.TypeOf(fx.In{}),
+			Offset:    0,
+			Index:     []int{0},
+			Anonymous: true,
+		},
 	}
 
-	fnT := plugin.Fn.Type()
-	outTag := svcMap[types.OutLabel]
-	newInStruct := convertInjectParams(plugin.Param, svcMap)
-	newOutArgs, err := convertResultType(fnT, outTag)
+	for index, depedepedency := range depedencies {
+		tagVal := ""
+		if len(depedepedency.Value) > 0 {
+			tagVal = fmt.Sprintf(`name:"%s"`, depedepedency.Value)
+		}
+
+		if !depedepedency.Require {
+			tagVal = fmt.Sprintf(`%s optional:"true"`, tagVal)
+		}
+		newFiled := reflect.StructField{
+			Name:      "N" + strconv.Itoa(index),
+			PkgPath:   "",
+			Type:      MasterDeployInvokerT,
+			Tag:       reflect.StructTag(tagVal),
+			Offset:    uintptr(index + 1),
+			Index:     []int{int(index + 1)},
+			Anonymous: false,
+		}
+		switch depedepedency.Type {
+		case types.Deploy:
+			newFiled.Type = MasterDeployInvokerT
+		case types.TestExec:
+			newFiled.Type = MasterExecInvokerT
+		default:
+			return nil, fmt.Errorf("not support plugin type %s", depedepedency.Name)
+		}
+
+		depedenceiesFields = append(depedenceiesFields, newFiled)
+	}
+	return reflect.StructOf(depedenceiesFields), nil
+}
+
+var MasterDeployInvokerT = reflect.TypeOf(&MasterDeployInvoker{})
+
+type MasterDeployInvoker struct {
+	*plugin.DeployInvoker
+	process *os.Process
+}
+
+func SetupMasterDeploy(sockPath string, process *os.Process) (*MasterDeployInvoker, error) {
+	invoker, err := plugin.NewDeployInvoker(sockPath)
 	if err != nil {
-		return nil, "", err
+		return nil, err
+	}
+	return &MasterDeployInvoker{
+		DeployInvoker: invoker,
+		process:       process,
+	}, nil
+}
+
+func (serve *MasterDeployInvoker) Stop(ctx context.Context) error {
+	return serve.process.Kill()
+}
+
+func makeExecPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceName string) (interface{}, error) {
+	// prepare params
+	// start exec
+	// return interface type
+	retType := reflect.StructOf([]reflect.StructField{
+		{
+			Name:      "Instance", //just placeorder
+			Type:      MasterExecInvokerT,
+			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, instanceName)),
+			Offset:    0,
+			Index:     []int{0},
+			Anonymous: false,
+		},
+		{
+			Name:      "In",
+			Type:      reflect.TypeOf(fx.Out{}),
+			Offset:    1,
+			Index:     []int{1},
+			Anonymous: true,
+		},
+	})
+
+	depedencyT, err := makeDedenciesType(params.Dependencies)
+	if err != nil {
+		return nil, err
+	}
+	fnT := reflect.FuncOf([]reflect.Type{depedencyT}, []reflect.Type{retType, types.ErrT}, false)
+	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
+		process, err := runPluginAndWaitForReady(params, pluginPath)
+		if err != nil {
+			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}
+		}
+
+		exec, err := SetupMasterExec(params.SockPath, process) //used to give argument
+		if err != nil {
+			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}
+		}
+		retVal := reflect.New(retType).Elem()
+		retVal.Field(0).Set(reflect.ValueOf(exec))
+		return []reflect.Value{retVal, types.NilError}
+	}).Interface(), nil
+}
+
+var MasterExecInvokerT = reflect.TypeOf(&MasterExecInvoker{})
+
+type MasterExecInvoker struct {
+	*plugin.ExecInvoker
+	process *os.Process
+}
+
+func SetupMasterExec(sockPath string, process *os.Process) (*MasterExecInvoker, error) {
+	invoker, err := plugin.NewExecInvoker(sockPath)
+	if err != nil {
+		return nil, err
+	}
+	return &MasterExecInvoker{
+		ExecInvoker: invoker,
+		process:     process,
+	}, nil
+}
+
+func (serve *MasterExecInvoker) Stop(ctx context.Context) error {
+	return serve.process.Signal(syscall.SIGQUIT)
+}
+
+func runPluginAndWaitForReady(params *plugin.InitParams, pluginPath string) (*os.Process, error) {
+	// standard input, standard output, and standard error.
+	stdInR, stdInW, err := os.Pipe()
+	if err != nil {
+		return nil, err
 	}
 
-	newFn := reflect.FuncOf([]reflect.Type{types.CtxT, newInStruct}, newOutArgs, false)
-	return reflect.MakeFunc(newFn, func(args []reflect.Value) (vals []reflect.Value) {
-		defer func() {
-			if r := recover(); r != nil {
-				vals = make([]reflect.Value, 2)
-				vals[0] = reflect.Zero(newOutArgs[0])
-				log.Info("stacktrace from panic:" + string(debug.Stack()))
-				vals[1] = reflect.ValueOf(fmt.Errorf("invoke deploy plugin %s %v", depNode.GetName(), r))
-			} else {
-				log.Infof("completed deploy %s name: %s", depNode.GetName(), svcMap[types.OutLabel])
+	stdOutR, stdOutW, err := os.Pipe()
+	if err != nil {
+		return nil, err
+	}
+	//todo close pipe
+	r := bufio.NewReader(io.TeeReader(stdOutR, os.Stdout))
+	readyCh := make(chan struct{})
+	errCh := make(chan error)
+	go func() {
+		for {
+			data, err := r.ReadString('\n')
+			if err != nil {
+				errCh <- err
+				return
 			}
-		}()
-
-		log.Infof("start to deploy %s name: %s", depNode.GetName(), svcMap[types.OutLabel])
-		//convert params
-		argT := fnT.In(1)
-		dstVal := reflect.New(argT).Elem()
-		for j := 0; j < argT.NumField(); j++ {
-			field := argT.Field(j)
-			fieldName := field.Name
-			if !field.Anonymous && len(fieldName) != 0 {
-				if fieldName == "Params" {
-					val := reflect.New(field.Type)
-					err := collectParams(depNode.GetProperties(), val.Interface())
-					if err != nil {
-						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
+			cmd, val, isCmd := plugin.ReadCMD(data)
+			if isCmd {
+				switch cmd {
+				case plugin.CMDSTATEPREFIX:
+					if val == plugin.COMPLETELOG {
+						readyCh <- struct{}{}
 					}
-					//set basic svc map
-					svcMapField := val.Elem().FieldByName("SvcMap")
-					if (svcMapField != reflect.Value{}) {
-						svcMapField.Set(reflect.ValueOf(svcMap))
-					}
-					dstVal.FieldByName(fieldName).Set(val.Elem())
-				} else {
-					dstVal.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))
+				case plugin.CMDERRORREFIX:
+					errCh <- fmt.Errorf("get error form plugin %s %s", params.InstanceName, val)
+				case plugin.CMDVALPREFIX:
 				}
 			}
 		}
+	}()
 
-		//call plugin
-		results := plugin.Fn.Call([]reflect.Value{args[0], dstVal})
-		//convert result
-		if !results[1].IsNil() {
-			return []reflect.Value{reflect.Zero(newOutArgs[0]), results[1]}
-		}
-		destResultVal := reflect.New(newOutArgs[0]).Elem()
-		destResultVal.Field(0).Set(results[0])
-		return []reflect.Value{destResultVal, results[1]}
-	}).Interface(), outTag, nil
-}
-
-func getSvcMap(properties ...*types.Property) (map[string]string, error) {
-	var svcMap = make(map[string]string)
-	for _, p := range properties {
-		if p != nil && !reflect2.IsNil(p.Value) {
-			if val, ok := p.Value.(string); ok && len(val) > 0 {
-				svcMap[p.Name] = val
-			}
-		}
-	}
-	return svcMap, nil
-}
-
-func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type {
-	fieldNum := in.NumField()
-	var inDepTypeFields []reflect.StructField
-	offset := uintptr(0)
-	for i := 0; i < fieldNum; i++ {
-		field := in.Field(i)
-		if !field.Anonymous {
-			svcNameKey := field.Tag.Get(types.SvcName)
-			svcName := svcMap[svcNameKey]
-			tagVal := fmt.Sprintf(`name:"%s"`, svcName)
-			if field.Tag.Get("optional") == "true" {
-				tagVal = fmt.Sprintf(`%s optional:"true"`, tagVal)
-			}
-			newField := reflect.StructField{
-				Name:      field.Name,
-				PkgPath:   field.PkgPath,
-				Type:      field.Type,
-				Tag:       reflect.StructTag(tagVal),
-				Offset:    offset,
-				Index:     []int{int(offset)},
-				Anonymous: false,
-			}
-			inDepTypeFields = append(inDepTypeFields, newField)
-			offset++
-		}
-	}
-	inDepTypeFields = append(inDepTypeFields, reflect.StructField{
-		Name:      "In",
-		Type:      reflect.TypeOf(fx.In{}),
-		Offset:    offset,
-		Index:     []int{int(offset)},
-		Anonymous: true,
+	process, err := os.StartProcess(pluginPath, []string{pluginPath}, &os.ProcAttr{
+		Env:   os.Environ(),
+		Files: []*os.File{stdInR, stdOutW, os.Stderr},
 	})
-	return reflect.StructOf(inDepTypeFields)
-}
-
-func convertResultType(fnT reflect.Type, outTag string) ([]reflect.Type, error) {
-	var newOutArgs []reflect.Type
-	{
-		//todo opt for more return values ?
-		numOut := fnT.NumOut()
-		if numOut != 2 {
-			return nil, fmt.Errorf("return values must be (val, error) format")
-		}
-
-		resultFields := []reflect.StructField{
-			{
-				Name:      "OutVal", //just placeorder
-				Type:      fnT.Out(0),
-				Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, outTag)),
-				Offset:    0,
-				Index:     []int{int(0)},
-				Anonymous: false,
-			},
-		}
-		resultFields = append(resultFields, reflect.StructField{
-			Name:      "Out",
-			Type:      reflect.TypeOf(fx.Out{}),
-			Offset:    1,
-			Index:     []int{int(1)},
-			Anonymous: true,
-		})
-		resultStruct := reflect.StructOf(resultFields)
-		newOutArgs = append(newOutArgs, resultStruct)
-		newOutArgs = append(newOutArgs, types.ErrT)
-	}
-	return newOutArgs, nil
-}
-
-func collectParams(properties []*types.Property, params interface{}) error {
-	value := make(map[string]interface{})
-	for _, p := range properties {
-		value[p.Name] = p.Value
-	}
-	jsonBytes, err := json.Marshal(value)
 	if err != nil {
-		return err
+		fmt.Print(err.Error())
+		return nil, err
 	}
-	err = json.Unmarshal(jsonBytes, params)
+	//write response
+	initData, err := json.Marshal(params)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+
+	fmt.Println(string(initData))
+	_, err = stdInW.Write(initData)
+	if err != nil {
+		return nil, err
+	}
+	_, err = stdInW.Write([]byte{'\n'})
+	if err != nil {
+		return nil, err
+	}
+	//wait for specific log
+	select {
+	case <-readyCh:
+		return process, nil
+	case err = <-errCh:
+		return nil, err
+	}
 }

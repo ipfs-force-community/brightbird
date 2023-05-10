@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"fmt"
+	"github.com/hunjixin/brightbird/models"
 	"math"
 	"os"
 	"time"
@@ -67,12 +68,12 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				continue
 			}
 			//check running task state
-			runningTask, err := taskMgr.taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+			runningTask, err := taskMgr.taskRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 				PageNum:  1,
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
 					JobId: job.ID,
-					State: []types.State{types.Running, types.TempError},
+					State: []models.State{models.Running, models.TempError},
 				},
 			})
 			if err != nil {
@@ -84,7 +85,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
 					if errors2.IsNotFound(err) {
-						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, "not found testrunner, maybe delete manually")
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "not found testrunner, maybe delete manually")
 						if markFailErr != nil {
 							log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
 						}
@@ -93,7 +94,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 						if restartCount > 5 {
 							log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
 							// mark pod as fail and remove this pod
-							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, "failed five times, delete task")
+							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed five times, delete task")
 							if markFailErr != nil {
 								log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 							}
@@ -109,12 +110,12 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			// start init task
-			initTasks, err := taskMgr.taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+			initTasks, err := taskMgr.taskRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 				PageNum:  1,
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
 					JobId: job.ID,
-					State: []types.State{types.Init},
+					State: []models.State{models.Init},
 				},
 			})
 			if err != nil {
@@ -138,10 +139,10 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 	}
 }
 
-func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *types.Task) error {
+func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *models.Task) error {
 	pod, err := taskMgr.Process(ctx, task)
 	if err != nil {
-		markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, types.Error, err.Error())
+		markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, err.Error())
 		if err != nil {
 			return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
 		}
@@ -160,7 +161,7 @@ func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) 
 		return err
 	}
 
-	task.State = types.Error
+	task.State = models.Error
 	task.Logs = append(task.Logs, "stop manually")
 	_, err = taskMgr.taskRepo.Save(ctx, task)
 	if err != nil {
@@ -169,7 +170,7 @@ func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) 
 	return nil
 }
 
-func (taskMgr *TaskMgr) Process(ctx context.Context, task *types.Task) (*corev1.Pod, error) {
+func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1.Pod, error) {
 	job, err := taskMgr.jobRepo.Get(ctx, task.JobId)
 	if err != nil {
 		return nil, err

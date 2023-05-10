@@ -2,15 +2,10 @@ package utils
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"net"
 	"os"
-	"os/signal"
 	"strings"
-	"syscall"
-
-	"github.com/hunjixin/brightbird/types"
 )
 
 func Prompt() {
@@ -41,29 +36,6 @@ func GetFreePort() (int, error) {
 	}
 	defer l.Close()
 	return l.Addr().(*net.TCPAddr).Port, nil
-}
-
-func CatchSig(ctx context.Context, done types.Shutdown) {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT, syscall.SIGSEGV)
-LOOP:
-	for {
-		select {
-		case <-ctx.Done():
-			break LOOP
-		case s := <-c:
-			switch s {
-			case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
-				break LOOP
-			case syscall.SIGHUP:
-			case syscall.SIGSEGV:
-			default:
-				break LOOP
-			}
-		}
-	}
-	fmt.Println("recieve signal")
-	done <- struct{}{}
 }
 
 func ToMultiAddr(endpoint string) string {

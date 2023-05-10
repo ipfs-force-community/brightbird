@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	chain_co "github.com/hunjixin/brightbird/pluginsrc/deploy/chain-co"
 )
 
-var Info = chain_co.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(chain_co.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params chain_co.Config `optional:"true"`
@@ -38,9 +41,14 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", adminToken, dns, svc.Spec.Ports[0].Port)
 	}
 
+	venusAuthEndpoint, err := depParams.VenusAuthDeploy.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := chain_co.DeployerFromConfig(depParams.K8sEnv, chain_co.Config{
 		Replicas:   1,
-		AuthUrl:    depParams.VenusAuthDeploy.SvcEndpoint().ToHttp(),
+		AuthUrl:    venusAuthEndpoint.ToHttp(),
 		AdminToken: depParams.Params.AdminToken,
 		Nodes:      podEndpoints,
 	}, depParams.Params)

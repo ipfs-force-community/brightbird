@@ -6,9 +6,8 @@ import (
 	"errors"
 	"fmt"
 
-	mConfig "github.com/filecoin-project/venus-miner/node/config"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/pelletier/go-toml"
@@ -45,7 +44,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-miner",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus-miner.git",
 	ImageTarget: "venus-miner",
 	Description: "",
@@ -88,12 +87,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	}, nil
 }
 
-func (deployer *VenusMinerDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusMinerDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusMinerDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-miner-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-miner-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusMinerDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -104,12 +103,12 @@ func (deployer *VenusMinerDeployer) Svc(ctx context.Context) (*corev1.Service, e
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusMinerDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusMinerDeployer) SvcEndpoint() (types.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusMinerDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *VenusMinerDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed venus-miner
@@ -119,11 +118,11 @@ func (deployer *VenusMinerDeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 	if deployer.cfg.UseMysql {
-		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("venus-miner-" + deployer.env.UniqueId(""))
+		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("venus-miner-" + renderParams.UniqueId)
 	}
 	if len(renderParams.MysqlDSN) > 0 {
 		deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
@@ -168,18 +167,13 @@ func (deployer *VenusMinerDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *VenusMinerDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusMinerDeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &mConfig.MinerConfig{}
-	err = toml.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *VenusMinerDeployer) Update(ctx context.Context, updateCfg interface{}) error {

@@ -3,24 +3,29 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/hunjixin/brightbird/utils"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	types2 "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
-	Name:        "admin/sign/write/read token ",
+	Name:        "admin-sign-write-read-token ",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "generate diff permissions token",
 }
 
@@ -37,7 +42,10 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
 	if env.Debug {
 		venusAuthPods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -59,7 +67,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +98,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func checkPermission(ctx context.Context, token string, params TestCaseParams) (string, error) {
-	endpoint := params.Venus.SvcEndpoint()
+	endpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
 	if env.Debug {
 		venusPods, err := params.Venus.Pods(ctx)
 		if err != nil {

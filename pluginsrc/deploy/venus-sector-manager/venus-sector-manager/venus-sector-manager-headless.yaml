@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: venus-sector-manager-{{.TestID}}-svc
+  name: venus-sector-manager-{{.UniqueId}}-svc
 spec:
   clusterIP: None
   selector:
-    app: venus-sector-manager-{{.TestID}}-pod
+    app: venus-sector-manager-{{.UniqueId}}-pod
   ports:
     - protocol: TCP
       port: 1789

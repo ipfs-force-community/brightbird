@@ -17,8 +17,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
 	"google.golang.org/appengine"
@@ -74,8 +75,16 @@ type K8sEnvDeployer struct {
 	resourceMgr       IResourceMgr
 }
 
+type K8sInitParams struct {
+	Namespace         string
+	TestID            string
+	PrivateRegistry   string
+	MysqlConnTemplate string
+	TmpPath           string
+}
+
 // NewK8sEnvDeployer create a new test environment
-func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, mysqlConnTemplate string, tmpPath string) (*K8sEnvDeployer, error) {
+func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -113,13 +122,13 @@ func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, 
 	return &K8sEnvDeployer{
 		k8sCfg:            config,
 		k8sClient:         k8sClient,
-		namespace:         namespace,
-		testID:            testID,
+		namespace:         params.Namespace,
+		testID:            params.TestID,
 		hostIP:            url.Hostname(),
 		dialCtx:           dialCtx,
-		privateRegistry:   privateRegistry,
-		mysqlConnTemplate: mysqlConnTemplate,
-		resourceMgr:       NewResourceMgr(k8sClient, namespace, tmpPath, mysqlConnTemplate, testID),
+		privateRegistry:   params.PrivateRegistry,
+		mysqlConnTemplate: params.MysqlConnTemplate,
+		resourceMgr:       NewResourceMgr(k8sClient, params.Namespace, params.TmpPath, params.MysqlConnTemplate, params.TestID),
 	}, nil
 }
 
@@ -151,14 +160,6 @@ func (env *K8sEnvDeployer) NameSpace() string {
 // K8sClient
 func (env *K8sEnvDeployer) K8sClient() *kubernetes.Clientset {
 	return env.k8sClient
-}
-
-// UniqueId return a unique id for all deployer
-func (env *K8sEnvDeployer) UniqueId(outName string) string {
-	if len(outName) > 0 {
-		return env.testID + hex.EncodeToString(utils.Blake256([]byte(outName))[:4])
-	}
-	return env.testID
 }
 
 func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
@@ -502,7 +503,7 @@ LOOP:
 	if Debug {
 		pods, err := dep.Pods(ctx)
 		if err != nil {
-			return "", fmt.Errorf("get pod of %s fail %w", dep.Name(), err)
+			return "", fmt.Errorf("get pod of %s fail %w", name, err)
 		}
 		//forward a pod to local machine
 		for {
@@ -513,7 +514,7 @@ LOOP:
 			}
 			err = env.WaitForAPIReady(ctx, forwardPort) // todo move this try logic to WaitForAPIReady
 			if err != nil {
-				log.Infof("%s api return error %v", dep.Name(), err)
+				log.Infof("%s api return error %v", name, err)
 				continue
 			}
 			break
@@ -787,4 +788,11 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 
 func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
 	return env.resourceMgr.Clean(ctx)
+}
+
+func UniqueId(testId, outName string) string {
+	if len(outName) > 0 {
+		return testId + hex.EncodeToString(utils.Blake256([]byte(outName))[:4])
+	}
+	return testId
 }

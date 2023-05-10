@@ -4,11 +4,14 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_ha "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-ha"
+	"github.com/hunjixin/brightbird/types"
 )
 
-var Info = venus_ha.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_ha.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_ha.Config `optional:"true"`
@@ -25,9 +28,14 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
+	authEndpoint, err := depParams.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := venus_ha.DeployerFromConfig(depParams.K8sEnv, venus_ha.Config{
-		AuthUrl:        depParams.VenusAuth.SvcEndpoint().ToHttp(),
-		AdminToken:     adminToken.(string),
+		AuthUrl:        authEndpoint.ToHttp(),
+		AdminToken:     adminToken.String(),
 		BootstrapPeers: depParams.BootstrapPeers,
 	}, depParams.Params)
 	if err != nil {

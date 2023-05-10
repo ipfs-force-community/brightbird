@@ -6,10 +6,10 @@ import (
 	"errors"
 	"fmt"
 
+	types2 "github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/venus-market/v2/config"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/pelletier/go-toml/v2"
@@ -41,10 +41,10 @@ func DefaultConfig() Config {
 	return Config{}
 }
 
-var PluginInfo = types.PluginInfo{
+var PluginInfo = types2.PluginInfo{
 	Name:        "market-client",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types2.Deploy,
 	Description: "",
 	Repo:        "https://github.com/filecoin-project/venus-market.git",
 	ImageTarget: "market-client",
@@ -58,7 +58,7 @@ type MarketClientDeployer struct {
 	env *env.K8sEnvDeployer
 	cfg *Config
 
-	svcEndpoint types.Endpoint
+	svcEndpoint types2.Endpoint
 
 	configMapName   string
 	statefulSetName string
@@ -89,12 +89,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, depCfg Config, frontCfg Config)
 	}, nil
 }
 
-func (deployer *MarketClientDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *MarketClientDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *MarketClientDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("market-client-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("market-client-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *MarketClientDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -105,12 +105,12 @@ func (deployer *MarketClientDeployer) Svc(ctx context.Context) (*corev1.Service,
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *MarketClientDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *MarketClientDeployer) SvcEndpoint() (types2.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *MarketClientDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *MarketClientDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed  market-client
@@ -121,7 +121,7 @@ func (deployer *MarketClientDeployer) Deploy(ctx context.Context) (err error) {
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel]),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 	//create configmap
@@ -165,18 +165,13 @@ func (deployer *MarketClientDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *MarketClientDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *MarketClientDeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &config.MarketClientConfig{}
-	err = toml.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *MarketClientDeployer) Update(ctx context.Context, updateCfg interface{}) error {

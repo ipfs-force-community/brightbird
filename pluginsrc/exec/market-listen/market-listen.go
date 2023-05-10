@@ -3,18 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/fx"
 
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "market_listen",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "market listen",
 }
 
@@ -37,7 +42,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {

@@ -2,39 +2,13 @@ package api
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// ListInGroupParams
-// swagger:model listInGroupParams
-type ListInGroupParams struct {
-	GroupId string `form:"groupId"`
-	Name    string `form:"name"`
-}
-
-// ListInGroupRequest
-// swagger:model listInGroupRequest
-type ListInGroupRequest = types.PageReq[ListInGroupParams]
-
-// GetTestFlowRequest
-// swagger:model getTestFlowRequest
-type GetTestFlowRequest struct {
-	ID   string `form:"id"`
-	Name string `form:"name"`
-}
-
-// ListTestFlowResp
-// swagger:model listTestFlowResp
-type ListTestFlowResp = types.PageResp[types.TestFlow]
-
-// ChangeGroupRequest
-// swagger:model changeGroupRequest
-type ChangeGroupRequest = repo.ChangeTestflowGroup
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
@@ -72,8 +46,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Responses:
 	//       200: listTestFlowResp
+	//		 503: apiError
 	group.GET("list", func(c *gin.Context) {
-		req := &ListInGroupRequest{}
+		req := &models.ListInGroupRequest{}
 		err := c.ShouldBindWith(req, paginationQueryBind)
 		if err != nil {
 			c.Error(err)
@@ -86,7 +61,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		output, err := service.List(ctx, types.PageReq[repo.ListTestFlowParams]{
+		output, err := service.List(ctx, models.PageReq[repo.ListTestFlowParams]{
 			PageNum:  req.PageNum,
 			PageSize: req.PageSize,
 			Params: repo.ListTestFlowParams{
@@ -126,6 +101,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.GET("count/:groupId", func(c *gin.Context) {
 		groupId, err := primitive.ObjectIDFromHex(c.Param("groupId"))
 		if err != nil {
@@ -142,7 +118,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow/{name} getTestFlow
+	// swagger:route GET /testflow getTestFlow
 	//
 	// Get specific test case by condition.
 	//
@@ -171,8 +147,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Responses:
 	//       200: testFlow
+	//		 503: apiError
 	group.GET("", func(c *gin.Context) {
-		req := &GetTestFlowRequest{}
+		req := &models.GetTestFlowRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
 			c.Error(err)
@@ -222,8 +199,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("", func(c *gin.Context) {
-		testFlow := types.TestFlow{}
+		testFlow := models.TestFlow{}
 		err := c.ShouldBindJSON(&testFlow)
 		if err != nil {
 			c.Error(err)
@@ -256,9 +234,14 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Parameters:
 	//       + name: id
+	//         in: path
+	//         description: id of test flow
+	//         required: true
+	//         type: string
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -292,22 +275,23 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//     Parameters:
 	//       + name: changGroupRequest
 	//         in: body
-	//         description: params with groupid and testflows
+	//         description: params with group id and testflows
 	//         required: true
-	//         type: changeGroupRequest
+	//         type: changeTestflowGroupRequest
 	//         allowEmpty:  false
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("/changegroup", func(c *gin.Context) {
-		changeTestflowGroup := ChangeGroupRequest{}
+		changeTestflowGroup := models.ChangeTestflowGroupRequest{}
 		err := c.ShouldBindJSON(&changeTestflowGroup)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		err = service.ChangeTestflowGroup(ctx, changeTestflowGroup)
+		err = service.ChangeTestflowGroup(ctx, repo.ChangeTestflowGroup(changeTestflowGroup))
 		if err != nil {
 			c.Error(err)
 			return

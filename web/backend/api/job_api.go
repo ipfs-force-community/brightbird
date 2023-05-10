@@ -2,41 +2,18 @@ package api
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"math"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 var jobLogger = logging.Logger("job_api")
-
-// UpdateJobRequest
-// swagger:model updateJobRequest
-type UpdateJobRequest struct {
-	TestFlowId  primitive.ObjectID `json:"testFlowId"`
-	Name        string             `json:"name"`
-	Description string             `json:"description"`
-	//cron job params
-	types.CronJobParams
-	Versions map[string]string `json:"versions"`
-}
-
-// JobDetailResp
-// swagger:model jobDetailResp
-type JobDetailResp struct {
-	types.Job
-	TestFlowName string `json:"testFlowName"`
-	GroupName    string `json:"groupName"`
-}
-
-// ListJobResp
-// swagger:model listJobResp
-type ListJobResp []types.Job
 
 func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager, taskManager *job.TaskMgr) {
 	group := v1group.Group("/job")
@@ -57,6 +34,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200: listJobResp
+	//		 503: apiError
 	group.GET("list", func(c *gin.Context) {
 		jobs, err := jobRepo.List(ctx)
 		if err != nil {
@@ -90,6 +68,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200: job
+	//		 503: apiError
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -130,6 +109,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200: jobDetailResp
+	//		 503: apiError
 	group.GET("detail/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -154,7 +134,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			c.Error(err)
 			return
 		}
-		c.JSON(http.StatusOK, JobDetailResp{
+		c.JSON(http.StatusOK, models.JobDetailResp{
 			*job,
 			testflow.Name,
 			tfGroup.Name,
@@ -190,8 +170,9 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200: job
+	//		 503: apiError
 	group.POST(":id", func(c *gin.Context) {
-		params := &UpdateJobRequest{}
+		params := &models.UpdateJobRequest{}
 		err := c.ShouldBindJSON(params)
 		if err != nil {
 			c.Error(err)
@@ -260,6 +241,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -281,7 +263,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		//remove task
-		tasks, err := taskRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+		tasks, err := taskRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 			PageNum:  1,
 			PageSize: math.MaxInt64,
 			Params: repo.ListTaskParams{
@@ -294,7 +276,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		for _, task := range tasks.List {
-			if task.State == types.Running || task.State == types.TempError {
+			if task.State == models.Running || task.State == models.TempError {
 				err = taskManager.StopOneTask(ctx, task.ID)
 				if err != nil {
 					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
@@ -340,8 +322,9 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("", func(c *gin.Context) {
-		job := &types.Job{}
+		job := &models.Job{}
 		err := c.ShouldBindJSON(job)
 		if err != nil {
 			c.Error(err)
@@ -368,8 +351,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.String(http.StatusOK, id.Hex())
 	})
 
-	// swagger:route POST /run/{jobid} saveJob
-	//
+	// swagger:route POST /run/{jobid} runJobImmediately
 	// run job immediately
 	//
 	//     Consumes:
@@ -385,14 +367,15 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//
 	//     Parameters:
 	//       + name: jobid
-	//         in: body
+	//         in: path
 	//         description: job id
 	//         required: true
-	//         type: job
+	//         type: string
 	//         allowEmpty:  false
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("/run/:jobid", func(c *gin.Context) {
 		jobIdStr := c.Param("jobid")
 		jobId, err := primitive.ObjectIDFromHex(jobIdStr)

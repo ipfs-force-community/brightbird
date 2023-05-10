@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hunjixin/brightbird/models"
+
 	"github.com/google/go-github/v51/github"
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
@@ -27,14 +29,13 @@ type PRMergedJob struct {
 	jobRepo      repo.IJobRepo
 	testflowRepo repo.ITestFlowRepo
 
-	deployStore  repo.DeployPluginStore
 	githubClient *github.Client
 	pubsub       modules.WebHookPubsub
 
 	logger *zap.SugaredLogger
 }
 
-func NewPRMergedJob(job types.Job, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *PRMergedJob {
+func NewPRMergedJob(job models.Job, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *PRMergedJob {
 
 	return &PRMergedJob{
 		jobId:        job.ID,
@@ -43,7 +44,6 @@ func NewPRMergedJob(job types.Job, deployStore repo.DeployPluginStore, pubsub mo
 		taskRepo:     taskRepo,
 		jobRepo:      jobRepo,
 		testflowRepo: testflowRepo,
-		deployStore:  deployStore,
 		logger:       tagCreateLog.With("type", "PRMergedJob", "job", job.ID, "testflow", job.TestFlowId),
 	}
 }
@@ -65,14 +65,14 @@ func (prMerged *PRMergedJob) RunImmediately(ctx context.Context) (primitive.Obje
 		return primitive.NilObjectID, fmt.Errorf("increase job %s exec count fail %w", job.ID, err)
 	}
 
-	id, err := prMerged.taskRepo.Save(ctx, &types.Task{
+	id, err := prMerged.taskRepo.Save(ctx, &models.Task{
 		ID:         primitive.NewObjectID(),
 		Name:       job.Name + "-" + strconv.Itoa(newJob.ExecCount),
 		JobId:      job.ID,
 		TestFlowId: job.TestFlowId,
-		State:      types.Init,
+		State:      models.Init,
 		TestId:     types.TestId(uuid.New().String()[:8]),
-		BaseTime:   types.BaseTime{},
+		BaseTime:   models.BaseTime{},
 	})
 	if err != nil {
 		return primitive.NilObjectID, fmt.Errorf("job %s save task fail %w", job.ID, err)
@@ -130,21 +130,21 @@ func (prMerged *PRMergedJob) Run(ctx context.Context) error {
 	return nil
 }
 
-func (prMerged *PRMergedJob) generateTaskFromJob(ctx context.Context, job *types.Job) (primitive.ObjectID, error) {
+func (prMerged *PRMergedJob) generateTaskFromJob(ctx context.Context, job *models.Job) (primitive.ObjectID, error) {
 	newJob, err := prMerged.jobRepo.IncExecCount(ctx, prMerged.jobId)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
 
 	// all use master branch, do not inherit version for job
-	id, err := prMerged.taskRepo.Save(ctx, &types.Task{
+	id, err := prMerged.taskRepo.Save(ctx, &models.Task{
 		ID:         primitive.NewObjectID(),
 		Name:       job.Name + "-" + strconv.Itoa(newJob.ExecCount),
 		JobId:      job.ID,
 		TestFlowId: job.TestFlowId,
-		State:      types.Init,
+		State:      models.Init,
 		TestId:     types.TestId(uuid.New().String()[:8]),
-		BaseTime:   types.BaseTime{},
+		BaseTime:   models.BaseTime{},
 	})
 	if err != nil {
 		return primitive.NilObjectID, err

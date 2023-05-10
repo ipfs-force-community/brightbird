@@ -2,17 +2,23 @@ package main
 
 import (
 	"context"
+
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "auth_request_venus",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "auth request venus",
 }
 
@@ -34,7 +40,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = checkPermission(ctx, adminToken.(string), params)
+	err = checkPermission(ctx, adminToken.String(), params)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +48,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func checkPermission(ctx context.Context, token string, params TestCaseParams) error {
-	endpoint := params.Venus.SvcEndpoint()
+	endpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		venusPods, err := params.Venus.Pods(ctx)
 		if err != nil {

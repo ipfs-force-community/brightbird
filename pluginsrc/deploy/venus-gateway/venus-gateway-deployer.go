@@ -7,10 +7,9 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
-	"github.com/ipfs-force-community/venus-gateway/config"
 	"github.com/pelletier/go-toml"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -43,7 +42,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-gateway",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/ipfs-force-community/venus-gateway.git",
 	ImageTarget: "venus-gateway",
 	Description: "",
@@ -83,12 +82,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	}, nil
 }
 
-func (deployer *VenusGatewayDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusGatewayDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusGatewayDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-gateway-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-gateway-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusGatewayDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -99,12 +98,12 @@ func (deployer *VenusGatewayDeployer) Svc(ctx context.Context) (*corev1.Service,
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusGatewayDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusGatewayDeployer) SvcEndpoint() (types.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusGatewayDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *VenusGatewayDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed venus-gateway
@@ -115,7 +114,7 @@ func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 	//create configmap
@@ -157,18 +156,13 @@ func (deployer *VenusGatewayDeployer) Deploy(ctx context.Context) error {
 	return nil
 }
 
-func (deployer *VenusGatewayDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusGatewayDeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &config.Config{}
-	err = toml.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *VenusGatewayDeployer) Update(ctx context.Context, updateCfg interface{}) error {

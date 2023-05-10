@@ -3,19 +3,24 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/filecoin-project/go-address"
+	"go.uber.org/fx"
 
+	"github.com/filecoin-project/go-address"
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "verity_gateway",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "verity gateway if normal",
 }
 
@@ -40,7 +45,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddr.(address.Address))
+	err = GetWalletInfo(ctx, params, adminTokenV.String(), walletAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
@@ -51,7 +56,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr address.Address) error {
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusWallet.Pods(ctx)
 		if err != nil {

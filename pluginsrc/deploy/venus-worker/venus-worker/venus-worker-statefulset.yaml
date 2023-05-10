@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: venus-worker-{{.TestID}}
+  name: venus-worker-{{.UniqueId}}
 spec:
   replicas: 1
-  serviceName: venus-worker-{{.TestID}}-svc
+  serviceName: venus-worker-{{.UniqueId}}-svc
   selector:
     matchLabels:
-      app: venus-worker-{{.TestID}}-pod
+      app: venus-worker-{{.UniqueId}}-pod
   template:
     metadata:
       labels:
-        app: venus-worker-{{.TestID}}-pod
+        app: venus-worker-{{.UniqueId}}-pod
     spec:
       initContainers:
         - name: init-myservice
@@ -27,7 +27,7 @@ spec:
               name: shared-dir-v
               subPath: {{.NameSpace}}
       containers:
-        - name: venus-worker-{{.TestID}}
+        - name: venus-worker-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
           args: ["run"]
           ports:
@@ -45,7 +45,7 @@ spec:
       volumes:
         - name: sector-worker-cfg
           configMap:
-            name: venus-worker-cfg-{{.TestID}}
+            name: venus-worker-cfg-{{.UniqueId}}
             items:
               - key: venus-worker.toml
                 path: venus-worker.toml

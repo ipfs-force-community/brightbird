@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	market_client "github.com/hunjixin/brightbird/pluginsrc/deploy/market-client"
 )
 
-var Info = market_client.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(market_client.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params market_client.Config `optional:"true"`
@@ -34,10 +37,21 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	venusEndpoin, err := depParams.VenusDep.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	walletPoint, err := depParams.WalletDeploy.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := market_client.DeployerFromConfig(depParams.K8sEnv, market_client.Config{
-		NodeUrl:     depParams.VenusDep.SvcEndpoint().ToMultiAddr(),
-		NodeToken:   adminToken.(string),
-		WalletUrl:   depParams.WalletDeploy.SvcEndpoint().ToMultiAddr(),
+		NodeUrl:     venusEndpoin.ToMultiAddr(),
+		NodeToken:   adminToken.String(),
+		WalletUrl:   walletPoint.ToMultiAddr(),
 		WalletToken: walletToken,
 	}, depParams.Params)
 	if err != nil {

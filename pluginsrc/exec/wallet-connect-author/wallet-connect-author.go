@@ -3,18 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/fx"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 // Info
 var Info = types.PluginInfo{
 	Name:        "wallet-connect-author",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "wallet connect author",
 }
 

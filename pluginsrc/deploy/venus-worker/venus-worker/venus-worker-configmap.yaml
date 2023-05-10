@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: venus-worker-cfg-{{.TestID}}
+  name: venus-worker-cfg-{{.UniqueId}}
 data:
 {{- range $i := until 20 }}
   test{{$i}}: |

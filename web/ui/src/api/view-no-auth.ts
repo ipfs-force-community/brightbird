@@ -4,8 +4,8 @@ import {
   ITaskParamVo,
 } from '@/api/dto/workflow-execution-record';
 import {
-  INodeVo, IProcessTemplateVo, ITestFlowDetail,
-  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam
+  IProcessTemplateVo, ITestFlowDetail,
+  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam, PluginOut
 } from '@/api/dto/testflow';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
@@ -55,7 +55,7 @@ export function getProjectGroup(groupId: string): Promise<ITestflowGroupVo> {
 }
 
 /**
- * 查询项目
+ * 查询测试流
  * @param dto
  */
 export function queryTestFlow(dto: IProjectQueryingDto): Promise<IPageVo<ITestFlowDetail>> {
@@ -68,7 +68,7 @@ export function queryTestFlow(dto: IProjectQueryingDto): Promise<IPageVo<ITestFl
 
 /**
  * 获取组中测试流的数量
- * @param dto
+ * @param groupId
  */
 export function countTestFlows(groupId: string): Promise<number> {
   return restProxy({
@@ -102,8 +102,8 @@ export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
 }
 
 /**
- * 获取项目详情
- * @param projectId
+ * 获取测试流详情
+ * @param params
  */
 export function fetchTestFlowDetail(params: IGetTestFlowParam): Promise<ITestFlowDetail> {
   return restProxy({
@@ -121,7 +121,7 @@ export function deleteTestFlow(projectId: string): Promise<void> {
 }
 
 /**
- * 保存项目
+ * 保存测试流
  * @param dto
  */
 export async function saveTestFlow(dto: ITestFlowDetail): Promise<ITestFlowIdVo> {
@@ -204,8 +204,8 @@ export function fetchVersion(): Promise<string> {
 /**
  * 获取deploy插件
  */
-export function fetchDeployPlugins(): Promise<INodeVo[]> {
-  return restProxy<INodeVo[]>({
+export function fetchDeployPlugins(): Promise<PluginOut[]> {
+  return restProxy<PluginOut[]>({
     url: `${baseUrl.plugin}/deploy/list`,
     method: 'get',
   });
@@ -215,8 +215,8 @@ export function fetchDeployPlugins(): Promise<INodeVo[]> {
  * 根据name获取deploy插件
  * @param name
  */
-export function fetchDeployByName(name: string): Promise<INodeVo> {
-  return restProxy<INodeVo>({
+export function fetchDeployByName(name: string): Promise<PluginOut> {
+  return restProxy<PluginOut>({
     url: `${baseUrl.plugin}/${name}`,
     method: 'get',
   });
@@ -225,8 +225,8 @@ export function fetchDeployByName(name: string): Promise<INodeVo> {
 /**
  * 获取exec插件
  */
-export function fetchExecPlugins(): Promise<INodeVo[]> {
-  return restProxy<INodeVo[]>({
+export function fetchExecPlugins(): Promise<PluginOut[]> {
+  return restProxy<PluginOut[]>({
     url: `${baseUrl.plugin}/exec/list`,
     method: 'get',
   });
@@ -236,8 +236,8 @@ export function fetchExecPlugins(): Promise<INodeVo[]> {
  * 根据name获取exec插件
  * @param name
  */
-export function fetchExecByName(name: string): Promise<INodeVo> {
-  return restProxy<INodeVo>({
+export function fetchExecByName(name: string): Promise<PluginOut> {
+  return restProxy<PluginOut>({
     url: `${baseUrl.plugin}/${name}`,
     method: 'get',
   });
