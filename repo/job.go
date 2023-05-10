@@ -2,9 +2,9 @@ package repo
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"time"
 
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,11 +13,11 @@ import (
 )
 
 type IJobRepo interface {
-	List(context.Context) ([]*types.Job, error)
-	Get(context.Context, primitive.ObjectID) (*types.Job, error)
-	Save(context.Context, *types.Job) (primitive.ObjectID, error)
+	List(context.Context) ([]*models.Job, error)
+	Get(context.Context, primitive.ObjectID) (*models.Job, error)
+	Save(context.Context, *models.Job) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
-	IncExecCount(ctx context.Context, id primitive.ObjectID) (*types.Job, error)
+	IncExecCount(ctx context.Context, id primitive.ObjectID) (*models.Job, error)
 }
 
 var _ IJobRepo = (*JobRepo)(nil)
@@ -39,13 +39,13 @@ func NewJobRepo(ctx context.Context, db *mongo.Database) (*JobRepo, error) {
 	return &JobRepo{jobCol: col}, nil
 }
 
-func (j *JobRepo) List(ctx context.Context) ([]*types.Job, error) {
+func (j *JobRepo) List(ctx context.Context) ([]*models.Job, error) {
 	cur, err := j.jobCol.Find(ctx, bson.M{}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}
 
-	jobs := []*types.Job{}
+	jobs := []*models.Job{}
 	err = cur.All(ctx, &jobs)
 	if err != nil {
 		return nil, err
@@ -53,8 +53,8 @@ func (j *JobRepo) List(ctx context.Context) ([]*types.Job, error) {
 	return jobs, nil
 }
 
-func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Job, error) {
-	tf := &types.Job{}
+func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Job, error) {
+	tf := &models.Job{}
 	err := j.jobCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
 		return nil, err
@@ -62,8 +62,8 @@ func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Job, e
 	return tf, nil
 }
 
-func (j *JobRepo) IncExecCount(ctx context.Context, id primitive.ObjectID) (*types.Job, error) {
-	tf := &types.Job{}
+func (j *JobRepo) IncExecCount(ctx context.Context, id primitive.ObjectID) (*models.Job, error) {
+	tf := &models.Job{}
 
 	inc := bson.M{
 		"$inc": bson.M{
@@ -77,7 +77,7 @@ func (j *JobRepo) IncExecCount(ctx context.Context, id primitive.ObjectID) (*typ
 	return tf, nil
 }
 
-func (j *JobRepo) Save(ctx context.Context, job *types.Job) (primitive.ObjectID, error) {
+func (j *JobRepo) Save(ctx context.Context, job *models.Job) (primitive.ObjectID, error) {
 	if job.ID.IsZero() {
 		job.ID = primitive.NewObjectID()
 	}

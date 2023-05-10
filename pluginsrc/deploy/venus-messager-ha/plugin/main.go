@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_messager_ha "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-messager-ha"
 )
 
-var Info = venus_messager_ha.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_messager_ha.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_messager_ha.Config `optional:"true"`
@@ -24,11 +27,27 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	venusEndpoint, err := depParams.Venus.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	venusAuthEndpoint, err := depParams.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := venus_messager_ha.DeployerFromConfig(depParams.K8sEnv, venus_messager_ha.Config{
-		NodeUrl:    depParams.Venus.SvcEndpoint().ToMultiAddr(),
-		GatewayUrl: depParams.Gateway.SvcEndpoint().ToMultiAddr(),
-		AuthUrl:    depParams.VenusAuth.SvcEndpoint().ToHttp(),
-		AuthToken:  adminToken.(string),
+		NodeUrl:    venusEndpoint.ToMultiAddr(),
+		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
+		AuthUrl:    venusAuthEndpoint.ToHttp(),
+		AuthToken:  adminToken.String(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err
@@ -38,5 +57,6 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return deployer, nil
 }

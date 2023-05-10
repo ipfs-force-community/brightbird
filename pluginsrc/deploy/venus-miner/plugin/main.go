@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_miner "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-miner"
 )
 
-var Info = venus_miner.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_miner.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_miner.Config `optional:"true"`
@@ -25,11 +28,26 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
+	venusEndpoint, err := depParams.Venus.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	venusAuthEndpoint, err := depParams.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := venus_miner.DeployerFromConfig(depParams.K8sEnv, venus_miner.Config{
-		NodeUrl:    depParams.Venus.SvcEndpoint().ToMultiAddr(),
-		GatewayUrl: depParams.Gateway.SvcEndpoint().ToMultiAddr(),
-		AuthUrl:    depParams.VenusAuth.SvcEndpoint().ToHttp(),
-		AuthToken:  adminToken.(string),
+		NodeUrl:    venusEndpoint.ToMultiAddr(),
+		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
+		AuthUrl:    venusAuthEndpoint.ToHttp(),
+		AuthToken:  adminToken.String(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

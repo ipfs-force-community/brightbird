@@ -2,29 +2,14 @@ package api
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// ListTasksParams
-// swagger:model listTasksParams
-type ListTasksParams struct {
-	JobId string        `form:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
-	State []types.State `form:"state"`
-}
-
-// ListTasksReq
-// swagger:model listTasksReq
-type ListTasksReq = types.PageReq[ListTasksParams]
-
-// ListTaskResp
-// swagger:model listTaskResp
-type ListTasksResp = types.PageResp[*types.Task]
 
 func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
@@ -52,9 +37,10 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//         type: string
 	//
 	//     Responses:
-	//       200: ListTasksResp
+	//       200: listTasksResp
+	//		 503: apiError
 	group.GET("list", func(c *gin.Context) {
-		params := ListTasksReq{}
+		params := models.ListTasksReq{}
 		err := c.ShouldBindWith(&params, paginationQueryBind)
 		if err != nil {
 			c.Error(err)
@@ -67,7 +53,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		tasks, err := tasksRepo.List(ctx, types.PageReq[repo.ListTaskParams]{
+		tasks, err := tasksRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 			PageNum:  params.PageNum,
 			PageSize: params.PageSize,
 			Params: repo.ListTaskParams{
@@ -106,6 +92,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Responses:
 	//       200: task
+	//		 503: apiError
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -146,6 +133,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
@@ -185,6 +173,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Responses:
 	//       200:
+	//		 503: apiError
 	group.POST("/stop/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {

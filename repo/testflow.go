@@ -3,9 +3,9 @@ package repo
 import (
 	"context"
 	"fmt"
+	"github.com/hunjixin/brightbird/models"
 	"time"
 
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,15 +23,12 @@ type ListTestFlowParams struct {
 	Name    string
 }
 
-type ChangeTestflowGroup struct {
-	GroupID     primitive.ObjectID   `json:"groupId"`
-	TestflowIDs []primitive.ObjectID `json:"testflowIds"`
-}
+type ChangeTestflowGroup = models.ChangeTestflowGroupRequest
 
 type ITestFlowRepo interface {
-	Get(context.Context, *GetTestFlowParams) (*types.TestFlow, error)
-	List(ctx context.Context, req types.PageReq[ListTestFlowParams]) (*types.PageResp[types.TestFlow], error)
-	Save(context.Context, types.TestFlow) (primitive.ObjectID, error)
+	Get(context.Context, *GetTestFlowParams) (*models.TestFlow, error)
+	List(ctx context.Context, req models.PageReq[ListTestFlowParams]) (*models.PageResp[models.TestFlow], error)
+	Save(context.Context, models.TestFlow) (primitive.ObjectID, error)
 	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	ChangeTestflowGroup(ctx context.Context, params ChangeTestflowGroup) error
@@ -63,7 +60,7 @@ func NewTestFlowRepo(ctx context.Context, db *mongo.Database) (*TestFlowRepo, er
 	return &TestFlowRepo{caseCol: col}, nil
 }
 
-func (c *TestFlowRepo) List(ctx context.Context, params types.PageReq[ListTestFlowParams]) (*types.PageResp[types.TestFlow], error) {
+func (c *TestFlowRepo) List(ctx context.Context, params models.PageReq[ListTestFlowParams]) (*models.PageResp[models.TestFlow], error) {
 	filter := bson.D{}
 	if !params.Params.GroupID.IsZero() {
 		filter = append(filter, bson.E{Key: "groupid", Value: params.Params.GroupID})
@@ -84,13 +81,13 @@ func (c *TestFlowRepo) List(ctx context.Context, params types.PageReq[ListTestFl
 		return nil, err
 	}
 
-	tf := []types.TestFlow{}
+	tf := []models.TestFlow{}
 	err = cur.All(ctx, &tf)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.PageResp[types.TestFlow]{
+	return &models.PageResp[models.TestFlow]{
 		Total:   count,
 		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
 		PageNum: params.PageNum,
@@ -98,7 +95,7 @@ func (c *TestFlowRepo) List(ctx context.Context, params types.PageReq[ListTestFl
 	}, nil
 }
 
-func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*types.TestFlow, error) {
+func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*models.TestFlow, error) {
 	filter := bson.M{}
 	if len(params.Name) > 0 {
 		filter["name"] = params.Name
@@ -107,7 +104,7 @@ func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*typ
 		filter["_id"] = params.ID
 	}
 
-	tf := &types.TestFlow{}
+	tf := &models.TestFlow{}
 	err := c.caseCol.FindOne(ctx, filter).Decode(tf)
 	if err != nil {
 		return nil, err
@@ -119,7 +116,7 @@ func (c *TestFlowRepo) CountByGroup(ctx context.Context, groupId primitive.Objec
 	return c.caseCol.CountDocuments(ctx, bson.D{{"groupid", groupId}})
 }
 
-func (c *TestFlowRepo) Save(ctx context.Context, tf types.TestFlow) (primitive.ObjectID, error) {
+func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.ObjectID, error) {
 	if tf.ID.IsZero() {
 		tf.ID = primitive.NewObjectID()
 	}
@@ -147,7 +144,7 @@ func (c *TestFlowRepo) Save(ctx context.Context, tf types.TestFlow) (primitive.O
 }
 
 func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
-	tf := &types.TestFlow{}
+	tf := &models.TestFlow{}
 	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil || err == mongo.ErrNoDocuments {
 		return fmt.Errorf("test flow (%d) not exis", id)

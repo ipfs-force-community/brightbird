@@ -4,18 +4,24 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/simlecode/api-compare/cmd"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "api_compare",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "api compare",
 }
 

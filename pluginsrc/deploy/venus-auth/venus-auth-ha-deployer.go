@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/config"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/pelletier/go-toml"
@@ -46,7 +46,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-auth",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus-auth.git",
 	ImageTarget: "venus-auth",
 	Description: "",
@@ -67,25 +67,15 @@ type VenusAuthHADeployer struct {
 	params map[string]string
 }
 
-func NewVenusAuthHADeployer(env *env.K8sEnvDeployer, replicas int) *VenusAuthHADeployer {
-	return &VenusAuthHADeployer{
-		env: env,
-		cfg: &Config{
-			Replicas: replicas, //default
-			MysqlDSN: env.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId("")),
-		},
-	}
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+func DeployerFromConfig(envV *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
-	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId(""))
+	defaultCfg.MysqlDSN = envV.FormatMysqlConnection("venus-auth-ha-" + env.UniqueId(envV.TestID(), cfg.InstanceName))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err
 	}
 	return &VenusAuthHADeployer{
-		env:    env,
+		env:    envV,
 		cfg:    &cfg,
 		params: make(map[string]string),
 	}, nil
@@ -104,12 +94,12 @@ func DeployerFromBytes(env *env.K8sEnvDeployer, data json.RawMessage) (env.IDepl
 	}, nil
 }
 
-func (deployer *VenusAuthHADeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusAuthHADeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusAuthHADeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-auth-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-auth-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusAuthHADeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -120,12 +110,12 @@ func (deployer *VenusAuthHADeployer) Svc(ctx context.Context) (*corev1.Service, 
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusAuthHADeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusAuthHADeployer) SvcEndpoint() (types.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusAuthHADeployer) Param(key string) (interface{}, error) {
-	return deployer.params[key], nil
+func (deployer *VenusAuthHADeployer) Param(key string) (env.Params, error) {
+	return env.ParamsFromVal(deployer.params[key]), nil
 }
 
 //go:embed venus-auth
@@ -136,7 +126,7 @@ func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 
@@ -190,7 +180,10 @@ func (deployer *VenusAuthHADeployer) Deploy(ctx context.Context) (err error) {
 }
 
 func (deployer *VenusAuthHADeployer) prepareParams(ctx context.Context) error {
-	endpoint := deployer.SvcEndpoint()
+	endpoint, err := deployer.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	venusAuthPods, err := deployer.Pods(ctx)
 	if err != nil {
 		return err
@@ -235,18 +228,13 @@ func (deployer *VenusAuthHADeployer) prepareParams(ctx context.Context) error {
 	return nil
 }
 
-func (deployer *VenusAuthHADeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusAuthHADeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &config.Config{}
-	err = toml.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *VenusAuthHADeployer) Update(ctx context.Context, updateCfg interface{}) error {

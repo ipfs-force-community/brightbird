@@ -8,25 +8,29 @@ import (
 	"strings"
 	"time"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/retrievalmarket"
 	"github.com/filecoin-project/go-state-types/big"
-	vtypes "github.com/filecoin-project/venus/venus-shared/types"
-	"github.com/filecoin-project/venus/venus-shared/types/market/client"
-	"github.com/ipfs/go-cid"
-
-	"github.com/filecoin-project/go-address"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
+	vtypes "github.com/filecoin-project/venus/venus-shared/types"
+	"github.com/filecoin-project/venus/venus-shared/types/market/client"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs/go-cid"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
-	Name:        "storage-deals",
+	Name:        "submit-retrieval-request",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "storage-deals",
 }
 
@@ -83,7 +87,10 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -164,7 +171,10 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 }
 
 func SubmitRetrievalRequest(ctx context.Context, params TestCaseParams, minerAddr address.Address) error {
-	endpoint := params.MarketClient.SvcEndpoint()
+	endpoint, err := params.MarketClient.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.MarketClient.Pods(ctx)
 		if err != nil {

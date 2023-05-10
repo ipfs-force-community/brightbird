@@ -7,18 +7,22 @@ import (
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
-	"github.com/hunjixin/brightbird/utils"
-
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
-	Name:        "verity_gateway",
+	Name:        "gateway-get-walletpro",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "verity gateway if normal",
 }
 
@@ -64,7 +68,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -86,7 +93,7 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 		return "", err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return "", err
 	}
@@ -153,7 +160,10 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) error {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {

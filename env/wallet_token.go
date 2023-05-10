@@ -24,5 +24,4 @@ func ReadWalletToken(ctx context.Context, k8sEnv *K8sEnvDeployer, walletPod stri
 	}
 
 	return string(tokenBytes), nil
-
 }

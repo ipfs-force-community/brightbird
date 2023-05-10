@@ -23,6 +23,7 @@ func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
 	//     Deprecated: false
 	//
 	//     Responses:
+	//       200: myString
 	group.GET("version", func(c *gin.Context) {
 		c.JSON(http.StatusOK, version.Version())
 	})

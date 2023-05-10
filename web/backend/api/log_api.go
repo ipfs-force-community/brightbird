@@ -8,14 +8,6 @@ import (
 	"github.com/hunjixin/brightbird/repo"
 )
 
-// PodListResp
-// swagger:model podListResp
-type PodListResp []string
-
-// LogListResp
-// swagger:model logListResp
-type LogListResp []string
-
 func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo repo.ILogRepo) {
 	group := v1group.Group("/logs")
 
@@ -43,6 +35,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	//
 	//     Responses:
 	//       200: podListResp
+	//		 503: apiError
 	group.GET("pods/:testid", func(c *gin.Context) {
 		testID := c.Param("testid")
 		pods, err := logRepo.ListPodsInTest(c, testID)
@@ -77,6 +70,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	//
 	//     Responses:
 	//       200: podListResp
+	//		 503: apiError
 	group.GET(":podName", func(c *gin.Context) {
 		podName := c.Param("podName")
 		pods, err := logRepo.GetPodLog(c, podName)

@@ -10,6 +10,8 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/hunjixin/brightbird/env/plugin"
+
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
@@ -20,15 +22,19 @@ import (
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/filecoin-project/venus/venus-shared/types/market"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "storage-deals-set-ask",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "storage deals set-ask",
 }
 
@@ -77,7 +83,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -172,7 +182,11 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 }
 
 func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -229,7 +243,10 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))

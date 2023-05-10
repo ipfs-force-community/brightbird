@@ -12,16 +12,21 @@ import (
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "verity_gateway",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "verity gateway if normal",
 }
 
@@ -57,7 +62,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -78,7 +87,7 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return "", err
 	}
@@ -110,7 +119,11 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -141,7 +154,11 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string) error {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {

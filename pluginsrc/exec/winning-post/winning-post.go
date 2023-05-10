@@ -8,21 +8,27 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/hunjixin/brightbird/env/plugin"
+
 	"github.com/filecoin-project/go-address"
 	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "winning_post",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "check miner winning post if success.",
 }
 
@@ -86,7 +92,11 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -171,7 +181,11 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 		return "", err
 	}
 
-	endpoint := params.VenusMiner.SvcEndpoint()
+	endpoint, err := params.VenusMiner.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -198,7 +212,11 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 }
 
 func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken string) (string, error) {
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		messagePods, err := params.VenusMessage.Pods(ctx)
 		if err != nil {

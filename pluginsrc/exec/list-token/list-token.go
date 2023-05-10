@@ -7,15 +7,20 @@ import (
 
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
-	Name:        "generate_token",
+	Name:        "list_token",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "generate admin token",
 }
 
@@ -31,7 +36,11 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -53,7 +62,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminTokenV.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminTokenV.String())
 	if err != nil {
 		return nil, err
 	}

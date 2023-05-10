@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "add_miner",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "user add miner",
 }
 
@@ -68,7 +74,10 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusWalletPods[0].GetName(), int(svc.Spec.Ports[0].Port))

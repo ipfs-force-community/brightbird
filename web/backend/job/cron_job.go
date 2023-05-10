@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -17,7 +18,7 @@ var cronLog = logging.Logger("cron_job")
 var _ IJob = (*CronJob)(nil)
 
 type CronJob struct {
-	job      types.Job
+	job      models.Job
 	cron     *cron.Cron
 	taskRepo repo.ITaskRepo
 	jobRepo  repo.IJobRepo
@@ -25,7 +26,7 @@ type CronJob struct {
 	cronId *cron.EntryID
 }
 
-func NewCronJob(job types.Job, cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *CronJob {
+func NewCronJob(job models.Job, cron *cron.Cron, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo) *CronJob {
 	return &CronJob{job: job, cron: cron, taskRepo: taskRepo, jobRepo: jobRepo}
 }
 
@@ -43,14 +44,14 @@ func (cronJob *CronJob) RunImmediately(ctx context.Context) (primitive.ObjectID,
 		return primitive.NilObjectID, err
 	}
 
-	id, err := cronJob.taskRepo.Save(ctx, &types.Task{
+	id, err := cronJob.taskRepo.Save(ctx, &models.Task{
 		ID:              primitive.NewObjectID(),
 		Name:            cronJob.job.Name + "-" + strconv.Itoa(newJob.ExecCount),
 		JobId:           cronJob.job.ID,
 		TestFlowId:      cronJob.job.TestFlowId,
-		State:           types.Init,
+		State:           models.Init,
 		TestId:          types.TestId(uuid.New().String()[:8]),
-		BaseTime:        types.BaseTime{},
+		BaseTime:        models.BaseTime{},
 		InheritVersions: cronJob.job.Versions,
 	})
 	if err != nil {

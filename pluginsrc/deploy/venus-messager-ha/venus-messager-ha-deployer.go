@@ -6,9 +6,11 @@ import (
 	"errors"
 	"fmt"
 
+	types2 "github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/venus-messager/config"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -46,10 +48,10 @@ func DefaultConfig() Config {
 	}
 }
 
-var PluginInfo = types.PluginInfo{
+var PluginInfo = types2.PluginInfo{
 	Name:        "venus-message-ha",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus-messager.git",
 	ImageTarget: "venus-messager",
 	Description: "",
@@ -61,7 +63,7 @@ type VenusMessagerHADeployer struct {
 	env *env.K8sEnvDeployer
 	cfg *Config
 
-	svcEndpoint types.Endpoint
+	svcEndpoint types2.Endpoint
 
 	pushPodName     string
 	configMapName   string
@@ -69,39 +71,25 @@ type VenusMessagerHADeployer struct {
 	svcName         string
 }
 
-func NewVenusMessagerHADeployer(env *env.K8sEnvDeployer, replicas int, nodeUrl, authUrl, gatewayUrl, authToken string) *VenusMessagerHADeployer {
-	return &VenusMessagerHADeployer{
-		env: env,
-		cfg: &Config{
-			Replicas:   replicas, //default
-			AuthUrl:    authUrl,
-			GatewayUrl: gatewayUrl,
-			AuthToken:  authToken,
-			NodeUrl:    nodeUrl,
-			MysqlDSN:   env.FormatMysqlConnection("venus-messager-ha-" + env.UniqueId("")),
-		},
-	}
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
+func DeployerFromConfig(envV *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
-	defaultCfg.MysqlDSN = env.FormatMysqlConnection("venus-messager-ha-" + env.UniqueId(""))
+	defaultCfg.MysqlDSN = envV.FormatMysqlConnection("venus-messager-ha-" + env.UniqueId(envV.TestID(), cfg.InstanceName))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err
 	}
 	return &VenusMessagerHADeployer{
-		env: env,
+		env: envV,
 		cfg: &cfg,
 	}, nil
 }
 
-func (deployer *VenusMessagerHADeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusMessagerHADeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusMessagerHADeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-messager-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-messager-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusMessagerHADeployer) PushPods(ctx context.Context) ([]corev1.Pod, error) {
@@ -140,12 +128,12 @@ func (deployer *VenusMessagerHADeployer) Svc(ctx context.Context) (*corev1.Servi
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusMessagerHADeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusMessagerHADeployer) SvcEndpoint() (types2.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusMessagerHADeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *VenusMessagerHADeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed venus-messager
@@ -155,7 +143,7 @@ func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error)
 	renderParams := RenderParams{
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 
@@ -218,18 +206,13 @@ func (deployer *VenusMessagerHADeployer) Deploy(ctx context.Context) (err error)
 	return nil
 }
 
-func (deployer *VenusMessagerHADeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusMessagerHADeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.ExecRemoteCmd(ctx, deployer.pushPodName, "cat /root/.venus-messager/config.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &config.Config{}
-	err = toml.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *VenusMessagerHADeployer) Update(ctx context.Context, updateCfg interface{}) error {

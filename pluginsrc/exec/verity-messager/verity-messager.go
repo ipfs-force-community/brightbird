@@ -8,16 +8,21 @@ import (
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "verity_message",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "verity message if normal",
 }
 
@@ -51,7 +56,10 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 		return "", err
 	}
 
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -68,7 +76,7 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 		}
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return "", err
 	}
@@ -85,7 +93,11 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 }
 
 func CreateMessage(ctx context.Context, params TestCaseParams, authToken string) error {
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {

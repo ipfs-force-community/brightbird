@@ -114,15 +114,15 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
-import {fetchDeployPlugins, fetchExecPlugins} from "@/api/view-no-auth";
-import {INodeVo} from "@/api/dto/testflow.js";
+import { fetchDeployPlugins, fetchExecPlugins } from "@/api/view-no-auth";
+import { PluginOut } from "@/api/dto/testflow.js";
 
 export default defineComponent({
   components: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
-    const deployPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
-    const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
+    const deployPlugins = reactive<Mutable<INode<PluginOut>>>({total:0, list:[]});
+    const execPlugins = reactive<Mutable<INode<PluginOut>>>({total:0, list:[]});
       fetchDeployPlugins()
         .then(res => {
           deployPlugins.list = res

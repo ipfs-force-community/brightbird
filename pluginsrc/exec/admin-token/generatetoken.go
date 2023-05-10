@@ -4,19 +4,25 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "generate_token",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "generate admin token",
 }
 
@@ -38,7 +44,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -51,7 +61,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return nil, err
 	}

@@ -5,10 +5,13 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_gateway "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-gateway"
 )
 
-var Info = venus_gateway.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_gateway.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_gateway.Config `optional:"true"`
@@ -23,10 +26,16 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	authEndpoint, err := depParams.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	fmt.Println("ttttt ggg", adminToken)
 	deployer, err := venus_gateway.DeployerFromConfig(depParams.K8sEnv, venus_gateway.Config{
-		AuthUrl:    depParams.VenusAuth.SvcEndpoint().ToHttp(),
-		AdminToken: adminToken.(string),
+		AuthUrl:    authEndpoint.ToHttp(),
+		AdminToken: adminToken.String(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

@@ -2,18 +2,23 @@ package main
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/env/plugin_utils"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/env/venus_utils"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "check_sync",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "check if sync successed",
 }
 
@@ -37,7 +42,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	for _, pod := range pods {
-		err := plugin_utils.SyncWait(ctx, params.K8sEnv, pod, adminToken.(string))
+		err := venus_utils.SyncWait(ctx, params.K8sEnv, pod, adminToken.String())
 		if err != nil {
 			return nil, err
 		}

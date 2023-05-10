@@ -5,8 +5,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -73,39 +74,6 @@ func TestDeployerFromConfig(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DeployerFromConfig() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestVenusWalletDeployer_Name(t *testing.T) {
-	type fields struct {
-		env             *env.K8sEnvDeployer
-		cfg             *Config
-		svcEndpoint     types.Endpoint
-		configMapName   string
-		statefulSetName string
-		svcName         string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			deployer := &VenusWalletDeployer{
-				env:             tt.fields.env,
-				cfg:             tt.fields.cfg,
-				svcEndpoint:     tt.fields.svcEndpoint,
-				configMapName:   tt.fields.configMapName,
-				statefulSetName: tt.fields.statefulSetName,
-				svcName:         tt.fields.svcName,
-			}
-			if got := deployer.Name(); got != tt.want {
-				t.Errorf("VenusWalletDeployer.Name() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -235,39 +203,6 @@ func TestVenusWalletDeployer_Svc(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("VenusWalletDeployer.Svc() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestVenusWalletDeployer_SvcEndpoint(t *testing.T) {
-	type fields struct {
-		env             *env.K8sEnvDeployer
-		cfg             *Config
-		svcEndpoint     types.Endpoint
-		configMapName   string
-		statefulSetName string
-		svcName         string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   types.Endpoint
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			deployer := &VenusWalletDeployer{
-				env:             tt.fields.env,
-				cfg:             tt.fields.cfg,
-				svcEndpoint:     tt.fields.svcEndpoint,
-				configMapName:   tt.fields.configMapName,
-				statefulSetName: tt.fields.statefulSetName,
-				svcName:         tt.fields.svcName,
-			}
-			if got := deployer.SvcEndpoint(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("VenusWalletDeployer.SvcEndpoint() = %v, want %v", got, tt.want)
 			}
 		})
 	}

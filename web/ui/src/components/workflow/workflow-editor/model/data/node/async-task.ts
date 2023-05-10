@@ -2,8 +2,7 @@ import {BaseNode} from './base-node';
 import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
 import {TaskStatusEnum} from '@/api/dto/enumeration';
-import {IPropertyDto} from "@/api/dto/testflow";
-
+import { Property } from "@/api/dto/testflow";
 export interface IAsyncTaskParam {
   readonly ref: string;
   readonly name: string;
@@ -37,9 +36,9 @@ export class AsyncTask extends BaseNode {
   groupType: NodeGroupEnum;
   version: string;
   pluginType: string;
-  readonly inputs: IPropertyDto[];
-  readonly svcProperties: IPropertyDto[];
-  out: IPropertyDto;
+  readonly inputs: Property[];
+  readonly svcProperties: Property[];
+  out: Property;
   createTime: string;
   modifiedTime: string;
 
@@ -50,11 +49,11 @@ export class AsyncTask extends BaseNode {
       groupType: NodeGroupEnum,
       version = '',
       pluginType = '',
-      inputs: IPropertyDto[],
-      svcProperties: IPropertyDto[],
+      inputs: Property[],
+      svcProperties: Property[],
       createTime = '',
       modifiedTime = '',
-      out: IPropertyDto,
+      out: Property,
   ) {
     super(
         name,
@@ -84,7 +83,7 @@ export class AsyncTask extends BaseNode {
       [key: string]: string | number | boolean;
     } = {};
     if (inputs && inputs.length > 0) {
-      inputs.forEach(({name, type, required, value}) => {
+      inputs.forEach(({name, type, require, value}) => {
         switch (type) {
           case ParamTypeEnum.NUMBER: {
             const val = parseFloat(value);
@@ -111,7 +110,7 @@ export class AsyncTask extends BaseNode {
           param[name] = value;
         }
 
-        if (!required && !value && type !== ParamTypeEnum.STRING) {
+        if (!require && !value && type !== ParamTypeEnum.STRING) {
           delete param[name];
         }
       });
@@ -121,7 +120,7 @@ export class AsyncTask extends BaseNode {
       [key: string]: string | number | boolean;
     } = {};
     if (svcProperties && svcProperties.length > 0) {
-      svcProperties.forEach(({name, type, required, value}) => {
+      svcProperties.forEach(({name, type, require, value}) => {
         switch (type) {
           case ParamTypeEnum.NUMBER: {
             const val = parseFloat(value);
@@ -148,7 +147,7 @@ export class AsyncTask extends BaseNode {
           svc[name] = value;
         }
 
-        if (!required && !value && type !== ParamTypeEnum.STRING) {
+        if (!require && !value && type !== ParamTypeEnum.STRING) {
           delete svc[name];
         }
       });
@@ -171,7 +170,7 @@ export class AsyncTask extends BaseNode {
             output[out.name] = out.value;
           }
 
-          if (!out.required && !out.value && out.type !== ParamTypeEnum.STRING) {
+          if (!out.require && !out.value && out.type !== ParamTypeEnum.STRING) {
             delete output[out.name];
           }
         }

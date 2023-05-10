@@ -11,16 +11,21 @@ import (
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/libp2p/go-libp2p/core/peer"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "storage-deals",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "storage-deals",
 }
 
@@ -78,7 +83,11 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -159,7 +168,10 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 }
 
 func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.Address) error {
-	endpoint := params.MarketClient.SvcEndpoint()
+	endpoint, err := params.MarketClient.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.MarketClient.Pods(ctx)
 		if err != nil {
@@ -182,7 +194,11 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 	}
 	defer closer()
 
-	venusEndpoint := params.Venus.SvcEndpoint()
+	venusEndpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.Venus.Pods(ctx)
 		if err != nil {

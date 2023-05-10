@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_wallet_pro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 )
 
-var Info = venus_wallet_pro.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_wallet_pro.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_wallet_pro.Config `optional:"true"`

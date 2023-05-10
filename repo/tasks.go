@@ -2,12 +2,12 @@ package repo
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/models"
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,16 +15,16 @@ import (
 
 type ListTaskParams struct {
 	JobId primitive.ObjectID `form:"jobId"`
-	State []types.State      `form:"state"`
+	State []models.State     `form:"state"`
 }
 
 type ITaskRepo interface {
-	List(context.Context, types.PageReq[ListTaskParams]) (*types.PageResp[*types.Task], error)
+	List(context.Context, models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error)
 	UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
-	MarkState(ctx context.Context, id primitive.ObjectID, state types.State, msg ...string) error
+	MarkState(ctx context.Context, id primitive.ObjectID, state models.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
-	Get(context.Context, primitive.ObjectID) (*types.Task, error)
-	Save(context.Context, *types.Task) (primitive.ObjectID, error)
+	Get(context.Context, primitive.ObjectID) (*models.Task, error)
+	Save(context.Context, *models.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -56,7 +56,7 @@ type TaskRepo struct {
 	taskCol *mongo.Collection
 }
 
-func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams]) (*types.PageResp[*types.Task], error) {
+func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error) {
 	filter := bson.D{}
 	if !params.Params.JobId.IsZero() {
 		filter = append(filter, bson.E{Key: "jobid", Value: params.Params.JobId})
@@ -76,13 +76,13 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 		return nil, err
 	}
 
-	tasks := []*types.Task{} //ensure lisit have value convient for front pages
+	tasks := []*models.Task{} //ensure lisit have value convient for front pages
 	err = cur.All(ctx, &tasks)
 	if err != nil {
 		return nil, err
 	}
 
-	return &types.PageResp[*types.Task]{
+	return &models.PageResp[*models.Task]{
 		Total:   count,
 		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
 		PageNum: params.PageNum,
@@ -90,8 +90,8 @@ func (j *TaskRepo) List(ctx context.Context, params types.PageReq[ListTaskParams
 	}, nil
 }
 
-func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task, error) {
-	tf := &types.Task{}
+func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Task, error) {
+	tf := &models.Task{}
 	err := j.taskCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
 		return nil, err
@@ -99,7 +99,7 @@ func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*types.Task,
 	return tf, nil
 }
 
-func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state types.State, logs ...string) error {
+func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state models.State, logs ...string) error {
 	update := bson.M{
 		"$set": bson.M{
 			"state": state,
@@ -118,7 +118,7 @@ func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state t
 func (j *TaskRepo) UpdatePodRunning(ctx context.Context, id primitive.ObjectID, podName string) error {
 	update := bson.M{
 		"$set": bson.M{
-			"state":   types.Running,
+			"state":   models.Running,
 			"podname": podName,
 		},
 		"$push": bson.M{
@@ -130,7 +130,7 @@ func (j *TaskRepo) UpdatePodRunning(ctx context.Context, id primitive.ObjectID, 
 	return err
 }
 
-func (j *TaskRepo) Save(ctx context.Context, task *types.Task) (primitive.ObjectID, error) {
+func (j *TaskRepo) Save(ctx context.Context, task *models.Task) (primitive.ObjectID, error) {
 	if task.ID.IsZero() {
 		task.ID = primitive.NewObjectID()
 	}

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math/rand"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -18,7 +20,7 @@ import (
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs/go-cid"
@@ -26,10 +28,14 @@ import (
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
-	Name:        "actor-set-addrs",
+	Name:        "actor-set-peer-id",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "actor set-addrs",
 }
 
@@ -83,7 +89,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
@@ -104,7 +114,7 @@ func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error)
 	if err != nil {
 		return "", err
 	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
 	if err != nil {
 		return "", err
 	}
@@ -128,7 +138,10 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		return err
 	}
 
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.VenusMessage.Pods(ctx)
 		if err != nil {
@@ -161,7 +174,11 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 }
 
 func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -210,7 +227,10 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -264,7 +284,10 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 }
 
 func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return cid.Undef, err
+	}
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -336,7 +359,10 @@ func ConstructParams(pid peer.ID) (param []byte, err error) {
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Address) (vtypes.MinerInfo, error) {
-	endpoint := params.Venus.SvcEndpoint()
+	endpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return vtypes.MinerInfo{}, err
+	}
 	if env.Debug {
 		pods, err := params.Venus.Pods(ctx)
 		if err != nil {

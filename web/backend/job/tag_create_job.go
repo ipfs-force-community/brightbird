@@ -7,6 +7,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/hunjixin/brightbird/models"
+
 	"github.com/google/go-github/v51/github"
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
@@ -28,14 +30,14 @@ type TagCreateJob struct {
 	jobRepo      repo.IJobRepo
 	testflowRepo repo.ITestFlowRepo
 
-	deployStore  repo.DeployPluginStore
+	pluginRepo   repo.IPluginService
 	githubClient *github.Client
 	pubsub       modules.WebHookPubsub
 
 	logger *zap.SugaredLogger
 }
 
-func NewTagCreateJob(job types.Job, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *TagCreateJob {
+func NewTagCreateJob(job models.Job, pluginRepo repo.IPluginService, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *TagCreateJob {
 
 	return &TagCreateJob{
 		jobId:        job.ID,
@@ -44,7 +46,7 @@ func NewTagCreateJob(job types.Job, deployStore repo.DeployPluginStore, pubsub m
 		taskRepo:     taskRepo,
 		jobRepo:      jobRepo,
 		testflowRepo: testflowRepo,
-		deployStore:  deployStore,
+		pluginRepo:   pluginRepo,
 		logger:       tagCreateLog.With("type", "TagCreatedJob", "job", job.ID, "testflow", job.TestFlowId),
 	}
 }
@@ -87,7 +89,7 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 			}
 
 			for _, node := range testflow.Nodes {
-				plugin, err := tagCreateJob.deployStore.GetPlugin(node.Name)
+				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
 				if err != nil {
 					return primitive.NilObjectID, err
 				}
@@ -135,7 +137,7 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, pushEvent *github
 			//hit event
 			//remember last hint
 			for _, node := range testflow.Nodes {
-				plugin, err := tagCreateJob.deployStore.GetPlugin(node.Name)
+				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
 				if err != nil {
 					return err
 				}
@@ -169,20 +171,20 @@ func (tagCreateJob *TagCreateJob) Run(ctx context.Context) error {
 	return nil
 }
 
-func (tagCreateJob *TagCreateJob) generateTaskFromJob(ctx context.Context, job *types.Job) (primitive.ObjectID, error) {
+func (tagCreateJob *TagCreateJob) generateTaskFromJob(ctx context.Context, job *models.Job) (primitive.ObjectID, error) {
 	newJob, err := tagCreateJob.jobRepo.IncExecCount(ctx, tagCreateJob.jobId)
 	if err != nil {
 		return primitive.NilObjectID, err
 	}
 
-	id, err := tagCreateJob.taskRepo.Save(ctx, &types.Task{
+	id, err := tagCreateJob.taskRepo.Save(ctx, &models.Task{
 		ID:              primitive.NewObjectID(),
 		Name:            job.Name + "-" + strconv.Itoa(newJob.ExecCount),
 		JobId:           job.ID,
 		TestFlowId:      job.TestFlowId,
-		State:           types.Init,
+		State:           models.Init,
 		TestId:          types.TestId(uuid.New().String()[:8]),
-		BaseTime:        types.BaseTime{},
+		BaseTime:        models.BaseTime{},
 		InheritVersions: job.Versions,
 	})
 	if err != nil {

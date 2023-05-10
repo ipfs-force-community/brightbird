@@ -3,14 +3,13 @@ package venus
 import (
 	"context"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	"encoding/json"
+	"github.com/hunjixin/brightbird/types"
 
-	"github.com/filecoin-project/venus/pkg/config"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	appv1 "k8s.io/api/apps/v1"
@@ -47,7 +46,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-daemon-simple",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus.git",
 	ImageTarget: "venus",
 	Description: "",
@@ -89,12 +88,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	}, nil
 }
 
-func (deployer *VenusDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -105,12 +104,12 @@ func (deployer *VenusDeployer) Svc(ctx context.Context) (*corev1.Service, error)
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusDeployer) SvcEndpoint() (types.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *VenusDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed venus-node
@@ -121,7 +120,7 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            deployer.buildArgs(),
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 		Config:          *deployer.cfg,
 	}
 	//create configmap
@@ -164,18 +163,13 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *VenusDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusDeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.json")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	cfg := &config.Config{}
-	err = json.Unmarshal(cfgData, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 // Update
