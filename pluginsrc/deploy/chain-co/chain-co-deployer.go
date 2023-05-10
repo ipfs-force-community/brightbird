@@ -39,7 +39,7 @@ func DefaultConfig() Config {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        string(env.ChainCo),
+	Name:        "chain-co",
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Description: "",

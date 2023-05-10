@@ -43,7 +43,7 @@ func DefaultConfig() Config {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        string(env.VenusMiner),
+	Name:        "venus-miner",
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus-miner.git",

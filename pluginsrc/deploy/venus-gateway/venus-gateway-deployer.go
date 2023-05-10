@@ -41,7 +41,7 @@ func DefaultConfig() Config {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        string(env.VenusGateway),
+	Name:        "venus-gateway",
 	Version:     version.Version(),
 	Category:    types.Deploy,
 	Repo:        "https://github.com/ipfs-force-community/venus-gateway.git",
