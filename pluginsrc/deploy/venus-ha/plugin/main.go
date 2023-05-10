@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/types"
 	venus_ha "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-ha"
-	"github.com/hunjixin/brightbird/types"
 )
 
 var Info = venus_ha.PluginInfo

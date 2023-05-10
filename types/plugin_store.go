@@ -15,27 +15,10 @@ import (
 
 var pluginLog = logging.Logger("plugins")
 
-type Category string
-
-const (
-	Deploy   Category = "Deployer"
-	TestExec Category = "Exec"
-)
-
 type IPluginInfo interface {
 	Each(fn func(*PluginDetail) error) error
 	GetPlugin(name string) (*PluginDetail, error)
 	AddPlugin(path string) error
-}
-
-type PluginInfo struct {
-	Name        string   `json:"name"`
-	Version     string   `json:"version"`
-	Category    Category `json:"category"`
-	Description string   `json:"description"`
-	Repo        string   `json:"repo"`
-	ImageTarget string   `json:"imageTarget"`
-	Path        string   `json:"path"`
 }
 
 type PluginDetail struct {

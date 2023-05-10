@@ -7,7 +7,7 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs-force-community/venus-cluster/venus-sector-manager/modules"

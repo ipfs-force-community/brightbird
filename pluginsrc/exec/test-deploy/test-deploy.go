@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )

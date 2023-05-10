@@ -18,7 +18,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
 	"google.golang.org/appengine"
@@ -71,7 +71,7 @@ type K8sEnvDeployer struct {
 	mysqlConnTemplate string
 	k8sCfg            *rest.Config
 	dialCtx           func(ctx context.Context, network, address string) (net.Conn, error)
-	resouceMgr        IResourceMgr
+	resourceMgr       IResourceMgr
 }
 
 // NewK8sEnvDeployer create a new test environment
@@ -119,7 +119,7 @@ func NewK8sEnvDeployer(namespace string, testID string, privateRegistry string, 
 		dialCtx:           dialCtx,
 		privateRegistry:   privateRegistry,
 		mysqlConnTemplate: mysqlConnTemplate,
-		resouceMgr:        NewResourceMgr(k8sClient, namespace, tmpPath, mysqlConnTemplate, testID),
+		resourceMgr:       NewResourceMgr(k8sClient, namespace, tmpPath, mysqlConnTemplate, testID),
 	}, nil
 }
 
@@ -130,7 +130,7 @@ func (env *K8sEnvDeployer) FormatMysqlConnection(dbName string) string {
 
 // TestID return a resource id
 func (env *K8sEnvDeployer) ResourceMgr() IResourceMgr {
-	return env.resouceMgr
+	return env.resourceMgr
 }
 
 // TestID return a unique test id
@@ -786,5 +786,5 @@ func (env *K8sEnvDeployer) PortForwardPod(ctx context.Context, podName string, d
 }
 
 func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
-	return env.resouceMgr.Clean(ctx)
+	return env.resourceMgr.Clean(ctx)
 }

@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
+	"github.com/hunjixin/brightbird/env/plugin_utils"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
@@ -36,7 +37,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	for _, pod := range pods {
-		err := env.SyncWait(ctx, params.K8sEnv, pod, adminToken.(string))
+		err := plugin_utils.SyncWait(ctx, params.K8sEnv, pod, adminToken.(string))
 		if err != nil {
 			return nil, err
 		}
