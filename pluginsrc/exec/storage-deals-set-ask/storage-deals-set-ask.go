@@ -36,36 +36,30 @@ type TestCaseParams struct {
 	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
 	VenusMarket                env.IDeployer       `json:"-" svcname:"VenusMarket"`
 	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
+	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	minerAddr, err := params.CreateMiner.Param("CreateMiner")
 	if err != nil {
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
-	if err != nil {
-		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
-	}
-
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr)
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo)
+	fmt.Println("miner info: %v", minerInfo, minerAddr.(address.Address))
 
-	err = StorageAskSet(ctx, params, minerAddr)
+	err = StorageAskSet(ctx, params, minerAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
 		return nil, err
 	}
 
-	err = StorageAskGet(ctx, params, minerAddr)
+	err = StorageAskGet(ctx, params, minerAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
 		return nil, err

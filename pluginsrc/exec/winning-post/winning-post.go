@@ -4,11 +4,9 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"math/rand"
 	"os"
 	"regexp"
 
-	"github.com/filecoin-project/go-address"
 	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
@@ -30,64 +28,35 @@ type TestCaseParams struct {
 	VenusMiner                 env.IDeployer       `json:"-" svcname:"VenusMiner"`
 	VenusMessage               env.IDeployer       `json:"-" svcname:"VenusMessage"`
 	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
+	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	minerAddr, err := params.CreateMiner.Param("CreateMiner")
 	if err != nil {
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
-	if err != nil {
-		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
-	}
-
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr)
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(string))
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
 	fmt.Printf("miner info: %v\n", minerInfo)
 
-	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr)
+	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr.(string))
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
 	fmt.Printf("miner info: %v\n", getMiner)
 
-	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr)
+	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr.(string))
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
 	fmt.Printf("winning post message is: %v\n", WinningPostMsg)
 
 	return env.NewSimpleExec(), nil
-}
-
-func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {
-	cmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"create",
-		"--sector-size=8MiB",
-		"--exid=" + string(rune(rand.Intn(1000000))),
-	}
-	cmd = append(cmd, "--from="+walletAddr.String())
-
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
-	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
-	}
-
-	return string(minerAddr), nil
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {

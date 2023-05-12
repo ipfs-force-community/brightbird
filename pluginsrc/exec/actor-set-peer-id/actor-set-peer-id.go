@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
@@ -38,29 +36,17 @@ type TestCaseParams struct {
 	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
 	Venus                      env.IDeployer       `json:"-" svcname:"Venus"`
 	VenusMessage               env.IDeployer       `json:"-" svcname:"VenusMessage"`
-	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
+	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
+	NewAddrsListen             env.IExec           `json:"-" svcname:"NewAddrsListen"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	listenAddress, err := marketListen(ctx, params)
-	if err != nil {
-		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
-	}
-	fmt.Printf("market net listen is: %v\n", listenAddress)
-
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	minerAddr, err := params.CreateMiner.Param("CreateMiner")
 	if err != nil {
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
-	if err != nil {
-		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
-	}
-
-	messageId, err := SetActorAddr(ctx, params, minerAddr)
+	messageId, err := SetActorAddr(ctx, params, minerAddr.(string))
 	if err != nil {
 		fmt.Printf("set actor address failed: %v\n", err)
 		return nil, err
@@ -114,63 +100,6 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 	return nil
 }
 
-func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
-	if env.Debug {
-		pods, err := params.VenusMarket.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		svc, err := params.VenusMarket.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
-	if err != nil {
-		return "", err
-	}
-	defer closer()
-
-	addrs, err := client.NetAddrsListen(ctx)
-	if err != nil {
-		return "", nil
-	}
-
-	for _, peer := range addrs.Addrs {
-		fmt.Printf("%s/p2p/%s\n", peer, addrs.ID)
-	}
-	return "", err
-}
-
-func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {
-	cmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"create",
-		"--sector-size=8MiB",
-		"--exid=" + string(rune(rand.Intn(1000000))),
-	}
-	cmd = append(cmd, "--from="+walletAddr.String())
-
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
-	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
-	}
-
-	return string(minerAddr), nil
-}
-
 func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
 	endpoint := params.VenusMarket.SvcEndpoint()
 	if env.Debug {
@@ -195,12 +124,13 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 	}
 	defer closer()
 
-	addrs, err := client.NetAddrsListen(ctx)
-	if err != nil && addrs.Addrs != nil {
+	addrs, err := params.NewAddrsListen.Param("NewAddrsListen")
+	if err != nil && addrs.(peer.AddrInfo).Addrs != nil {
 		return cid.Undef, nil
 	}
+	fmt.Printf("market net listen is: %v\n", addrs.(peer.AddrInfo))
 
-	pid := addrs.ID
+	pid := addrs.(peer.AddrInfo).ID
 
 	MessageParams, err := ConstructParams(pid)
 	if err != nil {

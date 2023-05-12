@@ -3,8 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"math/rand"
-
 	"github.com/filecoin-project/go-address"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
@@ -30,63 +28,29 @@ type TestCaseParams struct {
 	MarketClient               env.IDeployer       `json:"-" svcname:"MarketClient"`
 	Venus                      env.IDeployer       `json:"-" svcname:"Venus"`
 	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
+	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	minerAddr, err := params.CreateMiner.Param("CreateMiner")
 	if err != nil {
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
-	if err != nil {
-		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
-	}
-
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr)
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
 	fmt.Println("miner info: %v", minerInfo)
 
-	err = StorageAsksQuery(ctx, params, minerAddr)
+	err = StorageAsksQuery(ctx, params, minerAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("storage asks query failed: %v\n", err)
 		return nil, err
 	}
 	return env.NewSimpleExec(), nil
-}
-
-func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (address.Address, error) {
-	cmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"create",
-		"--sector-size=8MiB",
-		"--exid=" + string(rune(rand.Intn(100000))),
-	}
-	cmd = append(cmd, "--from="+walletAddr.String())
-
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
-	if err != nil {
-		return address.Undef, fmt.Errorf("exec remote cmd failed: %w\n", err)
-	}
-
-	addr, err := address.NewFromBytes(minerAddr)
-	if err != nil {
-		return address.Undef, err
-	}
-	return addr, nil
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.Address) (string, error) {
