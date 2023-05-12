@@ -6,14 +6,11 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
@@ -28,25 +25,25 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	K8sEnv       *env.K8sEnvDeployer `json:"-"`
-	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
 	VenusGateway env.IDeployer       `json:"-" svcname:"VenusGateway"`
 	VenusWallet  env.IDeployer       `json:"-" svcname:"VenusWallet"`
+	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	authToken, err := CreateAuthToken(ctx, params)
-	if err != nil {
-		fmt.Printf("create auth token failed: %v\n", err)
-		return nil, err
-	}
 
-	_, err = CreateWallet(ctx, params)
+	_, err := CreateWallet(ctx, params)
 	if err != nil {
 		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err
 	}
 
-	err = GetWalletInfo(ctx, params, authToken)
+	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	if err != nil {
+		return nil, err
+	}
+
+	err = GetWalletInfo(ctx, params, adminTokenV.(string))
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
@@ -54,44 +51,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	return env.NewSimpleExec(), nil
 
-}
-
-func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
-	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		svc, err := params.VenusAuth.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
-
-	adminToken, err := params.VenusAuth.Param("AdminToken")
-	if err != nil {
-		return "", err
-	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
-	if err != nil {
-		return "", err
-	}
-	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    "admin",
-		Comment: utils.StringPtr("comment admin"),
-		State:   0,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return authAPIClient.GenerateToken(ctx, "admin", "admin", "")
 }
 
 func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
@@ -141,14 +100,14 @@ func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, 
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string) error {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint := params.VenusWallet.SvcEndpoint()
 	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
+		pods, err := params.VenusWallet.Pods(ctx)
 		if err != nil {
 			return err
 		}
 
-		svc, err := params.VenusAuth.Svc(ctx)
+		svc, err := params.VenusWallet.Svc(ctx)
 		if err != nil {
 			return err
 		}

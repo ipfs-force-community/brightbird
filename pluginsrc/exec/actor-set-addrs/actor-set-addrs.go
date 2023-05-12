@@ -9,8 +9,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/builtin"
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/filecoin-project/venus/venus-shared/actors"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
@@ -20,7 +18,6 @@ import (
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
@@ -84,49 +81,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	return env.NewSimpleExec(), nil
 }
 
-func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
-	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		svc, err := params.VenusAuth.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
-
-	adminToken, err := params.VenusAuth.Param("AdminToken")
-	if err != nil {
-		return "", err
-	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
-	if err != nil {
-		return "", err
-	}
-	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    "admin",
-		Comment: utils.StringPtr("comment admin"),
-		State:   0,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return authAPIClient.GenerateToken(ctx, "admin", "admin", "")
-}
-
 func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId cid.Cid) error {
 
-	authToken, err := CreateAuthToken(ctx, params)
+	adminTokenV, err := params.VenusAuth.Param("AdminToken")
 	if err != nil {
-		fmt.Printf("create auth token failed: %v\n", err)
 		return err
 	}
 
@@ -147,7 +105,7 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		}
 	}
 
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.(string), nil)
 	if err != nil {
 		return err
 	}

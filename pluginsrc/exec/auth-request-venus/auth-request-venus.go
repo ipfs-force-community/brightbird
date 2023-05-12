@@ -2,14 +2,9 @@ package main
 
 import (
 	"context"
-	"fmt"
-
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
@@ -33,50 +28,13 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	venusAuthPods, err := params.VenusAuth.Pods(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	svc, err := params.VenusAuth.Svc(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint := params.VenusAuth.SvcEndpoint()
-	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	adminToken, err := params.VenusAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
-	if err != nil {
-		return nil, err
-	}
 
-	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    "admin",
-		Comment: utils.StringPtr("comment admin"),
-		State:   0,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	token, err := authAPIClient.GenerateToken(ctx, "admin", "admin", "")
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(token)
-
-	err = checkPermission(ctx, token, params)
+	err = checkPermission(ctx, adminToken.(string), params)
 	if err != nil {
 		return nil, err
 	}

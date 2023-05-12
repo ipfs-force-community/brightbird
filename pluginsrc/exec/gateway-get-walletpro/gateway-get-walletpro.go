@@ -4,11 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
-	"github.com/hunjixin/brightbird/utils"
-
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/version"
@@ -34,12 +30,6 @@ type TestCaseParams struct {
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	authToken, err := CreateAuthToken(ctx, params)
-	if err != nil {
-		fmt.Printf("create auth token failed: %v\n", err)
-		return nil, err
-	}
-
 	walletAddrs, err := ImportFbls(ctx, params)
 	if err != nil || len(walletAddrs) <= 0 {
 		fmt.Printf("create miner failed: %v\n", err)
@@ -54,52 +44,18 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = GetWalletInfo(ctx, params, authToken, walletAddrs[0])
+	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	if err != nil {
+		return nil, err
+	}
+
+	err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddrs[0])
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
 	}
 
 	return env.NewSimpleExec(), nil
-}
-
-func CreateAuthToken(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint := params.VenusAuth.SvcEndpoint()
-	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		svc, err := params.VenusAuth.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
-
-	adminToken, err := params.VenusAuth.Param("AdminToken")
-	if err != nil {
-		return "", err
-	}
-
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.(string))
-	if err != nil {
-		return "", err
-	}
-	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    "admin",
-		Comment: utils.StringPtr("comment admin"),
-		State:   0,
-	})
-	if err != nil {
-		return "", err
-	}
-
-	return authAPIClient.GenerateToken(ctx, "admin", "admin", "")
 }
 
 // ImportFbls

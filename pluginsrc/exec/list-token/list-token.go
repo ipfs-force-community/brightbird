@@ -13,10 +13,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "generate_token",
+	Name:        "list_token",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "generate admin token",
+	Description: "list token",
 }
 
 type TestCaseParams struct {
@@ -60,15 +60,12 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	skip, err := strconv.ParseInt(params.Params.skip, 10, 64)
 	limit, err := strconv.ParseInt(params.Params.limit, 10, 64)
-	_, err = authAPIClient.Tokens(ctx, skip, limit)
+	tokenList, err := authAPIClient.Tokens(ctx, skip, limit)
 	if err != nil {
 		return nil, err
 	}
-
-	adminToken, err := authAPIClient.GenerateToken(ctx, "admin", "admin", "")
-	if err != nil {
-		return nil, err
+	for _, token := range tokenList {
+		fmt.Println(token)
 	}
-	fmt.Println(adminToken)
 	return env.NewSimpleExec(), nil
 }

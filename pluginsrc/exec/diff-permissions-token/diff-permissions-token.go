@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/filecoin-project/venus-auth/auth"
+	"github.com/hunjixin/brightbird/utils"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
@@ -14,7 +15,6 @@ import (
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
