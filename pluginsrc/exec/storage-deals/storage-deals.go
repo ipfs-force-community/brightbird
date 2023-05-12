@@ -8,7 +8,6 @@ import (
 	"github.com/filecoin-project/go-address"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
-	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
@@ -30,19 +29,18 @@ type TestCaseParams struct {
 	VenusAuth                  env.IDeployer       `json:"-" svcname:"VenusAuth"`
 	MarketClient               env.IDeployer       `json:"-" svcname:"MarketClient"`
 	Venus                      env.IDeployer       `json:"-" svcname:"Venus"`
-	VenusWallet                env.IDeployer       `json:"-" svcname:"VenusWallet"`
 	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
+	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	walletAddr, err := CreateWallet(ctx, params)
+	walletAddr, err := params.CreateWallet.Param("CreateWallet")
 	if err != nil {
-		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr)
+	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
 	if err != nil {
 		fmt.Printf("create miner failed: %v\n", err)
 		return nil, err
@@ -61,51 +59,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 	return env.NewSimpleExec(), nil
-}
-
-func CreateWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	pods, err := params.VenusWallet.Pods(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-
-	svc, err := params.VenusWallet.Svc(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, pods[0].GetName())
-	if err != nil {
-		return address.Undef, fmt.Errorf("read wallet token failed: %w\n", err)
-	}
-
-	endpoint := params.VenusWallet.SvcEndpoint()
-	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
-		}
-	}
-
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
-	if err != nil {
-		return address.Undef, fmt.Errorf("dial iFullAPI rpc failed: %w\n", err)
-	}
-	defer closer()
-
-	password := "123456"
-	err = walletRpc.SetPassword(ctx, password)
-	if err != nil {
-		return address.Undef, fmt.Errorf("set password failed: %w\n", err)
-	}
-
-	walletAddr, err := walletRpc.WalletNew(ctx, vtypes.KTBLS)
-	if err != nil {
-		return address.Undef, fmt.Errorf("create wallet failed: %w\n", err)
-	}
-	fmt.Printf("wallet: %v\n", walletAddr)
-
-	return walletAddr, nil
 }
 
 func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (address.Address, error) {

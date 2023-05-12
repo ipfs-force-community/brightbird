@@ -3,16 +3,14 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus-auth/auth"
 	"github.com/hunjixin/brightbird/utils"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/venus-auth/jwtclient"
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
-	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	types2 "github.com/filecoin-project/venus/venus-shared/types"
-	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/version"
@@ -32,10 +30,10 @@ type TestCaseParams struct {
 		Permission string `json:"permission"`
 	} `optional:"true"`
 
-	K8sEnv      *env.K8sEnvDeployer `json:"-"`
-	VenusAuth   env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	Venus       env.IDeployer       `json:"-" svcname:"Venus"`
-	VenusWallet env.IDeployer       `json:"-" svcname:"VenusWallet"`
+	K8sEnv       *env.K8sEnvDeployer `json:"-"`
+	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	Venus        env.IDeployer       `json:"-" svcname:"Venus"`
+	CreateWallet env.IExec           `json:"-" svcname:"CreateWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -114,7 +112,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	}
 	defer closer()
 
-	walletAddr, err := createWallet(ctx, params)
+	walletAddr, err := params.CreateWallet.Param("CreateWallet")
 	if err != nil {
 		return "", err
 	}
@@ -122,18 +120,18 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	chainHead, err := chainRpc.ChainHead(ctx)
 	read := err == nil && chainHead != nil
 
-	writeErr := chainRpc.MpoolPublishByAddr(ctx, walletAddr)
+	writeErr := chainRpc.MpoolPublishByAddr(ctx, walletAddr.(address.Address))
 	write := writeErr == nil
 
 	msg := types2.Message{
-		From:       walletAddr,
-		To:         walletAddr,
+		From:       walletAddr.(address.Address),
+		To:         walletAddr.(address.Address),
 		Value:      abi.NewTokenAmount(0),
 		GasFeeCap:  abi.NewTokenAmount(0),
 		GasPremium: abi.NewTokenAmount(0),
 	}
 
-	signedMsg, signErr := chainRpc.WalletSignMessage(ctx, walletAddr, &msg)
+	signedMsg, signErr := chainRpc.WalletSignMessage(ctx, walletAddr.(address.Address), &msg)
 	sign := signErr == nil && signedMsg != nil
 
 	adminAddrs := chainRpc.WalletAddresses(ctx)
@@ -153,47 +151,4 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	}
 
 	return "", nil
-}
-
-func createWallet(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	venusWalletPods, err := params.VenusWallet.Pods(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-
-	svc, err := params.Venus.Svc(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, venusWalletPods[0].GetName())
-	if err != nil {
-		return address.Undef, err
-	}
-
-	endpoint := params.VenusWallet.SvcEndpoint()
-	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusWalletPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return address.Undef, err
-		}
-	}
-
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
-	if err != nil {
-		return address.Undef, err
-	}
-	defer closer()
-
-	password := "123456"
-	err = walletRpc.SetPassword(ctx, password)
-	if err != nil {
-		return address.Undef, err
-	}
-	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
-	if err != nil {
-		return address.Undef, err
-	}
-	fmt.Println("wallet:", walletAddr)
-	return walletAddr, nil
 }
