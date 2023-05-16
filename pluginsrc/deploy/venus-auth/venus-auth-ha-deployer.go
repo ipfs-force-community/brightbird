@@ -230,7 +230,6 @@ func (deployer *VenusAuthHADeployer) prepareParams(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Println("ttttt ", adminToken)
 	deployer.params["AdminToken"] = adminToken
 	return nil
 }
