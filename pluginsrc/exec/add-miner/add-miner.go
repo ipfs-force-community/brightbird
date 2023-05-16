@@ -29,7 +29,7 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	walletAddr, err := params.CreateWallet.Param("Wallet")
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 	fmt.Println("miner info: %v", minerInfo)
 
-	return env.NewSimpleExec(), nil
+	return env.NewSimpleExec().Add("Miner", minerAddr), nil
 }
 
 func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {
