@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math/rand"
 	"os"
 	"strings"
 	"text/tabwriter"
@@ -41,7 +40,7 @@ type TestCaseParams struct {
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	minerAddr, err := params.CreateMiner.Param("CreateMiner")
+	minerAddr, err := params.CreateMiner.Param("Miner")
 	if err != nil {
 		return nil, err
 	}
@@ -203,34 +202,6 @@ func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Add
 		return w.Flush()
 	}
 	return nil
-}
-
-func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (address.Address, error) {
-	cmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"create",
-		"--sector-size=8MiB",
-		"--exid=" + string(rune(rand.Intn(100000))),
-	}
-	cmd = append(cmd, "--from="+walletAddr.String())
-
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
-	if err != nil {
-		return address.Undef, err
-	}
-
-	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), cmd...)
-	if err != nil {
-		return address.Undef, fmt.Errorf("exec remote cmd failed: %w\n", err)
-	}
-
-	addr, err := address.NewFromBytes(minerAddr)
-	if err != nil {
-		return address.Undef, err
-	}
-	return addr, nil
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.Address) (string, error) {

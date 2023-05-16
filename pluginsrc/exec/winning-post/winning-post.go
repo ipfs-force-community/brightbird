@@ -32,7 +32,7 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	minerAddr, err := params.CreateMiner.Param("CreateMiner")
+	minerAddr, err := params.CreateMiner.Param("Miner")
 	if err != nil {
 		return nil, err
 	}
