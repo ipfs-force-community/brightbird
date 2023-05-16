@@ -14,7 +14,7 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "CreateUser",
+	Name:        "create_user",
 	Version:     version.Version(),
 	Category:    types.TestExec,
 	Description: "create user token",

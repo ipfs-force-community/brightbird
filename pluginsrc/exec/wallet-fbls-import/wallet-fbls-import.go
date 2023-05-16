@@ -15,7 +15,7 @@ var Info = types.PluginInfo{
 	Name:        "wallet-fbls-import",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "wallet-fbls-import",
+	Description: "wallet fbls import",
 }
 
 // TestCaseParams

@@ -20,10 +20,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "actor-set-addrs",
+	Name:        "actor-set-peer-id",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "actor set-addrs",
+	Description: "actor set peer-id",
 }
 
 type TestCaseParams struct {

@@ -16,10 +16,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "actor-upsert",
+	Name:        "actor-delete",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "actor upsert",
+	Description: "actor delete",
 }
 
 type TestCaseParams struct {

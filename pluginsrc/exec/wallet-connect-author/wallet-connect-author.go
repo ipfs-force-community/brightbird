@@ -12,10 +12,10 @@ import (
 
 // Info
 var Info = types.PluginInfo{
-	Name:        "wallet-fbls-import",
+	Name:        "wallet-connect-author",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "wallet-fbls-import",
+	Description: "wallet connect author",
 }
 
 // TestCaseParams

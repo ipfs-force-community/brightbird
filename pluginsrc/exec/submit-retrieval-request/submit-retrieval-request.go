@@ -22,10 +22,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "storage-deals",
+	Name:        "submit-retrieval-request",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "storage-deals",
+	Description: "submit-retrieval-request",
 }
 
 type TestCaseParams struct {

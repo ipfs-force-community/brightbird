@@ -12,10 +12,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "verity_gateway",
+	Name:        "walletpro_gateway",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "verity gateway if normal",
+	Description: "walletpro_gateway",
 }
 
 type TestCaseParams struct {

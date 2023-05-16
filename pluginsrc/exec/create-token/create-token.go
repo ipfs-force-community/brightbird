@@ -12,10 +12,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "CreateToken",
+	Name:        "create_token",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "create user",
+	Description: "create token",
 }
 
 type TestCaseParams struct {

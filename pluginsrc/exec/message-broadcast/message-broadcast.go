@@ -15,10 +15,10 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "verity_message",
+	Name:        "message_log",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "verity message if normal",
+	Description: "message log",
 }
 
 type TestCaseParams struct {

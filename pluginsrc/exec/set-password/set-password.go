@@ -16,7 +16,7 @@ var Info = types.PluginInfo{
 	Name:        "set_password",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "import private key to venus wallet",
+	Description: "set wallet password",
 }
 
 type TestCaseParams struct {
