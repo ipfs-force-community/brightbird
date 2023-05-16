@@ -30,7 +30,7 @@ type TestCaseParams struct {
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	walletAddr, err := params.CreateWallet.Param("Wallet")
 	if err != nil {
 		return nil, err
 	}

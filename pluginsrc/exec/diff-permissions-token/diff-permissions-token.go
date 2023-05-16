@@ -112,7 +112,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	}
 	defer closer()
 
-	walletAddr, err := params.CreateWallet.Param("CreateWallet")
+	walletAddr, err := params.CreateWallet.Param("Wallet")
 	if err != nil {
 		return "", err
 	}
