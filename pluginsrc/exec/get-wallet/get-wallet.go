@@ -38,7 +38,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	walletAddr, err := params.WalletName.Param("WalletName")
 
-	_, err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddr.(string))
+	err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddr.(string))
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
@@ -47,35 +47,35 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	return env.NewSimpleExec().Add("Wallet", walletAddr), nil
 }
 
-func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) (env.IExec, error) {
+func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) error {
 	endpoint := params.VenusAuth.SvcEndpoint()
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 
 		svc, err := params.VenusAuth.Svc(ctx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
 	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHttp(), authToken, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer closer()
 
 	walletDetail, err := api.ListWalletInfoByWallet(ctx, walletAddr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	fmt.Println(walletDetail)
-	return env.NewSimpleExec().Add("WalletInfo", walletAddr), nil
+	return nil
 }
