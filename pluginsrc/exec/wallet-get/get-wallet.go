@@ -12,21 +12,17 @@ import (
 )
 
 var Info = types.PluginInfo{
-	Name:        "verity_gateway",
+	Name:        "get_wallet",
 	Version:     version.Version(),
 	Category:    types.TestExec,
-	Description: "verity gateway if normal",
+	Description: "get wallet",
 }
 
 type TestCaseParams struct {
 	fx.In
-	Params struct {
-		AuthorizerURL string `json:"authorizer_url"`
-	} `optional:"true"`
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
-	VenusAuth      env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	WalletName     env.IExec           `json:"-" svcname:"WalletName"`
+	K8sEnv    *env.K8sEnvDeployer `json:"-"`
+	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	AddWallet env.IExec           `json:"-" svcname:"AddWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -36,7 +32,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	walletAddr, err := params.WalletName.Param("WalletName")
+	walletAddr, err := params.AddWallet.Param("Wallet")
 
 	err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddr.(string))
 	if err != nil {
