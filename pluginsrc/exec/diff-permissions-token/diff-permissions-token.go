@@ -30,10 +30,10 @@ type TestCaseParams struct {
 		Permission string `json:"permission"`
 	} `optional:"true"`
 
-	K8sEnv       *env.K8sEnvDeployer `json:"-"`
-	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	Venus        env.IDeployer       `json:"-" svcname:"Venus"`
-	CreateWallet env.IExec           `json:"-" svcname:"CreateWallet"`
+	K8sEnv    *env.K8sEnvDeployer `json:"-"`
+	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	Venus     env.IDeployer       `json:"-" svcname:"Venus"`
+	Wallet    env.IExec           `json:"-" svcname:"Wallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -112,7 +112,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	}
 	defer closer()
 
-	walletAddr, err := params.CreateWallet.Param("Wallet")
+	walletAddr, err := params.Wallet.Param("Wallet")
 	if err != nil {
 		return "", err
 	}
