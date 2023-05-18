@@ -89,7 +89,7 @@
           <div v-if="form.svcProperties">
             <jm-form-item v-for="(item, index) in form.svcProperties"
                 :key="item.name"
-                :prop="`inputs.${index}.value`"
+                :prop="`svcProperties.${index}.value`"
                 class="node-name"
             >
               <template #label>
