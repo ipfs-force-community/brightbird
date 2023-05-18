@@ -87,11 +87,11 @@
         </div>
         <div class="optional-container set-padding" v-else-if="tabFlag === 3">
           <div v-if="form.svcProperties">
-            <jm-form-item v-for="(item, index) in form.svcProperties"
-                :key="item.name"
-                :prop="`svcProperties.${index}.value`"
-                class="node-name"
-            >
+              <jm-form-item v-for="(item, index) in form.svcProperties"
+                            :key="item.name"
+                            :prop="form.svcProperties.length ? `svcProperties.${index}.value` : null"
+                            class="node-name"
+              >
               <template #label>
                 {{ item.name }}
                 <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
