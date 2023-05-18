@@ -15,8 +15,8 @@
           >
             <jm-option v-for="item in versionList.versions" :key="item" :label="item" :value="item" />
           </jm-select>
-          <div v-if="form.versionDescription ? !versionLoading : false" class="version-description">
-            {{ form.versionDescription }}
+          <div v-if="form.version? !versionLoading : false" class="version-description">
+            {{ form.version }}
           </div>
         </jm-form-item>
       </div>
@@ -87,8 +87,7 @@
         </div>
         <div class="optional-container set-padding" v-else-if="tabFlag === 3">
           <div v-if="form.svcProperties">
-            <jm-form-item
-                v-for="(item, index) in form.svcProperties"
+            <jm-form-item v-for="(item, index) in form.svcProperties"
                 :key="item.name"
                 :prop="`inputs.${index}.value`"
                 class="node-name"
@@ -108,7 +107,7 @@
               />
             </jm-form-item>
           </div>
-          <div v-if="!form.svcProperties">
+          <div v-else>
             <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
           </div>
         </div>
@@ -120,14 +119,19 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, inject, onMounted, PropType, ref } from 'vue';
 import { AsyncTask } from '../../model/data/node/async-task';
-import { NodeGroupEnum, ParamTypeEnum } from '../../model/data/enumeration';
+import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../../model/data/enumeration';
 import noParamImage from '../../svgs/no-param.svg';
 import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
 import ExpressionEditor from './form/expression-editor.vue';
 import { Node } from '@antv/x6';
+import JmEmpty from "@/components/data/empty/index.vue";
+import JmForm from "@/components/form/form";
+import jmFormItem from "@/components/form/form-item";
+import JmInput from "@/components/form/input";
+import {IPropertyDto} from "@/api/dto/testflow";
 
 export default defineComponent({
-  components: { ExpressionEditor },
+  components: { JmEmpty, ExpressionEditor, JmForm, jmFormItem, JmInput},
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,

@@ -24,6 +24,7 @@ import AsyncTaskPanel from './async-task-panel.vue';
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../model/data/custom-x6-node-proxy';
 import { IWorkflow } from '../../model/data/common';
+import {AsyncTask} from "@/components/workflow/workflow-editor/model/data/node/async-task";
 
 export default defineComponent({
   // components: { CronPanel, WebhookPanel, ShellPanel, AsyncTaskPanel },
@@ -51,6 +52,7 @@ export default defineComponent({
     const proxy = new CustomX6NodeProxy(node);
     // 不能为ref，否则，表单内容的变化影响数据绑定
     const nodeData = proxy.getData(graph, props.workflowData);
+
     const formRef = ref();
     provide('getNode', (): Node => node);
 
