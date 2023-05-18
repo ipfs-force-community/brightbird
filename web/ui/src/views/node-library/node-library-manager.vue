@@ -10,8 +10,11 @@
       </div>
 
       <div class="title">
-        <span>部署插件</span>
+        <span>测试插件</span>
         <span class="desc">（共有 {{ execPlugins.total }} 个插件定义）</span>
+        <div class="upload-button">
+            <jm-button type="primary" @click="handleUpload">上传</jm-button>
+        </div>
       </div>
 
       <div class="content">
@@ -55,8 +58,11 @@
       </div>
 
       <div class="title">
-        <span>测试插件</span>
+        <span>部署插件</span>
         <span class="desc">（共有 {{ deployPlugins.total }} 个插件定义）</span>
+        <div class="upload-button">
+            <jm-button type="primary" @click="handleUpload">上传</jm-button>
+        </div>
       </div>
 
       <div class="content">
@@ -122,7 +128,11 @@ export default defineComponent({
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const deployPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
-    const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
+    const handleUpload = async () => {
+
+    };
+
+      const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
       fetchDeployPlugins()
         .then(res => {
           deployPlugins.list = res
@@ -142,11 +152,13 @@ export default defineComponent({
           proxy.$throw(err, proxy);
         });
 
-    return {
+      return {
       deployPlugins,
       execPlugins,
+      handleUpload,
     };
   },
+
 });
 </script>
 
