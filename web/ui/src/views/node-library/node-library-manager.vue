@@ -9,10 +9,10 @@
         </router-link>
       </div>
 
-      <div class="title">
+      <div class="title" style="display: flex; justify-content: space-between;">
         <span>测试插件</span>
         <span class="desc">（共有 {{ execPlugins.total }} 个插件定义）</span>
-        <div class="upload-button">
+        <div class="upload-button" style="margin-left: auto;">
             <jm-button type="primary" @click="handleUpload">上传</jm-button>
         </div>
       </div>
@@ -57,10 +57,10 @@
         </div>
       </div>
 
-      <div class="title">
+      <div class="title" style="display: flex; justify-content: space-between;">
         <span>部署插件</span>
         <span class="desc">（共有 {{ deployPlugins.total }} 个插件定义）</span>
-        <div class="upload-button">
+        <div class="upload-button" style="margin-left: auto;">
             <jm-button type="primary" @click="handleUpload">上传</jm-button>
         </div>
       </div>
