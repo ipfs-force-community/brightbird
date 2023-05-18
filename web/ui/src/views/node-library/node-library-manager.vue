@@ -25,6 +25,9 @@
             :key="idx"
             class="item"
         >
+          <div class="delete-button">
+              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
+          </div>
           <div class="deprecated" v-if="i.deprecated">
             <jm-tooltip placement="top-start">
               <template #content>
@@ -73,6 +76,9 @@
           :key="idx"
           class="item"
         >
+          <div class="delete-button">
+              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
+          </div>
           <div class="deprecated" v-if="i.deprecated">
             <jm-tooltip placement="top-start">
               <template #content>
@@ -131,31 +137,34 @@ export default defineComponent({
     const handleUpload = async () => {
 
     };
+    const handleDelete = (index: number) => {
+    };
 
-      const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
-      fetchDeployPlugins()
-        .then(res => {
-          deployPlugins.list = res
-          deployPlugins.total = res.length
-        })
-        .catch((err: Error) => {
-          proxy.$throw(err, proxy);
-        });
+    const execPlugins = reactive<Mutable<INode<INodeVo>>>({total:0, list:[]});
+    fetchDeployPlugins()
+      .then(res => {
+        deployPlugins.list = res
+        deployPlugins.total = res.length
+      })
+      .catch((err: Error) => {
+        proxy.$throw(err, proxy);
+      });
 
 
-        fetchExecPlugins()
-        .then(res => {
-          execPlugins.list = res
-          execPlugins.total = res.length
-        })
-        .catch((err: Error) => {
-          proxy.$throw(err, proxy);
-        });
+      fetchExecPlugins()
+      .then(res => {
+        execPlugins.list = res
+        execPlugins.total = res.length
+      })
+      .catch((err: Error) => {
+        proxy.$throw(err, proxy);
+      });
 
       return {
       deployPlugins,
       execPlugins,
       handleUpload,
+      handleDelete,
     };
   },
 
