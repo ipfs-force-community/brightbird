@@ -25,9 +25,6 @@
             :key="idx"
             class="item"
         >
-          <div class="delete-button">
-              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
-          </div>
           <div class="deprecated" v-if="i.deprecated">
             <jm-tooltip placement="top-start">
               <template #content>
@@ -57,6 +54,9 @@
                 :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
             />
           </div>
+          <div class="delete-button">
+              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
+          </div>
         </div>
       </div>
 
@@ -76,9 +76,6 @@
           :key="idx"
           class="item"
         >
-          <div class="delete-button">
-              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
-          </div>
           <div class="deprecated" v-if="i.deprecated">
             <jm-tooltip placement="top-start">
               <template #content>
@@ -107,6 +104,9 @@
               v-if="i.icon"
               :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
             />
+          </div>
+          <div class="delete-button">
+              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
           </div>
         </div>
       </div>
