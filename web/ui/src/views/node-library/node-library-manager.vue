@@ -54,9 +54,13 @@
                 :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
             />
           </div>
-          <div class="delete-button">
-              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
-          </div>
+            <div class="content-bottom">
+                <div class="operation">
+                    <jm-tooltip content="删除" placement="bottom" >
+                        <button class="delete-label" @click="handleDelete(idx)"></button>
+                    </jm-tooltip>
+                </div>
+            </div>
         </div>
       </div>
 
@@ -105,9 +109,13 @@
               :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
             />
           </div>
-          <div class="delete-button">
-              <jm-button type="danger" @click="handleDelete(idx)">删除</jm-button>
-          </div>
+            <div class="content-bottom">
+                <div class="operation">
+                    <jm-tooltip content="删除" placement="bottom" >
+                        <button class="delete-label" @click="handleDelete(idx)"></button>
+                    </jm-tooltip>
+                </div>
+            </div>
         </div>
       </div>
     </div>
