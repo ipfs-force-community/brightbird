@@ -395,8 +395,12 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 
 func collectParams(properties []*types.Property, params interface{}) error {
 	value := make(map[string]interface{})
+	var err error
 	for _, p := range properties {
-		value[p.Name] = p.Value
+		value[p.Name], err = GetPropertyValue(p)
+		if err != nil {
+			return err
+		}
 	}
 	jsonBytes, err := json.Marshal(value)
 	if err != nil {

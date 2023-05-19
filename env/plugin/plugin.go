@@ -126,10 +126,37 @@ func mapType(val reflect.Kind) (string, error) {
 	return "", fmt.Errorf("types %s not support", val.String())
 }
 
+func GetPropertyValue(property *types.Property) (interface{}, error) {
+	switch property.Type {
+	case "bool":
+		return property.Value == "true", nil
+	case "number":
+		val, err := strconv.ParseInt(property.Value, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return val, nil
+	case "decimical":
+		val, err := strconv.ParseFloat(property.Value, 64)
+		if err != nil {
+			return nil, err
+		}
+		return val, nil
+	case "string":
+		return property.Value, nil
+	}
+	return nil, fmt.Errorf("unsupport property type %s", property.Type)
+}
 func ConvertValue[T any](value string) (T, error) {
-	dstValue := utils.Default[T]()
-	valR := reflect.ValueOf(dstValue)
+	dstValue := new(T)
+	valR := reflect.ValueOf(dstValue).Elem()
 	switch valR.Type().Kind() {
+	case reflect.Int:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return *dstValue, err
+		}
+		valR.Set(reflect.ValueOf(val))
 	case reflect.Bool:
 		if value == "true" {
 			valR.Set(reflect.ValueOf(true))
@@ -137,77 +164,71 @@ func ConvertValue[T any](value string) (T, error) {
 			valR.Set(reflect.ValueOf(false))
 		}
 
-	case reflect.Int:
-		val, err := strconv.Atoi(value)
-		if err != nil {
-			return dstValue, err
-		}
-		valR.Set(reflect.ValueOf(int(val)))
-
 	case reflect.Int8:
-		val, err := strconv.Atoi(value)
+		val, err := strconv.ParseInt(value, 10, 8)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
 		valR.Set(reflect.ValueOf(int8(val)))
 
 	case reflect.Int16:
-		val, err := strconv.Atoi(value)
+		val, err := strconv.ParseInt(value, 10, 16)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
 		valR.Set(reflect.ValueOf(int16(val)))
 
 	case reflect.Int32:
-		val, err := strconv.Atoi(value)
+		val, err := strconv.ParseInt(value, 10, 32)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
 		valR.Set(reflect.ValueOf(int32(val)))
-
-	case reflect.Uint8:
-		val, err := strconv.Atoi(value)
-		if err != nil {
-			return dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint8(val)))
-
-	case reflect.Uint16:
-		val, err := strconv.Atoi(value)
-		if err != nil {
-			return dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint8(val)))
-
-	case reflect.Uint32:
-		val, err := strconv.ParseUint(value, 10, 32)
-		if err != nil {
-			return dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint32(val)))
 
 	case reflect.Int64: //todo use bignumber
 		val, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
-		valR.Set(reflect.ValueOf(int64(val)))
-	case reflect.Uint64: //todo use bignumber
+		valR.Set(reflect.ValueOf(val))
+
+	case reflect.Uint8:
+		val, err := strconv.ParseUint(value, 10, 8)
+		if err != nil {
+			return *dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint8(val)))
+
+	case reflect.Uint16:
+		val, err := strconv.ParseUint(value, 10, 16)
+		if err != nil {
+			return *dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint16(val)))
+
+	case reflect.Uint32:
+		val, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return *dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint32(val)))
+
+	case reflect.Uint64:
 		val, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
-		valR.Set(reflect.ValueOf(uint64(val)))
+		valR.Set(reflect.ValueOf(val))
 	case reflect.Float32:
 		val, err := strconv.ParseFloat(value, 32)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
 		valR.Set(reflect.ValueOf(float32(val)))
-	case reflect.Float64: //todo use bigdecimal
+	case reflect.Float64:
 		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
-			return dstValue, err
+			return *dstValue, err
 		}
 		valR.Set(reflect.ValueOf(float64(val)))
 	case reflect.String:
@@ -215,5 +236,5 @@ func ConvertValue[T any](value string) (T, error) {
 	default:
 		return utils.Default[T](), fmt.Errorf("types %s not support", valR.Kind().String())
 	}
-	return dstValue, nil
+	return *dstValue, nil
 }

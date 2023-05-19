@@ -10,10 +10,6 @@ type Property struct {
 	Require     bool   `json:"require"`
 }
 
-func (p Property) GetValue() interface{} {
-
-}
-
 // Property DependencyProperty
 // swagger:model svcProperty
 type DependencyProperty struct {
