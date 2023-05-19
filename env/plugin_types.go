@@ -6,6 +6,8 @@ import (
 	"errors"
 	"reflect"
 
+	"github.com/hunjixin/brightbird/utils"
+
 	"github.com/hunjixin/brightbird/types"
 
 	appv1 "k8s.io/api/apps/v1"
@@ -85,7 +87,7 @@ func UnmarshalJson[T any](data []byte) (T, error) {
 	val := new(T)
 	err := json.Unmarshal(data, val)
 	if err != nil {
-		return getZero[T](), err
+		return utils.Default[T](), err
 	}
 	return *val, nil
 }
@@ -101,9 +103,4 @@ func (params Params) MustString() string {
 		panic("marshal val fail")
 	}
 	return val
-}
-
-func getZero[T any]() T {
-	var result T
-	return result
 }
