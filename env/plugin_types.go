@@ -67,8 +67,12 @@ func ParamsFromVal(val interface{}) Params {
 	}
 }
 
-func (params Params) Marshal() ([]byte, error) {
-	return json.Marshal(params.V)
+func UnmarshalJson[T any](data []byte) (T, error) {
+	return getZero[T](), nil
+}
+
+func (params Params) Raw() []byte {
+	return params.V
 }
 
 func (params Params) JsonUnmarshal(val interface{}) error {
@@ -82,4 +86,9 @@ func (params Params) String() string {
 		panic("marshal val fail")
 	}
 	return val
+}
+
+func getZero[T any]() T {
+	var result T
+	return result
 }
