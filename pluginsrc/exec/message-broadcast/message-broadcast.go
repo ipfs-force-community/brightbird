@@ -4,20 +4,25 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"go.uber.org/fx"
 	"os"
 	"regexp"
 
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "message_log",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "message log",
 }
 
@@ -54,7 +59,11 @@ func CreateMessage(ctx context.Context, params TestCaseParams, authToken string)
 		return err
 	}
 
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))

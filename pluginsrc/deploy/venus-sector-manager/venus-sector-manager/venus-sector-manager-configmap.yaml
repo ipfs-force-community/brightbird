@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: venus-sector-manager-cfg-{{.TestID}}
+  name: venus-sector-manager-cfg-{{.UniqueId}}
 data:
   sector-manager.cfg: |
     # Default config:
@@ -16,7 +16,7 @@ data:
     
     [[Common.PieceStores]]
     Name = "local"
-    Path = "/shared-dir/m-piece/piece-{{.TestID}}"
+    Path = "/shared-dir/m-piece/piece-{{.UniqueId}}"
     #Plugin = ""
     #PluginName = "s3store"
     [Common.PieceStores.Meta]
@@ -24,7 +24,7 @@ data:
     
     [[Common.PersistStores]]
     Name = "storage"
-    Path = "/storage-nfs-4/{{.TestID}}/{{.MinerAddress}}"
+    Path = "/storage-nfs-4/{{.UniqueId}}/{{.MinerAddress}}"
     Strict = false
     ReadOnly = false
     Weight = 0

@@ -3,18 +3,23 @@ package main
 import (
 	"context"
 	"fmt"
+	"go.uber.org/fx"
 
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "verity_message",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "verity message if normal",
 }
 
@@ -32,7 +37,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = CreateMessage(ctx, params, adminTokenV.(string))
+	err = CreateMessage(ctx, params, adminTokenV.String())
 	if err != nil {
 		fmt.Printf("create message rpc failed: %v\n", err)
 		return nil, err
@@ -42,7 +47,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func CreateMessage(ctx context.Context, params TestCaseParams, authToken string) error {
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusMessage.Pods(ctx)
 		if err != nil {

@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_auth "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-auth"
 )
 
-var Info = venus_auth.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_auth.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_auth.Config `optional:"true"`

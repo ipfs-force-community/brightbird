@@ -3,206 +3,104 @@ package repo
 import (
 	"context"
 	"fmt"
-	"reflect"
-	"sort"
-	"strings"
 
 	"github.com/hunjixin/brightbird/types"
+
+	"github.com/hunjixin/brightbird/models"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type IPluginService interface {
-	DeployPlugins(context.Context) ([]types.PluginOut, error)
-	ExecPlugins(context.Context) ([]types.PluginOut, error)
-	GetByName(context.Context, string) (*types.PluginOut, error)
+	DeployPlugins(context.Context) ([]models.PluginOut, error)
+	ExecPlugins(context.Context) ([]models.PluginOut, error)
+	GetPlugin(context.Context, string, string) (*models.PluginOut, error)
+	SavePlugins(context.Context, []*models.PluginOut) error
 }
 
 type PluginSvc struct {
-	deployPluginStore DeployPluginStore
-	execPluginStore   ExecPluginStore
+	pluginCol *mongo.Collection
 }
 
-func NewPluginSvc(deployPluginStore DeployPluginStore, execPluginStore ExecPluginStore) *PluginSvc {
-	return &PluginSvc{deployPluginStore: deployPluginStore, execPluginStore: execPluginStore}
-}
-
-func (p *PluginSvc) DeployPlugins(ctx context.Context) ([]types.PluginOut, error) {
-	var deployPlugins []types.PluginOut
-	err := p.deployPluginStore.Each(func(detail *types.PluginDetail) error {
-		pluginOut, err := getPluginOutput(detail)
-		if err != nil {
-			return err
-		}
-		deployPlugins = append(deployPlugins, pluginOut)
-		return nil
+func NewPluginSvc(ctx context.Context, db *mongo.Database) (*PluginSvc, error) {
+	col := db.Collection("plugins")
+	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
+		{
+			Keys: bsonx.Doc{
+				{Key: "name", Value: bsonx.Int32(-1)},
+				{Key: "version", Value: bsonx.Int32(-1)},
+			},
+			Options: options.Index().SetUnique(true),
+		},
 	})
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(deployPlugins, func(i, j int) bool {
-		return deployPlugins[i].Name > deployPlugins[j].Name
-	})
-	return deployPlugins, nil
+	return &PluginSvc{
+		pluginCol: col,
+	}, nil
 }
 
-func (p *PluginSvc) ExecPlugins(ctx context.Context) ([]types.PluginOut, error) {
-	var deployPlugins []types.PluginOut
-	err := p.execPluginStore.Each(func(detail *types.PluginDetail) error {
-		pluginOut, err := getPluginOutput(detail)
-		if err != nil {
-			return err
-		}
-		deployPlugins = append(deployPlugins, pluginOut)
-		return nil
-	})
+func (p *PluginSvc) DeployPlugins(ctx context.Context) ([]models.PluginOut, error) {
+	var pluginOut []models.PluginOut
+	cur, err := p.pluginCol.Find(ctx, bson.D{{"plugintype", types.Deploy}}, sortNameDesc)
 	if err != nil {
 		return nil, err
 	}
-	sort.Slice(deployPlugins, func(i, j int) bool {
-		return deployPlugins[i].Name > deployPlugins[j].Name
-	})
-	return deployPlugins, nil
-}
-
-func (p *PluginSvc) GetByName(ctx context.Context, name string) (*types.PluginOut, error) {
-	var deployPlugins *types.PluginOut
-	err := p.deployPluginStore.Each(func(detail *types.PluginDetail) error {
-		pluginOut, err := getPluginOutput(detail)
-		if err != nil {
-			return err
-		}
-		if pluginOut.Name == name {
-			deployPlugins = &pluginOut
-		}
-		return nil
-	})
+	err = cur.All(ctx, &pluginOut)
 	if err != nil {
 		return nil, err
-	}
-
-	err = p.execPluginStore.Each(func(detail *types.PluginDetail) error {
-		pluginOut, err := getPluginOutput(detail)
-		if err != nil {
-			return err
-		}
-		if pluginOut.Name == name {
-			deployPlugins = &pluginOut
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	if deployPlugins == nil {
-		return nil, fmt.Errorf("plugin %s not found", name)
-	}
-	return deployPlugins, nil
-}
-
-func getPluginOutput(detail *types.PluginDetail) (types.PluginOut, error) {
-	var pluginOut = types.PluginOut{}
-	pluginOut.PluginInfo = *detail.PluginInfo
-	numFields := detail.Param.NumField()
-
-	var svcProperties []types.Property
-	for i := 0; i < numFields; i++ {
-		field := detail.Param.Field(i)
-		if field.Name == "Params" {
-			configProperties, err := parserProperties(field.Type)
-			if err != nil {
-				return types.PluginOut{}, err
-			}
-			pluginOut.Properties = configProperties
-		} else {
-			svcName := field.Tag.Get(types.SvcName)
-			if len(svcName) == 0 {
-				continue
-			}
-			svcType := strings.TrimRight(strings.TrimLeft(field.Type.Name(), "I"), "Deployer")
-			svcProperties = append(svcProperties, types.Property{
-				Name:        svcName,
-				Type:        svcType,
-				Description: "",
-			})
-		}
-	}
-	pluginOut.SvcProperties = svcProperties
-	pluginOut.Out = &types.Property{
-		Name:        "Out",
-		Type:        "string",
-		Description: "",
 	}
 	return pluginOut, nil
 }
 
-func parserProperties(configT reflect.Type) ([]types.Property, error) {
-	configFieldsNum := configT.NumField()
-	var properties []types.Property
-	for j := 0; j < configFieldsNum; j++ {
-		field := configT.Field(j)
-		if field.Anonymous {
-			embedProperties, err := parserProperties(field.Type)
-			if err != nil {
-				return nil, err
-			}
-			properties = append(properties, embedProperties...)
-			continue
-		}
+func (p *PluginSvc) ExecPlugins(ctx context.Context) ([]models.PluginOut, error) {
+	var pluginOut []models.PluginOut
+	cur, err := p.pluginCol.Find(ctx, bson.D{{"plugintype", types.TestExec}}, sortNameDesc)
+	if err != nil {
+		return nil, err
+	}
+	err = cur.All(ctx, &pluginOut)
+	if err != nil {
+		return nil, err
+	}
+	return pluginOut, nil
+}
 
-		fieldName := getFieldJsonName(field)
-		if fieldName == "-" || fieldName == "" {
-			continue
-		}
-		typeName, err := mapType(field.Type.Kind())
+func (p *PluginSvc) SavePlugins(ctx context.Context, pluginOuts []*models.PluginOut) error {
+	//do some check
+	for _, plugin := range pluginOuts {
+		count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": plugin.Name, "version": plugin.Version})
 		if err != nil {
-			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
+			return err
 		}
-		properties = append(properties, types.Property{
-			Name: fieldName,
-			Type: typeName,
-		})
+		if count > 0 {
+			return fmt.Errorf("plugin %s version %s already exit, please remove first", plugin.Name, plugin.Version)
+		}
 	}
-	return properties, nil
+
+	var models []mongo.WriteModel
+	for _, p := range pluginOuts {
+		p.ID = primitive.NewObjectID()
+		models = append(models, mongo.NewInsertOneModel().SetDocument(p))
+	}
+
+	_, err := p.pluginCol.BulkWrite(ctx, models)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func getFieldJsonName(field reflect.StructField) string {
-	fieldName := field.Name
-	jsonTag := field.Tag.Get("json")
-	jsonFlags := strings.Split(jsonTag, ",")
-	if val := strings.TrimSpace(jsonFlags[0]); len(val) > 0 {
-		fieldName = val
+func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*models.PluginOut, error) {
+	var pluginOut *models.PluginOut
+	err := p.pluginCol.FindOne(ctx, bson.D{{"name", name}, {"version", version}}).Decode(&pluginOut)
+	if err != nil {
+		return nil, err
 	}
-	return fieldName
-}
-
-func mapType(val reflect.Kind) (string, error) {
-	switch val {
-	case reflect.Bool:
-		return "bool", nil
-	case reflect.Int:
-		fallthrough
-	case reflect.Int8:
-		fallthrough
-	case reflect.Int16:
-		fallthrough
-	case reflect.Int32:
-		fallthrough
-	case reflect.Uint8:
-		fallthrough
-	case reflect.Uint16:
-		fallthrough
-	case reflect.Uint32:
-		fallthrough
-	case reflect.Int64: //todo use bignumber
-		fallthrough
-	case reflect.Uint64: //todo use bignumber
-		return "number", nil
-	case reflect.Float32:
-		return "decimical", nil
-	case reflect.Float64: //todo use bigdecimal
-		return "decimal", nil
-	case reflect.String:
-		return "string", nil
-	}
-	return "", fmt.Errorf("types %t not support", val.String())
+	return pluginOut, nil
 }

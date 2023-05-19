@@ -4,10 +4,13 @@ import (
 	"context"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	venus_sector_manager "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-sector-manager"
 )
 
-var Info = venus_sector_manager.PluginInfo
+func main() {
+	plugin.SetupPluginFromStdin(venus_sector_manager.PluginInfo, Exec)
+}
 
 type DepParams struct {
 	Params venus_sector_manager.Config `optional:"true"`
@@ -28,13 +31,37 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
+	venusEndpoint, err := depParams.Venus.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	venusAuthEndpoint, err := depParams.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
+	messagerEndpoint, err := depParams.Message.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+	marketEndpoint, err := depParams.Market.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := venus_sector_manager.DeployerFromConfig(depParams.K8sEnv, venus_sector_manager.Config{
-		NodeUrl:     depParams.Venus.SvcEndpoint().ToMultiAddr(),
-		MessagerUrl: depParams.Message.SvcEndpoint().ToMultiAddr(),
-		MarketUrl:   depParams.Market.SvcEndpoint().ToMultiAddr(),
-		GatewayUrl:  depParams.Gateway.SvcEndpoint().ToMultiAddr(),
-		AuthUrl:     depParams.VenusAuth.SvcEndpoint().ToHttp(),
-		AuthToken:   adminToken.(string),
+		NodeUrl:     venusEndpoint.ToMultiAddr(),
+		MessagerUrl: messagerEndpoint.ToMultiAddr(),
+		MarketUrl:   marketEndpoint.ToMultiAddr(),
+		GatewayUrl:  gatewayEndpoint.ToMultiAddr(),
+		AuthUrl:     venusAuthEndpoint.ToHttp(),
+		AuthToken:   adminToken.String(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

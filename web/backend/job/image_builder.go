@@ -9,9 +9,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hunjixin/brightbird/repo"
+
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
@@ -26,10 +27,11 @@ type BuildResult struct {
 	Err     error
 }
 type BuildTask struct {
-	Name   string
-	Repo   string
-	Commit string
-	Result chan BuildResult //buffer 1 length
+	Name    string
+	Version string //Note plugin version
+	Repo    string
+	Commit  string
+	Result  chan BuildResult //buffer 1 length
 }
 
 // ////////////// Builder Worker Provider  ////////////////
@@ -42,12 +44,12 @@ type BuildWorkerProvider struct {
 	dockerOp        IDockerOperation
 	ffi             FFIDownloader
 	privateRegistry types.PrivateRegistry
-	store           repo.DeployPluginStore
+	pluginRepo      repo.IPluginService
 }
 
-func NewBuildWorkerProvider(dockerOp IDockerOperation, store repo.DeployPluginStore, ffi FFIDownloader, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
+func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, ffi FFIDownloader, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
 	return &BuildWorkerProvider{
-		store:           store,
+		pluginRepo:      pluginRepo,
 		dockerOp:        dockerOp,
 		proxy:           proxy,
 		ffi:             ffi,
@@ -64,21 +66,21 @@ func (provider *BuildWorkerProvider) CreateBuildWorker(ctx context.Context, logg
 		ffi:             provider.ffi,
 		privateRegistry: provider.privateRegistry,
 		logger:          logger,
-		store:           provider.store,
+		pluginRepo:      provider.pluginRepo,
 	}, nil
 }
 
 // ////////////// Builder Manager  ////////////////
 type ImageBuilderMgr struct {
-	store      repo.DeployPluginStore
+	pluginRepo repo.IPluginService
 	workerCfgs []config.BuildWorkerConfig
 	taskCh     chan *BuildTask
 	provider   IBuilderWorkerProvider
 }
 
-func NewImageBuilderMgr(store repo.DeployPluginStore, provider IBuilderWorkerProvider, workerCfgs []config.BuildWorkerConfig) *ImageBuilderMgr {
+func NewImageBuilderMgr(pluginRepo repo.IPluginService, provider IBuilderWorkerProvider, workerCfgs []config.BuildWorkerConfig) *ImageBuilderMgr {
 	return &ImageBuilderMgr{
-		store:      store,
+		pluginRepo: pluginRepo,
 		workerCfgs: workerCfgs,
 		provider:   provider,
 		taskCh:     make(chan *BuildTask, len(workerCfgs)*2),
@@ -93,17 +95,18 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 	for _, node := range deployNodes {
 		node := *node //copy
 		g.Go(func() error {
-			plugin, err := mgr.store.GetPlugin(node.Name)
+			plugin, err := mgr.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
 			if err != nil {
 				return err
 			}
 
 			result := make(chan BuildResult, 1)
 			mgr.taskCh <- &BuildTask{
-				Name:   node.Name,
-				Repo:   plugin.Repo,
-				Commit: versions[node.Name],
-				Result: result,
+				Name:    node.Name,
+				Version: node.Version,
+				Repo:    plugin.Repo,
+				Commit:  versions[node.Name],
+				Result:  result,
 			}
 			br := <-result
 			if br.Err != nil {
@@ -148,7 +151,7 @@ type IBuilderWorker interface {
 // BuildWorker implement for local build
 type BuildWorker struct {
 	proxy           string
-	store           repo.DeployPluginStore
+	pluginRepo      repo.IPluginService
 	dockerOp        IDockerOperation
 	buildMap        map[string]IIMageBuilder
 	ffi             FFIDownloader
@@ -174,7 +177,7 @@ func (worker *BuildWorker) Start(ctx context.Context, taskCh <-chan *BuildTask) 
 
 func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string, error) {
 	worker.logger.Infof("receive task %s commit %s", buildTask.Name, buildTask.Commit)
-	plugin, err := worker.store.GetPlugin(buildTask.Name)
+	plugin, err := worker.pluginRepo.GetPlugin(ctx, buildTask.Name, buildTask.Version)
 	if err != nil {
 		return "", err
 	}

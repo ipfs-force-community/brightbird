@@ -89,8 +89,8 @@ func NewLogRepo(ctx context.Context, db *mongo.Database) (repo.ILogRepo, error) 
 	return repo.NewLogRepo(ctx, db)
 }
 
-func NewPlugin(deployPluginStore repo.DeployPluginStore, execPluginStore repo.ExecPluginStore) repo.IPluginService {
-	return repo.NewPluginSvc(deployPluginStore, execPluginStore)
+func NewPlugin(ctx context.Context, db *mongo.Database) (repo.IPluginService, error) {
+	return repo.NewPluginSvc(ctx, db)
 }
 
 func NewCron() *cron.Cron {
@@ -128,20 +128,20 @@ func NewFFIDownloader(cfg config.Config) func() job.FFIDownloader {
 	}
 }
 
-func NewBuilderWorkerProvidor(cfg config.Config) func(job.IDockerOperation, job.FFIDownloader, repo.DeployPluginStore, types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
-	return func(dockerOp job.IDockerOperation, ffi job.FFIDownloader, store repo.DeployPluginStore, privateReg types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
-		return job.NewBuildWorkerProvider(dockerOp, store, ffi, privateReg, cfg.Proxy), nil
+func NewBuilderWorkerProvidor(cfg config.Config) func(job.IDockerOperation, job.FFIDownloader, repo.IPluginService, types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+	return func(dockerOp job.IDockerOperation, ffi job.FFIDownloader, pluginRepo repo.IPluginService, privateReg types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+		return job.NewBuildWorkerProvider(dockerOp, pluginRepo, ffi, privateReg, cfg.Proxy), nil
 	}
 }
 
-func NewBuilderMgr(cfg config.Config) func(repo.DeployPluginStore, job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
-	return func(store repo.DeployPluginStore, provider job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
-		return job.NewImageBuilderMgr(store, provider, cfg.BuildWorkers), nil
+func NewBuilderMgr(cfg config.Config) func(repo.IPluginService, job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+	return func(pluginRepo repo.IPluginService, provider job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+		return job.NewImageBuilderMgr(pluginRepo, provider, cfg.BuildWorkers), nil
 	}
 }
 
-func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, bus modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) job.IJobManager {
-	return job.NewJobManager(cron, deployStore, bus, githubClient, taskRepo, jobRepo, testflowRepo)
+func NewJobManager(cron *cron.Cron, pluginRepo repo.IPluginService, bus modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) job.IJobManager {
+	return job.NewJobManager(cron, pluginRepo, bus, githubClient, taskRepo, jobRepo, testflowRepo)
 }
 
 func NewTaskMgr(cfg config.Config) func(*cron.Cron, repo.IJobRepo, repo.ITaskRepo, repo.ITestFlowRepo, *job.TestRunnerDeployer, *job.ImageBuilderMgr, types.PrivateRegistry) *job.TaskMgr {

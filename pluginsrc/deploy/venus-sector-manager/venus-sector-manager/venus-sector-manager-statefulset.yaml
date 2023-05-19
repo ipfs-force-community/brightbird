@@ -1,17 +1,17 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: venus-sector-manager-{{.TestID}}
+  name: venus-sector-manager-{{.UniqueId}}
 spec:
   replicas: 1
-  serviceName: venus-sector-manager-{{.TestID}}-svc
+  serviceName: venus-sector-manager-{{.UniqueId}}-svc
   selector:
     matchLabels:
-      app: venus-sector-manager-{{.TestID}}-pod
+      app: venus-sector-manager-{{.UniqueId}}-pod
   template:
     metadata:
       labels:
-        app: venus-sector-manager-{{.TestID}}-pod
+        app: venus-sector-manager-{{.UniqueId}}-pod
     spec:
       initContainers:
         - name: init-myservice
@@ -27,7 +27,7 @@ spec:
               name: shared-dir-v
               subPath: {{.NameSpace}}
       containers:
-        - name: venus-sector-manager-{{.TestID}}
+        - name: venus-sector-manager-{{.UniqueId}}
           image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-sector-manager:{{.CodeVersion}}"
           args: ["run"]
           ports:
@@ -45,7 +45,7 @@ spec:
       volumes:
         - name: sector-manager-cfg
           configMap:
-            name: venus-sector-manager-cfg-{{.TestID}}
+            name: venus-sector-manager-cfg-{{.UniqueId}}
             items:
               - key: sector-manager.cfg
                 path: sector-manager.cfg

@@ -6,11 +6,9 @@ endif
 COMPONENT=""
 GOFLAGS+=-ldflags=$(ldflags)
 
-debug: GOFLAGS+=-gcflags "all=-N -l"
-debug: $(subst debug,,${MAKECMDGOALS})
-
 gen-swagger:
 	swagger generate spec -m -o ./swagger.json -w ./web/backend
+	swagger generate client -f ./swagger.json --skip-models  --existing-models=github.com/hunjixin/brightbird/models -c ./web/backend/client
 
 SWAGGER_ARG=
 swagger-srv: gen-swagger
@@ -19,8 +17,8 @@ swagger-srv: gen-swagger
 .PHONY: exec-plugin
 exec-plugin:
 	@for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
-		rm -f ./plugins/exec/$$i.so;\
-   		cmd="go build --buildmode=plugin -o ./plugins/exec/$$i.so $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
+		rm -f ./plugins/exec/$$i;\
+   		cmd="go build -o ./plugins/exec/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done
@@ -28,8 +26,8 @@ exec-plugin:
 .PHONY: deploy-plugin
 deploy-plugin:
 	@for i in $$(ls pluginsrc/deploy|grep $(COMPONENT)); do \
-		rm -f ./plugins/deploy/$$i.so;\
-   		cmd="go build --buildmode=plugin -o ./plugins/deploy/$$i.so $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
+		rm -f ./plugins/deploy/$$i;\
+   		cmd="go build -o ./plugins/deploy/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done

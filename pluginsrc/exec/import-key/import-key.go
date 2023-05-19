@@ -9,15 +9,20 @@ import (
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	types2 "github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
-var Info = types.PluginInfo{
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
+var Info = types2.PluginInfo{
 	Name:        "import_key",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types2.TestExec,
 	Description: "import private key to venus wallet",
 }
 
@@ -45,7 +50,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusWallethPods[0].GetName(), int(svc.Spec.Ports[0].Port))

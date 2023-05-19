@@ -6,19 +6,25 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	"github.com/hunjixin/brightbird/types"
+
 	"github.com/filecoin-project/go-address"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	mkTypes "github.com/filecoin-project/venus/venus-shared/types/market"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
 
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
+
 var Info = types.PluginInfo{
 	Name:        "actor-delete",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "actor delete",
 }
 
@@ -50,7 +56,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return address.Undef, err
+	}
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -94,7 +103,10 @@ func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, e
 }
 
 func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {
@@ -127,7 +139,10 @@ func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Addre
 }
 
 func actorList(ctx context.Context, params TestCaseParams, mAddr address.Address) (string, error) {
-	endpoint := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.VenusMarket.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
 	if env.Debug {
 		pods, err := params.VenusMarket.Pods(ctx)
 		if err != nil {

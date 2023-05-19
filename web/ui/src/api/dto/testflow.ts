@@ -29,19 +29,19 @@ export interface ITestFlowDetail
 export interface Node
     extends Readonly<{
         name: string;
-        type: string;
-        properties: IPropertyDto[];
-        svcProperties: IPropertyDto[];
-        out:IPropertyDto;
+        version: string;
+        properties: Property[];
+        dependencies: DependencyProperty[];
+        instanceName: DependencyProperty;
     }> {}
 
 export interface Case
     extends Readonly<{
         name: string;
-        type: string;
-        properties: IPropertyDto[];
-        svcProperties: IPropertyDto[];
-        out:IPropertyDto;
+        version: string;
+        properties: Property[];
+        dependencies: DependencyProperty[];
+        instanceName: DependencyProperty;
     }> {}
 
 /**
@@ -202,33 +202,39 @@ export interface INodeDefVo
     type: string;
   }> {}
 
-export interface IPropertyDto extends Readonly<{
+export interface Property extends Readonly<{
     name: string;
     type: string;
+    description: string;
     value: any;
+    require: true;
+}> {
+}
+
+export interface DependencyProperty extends Readonly<{
+    name: string;
+    value: string;
+    type: PluginType;
+    sockPath: string;
     required: true;
     description: string;
 }> {
+
 }
 
-export interface INodeVo extends Readonly<{
-    icon: string;
-    name: string;
-    createTime: string;
-    modifiedTiem: string;
-    version: string;
-    category: string;
-    description: string;
-    repo: string;
-    path: string;
-    properties: IPropertyDto[];
-    svcProperties: IPropertyDto[];
-    out:IPropertyDto;
-    deprecated: boolean;
+export interface PluginType extends Readonly<{
+    type: string;
 }> {
+
 }
 
+export interface PluginOut extends Readonly<{
+    id: number;
+    path: string;
+    instance: DependencyProperty;
+}> {
 
+}
 /**
  * 测试流组添加dto
  */

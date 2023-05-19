@@ -6,22 +6,31 @@ import (
 	"errors"
 	"fmt"
 
+	types2 "github.com/hunjixin/brightbird/types"
+
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
+//// The following types are used for components without configuration files or implemation with other lanaguage
+
+// ChainCoUpdate
+type ChainCoConfig struct {
+	Nodes     []string
+	AuthUrl   string
+	AuthToken string
+}
+
 type Config struct {
 	env.BaseConfig
+	Replicas int `json:"replicas"`
 
 	AuthUrl    string   `json:"-"`
 	AdminToken string   `json:"-"`
 	Nodes      []string `json:"-"`
-
-	Replicas int `json:"replicas"`
 }
 
 type RenderParams struct {
@@ -38,10 +47,10 @@ func DefaultConfig() Config {
 	return Config{Replicas: 0}
 }
 
-var PluginInfo = types.PluginInfo{
+var PluginInfo = types2.PluginInfo{
 	Name:        "chain-co",
 	Version:     version.Version(),
-	Category:    types.Deploy,
+	PluginType:  types2.Deploy,
 	Description: "",
 	Repo:        "https://github.com/ipfs-force-community/chain-co.git",
 	ImageTarget: "chain-co",
@@ -53,7 +62,7 @@ type ChainCoDeployer struct {
 	env *env.K8sEnvDeployer
 	cfg *Config
 
-	svcEndpoint types.Endpoint
+	svcEndpoint types2.Endpoint
 
 	statefulSetName string
 	svcName         string
@@ -81,12 +90,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	}, nil
 }
 
-func (deployer *ChainCoDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *ChainCoDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *ChainCoDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-chain-co-%s-pod", deployer.env.UniqueId("")))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-chain-co-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *ChainCoDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -97,12 +106,12 @@ func (deployer *ChainCoDeployer) Svc(ctx context.Context) (*corev1.Service, erro
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *ChainCoDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *ChainCoDeployer) SvcEndpoint() (types2.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *ChainCoDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *ChainCoDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 //go:embed  chain-co
@@ -141,17 +150,17 @@ func (deployer *ChainCoDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *ChainCoDeployer) GetConfig(ctx context.Context) (interface{}, error) {
-	return &env.ChainCoConfig{
+func (deployer *ChainCoDeployer) GetConfig(ctx context.Context) (env.Params, error) {
+	return env.ParamsFromVal(&ChainCoConfig{
 		Nodes:     deployer.cfg.Nodes,
 		AuthUrl:   deployer.cfg.AuthUrl,
 		AuthToken: deployer.cfg.AdminToken,
-	}, nil
+	}), nil
 }
 
 func (deployer *ChainCoDeployer) Update(ctx context.Context, updateCfg interface{}) error {
 	if updateCfg != nil {
-		update := updateCfg.(*env.ChainCoConfig)
+		update := updateCfg.(*ChainCoConfig)
 		//update params
 		deployer.cfg.Nodes = update.Nodes
 		deployer.cfg.AuthUrl = update.AuthUrl
@@ -198,6 +207,6 @@ func (deployer *ChainCoDeployer) buildRenderParams(nodes []string, authUrl strin
 		Config:          *deployer.cfg,
 		PrivateRegistry: deployer.env.PrivateRegistry(),
 		Args:            args,
-		UniqueId:        deployer.env.UniqueId(""),
+		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
 	}
 }

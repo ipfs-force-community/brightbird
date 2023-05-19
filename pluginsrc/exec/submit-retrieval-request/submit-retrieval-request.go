@@ -7,24 +7,28 @@ import (
 	"strings"
 	"time"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/retrievalmarket"
 	"github.com/filecoin-project/go-state-types/big"
+	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/filecoin-project/venus/venus-shared/types/market/client"
-	"github.com/ipfs/go-cid"
-
-	"github.com/filecoin-project/go-address"
-	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs/go-cid"
 	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "submit-retrieval-request",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "submit-retrieval-request",
 }
 
@@ -82,7 +86,10 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 }
 
 func SubmitRetrievalRequest(ctx context.Context, params TestCaseParams, minerAddr address.Address) error {
-	endpoint := params.MarketClient.SvcEndpoint()
+	endpoint, err := params.MarketClient.SvcEndpoint()
+	if err != nil {
+		return err
+	}
 	if env.Debug {
 		pods, err := params.MarketClient.Pods(ctx)
 		if err != nil {

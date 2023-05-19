@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/hunjixin/brightbird/models"
+
 	"github.com/google/go-github/v51/github"
 	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/web/backend/modules"
 	"github.com/robfig/cron/v3"
 
@@ -16,7 +17,7 @@ import (
 
 type IJobManager interface {
 	Start(ctx context.Context) error
-	InsertOrReplaceJob(ctx context.Context, job *types.Job) error
+	InsertOrReplaceJob(ctx context.Context, job *models.Job) error
 	ExecJobImmediately(ctx context.Context, jobId primitive.ObjectID) (primitive.ObjectID, error)
 	StopJob(ctx context.Context, jobId primitive.ObjectID) error
 	Stop(ctx context.Context) error
@@ -38,14 +39,14 @@ type JobManager struct {
 	taskRepo     repo.ITaskRepo
 	jobRepo      repo.IJobRepo
 	testflowRepo repo.ITestFlowRepo
+	pluginRepo   repo.IPluginService
 
 	runningJob   map[primitive.ObjectID]IJob
 	pubsub       modules.WebHookPubsub
 	githubClient *github.Client
-	deployStore  repo.DeployPluginStore
 }
 
-func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *JobManager {
+func NewJobManager(cron *cron.Cron, pluginRepo repo.IPluginService, pubsub modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) *JobManager {
 	return &JobManager{
 		cron:         cron,
 		taskRepo:     taskRepo,
@@ -54,12 +55,12 @@ func NewJobManager(cron *cron.Cron, deployStore repo.DeployPluginStore, pubsub m
 		lk:           sync.Mutex{},
 		pubsub:       pubsub,
 		githubClient: githubClient,
-		deployStore:  deployStore,
+		pluginRepo:   pluginRepo,
 		runningJob:   make(map[primitive.ObjectID]IJob),
 	}
 }
 
-func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) error {
+func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *models.Job) error {
 	j.lk.Lock()
 	defer j.lk.Unlock()
 
@@ -74,22 +75,22 @@ func (j *JobManager) InsertOrReplaceJob(ctx context.Context, job *types.Job) err
 	}
 
 	switch job.JobType {
-	case types.CronJobType:
+	case models.CronJobType:
 		jobInstance := NewCronJob(*job, j.cron, j.taskRepo, j.jobRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err
 		}
 		j.runningJob[job.ID] = jobInstance
-	case types.TagCreatedJobType:
-		jobInstance := NewTagCreateJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
+	case models.TagCreatedJobType:
+		jobInstance := NewTagCreateJob(*job, j.pluginRepo, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err
 		}
 		j.runningJob[job.ID] = jobInstance
-	case types.PRMergedJobType:
-		jobInstance := NewPRMergedJob(*job, j.deployStore, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
+	case models.PRMergedJobType:
+		jobInstance := NewPRMergedJob(*job, j.pubsub, j.githubClient, j.taskRepo, j.jobRepo, j.testflowRepo)
 		err := jobInstance.Run(ctx)
 		if err != nil {
 			return err

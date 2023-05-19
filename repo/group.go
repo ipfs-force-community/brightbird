@@ -3,9 +3,9 @@ package repo
 import (
 	"context"
 	"fmt"
+	"github.com/hunjixin/brightbird/models"
 	"time"
 
-	"github.com/hunjixin/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,9 +14,9 @@ import (
 )
 
 type IGroupRepo interface {
-	List(context.Context) ([]*types.Group, error)
-	Get(context.Context, primitive.ObjectID) (*types.Group, error)
-	Save(context.Context, types.Group) (primitive.ObjectID, error)
+	List(context.Context) ([]*models.Group, error)
+	Get(context.Context, primitive.ObjectID) (*models.Group, error)
+	Save(context.Context, models.Group) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -40,13 +40,13 @@ func NewGroupSvc(ctx context.Context, db *mongo.Database, testflowSvc ITestFlowR
 	return &GroupSvc{groupCol: col, testflowSvc: testflowSvc}, nil
 }
 
-func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
+func (g *GroupSvc) List(ctx context.Context) ([]*models.Group, error) {
 	cur, err := g.groupCol.Find(ctx, bson.M{}, sortModifyDesc)
 	if err != nil {
 		return nil, err
 	}
 
-	groups := []*types.Group{}
+	groups := []*models.Group{}
 	err = cur.All(ctx, &groups)
 	if err != nil {
 		return nil, err
@@ -54,8 +54,8 @@ func (g *GroupSvc) List(ctx context.Context) ([]*types.Group, error) {
 	return groups, nil
 }
 
-func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*types.Group, error) {
-	tf := &types.Group{}
+func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*models.Group, error) {
+	tf := &models.Group{}
 	err := g.groupCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (g GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
 	return nil
 }
 
-func (g *GroupSvc) Save(ctx context.Context, group types.Group) (primitive.ObjectID, error) {
+func (g *GroupSvc) Save(ctx context.Context, group models.Group) (primitive.ObjectID, error) {
 	if group.ID.IsZero() {
 		group.ID = primitive.NewObjectID()
 	}

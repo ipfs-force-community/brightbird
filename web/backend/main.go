@@ -8,7 +8,8 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"path/filepath"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gin-gonic/gin"
@@ -16,9 +17,9 @@ import (
 	"github.com/hunjixin/brightbird/fx_opt"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/hunjixin/brightbird/web/backend/api"
+	"github.com/hunjixin/brightbird/web/backend/cmds"
 	"github.com/hunjixin/brightbird/web/backend/config"
 	"github.com/hunjixin/brightbird/web/backend/job"
 	"github.com/hunjixin/brightbird/web/backend/modules"
@@ -28,7 +29,6 @@ import (
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.uber.org/fx"
 )
 
 var log = logging.Logger("main")
@@ -39,7 +39,8 @@ func main() {
 		Usage:   "test plateform backend",
 		Version: version.Version(),
 		Commands: []*cli.Command{
-			exampleCmd,
+			cmds.ExampleCmd,
+			cmds.ImportPluginsCmds,
 			runCmd,
 		},
 	}
@@ -154,13 +155,10 @@ func run(pCtx context.Context, cfg config.Config) error {
 		//config
 		fx_opt.Override(new(config.Config), cfg),
 		fx_opt.Override(new(types.PrivateRegistry), NewPrivateRegistry(cfg)),
-
-		fx_opt.Override(new(*gin.Engine), e),
-		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
-			return (*api.V1RouterGroup)(e.Group("api/v1"))
-		}),
+		fx_opt.Override(new(types.PluginStore), types.PluginStore(cfg.PluginStore)),
+		//webhook
 		fx_opt.Override(new(modules.WebHookPubsub), NewWebhoobPubsub(cfg)),
-
+		//database
 		fx_opt.Override(new(*mongo.Database), func(ctx context.Context) (*mongo.Database, error) {
 			cmdMonitor := &event.CommandMonitor{
 				Started: func(_ context.Context, evt *event.CommandStartedEvent) {
@@ -173,18 +171,10 @@ func run(pCtx context.Context, cfg config.Config) error {
 			}
 			return client.Database(cfg.DbName), nil
 		}),
-		fx_opt.Override(new(repo.DeployPluginStore), func() (repo.DeployPluginStore, error) {
-			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "deploy"))
-		}),
-		fx_opt.Override(new(repo.ExecPluginStore), func() (repo.ExecPluginStore, error) {
-			return types.LoadPlugins(filepath.Join(cfg.PluginStore, "exec"))
-		}),
 		//k8s env
-		fx_opt.Override(new(*job.TestRunnerDeployer), func(lc fx.Lifecycle) (*job.TestRunnerDeployer, error) {
+		fx_opt.Override(new(*job.TestRunnerDeployer), func() (*job.TestRunnerDeployer, error) {
 			return job.NewTestRunnerDeployer(cfg.NameSpace, cfg.Mysql, cfg.LogPath)
 		}),
-		//deploy plugin
-		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 
 		// build
 		fx_opt.Override(new(job.FFIDownloader), NewFFIDownloader(cfg)),
@@ -196,6 +186,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(new(*job.TaskMgr), NewTaskMgr(cfg)),
 		fx_opt.Override(new(job.IJobManager), NewJobManager),
 		//data repo
+		fx_opt.Override(new(repo.IPluginService), NewPlugin),
 		fx_opt.Override(new(repo.ITestFlowRepo), NewTestFlowRepo),
 		fx_opt.Override(new(repo.IGroupRepo), NewGroupRepo),
 		fx_opt.Override(new(repo.IJobRepo), NewJobRepo),
@@ -207,6 +198,10 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(fx_opt.NextInvoke(), UseGitToken),
 		fx_opt.Override(new(*github.Client), NewGithubClient(cfg)),
 		//api
+		fx_opt.Override(new(*gin.Engine), e),
+		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
+			return (*api.V1RouterGroup)(e.Group("api/v1"))
+		}),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTestFlowRouter),
@@ -230,7 +225,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		return err
 	}
 
-	go utils.CatchSig(pCtx, shutdown)
+	go types.CatchSig(pCtx, shutdown)
 
 	listener, err := net.Listen("tcp", cfg.Listen)
 	if err != nil {
@@ -254,7 +249,7 @@ func errorHandleMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 		if c.Errors != nil {
-			c.AbortWithStatusJSON(http.StatusServiceUnavailable, gin.H{"message": c.Errors.String()})
+			c.AbortWithStatusJSON(http.StatusServiceUnavailable, models.APIError{Message: c.Errors.String()})
 		}
 	}
 }

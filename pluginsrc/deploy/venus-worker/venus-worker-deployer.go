@@ -7,12 +7,14 @@ import (
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
+
+type VenusWorkerConfig string //just mock here
 
 type Config struct {
 	env.BaseConfig
@@ -39,6 +41,7 @@ func DefaultConfig() Config {
 var PluginInfo = types.PluginInfo{
 	Name:        "venus-worker",
 	Version:     version.Version(),
+	PluginType:  types.Deploy,
 	Repo:        "https://github.com/ipfs-force-community/venus-cluster.git",
 	ImageTarget: "venus-worker",
 	Description: "",
@@ -68,12 +71,12 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	}, nil
 }
 
-func (deployer *VenusWorkerDeployer) Name() string {
-	return PluginInfo.Name
+func (deployer *VenusWorkerDeployer) InstanceName() (string, error) {
+	return deployer.cfg.InstanceName, nil
 }
 
 func (deployer *VenusWorkerDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-worker-%s-pod", deployer.env.UniqueId(deployer.cfg.SvcMap[types.OutLabel])))
+	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-worker-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
 func (deployer *VenusWorkerDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
@@ -84,12 +87,12 @@ func (deployer *VenusWorkerDeployer) Svc(ctx context.Context) (*corev1.Service, 
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusWorkerDeployer) SvcEndpoint() types.Endpoint {
-	return deployer.svcEndpoint
+func (deployer *VenusWorkerDeployer) SvcEndpoint() (types.Endpoint, error) {
+	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusWorkerDeployer) Param(key string) (interface{}, error) {
-	return nil, errors.New("no params")
+func (deployer *VenusWorkerDeployer) Param(key string) (env.Params, error) {
+	return env.Params{}, errors.New("no params")
 }
 
 var f embed.FS
@@ -144,18 +147,18 @@ func (deployer *VenusWorkerDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *VenusWorkerDeployer) GetConfig(ctx context.Context) (interface{}, error) {
+func (deployer *VenusWorkerDeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "venus-worker.toml")
 	if err != nil {
-		return nil, err
+		return env.Params{}, err
 	}
 
-	return (*env.VenusWorkerConfig)(utils.StringPtr(string(cfgData))), nil
+	return env.ParamsFromVal(cfgData), nil
 }
 
 func (deployer *VenusWorkerDeployer) Update(ctx context.Context, updateCfg interface{}) error {
 	if updateCfg != nil {
-		update := updateCfg.(*env.VenusWorkerConfig)
+		update := updateCfg.(*VenusWorkerConfig)
 		err := deployer.env.SetConfigMap(ctx, deployer.configMapName, "venus-worker.toml", []byte(*update))
 		if err != nil {
 			return err

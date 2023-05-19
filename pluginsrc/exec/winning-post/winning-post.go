@@ -4,21 +4,26 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"go.uber.org/fx"
 	"os"
 	"regexp"
 
 	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "winning_post",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "check miner winning post if success.",
 }
 
@@ -37,20 +42,20 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(string))
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.String())
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
 	fmt.Printf("miner info: %v\n", minerInfo)
 
-	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr.(string))
+	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr.String())
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
 	fmt.Printf("miner info: %v\n", getMiner)
 
-	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr.(string))
+	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr.String())
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
@@ -91,7 +96,11 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 		return "", err
 	}
 
-	endpoint := params.VenusMiner.SvcEndpoint()
+	endpoint, err := params.VenusMiner.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
@@ -118,7 +127,11 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 }
 
 func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken string) (string, error) {
-	endpoint := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.VenusMessage.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		messagePods, err := params.VenusMessage.Pods(ctx)
 		if err != nil {
