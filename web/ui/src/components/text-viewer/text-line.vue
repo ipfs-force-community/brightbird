@@ -41,7 +41,7 @@ export default defineComponent({
     }
   }
 
-#text-align: justify;
+ text-align: justify;
   // 兼容IE & 火狐
   text-justify: distribute;
   // 解决文本内容两端对齐
