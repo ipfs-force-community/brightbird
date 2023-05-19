@@ -44,14 +44,19 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(address.Address))
+	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	if err != nil {
+		panic(err)
+	}
+
+	minerInfo, err := GetMinerInfo(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
 	fmt.Println("miner info: %v", minerInfo)
 
-	err = StorageAsksQuery(ctx, params, minerAddr.(address.Address))
+	err = StorageAsksQuery(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("storage asks query failed: %v\n", err)
 		return nil, err

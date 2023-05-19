@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"go.uber.org/fx"
 
@@ -46,15 +45,9 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	paramsBytes, err := json.Marshal(walletAddr)
+	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
 	if err != nil {
-		panic(err)
-	}
-
-	// 将字节数组转换为 address.Address 类型
-	addr, err := address.NewFromBytes(paramsBytes)
-	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	err = GetWalletInfo(ctx, params, adminTokenV.String(), addr)

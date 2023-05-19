@@ -6,7 +6,7 @@ import (
 
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
@@ -14,7 +14,7 @@ import (
 var Info = types.PluginInfo{
 	Name:        "get_wallet",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "get wallet",
 }
 
@@ -34,7 +34,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	walletAddr, err := params.AddWallet.Param("Wallet")
 
-	err = GetWalletInfo(ctx, params, adminTokenV.(string), walletAddr.(string))
+	err = GetWalletInfo(ctx, params, adminTokenV.String(), walletAddr.String())
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
@@ -44,7 +44,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) error {
-	endpoint := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.VenusAuth.SvcEndpoint()
+	if err != nil {
+		return err
+	}
+
 	if env.Debug {
 		pods, err := params.VenusAuth.Pods(ctx)
 		if err != nil {

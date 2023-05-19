@@ -131,18 +131,23 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	chainHead, err := chainRpc.ChainHead(ctx)
 	read := err == nil && chainHead != nil
 
-	writeErr := chainRpc.MpoolPublishByAddr(ctx, walletAddr.(address.Address))
+	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
+	if err != nil {
+		panic(err)
+	}
+
+	writeErr := chainRpc.MpoolPublishByAddr(ctx, addr)
 	write := writeErr == nil
 
 	msg := types2.Message{
-		From:       walletAddr.(address.Address),
-		To:         walletAddr.(address.Address),
+		From:       addr,
+		To:         addr,
 		Value:      abi.NewTokenAmount(0),
 		GasFeeCap:  abi.NewTokenAmount(0),
 		GasPremium: abi.NewTokenAmount(0),
 	}
 
-	signedMsg, signErr := chainRpc.WalletSignMessage(ctx, walletAddr.(address.Address), &msg)
+	signedMsg, signErr := chainRpc.WalletSignMessage(ctx, addr, &msg)
 	sign := signErr == nil && signedMsg != nil
 
 	adminAddrs := chainRpc.WalletAddresses(ctx)

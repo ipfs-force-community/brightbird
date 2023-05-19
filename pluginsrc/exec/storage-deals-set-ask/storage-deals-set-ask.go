@@ -50,20 +50,25 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.(address.Address))
+	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	if err != nil {
+		return nil, err
+	}
+
+	minerInfo, err := GetMinerInfo(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo, minerAddr.(address.Address))
+	fmt.Println("miner info: %v", minerInfo, addr)
 
-	err = StorageAskSet(ctx, params, minerAddr.(address.Address))
+	err = StorageAskSet(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
 		return nil, err
 	}
 
-	err = StorageAskGet(ctx, params, minerAddr.(address.Address))
+	err = StorageAskGet(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
 		return nil, err

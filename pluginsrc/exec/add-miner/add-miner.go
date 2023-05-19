@@ -39,7 +39,12 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	minerAddr, err := CreateMiner(ctx, params, walletAddr.(address.Address))
+	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
+	if err != nil {
+		panic(err)
+	}
+
+	minerAddr, err := CreateMiner(ctx, params, addr)
 	if err != nil {
 		fmt.Printf("create miner failed: %v\n", err)
 		return nil, err
@@ -52,7 +57,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 	fmt.Println("miner info: %v", minerInfo)
 
-	return env.NewSimpleExec().Add("Miner", minerAddr), nil
+	return env.NewSimpleExec().Add("Miner", env.ParamsFromVal(minerAddr)), nil
 }
 
 func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {

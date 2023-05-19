@@ -39,7 +39,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = CreateMessage(ctx, params, adminTokenV.(string))
+	err = CreateMessage(ctx, params, adminTokenV.String())
 	if err != nil {
 		fmt.Printf("get message failed: %v\n", err)
 		return nil, err

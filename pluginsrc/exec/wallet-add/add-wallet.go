@@ -3,12 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/filecoin-project/go-address"
+
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
-
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/types"
+	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
@@ -16,7 +15,7 @@ import (
 var Info = types.PluginInfo{
 	Name:        "add_wallet",
 	Version:     version.Version(),
-	Category:    types.TestExec,
+	PluginType:  types.TestExec,
 	Description: "add wallet",
 }
 
@@ -34,52 +33,56 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	walletAddr, err := CreateWallet(ctx, params, adminTokenV.(string))
+	walletAddr, err := CreateWallet(ctx, params, adminTokenV.String())
 	if err != nil {
 		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err
 	}
 
-	return env.NewSimpleExec().Add("Wallet", walletAddr), nil
+	return env.NewSimpleExec().Add("Wallet", env.ParamsFromVal(walletAddr)), nil
 }
 
-func CreateWallet(ctx context.Context, params TestCaseParams, token string) (address.Address, error) {
+func CreateWallet(ctx context.Context, params TestCaseParams, token string) (string, error) {
 	pods, err := params.VenusWallet.Pods(ctx)
 	if err != nil {
-		return address.Undef, err
+		return "", err
 	}
 
 	svc, err := params.VenusWallet.Svc(ctx)
 	if err != nil {
-		return address.Undef, err
+		return "", err
 	}
 
-	endpoint := params.VenusWallet.SvcEndpoint()
+	endpoint, err := params.VenusWallet.SvcEndpoint()
+	if err != nil {
+		return "", err
+	}
+
 	if env.Debug {
 		var err error
 		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
-			return address.Undef, fmt.Errorf("port forward failed: %w\n", err)
+			return "", fmt.Errorf("port forward failed: %w\n", err)
 		}
 	}
 
 	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
-		return address.Undef, fmt.Errorf("dial iFullAPI rpc failed: %w\n", err)
+		return "", fmt.Errorf("dial iFullAPI rpc failed: %w\n", err)
 	}
 	defer closer()
 
 	password := "123456"
 	err = walletRpc.SetPassword(ctx, password)
 	if err != nil {
-		return address.Undef, fmt.Errorf("set password failed: %w\n", err)
+		return "", fmt.Errorf("set password failed: %w\n", err)
 	}
 
 	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
 	if err != nil {
-		return address.Undef, fmt.Errorf("create wallet failed: %w\n", err)
+		return "", fmt.Errorf("create wallet failed: %w\n", err)
 	}
 	fmt.Printf("wallet: %v\n", walletAddr)
 
-	return walletAddr, nil
+	return walletAddr.String(), nil
 }
