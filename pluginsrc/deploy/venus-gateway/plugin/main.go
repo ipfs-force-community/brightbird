@@ -35,7 +35,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	fmt.Println("ttttt ggg", adminToken)
 	deployer, err := venus_gateway.DeployerFromConfig(depParams.K8sEnv, venus_gateway.Config{
 		AuthUrl:    authEndpoint.ToHttp(),
-		AdminToken: adminToken.String(),
+		AdminToken: adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

@@ -50,7 +50,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 
 	deployer, err := market_client.DeployerFromConfig(depParams.K8sEnv, market_client.Config{
 		NodeUrl:     venusEndpoin.ToMultiAddr(),
-		NodeToken:   adminToken.String(),
+		NodeToken:   adminToken.MustString(),
 		WalletUrl:   walletPoint.ToMultiAddr(),
 		WalletToken: walletToken,
 	}, depParams.Params)

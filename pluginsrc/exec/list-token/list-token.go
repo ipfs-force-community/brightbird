@@ -62,7 +62,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminTokenV.String())
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminTokenV.MustString())
 	if err != nil {
 		return nil, err
 	}

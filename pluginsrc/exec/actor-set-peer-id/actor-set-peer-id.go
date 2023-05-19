@@ -52,7 +52,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	messageId, err := SetActorAddr(ctx, params, minerAddr.String())
+	messageId, err := SetActorAddr(ctx, params, minerAddr.MustString())
 	if err != nil {
 		fmt.Printf("set actor address failed: %v\n", err)
 		return nil, err
@@ -94,7 +94,7 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		}
 	}
 
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.String(), nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.MustString(), nil)
 	if err != nil {
 		return err
 	}

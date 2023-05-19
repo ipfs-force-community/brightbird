@@ -56,7 +56,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		GatewayUrl:  gatewayEndpoint.ToMultiAddr(),
 		MessagerUrl: messagerEndpoint.ToMultiAddr(),
 		AuthUrl:     venusAuthEndpoint.ToMultiAddr(),
-		AuthToken:   adminToken.String(),
+		AuthToken:   adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

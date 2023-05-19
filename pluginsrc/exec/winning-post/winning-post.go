@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"go.uber.org/fx"
 	"os"
 	"regexp"
+
+	"go.uber.org/fx"
 
 	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
@@ -42,20 +43,20 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.String())
+	minerInfo, err := GetMinerInfo(ctx, params, minerAddr.MustString())
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
 	fmt.Printf("miner info: %v\n", minerInfo)
 
-	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr.String())
+	getMiner, err := GetMinerFromVenusMiner(ctx, params, minerAddr.MustString())
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}
 	fmt.Printf("miner info: %v\n", getMiner)
 
-	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr.String())
+	WinningPostMsg, err := GetWinningPostMsg(ctx, params, minerAddr.MustString())
 	if err != nil {
 		fmt.Printf("get miner for venus_miner failed: %v\n", err)
 	}

@@ -51,7 +51,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 
 		deployer, err = venus_wallet.DeployerFromConfig(depParams.K8sEnv, venus_wallet.Config{
 			GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-			UserToken:  userToken.String(),
+			UserToken:  userToken.MustString(),
 		}, depParams.Params)
 	} else {
 		deployer, err = venus_wallet.DeployerFromConfig(depParams.K8sEnv, venus_wallet.Config{}, depParams.Params)

@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
@@ -54,7 +55,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = GetWalletInfo(ctx, params, adminTokenV.String(), walletAddrs[0])
+	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), walletAddrs[0])
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err

@@ -33,7 +33,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	walletAddr, err := CreateWallet(ctx, params, adminTokenV.String())
+	walletAddr, err := CreateWallet(ctx, params, adminTokenV.MustString())
 	if err != nil {
 		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err

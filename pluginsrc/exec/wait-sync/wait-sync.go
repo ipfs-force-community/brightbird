@@ -42,7 +42,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	for _, pod := range pods {
-		err := venus_utils.SyncWait(ctx, params.K8sEnv, pod, adminToken.String())
+		err := venus_utils.SyncWait(ctx, params.K8sEnv, pod, adminToken.MustString())
 		if err != nil {
 			return nil, err
 		}

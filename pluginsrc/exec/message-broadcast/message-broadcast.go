@@ -4,9 +4,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"go.uber.org/fx"
 	"os"
 	"regexp"
+
+	"go.uber.org/fx"
 
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
@@ -39,7 +40,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = CreateMessage(ctx, params, adminTokenV.String())
+	err = CreateMessage(ctx, params, adminTokenV.MustString())
 	if err != nil {
 		fmt.Printf("get message failed: %v\n", err)
 		return nil, err

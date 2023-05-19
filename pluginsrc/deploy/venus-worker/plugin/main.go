@@ -35,7 +35,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 
 	deployer, err := venus_worker.DeployerFromConfig(depParams.K8sEnv, venus_worker.Config{
 		VenusSectorManagerUrl: sectorManagerEndpoint.ToHttp(),
-		AuthToken:             adminToken.String(),
+		AuthToken:             adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

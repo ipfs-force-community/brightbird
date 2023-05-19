@@ -60,7 +60,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.String())
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.MustString())
 	if err != nil {
 		return nil, err
 	}
@@ -69,11 +69,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	if len(userName.String()) == 0 {
+	if len(userName.MustString()) == 0 {
 		return nil, fmt.Errorf("specific user name")
 	}
 
-	token, err := authAPIClient.GenerateToken(ctx, userName.String(), params.Params.Perm, params.Params.Extra)
+	token, err := authAPIClient.GenerateToken(ctx, userName.MustString(), params.Params.Perm, params.Params.Extra)
 	if err != nil {
 		return nil, err
 	}

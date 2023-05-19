@@ -68,18 +68,19 @@ func ParamsFromVal(val interface{}) Params {
 }
 
 func UnmarshalJson[T any](data []byte) (T, error) {
-	return getZero[T](), nil
+	val := new(T)
+	err := json.Unmarshal(data, val)
+	if err != nil {
+		return getZero[T](), err
+	}
+	return *val, nil
 }
 
 func (params Params) Raw() []byte {
 	return params.V
 }
 
-func (params Params) JsonUnmarshal(val interface{}) error {
-	return nil
-}
-
-func (params Params) String() string {
+func (params Params) MustString() string {
 	var val string
 	err := json.Unmarshal(params.V, &val)
 	if err != nil {

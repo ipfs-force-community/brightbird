@@ -40,7 +40,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = checkPermission(ctx, adminToken.String(), params)
+	err = checkPermission(ctx, adminToken.MustString(), params)
 	if err != nil {
 		return nil, err
 	}

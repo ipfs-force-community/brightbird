@@ -34,7 +34,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	walletAddr, err := params.AddWallet.Param("Wallet")
 
-	err = GetWalletInfo(ctx, params, adminTokenV.String(), walletAddr.String())
+	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), walletAddr.MustString())
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err

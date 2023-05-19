@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	"github.com/filecoin-project/go-address"
@@ -50,7 +51,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	err = GetWalletInfo(ctx, params, adminTokenV.String(), addr)
+	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), addr)
 	if err != nil {
 		fmt.Printf("get wallet info failed: %v\n", err)
 		return nil, err
