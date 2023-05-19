@@ -3,11 +3,15 @@ package types
 // Property Property
 // swagger:model property
 type Property struct {
-	Name        string      `json:"name"`
-	Type        string      `json:"type"`
-	Description string      `json:"description"`
-	Value       interface{} `json:"value"`
-	Require     bool        `json:"require"`
+	Name        string `json:"name"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Value       string `json:"value"` //easy for front page
+	Require     bool   `json:"require"`
+}
+
+func (p Property) GetValue() interface{} {
+
 }
 
 // Property DependencyProperty

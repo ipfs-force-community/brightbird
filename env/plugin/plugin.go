@@ -4,9 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/utils"
 
 	"github.com/hunjixin/brightbird/types"
 )
@@ -115,11 +117,103 @@ func mapType(val reflect.Kind) (string, error) {
 	case reflect.Uint64: //todo use bignumber
 		return "number", nil
 	case reflect.Float32:
-		return "decimical", nil
+		fallthrough
 	case reflect.Float64: //todo use bigdecimal
-		return "decimal", nil
+		return "decimical", nil
 	case reflect.String:
 		return "string", nil
 	}
 	return "", fmt.Errorf("types %s not support", val.String())
+}
+
+func ConvertValue[T any](value string) (T, error) {
+	dstValue := utils.Default[T]()
+	valR := reflect.ValueOf(dstValue)
+	switch valR.Type().Kind() {
+	case reflect.Bool:
+		if value == "true" {
+			valR.Set(reflect.ValueOf(true))
+		} else {
+			valR.Set(reflect.ValueOf(false))
+		}
+
+	case reflect.Int:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(int(val)))
+
+	case reflect.Int8:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(int8(val)))
+
+	case reflect.Int16:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(int16(val)))
+
+	case reflect.Int32:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(int32(val)))
+
+	case reflect.Uint8:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint8(val)))
+
+	case reflect.Uint16:
+		val, err := strconv.Atoi(value)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint8(val)))
+
+	case reflect.Uint32:
+		val, err := strconv.ParseUint(value, 10, 32)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint32(val)))
+
+	case reflect.Int64: //todo use bignumber
+		val, err := strconv.ParseInt(value, 10, 64)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(int64(val)))
+	case reflect.Uint64: //todo use bignumber
+		val, err := strconv.ParseUint(value, 10, 64)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(uint64(val)))
+	case reflect.Float32:
+		val, err := strconv.ParseFloat(value, 32)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(float32(val)))
+	case reflect.Float64: //todo use bigdecimal
+		val, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return dstValue, err
+		}
+		valR.Set(reflect.ValueOf(float64(val)))
+	case reflect.String:
+		valR.Set(reflect.ValueOf(value))
+	default:
+		return utils.Default[T](), fmt.Errorf("types %s not support", valR.Kind().String())
+	}
+	return dstValue, nil
 }

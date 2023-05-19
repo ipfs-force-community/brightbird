@@ -216,7 +216,7 @@ export interface DependencyProperty extends Readonly<{
     value: string;
     type: PluginType;
     sockPath: string;
-    required: true;
+    require: true;
     description: string;
 }> {
 
@@ -228,13 +228,26 @@ export interface PluginType extends Readonly<{
 
 }
 
+
+
 export interface PluginOut extends Readonly<{
     id: number;
+    name: string;
+    version: string;
+    pluginType: string;
+    description: string,
+    repo: string,
+    imageTarget: string,
     path: string;
+    dependencies: DependencyProperty[];
+    properties: Property[];
     instance: DependencyProperty;
+    createTime: number;
+    modifiedTime: number;
 }> {
 
 }
+
 /**
  * 测试流组添加dto
  */
