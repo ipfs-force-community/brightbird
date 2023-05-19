@@ -1,31 +1,47 @@
 package env
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUnmarshalJson(t *testing.T) {
+func TestParams_Params(t *testing.T) {
 	{
-		str := `"aaaaaaa"`
-		val, err := UnmarshalJson[string]([]byte(str))
+		params := ParamsFromVal("123")
+		jsonBytes, err := json.Marshal(params)
 		assert.Nil(t, err)
-		assert.Equal(t, "aaaaaaa", val)
-	}
-	{
-		str := `10`
-		val, err := UnmarshalJson[int]([]byte(str))
+		actualParams := Params{}
+		err = json.Unmarshal(jsonBytes, &actualParams)
 		assert.Nil(t, err)
-		assert.Equal(t, 10, val)
+		actualStr, err := UnmarshalJson[string](actualParams.Raw())
+		assert.Nil(t, err)
+		assert.Equal(t, "123", actualStr)
 	}
 	{
 		type A struct {
 			M string
 		}
-		str := `{"M":"aaaa"}`
-		val, err := UnmarshalJson[A]([]byte(str))
+		params := ParamsFromVal(A{M: "aaaa"})
+		jsonBytes, err := json.Marshal(params)
 		assert.Nil(t, err)
-		assert.Equal(t, "aaaa", val.M)
+		actualParams := Params{}
+		err = json.Unmarshal(jsonBytes, &actualParams)
+		assert.Nil(t, err)
+		actual, err := UnmarshalJson[A](actualParams.Raw())
+		assert.Nil(t, err)
+		assert.Equal(t, "aaaa", actual.M)
+	}
+	{
+		params := ParamsFromVal(10)
+		jsonBytes, err := json.Marshal(params)
+		assert.Nil(t, err)
+		actualParams := Params{}
+		err = json.Unmarshal(jsonBytes, &actualParams)
+		assert.Nil(t, err)
+		actualStr, err := UnmarshalJson[int](actualParams.Raw())
+		assert.Nil(t, err)
+		assert.Equal(t, 10, actualStr)
 	}
 }

@@ -54,7 +54,21 @@ func (exec SimpleExec) Param(key string) (Params, error) {
 }
 
 type Params struct {
-	V []byte
+	v []byte
+}
+
+func (params *Params) UnmarshalJSON(bytes []byte) error {
+	var data []byte
+	err := json.Unmarshal(bytes, &data)
+	if err != nil {
+		return err
+	}
+	params.v = data
+	return nil
+}
+
+func (params Params) MarshalJSON() ([]byte, error) {
+	return json.Marshal(params.v)
 }
 
 func ParamsFromVal(val interface{}) Params {
@@ -63,7 +77,7 @@ func ParamsFromVal(val interface{}) Params {
 		panic("marshal val fail")
 	}
 	return Params{
-		V: data,
+		v: data,
 	}
 }
 
@@ -77,12 +91,12 @@ func UnmarshalJson[T any](data []byte) (T, error) {
 }
 
 func (params Params) Raw() []byte {
-	return params.V
+	return params.v
 }
 
 func (params Params) MustString() string {
 	var val string
-	err := json.Unmarshal(params.V, &val)
+	err := json.Unmarshal(params.v, &val)
 	if err != nil {
 		panic("marshal val fail")
 	}
