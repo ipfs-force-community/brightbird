@@ -6,10 +6,15 @@ import (
 
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/hunjixin/brightbird/env"
+	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
 )
+
+func main() {
+	plugin.SetupPluginFromStdin(Info, Exec)
+}
 
 var Info = types.PluginInfo{
 	Name:        "get_wallet",
