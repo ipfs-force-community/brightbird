@@ -2,8 +2,9 @@ package utils
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMergeMapStructAndJson(t *testing.T) {
@@ -54,4 +55,16 @@ func TestMergeStructAndJson(t *testing.T) {
 	assert.Equal(t, result.P2, 4)
 	assert.Equal(t, result.P3, 5)
 	assert.Equal(t, result.P4, 6)
+}
+
+func TestDefault(t *testing.T) {
+	assert.Equal(t, 0, Default[int]())
+	assert.Equal(t, "", Default[string]())
+	assert.Equal(t, map[string]string(nil), Default[map[string]string]())
+	assert.Equal(t, []byte(nil), Default[[]byte]())
+	type A struct {
+		M string
+	}
+	assert.Equal(t, A{}, Default[A]())
+	assert.Equal(t, (*A)(nil), Default[*A]())
 }

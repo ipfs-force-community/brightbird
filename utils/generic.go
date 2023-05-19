@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+
 	"github.com/imdario/mergo"
 )
 
@@ -37,6 +38,5 @@ func MergeStructAndInterface[T any](defaultCfg T, incomingCfg T, frontCfg interf
 }
 
 func Default[T any]() T {
-	var result T
-	return result
+	return *new(T)
 }
