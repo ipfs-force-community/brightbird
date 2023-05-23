@@ -1,6 +1,7 @@
 package config
 
 type Config struct {
+	StaticRoot   string
 	NameSpace    string
 	PluginStore  string
 	LogPath      string
@@ -37,9 +38,10 @@ type DockerRegistry struct {
 
 func DefaultConfig() Config {
 	return Config{
-		NameSpace: "default",
-		MongoUrl:  "mongodb://localhost:27017",
-		Listen:    "127.0.0.1:12356",
+		StaticRoot: "dist",
+		NameSpace:  "default",
+		MongoUrl:   "mongodb://localhost:27017",
+		Listen:     "127.0.0.1:12356",
 		DockerRegistry: []DockerRegistry{
 			{
 				URL: "https://registry.hub.docker.com",

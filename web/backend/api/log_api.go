@@ -11,7 +11,7 @@ import (
 func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo repo.ILogRepo) {
 	group := v1group.Group("/logs")
 
-	// swagger:route GET /logs/pods/{testid} listPodsInTest
+	// swagger:route GET /logs/pods/{testid} log listPodsInTest
 	//
 	// List all pod names in test.
 	//
@@ -46,7 +46,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 		c.JSON(http.StatusOK, pods)
 	})
 
-	// swagger:route GET /logs/{podName} listLogsInPod
+	// swagger:route GET /logs/{podName} log listLogsInPod
 	//
 	// get all logs in pod.
 	//

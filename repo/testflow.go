@@ -3,8 +3,9 @@ package repo
 import (
 	"context"
 	"fmt"
-	"github.com/hunjixin/brightbird/models"
 	"time"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,12 +16,17 @@ import (
 
 type GetTestFlowParams struct {
 	ID   primitive.ObjectID `form:"id"`
-	Name string             `form:"name"`
+	Name *string            `form:"name"`
 }
 
 type ListTestFlowParams struct {
 	GroupID primitive.ObjectID
-	Name    string
+	Name    *string
+}
+
+type CountTestFlowParams struct {
+	GroupID primitive.ObjectID
+	Name    *string
 }
 
 type ChangeTestflowGroup = models.ChangeTestflowGroupRequest
@@ -29,7 +35,7 @@ type ITestFlowRepo interface {
 	Get(context.Context, *GetTestFlowParams) (*models.TestFlow, error)
 	List(ctx context.Context, req models.PageReq[ListTestFlowParams]) (*models.PageResp[models.TestFlow], error)
 	Save(context.Context, models.TestFlow) (primitive.ObjectID, error)
-	CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error)
+	Count(ctx context.Context, params *CountTestFlowParams) (int64, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	ChangeTestflowGroup(ctx context.Context, params ChangeTestflowGroup) error
 }
@@ -65,9 +71,9 @@ func (c *TestFlowRepo) List(ctx context.Context, params models.PageReq[ListTestF
 	if !params.Params.GroupID.IsZero() {
 		filter = append(filter, bson.E{Key: "groupid", Value: params.Params.GroupID})
 	}
-	if len(params.Params.Name) > 0 {
+	if params.Params.Name != nil {
 		filter = append(filter, bson.E{Key: "name", Value: bson.M{"$regex": primitive.Regex{
-			Pattern: params.Params.Name,
+			Pattern: *params.Params.Name,
 			Options: "im",
 		}}})
 	}
@@ -97,8 +103,8 @@ func (c *TestFlowRepo) List(ctx context.Context, params models.PageReq[ListTestF
 
 func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*models.TestFlow, error) {
 	filter := bson.M{}
-	if len(params.Name) > 0 {
-		filter["name"] = params.Name
+	if params.Name != nil {
+		filter["name"] = *params.Name
 	}
 	if !params.ID.IsZero() {
 		filter["_id"] = params.ID
@@ -112,8 +118,15 @@ func (c *TestFlowRepo) Get(ctx context.Context, params *GetTestFlowParams) (*mod
 	return tf, nil
 }
 
-func (c *TestFlowRepo) CountByGroup(ctx context.Context, groupId primitive.ObjectID) (int64, error) {
-	return c.caseCol.CountDocuments(ctx, bson.D{{"groupid", groupId}})
+func (c *TestFlowRepo) Count(ctx context.Context, params *CountTestFlowParams) (int64, error) {
+	filter := bson.M{}
+	if params.Name != nil {
+		filter["name"] = params.Name
+	}
+	if !params.GroupID.IsZero() {
+		filter["groupid"] = params.GroupID
+	}
+	return c.caseCol.CountDocuments(ctx, filter)
 }
 
 func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.ObjectID, error) {

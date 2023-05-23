@@ -2,8 +2,9 @@ package repo
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"time"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,7 +13,13 @@ import (
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
+type CountJobParams struct {
+	ID   primitive.ObjectID
+	Name *string
+}
+
 type IJobRepo interface {
+	Count(context.Context, *CountJobParams) (int64, error)
 	List(context.Context) ([]*models.Job, error)
 	Get(context.Context, primitive.ObjectID) (*models.Job, error)
 	Save(context.Context, *models.Job) (primitive.ObjectID, error)
@@ -51,6 +58,17 @@ func (j *JobRepo) List(ctx context.Context) ([]*models.Job, error) {
 		return nil, err
 	}
 	return jobs, nil
+}
+
+func (j *JobRepo) Count(ctx context.Context, params *CountJobParams) (int64, error) {
+	filter := bson.M{}
+	if params.Name != nil {
+		filter["name"] = params.Name
+	}
+	if !params.ID.IsZero() {
+		filter["_id"] = params.ID
+	}
+	return j.jobCol.CountDocuments(ctx, filter)
 }
 
 func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Job, error) {

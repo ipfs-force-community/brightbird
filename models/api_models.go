@@ -37,6 +37,13 @@ type GroupResp struct {
 // swagger:model listGroupResp
 type ListGroupResp []GroupResp
 
+// CountGroupRequest
+// swagger:model countGroupRequest
+type CountGroupRequest struct {
+	ID   *string `form:"id"`
+	Name *string `form:"name"`
+}
+
 // UpdateJobRequest
 // swagger:model updateJobRequest
 type UpdateJobRequest struct {
@@ -54,6 +61,13 @@ type JobDetailResp struct {
 	Job
 	TestFlowName string `json:"testFlowName"`
 	GroupName    string `json:"groupName"`
+}
+
+// CountJobRequest
+// swagger:model countJobRequest
+type CountJobRequest struct {
+	ID   *string `form:"id"`
+	Name *string `form:"name"`
 }
 
 // ListJobResp
@@ -95,8 +109,8 @@ type ListTasksResp struct { //todo https://github.com/go-swagger/go-swagger/issu
 // ListInGroupParams
 // swagger:model listInGroupParams
 type ListInGroupParams struct {
-	GroupId string `form:"groupId"`
-	Name    string `form:"name"`
+	GroupId *string `form:"groupId"`
+	Name    *string `form:"name"`
 }
 
 // ListInGroupRequest
@@ -110,8 +124,15 @@ type ListInGroupRequest struct { //todo https://github.com/go-swagger/go-swagger
 // GetTestFlowRequest
 // swagger:model getTestFlowRequest
 type GetTestFlowRequest struct {
-	ID   string `form:"id"`
-	Name string `form:"name"`
+	ID   *string `form:"id"`
+	Name *string `form:"name"`
+}
+
+// CountTestFlowRequest
+// swagger:model countTestFlowRequest
+type CountTestFlowRequest struct {
+	GroupID *string `form:"groupId"`
+	Name    *string `form:"name"`
 }
 
 // ListTestFlowResp
@@ -128,11 +149,4 @@ type ListTestFlowResp struct { //todo https://github.com/go-swagger/go-swagger/i
 type ChangeTestflowGroupRequest struct {
 	GroupID     primitive.ObjectID   `json:"groupId"`
 	TestflowIDs []primitive.ObjectID `json:"testflowIds"`
-}
-
-// GetPluginRequest
-// swagger:model getPluginRequest
-type GetPluginRequest struct {
-	Name    string `json:"name"`
-	Version string `json:"version"`
 }

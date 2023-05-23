@@ -65,13 +65,19 @@ type GetPluginParams struct {
 
 	   name of plugin
 	*/
-	Name string
+	Name *string
+
+	/* PluginType.
+
+	   pluginType of plugin
+	*/
+	PluginType *string
 
 	/* Version.
 
 	   version of plugin
 	*/
-	Version string
+	Version *string
 
 	timeout    time.Duration
 	Context    context.Context
@@ -127,24 +133,35 @@ func (o *GetPluginParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithName adds the name to the get plugin params
-func (o *GetPluginParams) WithName(name string) *GetPluginParams {
+func (o *GetPluginParams) WithName(name *string) *GetPluginParams {
 	o.SetName(name)
 	return o
 }
 
 // SetName adds the name to the get plugin params
-func (o *GetPluginParams) SetName(name string) {
+func (o *GetPluginParams) SetName(name *string) {
 	o.Name = name
 }
 
+// WithPluginType adds the pluginType to the get plugin params
+func (o *GetPluginParams) WithPluginType(pluginType *string) *GetPluginParams {
+	o.SetPluginType(pluginType)
+	return o
+}
+
+// SetPluginType adds the pluginType to the get plugin params
+func (o *GetPluginParams) SetPluginType(pluginType *string) {
+	o.PluginType = pluginType
+}
+
 // WithVersion adds the version to the get plugin params
-func (o *GetPluginParams) WithVersion(version string) *GetPluginParams {
+func (o *GetPluginParams) WithVersion(version *string) *GetPluginParams {
 	o.SetVersion(version)
 	return o
 }
 
 // SetVersion adds the version to the get plugin params
-func (o *GetPluginParams) SetVersion(version string) {
+func (o *GetPluginParams) SetVersion(version *string) {
 	o.Version = version
 }
 
@@ -156,23 +173,54 @@ func (o *GetPluginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 	}
 	var res []error
 
-	// query param name
-	qrName := o.Name
-	qName := qrName
-	if qName != "" {
+	if o.Name != nil {
 
-		if err := r.SetQueryParam("name", qName); err != nil {
-			return err
+		// query param name
+		var qrName string
+
+		if o.Name != nil {
+			qrName = *o.Name
+		}
+		qName := qrName
+		if qName != "" {
+
+			if err := r.SetQueryParam("name", qName); err != nil {
+				return err
+			}
 		}
 	}
 
-	// query param version
-	qrVersion := o.Version
-	qVersion := qrVersion
-	if qVersion != "" {
+	if o.PluginType != nil {
 
-		if err := r.SetQueryParam("version", qVersion); err != nil {
-			return err
+		// query param pluginType
+		var qrPluginType string
+
+		if o.PluginType != nil {
+			qrPluginType = *o.PluginType
+		}
+		qPluginType := qrPluginType
+		if qPluginType != "" {
+
+			if err := r.SetQueryParam("pluginType", qPluginType); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Version != nil {
+
+		// query param version
+		var qrVersion string
+
+		if o.Version != nil {
+			qrVersion = *o.Version
+		}
+		qVersion := qrVersion
+		if qVersion != "" {
+
+			if err := r.SetQueryParam("version", qVersion); err != nil {
+				return err
+			}
 		}
 	}
 

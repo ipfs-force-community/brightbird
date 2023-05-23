@@ -3,9 +3,10 @@ package models
 import (
 	"errors"
 	"fmt"
+	"regexp"
+
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"regexp"
 )
 
 type JobType string

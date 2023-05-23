@@ -12,8 +12,10 @@ import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { Case, Node} from "@/api/dto/testflow.js";
 import yaml from 'yaml';
+import JmWorkflowEditor from "@/components/workflow/workflow-editor/index.vue";
 
 export default defineComponent({
+  components: { JmWorkflowEditor },
   props: {
     id: {
       type: String,
@@ -23,8 +25,6 @@ export default defineComponent({
     const { proxy, appContext } = getCurrentInstance() as any;
     const router = useRouter();
     const route = useRoute();
-    const store = useStore();
-    const { payload } = route.params;
     const loading = ref<boolean>(false);
     // workflow数据是否加载完成
     const loaded = ref<boolean>(false);
@@ -34,26 +34,18 @@ export default defineComponent({
     const projectPanelVisible = ref<boolean>(false);
     provide('projectPanelVisible', projectPanelVisible);
     const workflow = ref<IWorkflow>({
-      name: '未命名项目',
-      groupId: '1',
+      name: '',
+      groupId: '',
       createTime: '',
       modifiedTime: '',
       data: '',
     });
     onMounted(async () => {
-      // if (payload && editMode) {
-      //   // 初始化走这里获取到的cache为空
-      //   workflow.value = JSON.parse(payload as string);
-      //   loaded.value = true;
-      //   await nextTick();
-      //   loaded.value = false;
-      //   return;
-      // }
       if (editMode) {
         try {
           loading.value = true;
           loaded.value = true;
-          const fetchedData = await fetchTestFlowDetail({id:props.id as string, name:""});
+          const fetchedData = await fetchTestFlowDetail({id: props.id as string, name:""});
           const rawData = yaml.parse(fetchedData.graph)['raw-data'];
           flowCreateTime.value = fetchedData.createTime
           workflow.value = {
@@ -77,45 +69,49 @@ export default defineComponent({
     const close = async () => {
       await router.push({ name: 'index' });
     };
+    const save = async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
+      try {
+        if (workflow.value.name === '' || workflow.value.groupId === '') {
+          projectPanelVisible.value = true;
+          return;
+        }
+
+        const id = await saveTestFlow({
+          groupId: workflow.value.groupId,
+          name: workflow.value.name,
+          createTime: (editMode ? BigInt(flowCreateTime.value) : BigInt(Date.now()) * BigInt(1000000)).toString(),
+          modifiedTime: (Date.now() * 1000000).toString(),
+          cases: caseList,
+          nodes: nodeList,
+          graph: graph,
+          id: editMode ? props.id : '',
+          description: workflow.value.description || '',
+        });
+
+        if (!back) {
+          // 新增项目，再次点击保存进入项目编辑模式
+          if (!editMode) {
+            await router.push({ name: 'update-pipeline', params: { id } });
+            reloadMain();
+            return;
+          }
+          proxy.$success(editMode ? '保存成功' : '新增成功');
+          return;
+        }
+        proxy.$success(editMode ? '保存成功' : '新增成功');
+        await close();
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      }
+    };
+
     return {
       loaded,
       loading,
       workflow,
       projectPanelVisible,
       close,
-      save: async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
-        try {
-          if (workflow.value.name === '未命名项目' || workflow.value.groupId === '1') {
-            projectPanelVisible.value = true;
-            return;
-          }
-
-          const  id = await saveTestFlow({
-            groupId: workflow.value.groupId,
-            name: workflow.value.name,
-            createTime: (editMode ? BigInt(flowCreateTime.value) : BigInt(Date.now()) * BigInt(1000000)).toString(),
-            modifiedTime: (Date.now() * 1000000).toString(),
-            cases: caseList,
-            nodes: nodeList,
-            graph: graph,
-            id: editMode ? props.id : '',
-            description: workflow.value.description || '',
-          });
-          proxy.$success(editMode ? '保存成功' : '新增成功');
-          if (!back) {
-            // 新增项目，再次点击保存进入项目编辑模式
-            if (!editMode) {
-              await router.push({ name: 'update-pipeline', params: { id } });
-              reloadMain();
-              return;
-            }
-            return;
-          }
-          await close();
-        } catch (err) {
-          proxy.$throw(err, proxy);
-        }
-      },
+      save,
     };
   },
 });

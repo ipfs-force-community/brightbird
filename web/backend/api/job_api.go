@@ -2,9 +2,10 @@ package api
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"math"
 	"net/http"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
@@ -17,7 +18,7 @@ var jobLogger = logging.Logger("job_api")
 
 func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, groupRepo repo.IGroupRepo, jobManager job.IJobManager, taskManager *job.TaskMgr) {
 	group := v1group.Group("/job")
-	// swagger:route GET /job listJobs
+	// swagger:route GET /job/list job listJobs
 	//
 	// Lists all jobs.
 	//
@@ -44,7 +45,65 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.JSON(http.StatusOK, jobs)
 	})
 
-	// swagger:route Get /job/{id} getJob
+	// swagger:route GET /job/count job countJob
+	//
+	// Count all jobs by condition.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: id
+	//         in: query
+	//         description: job id
+	//         required: false
+	//         type: string
+	//       + name: name
+	//         in: query
+	//         description: job name
+	//         required: false
+	//         type: string
+	//
+	//     Responses:
+	//       200: listJobResp
+	//		 503: apiError
+	group.GET("count", func(c *gin.Context) {
+		req := &models.CountJobRequest{}
+		err := c.ShouldBindQuery(req)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		params := &repo.CountJobParams{
+			Name: req.Name,
+		}
+
+		if req.ID != nil {
+			params.ID, err = primitive.ObjectIDFromHex(*req.ID)
+			if err != nil {
+				c.Error(err)
+				return
+			}
+		}
+
+		count, err := jobRepo.Count(ctx, params)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+		c.JSON(http.StatusOK, count)
+	})
+
+	// swagger:route Get /job/{id} job getJob
 	//
 	// Get job by id
 	//
@@ -85,7 +144,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.JSON(http.StatusOK, job)
 	})
 
-	// swagger:route Get /job/detail/{id} getJob
+	// swagger:route Get /job/detail/{id} job getJob
 	//
 	// Get job detail by id
 	//
@@ -141,7 +200,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		})
 	})
 
-	// swagger:route Get /job/{id} updateJob
+	// swagger:route Get /job/{id} job updateJob
 	//
 	// Update job
 	//
@@ -217,7 +276,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.JSON(http.StatusOK, job)
 	})
 
-	// swagger:route DELETE /job/{id} deleteJob
+	// swagger:route DELETE /job/{id} job deleteJob
 	//
 	// Delete job by id
 	//
@@ -297,7 +356,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route POST /job saveJob
+	// swagger:route POST /job job saveJob
 	//
 	// save job entity, create if not exist
 	//
@@ -351,7 +410,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.String(http.StatusOK, id.Hex())
 	})
 
-	// swagger:route POST /run/{jobid} runJobImmediately
+	// swagger:route POST /run/{jobid} job runJobImmediately
 	// run job immediately
 	//
 	//     Consumes:

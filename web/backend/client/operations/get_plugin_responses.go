@@ -48,10 +48,10 @@ func NewGetPluginOK() *GetPluginOK {
 /*
 GetPluginOK describes a response with status code 200, with default header values.
 
-pluginOut
+pluginDetail
 */
 type GetPluginOK struct {
-	Payload *models.PluginOut
+	Payload []*models.PluginDetail
 }
 
 // IsSuccess returns true when this get plugin o k response has a 2xx status code
@@ -85,23 +85,21 @@ func (o *GetPluginOK) Code() int {
 }
 
 func (o *GetPluginOK) Error() string {
-	return fmt.Sprintf("[GET /plugin/get][%d] getPluginOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /plugin][%d] getPluginOK  %+v", 200, o.Payload)
 }
 
 func (o *GetPluginOK) String() string {
-	return fmt.Sprintf("[GET /plugin/get][%d] getPluginOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /plugin][%d] getPluginOK  %+v", 200, o.Payload)
 }
 
-func (o *GetPluginOK) GetPayload() *models.PluginOut {
+func (o *GetPluginOK) GetPayload() []*models.PluginDetail {
 	return o.Payload
 }
 
 func (o *GetPluginOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.PluginOut)
-
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 
@@ -153,11 +151,11 @@ func (o *GetPluginServiceUnavailable) Code() int {
 }
 
 func (o *GetPluginServiceUnavailable) Error() string {
-	return fmt.Sprintf("[GET /plugin/get][%d] getPluginServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[GET /plugin][%d] getPluginServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *GetPluginServiceUnavailable) String() string {
-	return fmt.Sprintf("[GET /plugin/get][%d] getPluginServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[GET /plugin][%d] getPluginServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *GetPluginServiceUnavailable) GetPayload() *models.APIError {

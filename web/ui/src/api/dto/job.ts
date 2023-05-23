@@ -18,6 +18,12 @@ extends Readonly<{
   tagPattern: string;
 }> {}
   
+export interface ICountJobParam
+  extends Readonly<{
+    id?: string;
+    name?: string;
+  }> { }
+
 export interface IJobVo extends Readonly<{
     id: string;
     testFlowId: string;

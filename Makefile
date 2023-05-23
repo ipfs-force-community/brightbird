@@ -3,6 +3,7 @@ ifneq ($(strip $(LDFLAGS)),)
 	ldflags+=-extldflags=$(LDFLAGS)
 endif
 
+DISTPATH=dist
 COMPONENT=""
 GOFLAGS+=-ldflags=$(ldflags)
 
@@ -17,8 +18,8 @@ swagger-srv: gen-swagger
 .PHONY: exec-plugin
 exec-plugin:
 	@for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
-		rm -f ./plugins/exec/$$i;\
-   		cmd="go build -o ./plugins/exec/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
+		rm -f $(DISTPATH)/plugins/exec/$$i;\
+   		cmd="go build -o $(DISTPATH)/plugins/exec/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done
@@ -26,23 +27,28 @@ exec-plugin:
 .PHONY: deploy-plugin
 deploy-plugin:
 	@for i in $$(ls pluginsrc/deploy|grep $(COMPONENT)); do \
-		rm -f ./plugins/deploy/$$i;\
-   		cmd="go build -o ./plugins/deploy/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
+		rm -f $(DISTPATH)/plugins/deploy/$$i;\
+   		cmd="go build -o $(DISTPATH)/plugins/deploy/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
 		echo $$cmd; \
 		eval $$cmd; \
 	done
 
 .PHONY: runner
 runner:
-	rm -f ./testrunner
-	go build -o testrunner  $(GOFLAGS) ./test_runner
+	rm -f $(DISTPATH)/testrunner
+	go build -o $(DISTPATH)/testrunner  $(GOFLAGS) ./test_runner
 
 .PHONY: backend
 backend:
-	rm -f ./backend
-	go build -o backend  $(GOFLAGS) ./web/backend
+	rm -f $(DISTPATH)/backend
+	go build -o $(DISTPATH)/backend  $(GOFLAGS) ./web/backend
 
-build-all: exec-plugin deploy-plugin runner backend
+.PHONY: ui
+ui:
+	rm -f $(DISTPATH)/ui
+	cd web/ui && PUBLICDIR=../../$(DISTPATH)/front yarn run build
+
+build-all: exec-plugin deploy-plugin runner ui backend
 
 TAG=latest
 docker-runner:
@@ -51,6 +57,4 @@ docker-runner:
 	docker push $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 
 clean:
-	rm -rf ./backend
-	rm -rf ./testrunner
-	rm -rf ./plugins
+	rm -rf $(DISTPATH)

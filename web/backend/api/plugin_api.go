@@ -2,7 +2,9 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path"
@@ -22,37 +24,9 @@ import (
 func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1group *V1RouterGroup, service repo.IPluginService) {
 	group := v1group.Group("/plugin")
 
-	// swagger:route GET /plugin/deploy listDeployPlugins
+	// swagger:route GET /plugin/mainfest plugin getPluginMainfest
 	//
-	// Lists all deploy plugin.
-	//
-	//     Consumes:
-	//     - application/json
-	//
-	//     Produces:
-	//     - application/json
-	//     - application/text
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Responses:
-	//       200: []pluginOut
-	//		 503: apiError
-	group.GET("deploy/list", func(c *gin.Context) {
-		output, err := service.DeployPlugins(c)
-		if err != nil {
-			c.Error(err)
-			return
-		}
-
-		c.JSON(http.StatusOK, output)
-	})
-
-	// swagger:route GET /plugin/exec listExecPlugin
-	//
-	// Lists all deploy plugin.
+	// Get plugin mainfest.
 	//
 	//     Consumes:
 	//     - application/json
@@ -65,11 +39,30 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//
 	//     Deprecated: false
 	//
+	//     Parameters:
+	//       + name: name
+	//         in: query
+	//         description: name of plugin
+	//         required: false
+	//         type: string
+	//       + name: pluginType
+	//         in: query
+	//         description: pluginType of plugin
+	//         required: false
+	//         type: string
+	//
 	//     Responses:
-	//       200: []pluginOut
+	//       200: []pluginInfo
 	//		 503: apiError
-	group.GET("exec/list", func(c *gin.Context) {
-		output, err := service.ExecPlugins(c)
+	group.GET("mainfest", func(c *gin.Context) {
+		req := &repo.ListMainFestParams{}
+		err := c.ShouldBindQuery(req)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		output, err := service.PluginSummary(c, req)
 		if err != nil {
 			c.Error(err)
 			return
@@ -78,7 +71,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /plugin/get getPlugin
+	// swagger:route GET /plugin plugin getPlugin
 	//
 	// Get plugin by name and version.
 	//
@@ -97,26 +90,36 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//       + name: name
 	//         in: query
 	//         description: name of plugin
-	//         required: true
+	//         required: false
 	//         type: string
 	//       + name: version
 	//         in: query
 	//         description: version of plugin
-	//         required: true
+	//         required: false
+	//         type: string
+	//       + name: pluginType
+	//         in: query
+	//         description: pluginType of plugin
+	//         required: false
 	//         type: string
 	//
 	//     Responses:
-	//       200: pluginOut
+	//       200: []pluginDetail
 	//		 503: apiError
 	group.GET("", func(c *gin.Context) {
-		req := &models.GetPluginRequest{}
+		req := &repo.ListPluginParams{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		output, err := service.GetPlugin(c, req.Name, req.Version)
+		if req.Name == nil && req.Version == nil && req.PluginType == nil {
+			c.Error(errors.New("no params"))
+			return
+		}
+
+		output, err := service.ListPlugin(c, req)
 		if err != nil {
 			c.Error(err)
 			return
@@ -125,81 +128,116 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route POST /plugin/upload Files uploadPluginFile
+	// swagger:route DELETE /plugin plugin deletePlugin
 	//
-	// Upload a file.
-	//
+	// Delete plugin by id
 	//
 	//     Consumes:
-	//     - multipart/form-data
+	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
+	//     - application/text
 	//
-	//     Schemes: https
+	//     Schemes: http, https
 	//
 	//     Deprecated: false
 	//
 	//     Parameters:
-	//       + name: file
-	//         in: formData
-	//         required: true
-	//         type: file
+	//       + name: id
+	//         in: query
+	//         description: id of plugin
+	//         required: false
+	//         type: string
 	//
 	//     Responses:
-	//       200: StatusOK
-	//       403: Error
+	//       200:
+	//		 503: apiError
+	group.DELETE("", func(c *gin.Context) {
+		idStr := c.Query("id")
 
-	group.GET("upload", func(c *gin.Context) {
-		form, err := c.MultipartForm()
+		id, err := primitive.ObjectIDFromHex(idStr)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		err = service.DeletePlugin(c, id)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
+	// UploadPluginFilesParams contains the uploaded file data
+	// swagger:parameters uploadPluginFilesParams
+	type UploadPluginFilesParams struct {
+		// Plugin file.
+		//
+		// in: formData
+		//
+		// swagger:file
+		PluginFiles []*multipart.FileHeader `json:"plugins" form:"plugins"`
+	}
+
+	// uploadPlugin swagger:route POST /plugin/upload plugin uploadPluginFilesParams
+	//
+	// Upload plugin files
+	//
+	// Responses:
+	//	    200:
+	//	    403: apiError
+	group.POST("upload", func(c *gin.Context) {
+		params := &UploadPluginFilesParams{}
+		err := c.ShouldBind(params)
 		// The file cannot be received.
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		var pluginInfos []*models.PluginOut
-		for _, files := range form.File {
-			for _, fileHeader := range files {
-				// The file is received, so let's save it
-				tmpPath := path.Join(os.TempDir(), uuid.NewString())
-				if err := c.SaveUploadedFile(fileHeader, tmpPath); err != nil {
-					c.Error(err)
-					return
-				}
-
-				pluginInfo, err := plugin.GetPluginInfo(tmpPath)
-				if err != nil {
-					c.Error(err)
-					return
-				}
-
-				// copy plugin to plugin store
-				fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
-				err = utils.CopyFile(tmpPath, filepath.Join(string(pluginStore), fname))
-				if err != nil {
-					c.Error(err)
-					return
-				}
-
-				pluginInfos = append(pluginInfos, &models.PluginOut{
-					ID: primitive.NewObjectID(),
-					BaseTime: models.BaseTime{
-						CreateTime:   time.Now().Unix(),
-						ModifiedTime: time.Now().Unix(),
-					},
-					PluginInfo: *pluginInfo,
-					Path:       fname,
-					Instance: types.DependencyProperty{
-						Name:        plugin.InstancePropertyName,
-						Value:       "default",
-						Type:        pluginInfo.PluginType,
-						SockPath:    "",
-						Description: "named a plugin instance",
-						Require:     true,
-					},
-				})
+		var pluginInfos []*models.PluginDetail
+		for _, fileHeader := range params.PluginFiles {
+			// The file is received, so let's save it
+			tmpPath := path.Join(os.TempDir(), uuid.NewString())
+			if err := c.SaveUploadedFile(fileHeader, tmpPath); err != nil {
+				c.Error(err)
+				return
 			}
+
+			pluginInfo, err := plugin.GetPluginInfo(tmpPath)
+			if err != nil {
+				c.Error(err)
+				return
+			}
+
+			// copy plugin to plugin store
+			fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
+			err = utils.CopyFile(tmpPath, filepath.Join(string(pluginStore), fname))
+			if err != nil {
+				c.Error(err)
+				return
+			}
+
+			pluginInfos = append(pluginInfos, &models.PluginDetail{
+				ID: primitive.NewObjectID(),
+				BaseTime: models.BaseTime{
+					CreateTime:   time.Now().Unix(),
+					ModifiedTime: time.Now().Unix(),
+				},
+				PluginInfo: *pluginInfo,
+				Path:       fname,
+				Instance: types.DependencyProperty{
+					Name:        plugin.InstancePropertyName,
+					Value:       "default",
+					Type:        pluginInfo.PluginType,
+					SockPath:    "",
+					Description: "named a plugin instance",
+					Require:     true,
+				},
+			})
 		}
 
 		err = service.SavePlugins(c, pluginInfos)
@@ -210,7 +248,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route POST /plugin/import importPlugin
+	// swagger:route POST /plugin/import plugin importPlugin
 	//
 	// import plugin mainfest.
 	//
@@ -251,7 +289,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			c.Error(err)
 			return
 		}
-		var pluginInfos []*models.PluginOut
+		var pluginInfos []*models.PluginDetail
 		for _, pluginPath := range filePaths {
 			pluginInfo, err := plugin.GetPluginInfo(pluginPath)
 			if err != nil {
@@ -267,7 +305,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				c.Error(err)
 				return
 			}
-			pluginInfos = append(pluginInfos, &models.PluginOut{
+			pluginInfos = append(pluginInfos, &models.PluginDetail{
 				ID: primitive.NewObjectID(),
 				BaseTime: models.BaseTime{
 					CreateTime:   time.Now().Unix(),
@@ -293,4 +331,5 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		}
 		c.Status(http.StatusOK)
 	})
+
 }

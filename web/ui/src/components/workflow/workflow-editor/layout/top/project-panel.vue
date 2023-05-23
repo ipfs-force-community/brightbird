@@ -11,7 +11,9 @@
             :maxlength="45"
             placeholder="请输入项目名称"
             :show-word-limit="true"
+            :class="{ 'has-error': nameError }"
           />
+          <div v-if="nameError" class="error-msg">该项目名已存在，请修改</div>
         </jm-form-item>
         <jm-form-item label="项目分组" class="group-item" prop="groupId">
           <jm-select v-model="projectInfoForm.groupId" placeholder="请选择项目分组" v-loading="loading">
@@ -29,7 +31,7 @@
         </jm-form-item>
         <div class="btn-container">
           <jm-button @click="cancel" class="cancel">取消</jm-button>
-          <jm-button type="primary" @click="save(editProjectInfoRef)">确定</jm-button>
+          <jm-button type="primary" @click="save()">确定</jm-button>
         </div>
       </jm-form>
     </div>
@@ -37,10 +39,10 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, onMounted, PropType, ref } from 'vue';
+import { defineComponent, onMounted, getCurrentInstance, PropType, ref } from 'vue';
 import { IWorkflow } from '../../model/data/common';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { listTestflowGroup } from '@/api/view-no-auth';
+import { listTestflowGroup, countTestFlow } from '@/api/view-no-auth';
 
 export interface IProjectInfo {
   name: string;
@@ -55,8 +57,9 @@ export default defineComponent({
       required: true,
     },
   },
-  emits: ['update:model-value'],
+  emits: ['save', 'update:model-value'],
   setup(props, { emit }) {
+    const { proxy } = getCurrentInstance() as any;
     const loading = ref<boolean>(true);
     const workflowForm = ref<IWorkflow>(props.workflowData);
     const projectInfoForm = ref<IProjectInfo>({
@@ -69,6 +72,8 @@ export default defineComponent({
     // 分组列表
     const testGroupList = ref<ITestflowGroupVo[]>([]);
 
+    const nameError = ref<boolean>(false);
+
     onMounted(async () => {
       testGroupList.value = await listTestflowGroup();
       loading.value = false;
@@ -79,14 +84,26 @@ export default defineComponent({
       testGroupList,
       projectInfoForm,
       loading,
-      save: () => {
-        editProjectInfoRef.value?.validate((valid: boolean) => {
+      nameError,
+      save: async () => {
+        editProjectInfoRef.value?.validate(async (valid: boolean) => {
           if (!valid) {
             return false;
           }
+          if (projectInfoForm.value.name && projectInfoForm.value.groupId) {
+            const count = await countTestFlow({
+              name: projectInfoForm.value.name,
+            });
+            if (count !== 0) {
+              nameError.value = true;
+              return;
+            }
+          }
+          // 测试流组中测试流为空，将其自动折叠
           workflowForm.value.name = projectInfoForm.value.name;
           workflowForm.value.groupId = projectInfoForm.value.groupId;
           emit('update:model-value', false);
+          emit('save');
         });
       },
       cancel: () => {
@@ -137,6 +154,14 @@ export default defineComponent({
         }
       }
     }
+  }
+  .error-msg {
+    font-size: 12px;
+    color: #f56c6c;
+    margin-top: 5px;
+  }
+  .has-error ::v-deep input{
+    border-color: #f56c6c;
   }
 }
 </style>

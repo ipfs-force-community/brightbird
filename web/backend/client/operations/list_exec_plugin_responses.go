@@ -48,10 +48,10 @@ func NewListExecPluginOK() *ListExecPluginOK {
 /*
 ListExecPluginOK describes a response with status code 200, with default header values.
 
-pluginOut
+pluginDetail
 */
 type ListExecPluginOK struct {
-	Payload []*models.PluginOut
+	Payload []*models.PluginDetail
 }
 
 // IsSuccess returns true when this list exec plugin o k response has a 2xx status code
@@ -92,7 +92,7 @@ func (o *ListExecPluginOK) String() string {
 	return fmt.Sprintf("[GET /plugin/exec][%d] listExecPluginOK  %+v", 200, o.Payload)
 }
 
-func (o *ListExecPluginOK) GetPayload() []*models.PluginOut {
+func (o *ListExecPluginOK) GetPayload() []*models.PluginDetail {
 	return o.Payload
 }
 

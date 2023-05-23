@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/static"
 	"github.com/hunjixin/brightbird/models"
 
 	"github.com/BurntSushi/toml"
@@ -85,6 +86,10 @@ var runCmd = &cli.Command{
 			Value: "testplateform",
 		},
 		&cli.StringFlag{
+			Name:  "static-root",
+			Value: "dist",
+		},
+		&cli.StringFlag{
 			Name:  "listen",
 			Value: "127.0.0.1:12356",
 		},
@@ -110,6 +115,10 @@ var runCmd = &cli.Command{
 			if err != nil {
 				return err
 			}
+		}
+
+		if c.IsSet("static-root") {
+			cfg.StaticRoot = c.String("static-root")
 		}
 
 		if c.IsSet("plugins") {
@@ -146,6 +155,7 @@ var runCmd = &cli.Command{
 
 func run(pCtx context.Context, cfg config.Config) error {
 	e := gin.Default()
+	e.Use(static.Serve("/", static.LocalFile(cfg.StaticRoot, false)))
 	e.Use(corsMiddleWare())
 	e.Use(errorHandleMiddleWare())
 
@@ -248,7 +258,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 func errorHandleMiddleWare() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
-		if c.Errors != nil {
+		if c.Errors != nil && len(c.Errors) > 0 {
 			c.AbortWithStatusJSON(http.StatusServiceUnavailable, models.APIError{Message: c.Errors.String()})
 		}
 	}

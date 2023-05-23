@@ -2,8 +2,9 @@ package api
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"net/http"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
@@ -12,9 +13,9 @@ import (
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
-	// swagger:route GET /testflow/list/ listTestFlowsInGroup
+	// swagger:route GET /testflow/list testflow listTestFlows
 	//
-	// Lists exec test flows in specific group.
+	// Lists test flows.
 	//
 	//     Consumes:
 	//     - application/json
@@ -31,7 +32,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//       + name: groupId
 	//         in: query
 	//         description: group id  of test flow
-	//         required: true
+	//         required: false
 	//         type: string
 	//       + name: pageNum
 	//         in: query
@@ -55,19 +56,21 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		groupId, err := primitive.ObjectIDFromHex(req.Params.GroupId)
-		if err != nil {
-			c.Error(err)
-			return
+		params := repo.ListTestFlowParams{
+			Name: req.Params.Name,
+		}
+		if req.Params.GroupId != nil {
+			params.GroupID, err = primitive.ObjectIDFromHex(*req.Params.GroupId)
+			if err != nil {
+				c.Error(err)
+				return
+			}
 		}
 
 		output, err := service.List(ctx, models.PageReq[repo.ListTestFlowParams]{
 			PageNum:  req.PageNum,
 			PageSize: req.PageSize,
-			Params: repo.ListTestFlowParams{
-				GroupID: groupId,
-				Name:    req.Params.Name,
-			},
+			Params:   params,
 		})
 		if err != nil {
 			c.Error(err)
@@ -77,7 +80,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow/count/ countTestFlowsInGroup
+	// swagger:route GET /testflow/count testflow countTestFlowsInGroup
 	//
 	// Count testflow numbers in group
 	//
@@ -96,20 +99,39 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//       + name: groupId
 	//         in: query
 	//         description: group id  of test flow
-	//         required: true
+	//         required: false
+	//         type: string
+	//       + name: name
+	//         in: query
+	//         description: name  of test flow
+	//         required: false
 	//         type: string
 	//
 	//     Responses:
 	//       200:
 	//		 503: apiError
-	group.GET("count/:groupId", func(c *gin.Context) {
-		groupId, err := primitive.ObjectIDFromHex(c.Param("groupId"))
+	group.GET("count", func(c *gin.Context) {
+		req := &models.CountTestFlowRequest{}
+		err := c.ShouldBindQuery(req)
 		if err != nil {
 			c.Error(err)
 			return
 		}
 
-		output, err := service.CountByGroup(ctx, groupId)
+		params := &repo.CountTestFlowParams{
+			Name: req.Name,
+		}
+
+		if req.GroupID != nil {
+			groupID, err := primitive.ObjectIDFromHex(*req.GroupID)
+			if err != nil {
+				c.Error(err)
+				return
+			}
+			params.GroupID = groupID
+		}
+
+		output, err := service.Count(ctx, params)
 		if err != nil {
 			c.Error(err)
 			return
@@ -118,7 +140,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow getTestFlow
+	// swagger:route GET /testflow testflow getTestFlow
 	//
 	// Get specific test case by condition.
 	//
@@ -137,12 +159,12 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//       + name: name
 	//         in: query
 	//         description: name of test flow
-	//         required: true
+	//         required: false
 	//         type: string
 	//       + name: id
 	//         in: query
 	//         description: id of test flow
-	//         required: true
+	//         required: false
 	//         type: string
 	//
 	//     Responses:
@@ -156,16 +178,18 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		id, err := primitive.ObjectIDFromHex(req.ID)
-		if err != nil {
-			c.Error(err)
-			return
+		params := &repo.GetTestFlowParams{
+			Name: req.Name,
+		}
+		if req.ID != nil {
+			params.ID, err = primitive.ObjectIDFromHex(*req.ID)
+			if err != nil {
+				c.Error(err)
+				return
+			}
 		}
 
-		output, err := service.Get(ctx, &repo.GetTestFlowParams{
-			ID:   id,
-			Name: req.Name,
-		})
+		output, err := service.Get(ctx, params)
 		if err != nil {
 			c.Error(err)
 			return
@@ -174,7 +198,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route POST /testflow saveTestFlow
+	// swagger:route POST /testflow testflow saveTestFlow
 	//
 	// save test case, create if not exist
 	//
@@ -217,7 +241,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.String(http.StatusOK, id.Hex())
 	})
 
-	// swagger:route DELETE /testflow/{id} deleteTestFlow
+	// swagger:route DELETE /testflow/{id} testflow deleteTestFlow
 	//
 	// Delete test flow by id
 	//
@@ -257,7 +281,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route POST /changegroup changetestflow
+	// swagger:route POST /changegroup testflow changetestflow
 	//
 	// change testflow group id
 	//

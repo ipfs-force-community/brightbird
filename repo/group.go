@@ -3,8 +3,9 @@ package repo
 import (
 	"context"
 	"fmt"
-	"github.com/hunjixin/brightbird/models"
 	"time"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -13,7 +14,13 @@ import (
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
+type CountGroupParams struct {
+	ID   primitive.ObjectID
+	Name *string
+}
+
 type IGroupRepo interface {
+	Count(context.Context, *CountGroupParams) (int64, error)
 	List(context.Context) ([]*models.Group, error)
 	Get(context.Context, primitive.ObjectID) (*models.Group, error)
 	Save(context.Context, models.Group) (primitive.ObjectID, error)
@@ -54,7 +61,18 @@ func (g *GroupSvc) List(ctx context.Context) ([]*models.Group, error) {
 	return groups, nil
 }
 
-func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*models.Group, error) {
+func (g *GroupSvc) Count(ctx context.Context, params *CountGroupParams) (int64, error) {
+	filter := bson.M{}
+	if params.Name != nil {
+		filter["name"] = params.Name
+	}
+	if !params.ID.IsZero() {
+		filter["_id"] = params.ID
+	}
+	return g.groupCol.CountDocuments(ctx, filter)
+}
+
+func (g *GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*models.Group, error) {
 	tf := &models.Group{}
 	err := g.groupCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
 	if err != nil {
@@ -63,11 +81,18 @@ func (g GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*models.Group
 	return tf, nil
 }
 
-func (g GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
-	count, err := g.testflowSvc.CountByGroup(ctx, id)
+func (g *GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
+	count, err := g.testflowSvc.Count(ctx, &CountTestFlowParams{
+		GroupID: id,
+	})
+	if err != nil {
+		return err
+	}
+
 	if count > 0 {
 		return fmt.Errorf("test flow (%d) in this group, remove test flow first", count)
 	}
+
 	_, err = g.groupCol.DeleteOne(ctx, bson.D{{"_id", id}})
 	if err != nil {
 		return err

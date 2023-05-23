@@ -7,7 +7,7 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
   return {
     plugins: [vue()],
     // base public path
-    base: command === 'build' && mode === 'cdn' ? `https://jianmu-ci.assets.dghub.cn/${name}/v${version}/` : '/',
+    base: '/',
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
@@ -17,6 +17,9 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
         vue: 'vue/dist/vue.esm-bundler.js',
       },
     },
-    server: {}
+    server: {},
+    build: {
+      outDir: process.env.PUBLICDIR
+    }
   };
 };

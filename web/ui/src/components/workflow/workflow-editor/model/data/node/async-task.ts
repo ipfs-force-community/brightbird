@@ -1,8 +1,9 @@
 import {BaseNode} from './base-node';
-import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '../enumeration';
+import {NodeTypeEnum, ParamTypeEnum} from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
-import {TaskStatusEnum} from '@/api/dto/enumeration';
-import { Property } from "@/api/dto/testflow";
+import {PluginTypeEnum, TaskStatusEnum} from '@/api/dto/enumeration';
+import { DependencyProperty, Property } from "@/api/dto/testflow";
+import { CustomRule } from '../common';
 export interface IAsyncTaskParam {
   readonly ref: string;
   readonly name: string;
@@ -33,27 +34,27 @@ export function checkDefaultIcon(icon: string) {
 }
 
 export class AsyncTask extends BaseNode {
-  groupType: NodeGroupEnum;
+  groupType: PluginTypeEnum;
   version: string;
   pluginType: string;
-  readonly inputs: Property[];
-  readonly svcProperties: Property[];
-  out: Property;
-  createTime: string;
-  modifiedTime: string;
+  inputs: Property[];
+  dependencies: DependencyProperty[];
+  instance: DependencyProperty;
+  createTime: number;
+  modifiedTime: number;
 
   constructor(
       name: string,
       type: NodeTypeEnum,
       icon = '',
-      groupType: NodeGroupEnum,
+      groupType: PluginTypeEnum,
       version = '',
       pluginType = '',
       inputs: Property[],
-      svcProperties: Property[],
-      createTime = '',
-      modifiedTime = '',
-      out: Property,
+      dependencies: DependencyProperty[],
+      createTime = 0,
+      modifiedTime = 0,
+      instance: DependencyProperty,
   ) {
     super(
         name,
@@ -64,21 +65,23 @@ export class AsyncTask extends BaseNode {
     this.version = version;
     this.pluginType = pluginType;
     this.inputs = inputs;
-    this.svcProperties = svcProperties;
+    this.dependencies = dependencies;
     this.createTime = createTime;
     this.modifiedTime = modifiedTime;
-    this.out = out;
+    this.instance = instance;
   }
 
+
+
   static build(
-      { name, type, icon, groupType, version, pluginType, inputs, svcProperties, createTime, modifiedTime, out}: any,
+      { name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, groupType, version, pluginType, inputs, svcProperties, createTime, modifiedTime, out);
+    return new AsyncTask(name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   toDsl(): object {
-    const { name, version, inputs, svcProperties, out } = this;
+    const { name, version, inputs, dependencies, instance } = this;
     const param: {
       [key: string]: string | number | boolean;
     } = {};
@@ -119,35 +122,13 @@ export class AsyncTask extends BaseNode {
     const svc: {
       [key: string]: string | number | boolean;
     } = {};
-    if (svcProperties && svcProperties.length > 0) {
-      svcProperties.forEach(({name, type, require, value}) => {
-        switch (type) {
-          case ParamTypeEnum.NUMBER: {
-            const val = parseFloat(value);
-            if (!isNaN(val)) {
-              svc[name] = val;
-              return;
-            }
-            break;
-          }
-          case ParamTypeEnum.BOOL: {
-            switch (value) {
-              case 'true':
-                svc[name] = true;
-                return;
-              case 'false':
-                svc[name] = false;
-                return;
-            }
-            break;
-          }
-        }
-
+    if (dependencies && dependencies.length > 0) {
+      dependencies.forEach(({name, type, require, value}) => {
         if (!svc[name]) {
           svc[name] = value;
         }
 
-        if (!require && !value && type !== ParamTypeEnum.STRING) {
+        if (!require && !value) {
           delete svc[name];
         }
       });
@@ -156,24 +137,13 @@ export class AsyncTask extends BaseNode {
     const output: {
       [key: string]: string | number | boolean;
     } = {};
-    if (out) {
-      switch (out.type) {
-        case ParamTypeEnum.NUMBER: {
-          const val = parseFloat(out.value);
-          if (!isNaN(val)) {
-            output[out.name] = val;
-          }
-          break;
-        }
-        default: {
-          if (!output[out.name]) {
-            output[out.name] = out.value;
-          }
+    if (instance) {
+      if (!output[instance.name]) {
+        output[instance.name] = instance.value;
+      }
 
-          if (!out.require && !out.value && out.type !== ParamTypeEnum.STRING) {
-            delete output[out.name];
-          }
-        }
+      if (!instance.require && !instance.value) {
+        delete output[instance.name];
       }
     }
 
@@ -181,8 +151,8 @@ export class AsyncTask extends BaseNode {
     return {
       type: `${this.name}:${version}`,
       param: inputs && inputs.length === 0 ? undefined : param,
-      svc: svcProperties && svcProperties.length == 0 ? undefined: svc,
-      output: !out ? undefined: output,
+      dependencies: dependencies && dependencies.length == 0 ? undefined: svc,
+      instance: !instance ? undefined: output,
     };
   }
 

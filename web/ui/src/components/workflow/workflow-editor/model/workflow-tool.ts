@@ -149,7 +149,7 @@ export class WorkflowTool {
       const nodeData = nodeProxy.getData();
       const ref = nodeData.getName();
 
-      if (nodeData instanceof AsyncTask && (nodeData as AsyncTask).out) {
+      if (nodeData instanceof AsyncTask && (nodeData as AsyncTask).instance) {
         // 只有在异步任务节点有输出参数时，才有可能被下游节点引用
         idMap.set(idArr[index], ref);
       }

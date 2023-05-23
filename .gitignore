@@ -1,7 +1,6 @@
 .idea/
 .vscode/
 *.so
-testrunner
-./backend
 config.toml
 __debug_bin
+dist

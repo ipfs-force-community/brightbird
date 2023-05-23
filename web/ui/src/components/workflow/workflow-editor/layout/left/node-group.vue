@@ -32,17 +32,17 @@
 import { computed, defineComponent, inject, onMounted, onUpdated, PropType, ref } from 'vue';
 import X6VueShape from '../../shape/x6-vue-shape.vue';
 import { IWorkflowNode } from '../../model/data/common';
-import { NodeGroupEnum } from '../../model/data/enumeration';
 import { WorkflowNode } from '../../model/workflow-node';
 import { TimeoutError } from '@/utils/rest/error';
 import { StateEnum } from '@/components/load-more/enumeration';
 import { WorkflowDnd } from '../../model/workflow-dnd';
+import { PluginTypeEnum } from '@/api/dto/enumeration';
 
 export default defineComponent({
   emits: ['getNodeCount'],
   props: {
     type: {
-      type: String as PropType<NodeGroupEnum>,
+      type: String as PropType<PluginTypeEnum>,
       required: true,
     },
     keyword: {
@@ -55,9 +55,9 @@ export default defineComponent({
   },
   setup(props, { emit }) {
     const groupName = computed<string>(() => {
-      if (props.type === NodeGroupEnum.DEPLOY) {
+      if (props.type === PluginTypeEnum.Deploy) {
         return '部署节点';
-      } else if (props.type === NodeGroupEnum.EXEC) {
+      } else if (props.type === PluginTypeEnum.Exec) {
         return '测试节点';
       } else {
         return '';
@@ -95,13 +95,13 @@ export default defineComponent({
         loading.value = true;
         switch (props.type) {
             // 官方节点
-          case NodeGroupEnum.DEPLOY: {
+          case PluginTypeEnum.Deploy: {
             const { content } = await workflowNode.loadDeployPlugins(keyword);
             nodes.value = content;
             break;
           }
             // 社区节点
-          case NodeGroupEnum.EXEC: {
+          case PluginTypeEnum.Exec: {
             const { content } = await workflowNode.loadExecPlugins(keyword);
             // 显示更多
             // totalPages <= currentPage ? (loadState.value = StateEnum.NONE) : (loadState.value = StateEnum.MORE);

@@ -29,7 +29,8 @@ var logDetail = &log.SugaredLogger
 
 type InitParams struct {
 	env.K8sInitParams
-	env.BaseConfig
+	CodeVersion  string                      //todo allow config as tag commit id brance
+	InstanceName string                      //plugin instance name
 	SockPath     string                      //path to listen
 	Dependencies []*types.DependencyProperty // get depedencies
 	Properties   []*types.Property           // get params form this fields
@@ -41,13 +42,13 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	logDetail.Infof("start running plugin")
 	fnT := reflect.TypeOf(constructor)
 	depParmasT := fnT.In(1)
-	pluginOut, err := ParseParams(depParmasT)
+	pluginParams, err := ParseParams(depParmasT)
 	if err != nil {
 		respError(err)
 		os.Exit(1)
 		return
 	}
-	info.PluginParams = pluginOut
+	info.PluginParams = pluginParams
 
 	if len(os.Args) > 1 && os.Args[1] == "info" {
 		respJson(info) //NOTE never remove this print code!!!!!, println for testrunner to read
@@ -62,7 +63,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 		return
 	}
 
-	//data := []byte(`{"Namespace":"production","TestID":"e35e2b9f","PrivateRegistry":"192.168.200.175","MysqlConnTemplate":"root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","TmpPath":"","codeVersion":"","InstanceName":"set-pwd","SockPath":"/tmp/e35e2b9f_set-pwd_e6dd33fd-24cb-4376-a21e-9fd3e66ee425.sock799133915","Dependencies":[{"name":"VenusWallet","value":"wallet","type":"Deployer","sockPath":"/tmp/e35e2b9f_wallet_22c7dcbf-55ca-4edf-a6e3-9e6832cbce1c.sock","description":"","require":false}],"Properties":[{"name":"password","type":"string","description":"","value":"123","require":false}]}`)
+	//data = []byte(`{"Namespace":"production","TestID":"e35e2b9f","PrivateRegistry":"192.168.200.175","MysqlConnTemplate":"root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","TmpPath":"","codeVersion":"","InstanceName":"set-pwd","SockPath":"/tmp/e35e2b9f_set-pwd_e6dd33fd-24cb-4376-a21e-9fd3e66ee425.sock799133915","Dependencies":[{"name":"VenusWallet","value":"wallet","type":"Deployer","sockPath":"/tmp/e35e2b9f_wallet_22c7dcbf-55ca-4edf-a6e3-9e6832cbce1c.sock","description":"","require":false}],"Properties":[{"name":"password","type":"string","description":"","value":"123","require":false}]}`)
 	incomingParams := &InitParams{}
 	err = json.Unmarshal(data, incomingParams)
 	if err != nil {

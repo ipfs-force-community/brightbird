@@ -40,6 +40,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "testflow"
+        ],
         "operationId": "changetestflow",
         "parameters": [
           {
@@ -68,35 +71,6 @@
       }
     },
     "/group": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists all group.",
-        "operationId": "listGroup",
-        "responses": {
-          "200": {
-            "description": "listGroupResp",
-            "schema": {
-              "$ref": "#/definitions/listGroupResp"
-            }
-          },
-          "503": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      },
       "post": {
         "description": "Save group",
         "consumes": [
@@ -109,6 +83,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "group"
         ],
         "operationId": "saveCases",
         "parameters": [
@@ -137,6 +114,85 @@
         }
       }
     },
+    "/group/count": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "summary": "Count group by condition.",
+        "operationId": "countGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "group id",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "group name",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/group/list": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "summary": "Lists all group.",
+        "operationId": "listGroup",
+        "responses": {
+          "200": {
+            "description": "listGroupResp",
+            "schema": {
+              "$ref": "#/definitions/listGroupResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/group/{id}": {
       "get": {
         "consumes": [
@@ -149,6 +205,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "group"
         ],
         "summary": "Get specific group by id.",
         "operationId": "getGroupById",
@@ -188,6 +247,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "group"
         ],
         "operationId": "updateGroup",
         "parameters": [
@@ -235,6 +297,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "group"
+        ],
         "operationId": "deleteGroup",
         "parameters": [
           {
@@ -259,35 +324,6 @@
       }
     },
     "/job": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists all jobs.",
-        "operationId": "listJobs",
-        "responses": {
-          "200": {
-            "description": "listJobResp",
-            "schema": {
-              "$ref": "#/definitions/listJobResp"
-            }
-          },
-          "503": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      },
       "post": {
         "description": "save job entity, create if not exist",
         "consumes": [
@@ -300,6 +336,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "job"
         ],
         "operationId": "saveJob",
         "parameters": [
@@ -328,6 +367,54 @@
         }
       }
     },
+    "/job/count": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "summary": "Count all jobs by condition.",
+        "operationId": "countJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "job name",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "listJobResp",
+            "schema": {
+              "$ref": "#/definitions/listJobResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/job/detail/{id}": {
       "get": {
         "description": "Get job detail by id",
@@ -341,6 +428,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "job"
         ],
         "operationId": "getJob",
         "parameters": [
@@ -368,6 +458,40 @@
         }
       }
     },
+    "/job/list": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "summary": "Lists all jobs.",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "listJobResp",
+            "schema": {
+              "$ref": "#/definitions/listJobResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/job/{id}": {
       "get": {
         "description": "Update job",
@@ -381,6 +505,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "job"
         ],
         "operationId": "updateJob",
         "parameters": [
@@ -431,6 +558,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "job"
+        ],
         "operationId": "deleteJob",
         "parameters": [
           {
@@ -466,6 +596,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "log"
         ],
         "summary": "List all pod names in test.",
         "operationId": "listPodsInTest",
@@ -507,6 +640,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "log"
+        ],
         "summary": "get all logs in pod.",
         "operationId": "listLogsInPod",
         "parameters": [
@@ -534,7 +670,7 @@
         }
       }
     },
-    "/plugin/deploy": {
+    "/plugin": {
       "get": {
         "consumes": [
           "application/json"
@@ -547,73 +683,8 @@
           "http",
           "https"
         ],
-        "summary": "Lists all deploy plugin.",
-        "operationId": "listDeployPlugins",
-        "responses": {
-          "200": {
-            "description": "pluginOut",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pluginOut"
-              }
-            }
-          },
-          "503": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      }
-    },
-    "/plugin/exec": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "summary": "Lists all deploy plugin.",
-        "operationId": "listExecPlugin",
-        "responses": {
-          "200": {
-            "description": "pluginOut",
-            "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pluginOut"
-              }
-            }
-          },
-          "503": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      }
-    },
-    "/plugin/get": {
-      "get": {
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json",
-          "application/text"
-        ],
-        "schemes": [
-          "http",
-          "https"
+        "tags": [
+          "plugin"
         ],
         "summary": "Get plugin by name and version.",
         "operationId": "getPlugin",
@@ -622,23 +693,67 @@
             "type": "string",
             "description": "name of plugin",
             "name": "name",
-            "in": "query",
-            "required": true
+            "in": "query"
           },
           {
             "type": "string",
             "description": "version of plugin",
             "name": "version",
-            "in": "query",
-            "required": true
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "pluginType of plugin",
+            "name": "pluginType",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "pluginOut",
+            "description": "pluginDetail",
             "schema": {
-              "$ref": "#/definitions/pluginOut"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginDetail"
+              }
             }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete plugin by id",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "operationId": "deletePlugin",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of plugin",
+            "name": "id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           },
           "503": {
             "description": "apiError",
@@ -661,6 +776,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "plugin"
         ],
         "summary": "import plugin mainfest.",
         "operationId": "importPlugin",
@@ -686,37 +804,81 @@
         }
       }
     },
-    "/plugin/upload": {
-      "post": {
+    "/plugin/mainfest": {
+      "get": {
         "consumes": [
-          "multipart/form-data"
-        ],
-        "produces": [
           "application/json"
         ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
         "schemes": [
+          "http",
           "https"
         ],
         "tags": [
-          "Files"
+          "plugin"
         ],
-        "summary": "Upload a file.",
-        "operationId": "uploadPluginFile",
+        "summary": "Get plugin mainfest.",
+        "operationId": "getPluginMainfest",
         "parameters": [
           {
-            "type": "object",
-            "name": "file",
-            "required": true
+            "type": "string",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "pluginType of plugin",
+            "name": "pluginType",
+            "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "$ref": "#/responses/StatusOK"
+            "description": "pluginInfo",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginInfo"
+              }
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/upload": {
+      "post": {
+        "description": "Upload plugin files",
+        "tags": [
+          "plugin"
+        ],
+        "operationId": "uploadPluginFilesParams",
+        "parameters": [
+          {
+            "type": "file",
+            "x-go-name": "PluginFiles",
+            "description": "Plugin file.",
+            "name": "plugins",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
           },
           "403": {
-            "description": "Error",
+            "description": "apiError",
             "schema": {
-              "$ref": "#/definitions/Error"
+              "$ref": "#/definitions/apiError"
             }
           }
         }
@@ -735,6 +897,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "job"
         ],
         "operationId": "runJobImmediately",
         "parameters": [
@@ -771,6 +936,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "task"
         ],
         "summary": "Lists all tasks.",
         "operationId": "listTasks",
@@ -812,6 +980,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "task"
+        ],
         "operationId": "stopTask",
         "parameters": [
           {
@@ -848,6 +1019,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "task"
         ],
         "operationId": "getTask",
         "parameters": [
@@ -887,6 +1061,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "task"
+        ],
         "operationId": "deleteTask",
         "parameters": [
           {
@@ -923,6 +1100,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "testflow"
+        ],
         "summary": "Get specific test case by condition.",
         "operationId": "getTestFlow",
         "parameters": [
@@ -930,15 +1110,13 @@
             "type": "string",
             "description": "name of test flow",
             "name": "name",
-            "in": "query",
-            "required": true
+            "in": "query"
           },
           {
             "type": "string",
             "description": "id of test flow",
             "name": "id",
-            "in": "query",
-            "required": true
+            "in": "query"
           }
         ],
         "responses": {
@@ -969,6 +1147,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "testflow"
+        ],
         "operationId": "saveTestFlow",
         "parameters": [
           {
@@ -996,7 +1177,7 @@
         }
       }
     },
-    "/testflow/count/": {
+    "/testflow/count": {
       "get": {
         "description": "Count testflow numbers in group",
         "consumes": [
@@ -1010,14 +1191,22 @@
           "http",
           "https"
         ],
+        "tags": [
+          "testflow"
+        ],
         "operationId": "countTestFlowsInGroup",
         "parameters": [
           {
             "type": "string",
             "description": "group id  of test flow",
             "name": "groupId",
-            "in": "query",
-            "required": true
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "name  of test flow",
+            "name": "name",
+            "in": "query"
           }
         ],
         "responses": {
@@ -1033,7 +1222,7 @@
         }
       }
     },
-    "/testflow/list/": {
+    "/testflow/list": {
       "get": {
         "consumes": [
           "application/json"
@@ -1046,15 +1235,17 @@
           "http",
           "https"
         ],
-        "summary": "Lists exec test flows in specific group.",
-        "operationId": "listTestFlowsInGroup",
+        "tags": [
+          "testflow"
+        ],
+        "summary": "Lists test flows.",
+        "operationId": "listTestFlows",
         "parameters": [
           {
             "type": "string",
             "description": "group id  of test flow",
             "name": "groupId",
-            "in": "query",
-            "required": true
+            "in": "query"
           },
           {
             "type": "integer",
@@ -1099,6 +1290,9 @@
           "http",
           "https"
         ],
+        "tags": [
+          "testflow"
+        ],
         "operationId": "deleteTestFlow",
         "parameters": [
           {
@@ -1131,6 +1325,9 @@
         "schemes": [
           "http",
           "https"
+        ],
+        "tags": [
+          "version"
         ],
         "operationId": "getVersion",
         "responses": {
@@ -2225,7 +2422,7 @@
           },
           "x-go-name": "Dependencies"
         },
-        "instanceName": {
+        "instance": {
           "$ref": "#/definitions/svcProperty"
         },
         "name": {
@@ -6078,15 +6275,15 @@
         "version"
       ],
       "properties": {
+        "Instance": {
+          "$ref": "#/definitions/svcProperty"
+        },
         "dependencies": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/svcProperty"
           },
           "x-go-name": "Dependencies"
-        },
-        "instanceName": {
-          "$ref": "#/definitions/svcProperty"
         },
         "name": {
           "description": "the name for this test flow",
@@ -6678,20 +6875,46 @@
       "x-go-name": "ChangeTestflowGroupRequest",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "getPluginRequest": {
-      "description": "GetPluginRequest",
+    "countGroupRequest": {
+      "description": "CountGroupRequest",
       "type": "object",
       "properties": {
-        "name": {
-          "type": "string",
-          "x-go-name": "Name"
+        "ID": {
+          "type": "string"
         },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "Name": {
+          "type": "string"
         }
       },
-      "x-go-name": "GetPluginRequest",
+      "x-go-name": "CountGroupRequest",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
+    "countJobRequest": {
+      "description": "CountJobRequest",
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "CountJobRequest",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
+    "countTestFlowRequest": {
+      "description": "CountTestFlowRequest",
+      "type": "object",
+      "properties": {
+        "GroupID": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "CountTestFlowRequest",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "getTestFlowRequest": {
@@ -6992,6 +7215,37 @@
       "x-go-name": "ListJobResp",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
+    "listMainFestParams": {
+      "description": "ListMainFestParams",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "PluginType": {
+          "$ref": "#/definitions/PluginType"
+        }
+      },
+      "x-go-name": "ListMainFestParams",
+      "x-go-package": "github.com/hunjixin/brightbird/repo"
+    },
+    "listPluginParams": {
+      "description": "ListPluginParams",
+      "type": "object",
+      "properties": {
+        "Name": {
+          "type": "string"
+        },
+        "PluginType": {
+          "$ref": "#/definitions/PluginType"
+        },
+        "Version": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "ListPluginParams",
+      "x-go-package": "github.com/hunjixin/brightbird/repo"
+    },
     "listTasksParams": {
       "description": "ListTasksParams",
       "type": "object",
@@ -7109,8 +7363,8 @@
       "x-go-name": "ObjectId",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "pluginOut": {
-      "description": "PluginOut",
+    "pluginDetail": {
+      "description": "PluginDetail",
       "type": "object",
       "properties": {
         "createTime": {
@@ -7174,7 +7428,26 @@
           "x-go-name": "Version"
         }
       },
-      "x-go-name": "PluginOut",
+      "x-go-name": "PluginDetail",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
+    "pluginInfo": {
+      "description": "PluginInfo",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "pluginType": {
+          "$ref": "#/definitions/PluginType"
+        }
+      },
+      "x-go-name": "PluginInfo",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "podListResp": {
@@ -7207,6 +7480,7 @@
           "x-go-name": "Type"
         },
         "value": {
+          "type": "string",
           "x-go-name": "Value"
         }
       },
