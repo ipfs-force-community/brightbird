@@ -236,7 +236,7 @@ export default defineComponent({
 @import '../../vars';
 
 .jm-workflow-editor-toolbar {
-  height: @tool-bar-height;∂
+  height: @tool-bar-height;
   background: #ffffff;
   z-index: 3;
   font-size: 14px;
