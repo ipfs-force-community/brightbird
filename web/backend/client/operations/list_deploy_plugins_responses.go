@@ -48,10 +48,10 @@ func NewListDeployPluginsOK() *ListDeployPluginsOK {
 /*
 ListDeployPluginsOK describes a response with status code 200, with default header values.
 
-pluginOut
+pluginDetail
 */
 type ListDeployPluginsOK struct {
-	Payload []*models.PluginOut
+	Payload []*models.PluginDetail
 }
 
 // IsSuccess returns true when this list deploy plugins o k response has a 2xx status code
@@ -92,7 +92,7 @@ func (o *ListDeployPluginsOK) String() string {
 	return fmt.Sprintf("[GET /plugin/deploy][%d] listDeployPluginsOK  %+v", 200, o.Payload)
 }
 
-func (o *ListDeployPluginsOK) GetPayload() []*models.PluginOut {
+func (o *ListDeployPluginsOK) GetPayload() []*models.PluginDetail {
 	return o.Payload
 }
 

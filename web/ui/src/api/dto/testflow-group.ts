@@ -11,7 +11,7 @@ export interface ITestflowGroupVo
       testFlowCount: number;
       description?: string;
     }
-  > {}
+  > { }
 /**
  * 创建项目组dto
  */
@@ -21,7 +21,7 @@ export interface IProjectGroupCreatingDto
     name: string;
     isShow: boolean;
     description?: string;
-  }> {}
+  }> { }
 /**
  * 编辑项目组dto
  */
@@ -31,7 +31,7 @@ export interface IProjectGroupEditingDto
     name: string;
     isShow: boolean;
     description?: string;
-  }> {}
+  }> { }
 /**
  * 创建项目组dto
  */
@@ -40,7 +40,7 @@ export interface IProjectGroupDto
   extends Readonly<{
     name: string;
     description?: string;
-  }> {}
+  }> { }
 
 /**
  *修改项目组排序dto
@@ -50,7 +50,7 @@ export interface IProjectGroupSortUpdatingDto
   extends Readonly<{
     originGroupId: string;
     targetGroupId: string;
-  }> {}
+  }> { }
 
 
 /**
@@ -60,4 +60,10 @@ export interface IProjectSortUpdatingDto
   extends Readonly<{
     originProjectId: string;
     targetProjectId: string;
-  }> {}
+  }> { }
+
+export interface ICountGroupParam
+  extends Readonly<{
+    id?: string;
+    name?: string;
+  }> { }

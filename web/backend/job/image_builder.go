@@ -93,28 +93,28 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 
 	g, _ := errgroup.WithContext(ctx)
 	for _, node := range deployNodes {
-		node := *node //copy
+		nodeCpy := *node //copy
 		g.Go(func() error {
-			plugin, err := mgr.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
+			plugin, err := mgr.pluginRepo.GetPlugin(ctx, nodeCpy.Name, nodeCpy.Version)
 			if err != nil {
 				return err
 			}
 
 			result := make(chan BuildResult, 1)
 			mgr.taskCh <- &BuildTask{
-				Name:    node.Name,
-				Version: node.Version,
+				Name:    nodeCpy.Name,
+				Version: nodeCpy.Version,
 				Repo:    plugin.Repo,
-				Commit:  versions[node.Name],
+				Commit:  versions[nodeCpy.Name],
 				Result:  result,
 			}
 			br := <-result
 			if br.Err != nil {
-				return fmt.Errorf("build %s failed reason: %v", node.Name, br.Err)
+				return fmt.Errorf("build %s failed reason: %v", nodeCpy.Name, br.Err)
 			}
 			mapLk.Lock()
 			defer mapLk.Unlock()
-			versionMap[node.Name] = br.Version
+			versionMap[nodeCpy.Name] = br.Version
 			return nil
 		})
 	}

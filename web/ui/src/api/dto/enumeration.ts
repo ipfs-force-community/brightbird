@@ -149,3 +149,11 @@ export namespace TaskStateEnum {
       }
   }
 }
+
+/**
+ * task state枚举类型
+ */
+export enum PluginTypeEnum {
+	Deploy        = "Deployer",
+	Exec     = "Exec",
+}

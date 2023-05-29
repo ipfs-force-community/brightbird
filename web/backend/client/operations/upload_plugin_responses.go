@@ -51,7 +51,7 @@ UploadPluginOK describes a response with status code 200, with default header va
 pluginOut
 */
 type UploadPluginOK struct {
-	Payload []*models.PluginOut
+	Payload []*models.PluginDetail
 }
 
 // IsSuccess returns true when this upload plugin o k response has a 2xx status code
@@ -92,7 +92,7 @@ func (o *UploadPluginOK) String() string {
 	return fmt.Sprintf("[GET /plugin/upload][%d] uploadPluginOK  %+v", 200, o.Payload)
 }
 
-func (o *UploadPluginOK) GetPayload() []*models.PluginOut {
+func (o *UploadPluginOK) GetPayload() []*models.PluginDetail {
 	return o.Payload
 }
 

@@ -5,7 +5,7 @@ import {IWorkflowNode} from './data/common';
 import {NODE, PORTS} from '../shape/gengral-config';
 import {ClickNodeWarningCallbackFnType, WorkflowValidator} from './workflow-validator';
 import {CustomX6NodeProxy} from './data/custom-x6-node-proxy';
-import {NodeGroupEnum, NodeTypeEnum} from './data/enumeration';
+import {NodeTypeEnum} from './data/enumeration';
 import {AsyncTask} from './data/node/async-task';
 
 const { icon: { width, height }, textMaxHeight } = NODE;
@@ -62,6 +62,7 @@ export class WorkflowDnd {
         if (!flag) {
           return false;
         }
+
         if (_data.getType() !== NodeTypeEnum.ASYNC_TASK) {
           _data
               .validate()
@@ -70,6 +71,7 @@ export class WorkflowDnd {
           return true;
         }
         const data = _data as AsyncTask;
+        
         proxy.setData(data);
         data
             .validate()

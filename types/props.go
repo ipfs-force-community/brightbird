@@ -28,7 +28,7 @@ type SharedPropertyInNode interface {
 	GetVersion() string
 	GetProperties() []*Property
 	GetDependencies() []*DependencyProperty
-	GetInstanceName() *DependencyProperty
+	GetInstance() *DependencyProperty
 }
 
 type DeployNode struct {
@@ -42,14 +42,14 @@ type DeployNode struct {
 	Version      string                `json:"version"`
 	Properties   []*Property           `json:"properties"`
 	Dependencies []*DependencyProperty `json:"dependencies"`
-	InstanceName *DependencyProperty   `json:"instanceName"`
+	Instance     *DependencyProperty   `json:"instance"`
 }
 
 func (n DeployNode) GetName() string                        { return n.Name }
 func (n DeployNode) GetVersion() string                     { return n.Version }
 func (n DeployNode) GetProperties() []*Property             { return n.Properties }
 func (n DeployNode) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n DeployNode) GetInstanceNamet() *DependencyProperty  { return n.InstanceName }
+func (n DeployNode) GetInstance() *DependencyProperty       { return n.Instance }
 
 type TestItem struct {
 	// the name for this test flow
@@ -62,11 +62,11 @@ type TestItem struct {
 	Version      string                `json:"version"`
 	Properties   []*Property           `json:"properties"`
 	Dependencies []*DependencyProperty `json:"dependencies"`
-	InstanceName *DependencyProperty   `json:"instanceName"`
+	Instance     *DependencyProperty   `json:"Instance"`
 }
 
 func (n TestItem) GetName() string                        { return n.Name }
 func (n TestItem) GetVersion() string                     { return n.Version }
 func (n TestItem) GetProperties() []*Property             { return n.Properties }
 func (n TestItem) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n TestItem) GetInstanceName() *DependencyProperty   { return n.InstanceName }
+func (n TestItem) GetInstance() *DependencyProperty       { return n.Instance }

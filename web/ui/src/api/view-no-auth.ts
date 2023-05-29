@@ -1,11 +1,14 @@
 import { restProxy } from '@/api/index';
 import {
+  PluginTypeEnum
+} from '@/api/dto/enumeration'
+import {
   ITaskExecutionRecordVo,
   ITaskParamVo,
 } from '@/api/dto/workflow-execution-record';
 import {
   IProcessTemplateVo, ITestFlowDetail,
-  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam, PluginOut
+  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam, PluginDetail, PluginInfo, GetPlugibMainfestReq, ICountTestFlowParam
 } from '@/api/dto/testflow';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
@@ -67,13 +70,14 @@ export function queryTestFlow(dto: IProjectQueryingDto): Promise<IPageVo<ITestFl
 }
 
 /**
- * 获取组中测试流的数量
- * @param groupId
+ * 查询测试流
+ * @param dto
  */
-export function countTestFlows(groupId: string): Promise<number> {
+export function countTestFlow(dto: ICountTestFlowParam): Promise<number> {
   return restProxy({
-    url: `${baseUrl.testflow}/count/${groupId}`,
+    url: `${baseUrl.testflow}/count`,
     method: 'get',
+    payload: dto,
   });
 }
 
@@ -202,47 +206,66 @@ export function fetchVersion(): Promise<string> {
 }
 
 /**
+ * 获取所有插件 按名称和版本分类
+ */
+export function fetchPluginsMainfest(req: GetPlugibMainfestReq): Promise<PluginInfo[]> {
+  return restProxy<PluginInfo[]>({
+    url: `${baseUrl.plugin}/mainfest`,
+    method: 'get',
+    payload: req
+  });
+}
+
+
+/**
  * 获取deploy插件
  */
-export function fetchDeployPlugins(): Promise<PluginOut[]> {
-  return restProxy<PluginOut[]>({
-    url: `${baseUrl.plugin}/deploy/list`,
+export function fetchDeployPlugins(): Promise<PluginDetail[]> {
+  return restProxy<PluginDetail[]>({
+    url: `${baseUrl.plugin}`,
     method: 'get',
+    payload: {
+      "pluginType":PluginTypeEnum.Deploy
+    },
   });
 }
 
 /**
- * 根据name获取deploy插件
+ * 根据name获取插件
  * @param name
  */
-export function fetchDeployByName(name: string): Promise<PluginOut> {
-  return restProxy<PluginOut>({
-    url: `${baseUrl.plugin}/${name}`,
+export function fetchPluginByName(name: string): Promise<PluginDetail[]> {
+  return restProxy<PluginDetail[]>({
+    url: `${baseUrl.plugin}`,
     method: 'get',
+    payload: {
+      "name":name
+    },
   });
 }
 
 /**
  * 获取exec插件
  */
-export function fetchExecPlugins(): Promise<PluginOut[]> {
-  return restProxy<PluginOut[]>({
-    url: `${baseUrl.plugin}/exec/list`,
+export function fetchExecPlugins(): Promise<PluginDetail[]> {
+  return restProxy<PluginDetail[]>({
+    url: `${baseUrl.plugin}`,
     method: 'get',
+    payload: {
+      "pluginType":PluginTypeEnum.Exec
+    },
   });
 }
 
 /**
- * 根据name获取exec插件
- * @param name
+ * 删除插件
  */
-export function fetchExecByName(name: string): Promise<PluginOut> {
-  return restProxy<PluginOut>({
-    url: `${baseUrl.plugin}/${name}`,
-    method: 'get',
+export function deletePlugin(id: string): Promise<PluginDetail[]> {
+  return restProxy<PluginDetail[]>({
+    url: `${baseUrl.plugin}?id=${id}`,
+    method: 'delete',
   });
 }
-
 
 /**
  * 获取项目缓存

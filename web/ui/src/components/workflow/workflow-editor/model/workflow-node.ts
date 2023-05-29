@@ -1,7 +1,8 @@
 import {IWorkflowNode} from './data/common';
 import {AsyncTask} from './data/node/async-task';
-import {NodeGroupEnum, NodeTypeEnum, ParamTypeEnum} from '@/components/workflow/workflow-editor/model/data/enumeration';
-import {fetchDeployPlugins, fetchExecPlugins} from "@/api/view-no-auth";
+import {NodeTypeEnum, ParamTypeEnum} from '@/components/workflow/workflow-editor/model/data/enumeration';
+import {fetchDeployPlugins, fetchExecPlugins, fetchPluginsMainfest} from "@/api/view-no-auth";
+import { PluginTypeEnum } from '@/api/dto/enumeration';
 
 interface IPageInfo {
   content: IWorkflowNode[];
@@ -13,10 +14,17 @@ export class WorkflowNode {
   }
 
   async loadDeployPlugins(keyword?: string): Promise<IPageInfo> {
-    const nodes = await fetchDeployPlugins();
+    const nodes = await fetchPluginsMainfest({pluginType:PluginTypeEnum.Deploy});
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, NodeTypeEnum.ASYNC_TASK, item.icon,
-        NodeGroupEnum.DEPLOY, item.version, item.pluginType, item.properties, item.svcProperties, item.createTime,
-        item.modifiedTiem, item.out));
+      item.pluginType, "", item.pluginType, [], [], 0,
+      0, {
+        name:"instance",
+        value:"",
+        type: item.pluginType,
+        sockPath: "",
+        require:true,
+        description:"节点实例名称",
+      }));
 
     return {
       content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
@@ -24,10 +32,17 @@ export class WorkflowNode {
   }
 
   async loadExecPlugins(keyword?: string): Promise<IPageInfo> {
-    const nodes = await fetchExecPlugins();
+    const nodes = await fetchPluginsMainfest({pluginType:PluginTypeEnum.Exec});
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, NodeTypeEnum.ASYNC_TASK, item.icon,
-        NodeGroupEnum.DEPLOY, item.version, item.pluginType, item.properties, item.svcProperties, item.createTime,
-        item.modifiedTiem, item.out));
+      item.pluginType, "", item.pluginType, [], [], 0,
+      0, {
+        name:"instance",
+        value:"",
+        type: item.pluginType,
+        sockPath: "",
+        require:true,
+        description:"节点实例名称",
+      }));
     return {
       content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
     };

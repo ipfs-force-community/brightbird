@@ -2,47 +2,55 @@ import { IPageDto } from '@/api/dto/common';
 import {
   DslTypeEnum,
   ProjectImporterTypeEnum,
+  PluginTypeEnum,
 } from '@/api/dto/enumeration';
 
 /**
  * 保存项目dto
  */
 export interface ITestFlowDetail
-    extends Readonly<{
-        id?: string;
-        name: string;
-        createTime: string;
-        modifiedTime: string;
-        cases: Case[];
-        nodes: Node[];
-        groupId: string;
-        graph: string;
-        description: string;
-  }> {}
+  extends Readonly<{
+    id?: string;
+    name: string;
+    createTime: string;
+    modifiedTime: string;
+    cases: Case[];
+    nodes: Node[];
+    groupId: string;
+    graph: string;
+    description: string;
+  }> { }
 
-  export interface IGetTestFlowParam
-      extends Readonly<{
-          id: string;
-          name: string;
-    }> {}
+export interface IGetTestFlowParam
+  extends Readonly<{
+    id?: string;
+    name?: string;
+  }> { }
+
+export interface ICountTestFlowParam
+  extends Readonly<{
+    groupId?: string;
+    name?: string;
+  }> { }
+
 
 export interface Node
-    extends Readonly<{
-        name: string;
-        version: string;
-        properties: Property[];
-        dependencies: DependencyProperty[];
-        instanceName: DependencyProperty;
-    }> {}
+  extends Readonly<{
+    name: string;
+    version: string;
+    properties: Property[];
+    dependencies: DependencyProperty[];
+    instance: DependencyProperty;
+  }> { }
 
 export interface Case
-    extends Readonly<{
-        name: string;
-        version: string;
-        properties: Property[];
-        dependencies: DependencyProperty[];
-        instanceName: DependencyProperty;
-    }> {}
+  extends Readonly<{
+    name: string;
+    version: string;
+    properties: Property[];
+    dependencies: DependencyProperty[];
+    instance: DependencyProperty;
+  }> { }
 
 /**
  * 克隆Git库dto
@@ -50,7 +58,7 @@ export interface Case
 export interface IGitCloningDto
   extends Readonly<{
     uri: string;
-      groupId: string;
+    groupId: string;
     credential: {
       type?: ProjectImporterTypeEnum;
       namespace?: string;
@@ -59,7 +67,7 @@ export interface IGitCloningDto
       privateKey?: string;
     };
     branch: string;
-  }> {}
+  }> { }
 
 /**
  * git值对象
@@ -69,7 +77,7 @@ export interface IGitVo
     id: string;
     uri: string;
     branch: string;
-  }> {}
+  }> { }
 
 /**
  * 导入项目dto
@@ -80,7 +88,7 @@ export interface IProjectImportingDto
       id: string;
       dslPath: string;
     }
-  > {}
+  > { }
 
 /**
  * 查询项目dto
@@ -93,7 +101,7 @@ export interface IProjectQueryingDto
       pageNum?: number;
       pageSize?: number;
     }
-  > {}
+  > { }
 
 /**
  * 项目id vo
@@ -101,7 +109,7 @@ export interface IProjectQueryingDto
 export interface ITestFlowIdVo
   extends Readonly<{
     id: string;
-  }> {}
+  }> { }
 
 /**
  * 流程模板vo
@@ -124,7 +132,7 @@ export interface IProcessTemplateVo
         workType: string;
       },
     ];
-  }> {}
+  }> { }
 
 /**
  * 任务参数vo
@@ -133,7 +141,7 @@ export interface ITaskParameterVo
   extends Readonly<{
     ref: string;
     expression: string;
-  }> {}
+  }> { }
 
 /**
  * 流程节点vo
@@ -157,7 +165,7 @@ export interface IWorkflowNodeVo
     taskParameters: ITaskParameterVo[];
     sources: string[];
     targets: string[];
-  }> {}
+  }> { }
 
 /**
  * 全局参数vo
@@ -167,7 +175,7 @@ export interface IGlobalParameterVo
     name: string;
     type: string;
     value: string | number | boolean;
-  }> {}
+  }> { }
 
 /**
  * 流程vo
@@ -182,7 +190,7 @@ export interface IWorkflowVo
     nodes: IWorkflowNodeVo[];
     globalParameters: IGlobalParameterVo[];
     dslText: string;
-  }> {}
+  }> { }
 
 /**
  * 节点定义vo
@@ -200,52 +208,68 @@ export interface INodeDefVo
     sourceLink?: string;
     documentLink?: string;
     type: string;
-  }> {}
+  }> { }
 
 export interface Property extends Readonly<{
-    name: string;
-    type: string;
-    description: string;
-    value: any;
-    require: true;
+  name: string;
+  type: string;
+  description: string;
+  value: any;
+  require: true;
 }> {
 }
+
+export interface GetPluginReq extends Readonly<{
+  name?: string;
+  pluginType?: PluginTypeEnum;
+  version?: string;
+}> {
+}
+
+export interface GetPlugibMainfestReq extends Readonly<{
+  name?: string;
+  pluginType?: PluginTypeEnum;
+}> {
+}
+
 
 export interface DependencyProperty extends Readonly<{
-    name: string;
-    value: string;
-    type: PluginType;
-    sockPath: string;
-    require: true;
-    description: string;
+  name: string;
+  value: string;
+  type: PluginTypeEnum;
+  sockPath: string;
+  require: true;
+  description: string;
 }> {
 
 }
 
-export interface PluginType extends Readonly<{
-    type: string;
-}> {
+export interface PluginInfo extends Readonly<{
+  name: string;
+  pluginType: PluginTypeEnum;
+  description: string,
 
+  icon: string;
+}> {
 }
 
+export interface PluginDetail extends Readonly<{
+  id: number;
+  name: string;
+  version: string;
+  pluginType: PluginTypeEnum;
+  description: string,
+  repo: string,
+  imageTarget: string,
+  path: string;
+  dependencies: DependencyProperty[];
+  properties: Property[];
+  instance: DependencyProperty;
+  createTime: number;
+  modifiedTime: number;
 
-
-export interface PluginOut extends Readonly<{
-    id: number;
-    name: string;
-    version: string;
-    pluginType: string;
-    description: string,
-    repo: string,
-    imageTarget: string,
-    path: string;
-    dependencies: DependencyProperty[];
-    properties: Property[];
-    instance: DependencyProperty;
-    createTime: number;
-    modifiedTime: number;
+  icon: string;
 }> {
-
 }
 
 /**
@@ -253,6 +277,6 @@ export interface PluginOut extends Readonly<{
  */
 export interface IChangeTestflowGroupDto
   extends Readonly<{
-      groupId: string;
-      testflowIds: string[];
-  }> {}
+    groupId: string;
+    testflowIds: string[];
+  }> { }

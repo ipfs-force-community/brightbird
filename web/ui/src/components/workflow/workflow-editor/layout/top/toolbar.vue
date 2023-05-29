@@ -3,7 +3,7 @@
     <div class="left">
       <button class="jm-icon-button-left" @click="goBack"></button>
       <div class="title">{{ workflowData.name }}</div>
-      <button class="jm-icon-workflow-edit" @click="edit"></button>
+<!--      <button class="jm-icon-workflow-edit" @click="edit"></button>-->
     </div>
     <div class="right">
       <div class="tools">
@@ -23,7 +23,7 @@
         <jm-button type="primary" @click="save(false)" @keypress.enter.prevent>保存</jm-button>
       </div>
     </div>
-    <project-panel v-if="projectPanelVisible" v-model="projectPanelVisible" :workflow-data="workflowData" />
+    <project-panel v-if="projectPanelVisible" @save="save(true)" v-model="projectPanelVisible" :workflow-data="workflowData" />
   </div>
 </template>
 
@@ -139,17 +139,25 @@ export default defineComponent({
                 if (jsonObject.pluginType === 'Exec') {
                   const CaseObj: Case = {
                     name: jsonObject.name,
+                    version: jsonObject.version,
                     properties: jsonObject.inputs,
-                    svcProperties: jsonObject.svcProperties,
-                    out: jsonObject.out,
+<<<<<<< HEAD
+                    dependencies: jsonObject.svcProperties,
+                    instanceName: jsonObject.out,
+=======
+                    dependencies: jsonObject.dependencies,
+                    version: jsonObject.version,
+                    instance: jsonObject.instance,
+>>>>>>> 733a448... feat: fix testrunner
                   };
                   caseList.push(CaseObj);
                 } else if (jsonObject.pluginType === 'Deployer') {
                   const NodeObj: Node = {
                     name: jsonObject.name,
                     properties: jsonObject.inputs,
-                    svcProperties: jsonObject.svcProperties,
-                    out: jsonObject.out,
+                    dependencies: jsonObject.dependencies,
+                    version: jsonObject.version,
+                    instance: jsonObject.instance,
                   };
                   nodeList.push(NodeObj);
                 }
@@ -193,17 +201,31 @@ export default defineComponent({
             if (jsonObject.pluginType === 'Exec') {
               const CaseObj: Case = {
                 name: jsonObject.name,
+                version: jsonObject.version,
                 properties: jsonObject.inputs,
-                svcProperties: jsonObject.svcProperties,
-                out: jsonObject.out,
+<<<<<<< HEAD
+                dependencies: jsonObject.svcProperties,
+                instanceName: jsonObject.out,
+=======
+                dependencies: jsonObject.dependencies,
+                version: jsonObject.version,
+                instance: jsonObject.instance,
+>>>>>>> 733a448... feat: fix testrunner
               };
               caseList.push(CaseObj);
             } else if (jsonObject.pluginType === 'Deployer') {
               const NodeObj: Node = {
                 name: jsonObject.name,
+                version: jsonObject.version,
                 properties: jsonObject.inputs,
-                svcProperties: jsonObject.svcProperties,
-                out: jsonObject.out,
+<<<<<<< HEAD
+                dependencies: jsonObject.svcProperties,
+                instanceName: jsonObject.out,
+=======
+                dependencies: jsonObject.dependencies,
+                version: jsonObject.version,
+                instance: jsonObject.instance,
+>>>>>>> 733a448... feat: fix testrunner
               };
               nodeList.push(NodeObj);
             }

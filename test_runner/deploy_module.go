@@ -37,27 +37,20 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlu
 			break
 		}
 
-		for _, dep := range dep.Dependencies {
-			sockPath := initedNode[dep.Value]
-			dep.SockPath = sockPath
-		}
-
 		codeVersionProp := plugin.FindCodeVersionProperties(dep.Properties)
-		instanceName := dep.InstanceName.Value
+		instanceName := dep.Instance.Value
 		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
-			BaseConfig: env.BaseConfig{
-				CodeVersion:  codeVersionProp.Value.(string),
-				InstanceName: instanceName,
-			},
-			SockPath:     tmpFName,
-			Dependencies: dep.Dependencies,
-			Properties:   dep.Properties,
+			CodeVersion:   codeVersionProp.Value,
+			InstanceName:  instanceName,
+			SockPath:      tmpFName,
+			Dependencies:  dep.Dependencies,
+			Properties:    dep.Properties,
 		}
 		initedNode[instanceName] = tmpFName
 
-		newFn, err := makeDeployPluginSetupFunc(params, path.Join(pluginStore, deployPlugin.Path), instanceName)
+		newFn, err := makeDeployPluginSetupFunc(params, initedNode, path.Join(pluginStore, deployPlugin.Path), instanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -84,25 +77,19 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlugi
 			break
 		}
 
-		instanceName := dep.InstanceName.Value
+		instanceName := dep.Instance.Value
 		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
-		for _, dep := range dep.Dependencies {
-			sockPath := initedNode[dep.Value]
-			dep.SockPath = sockPath
-		}
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
-			BaseConfig: env.BaseConfig{
-				CodeVersion:  "", //exec have no code version
-				InstanceName: instanceName,
-			},
-			SockPath:     tmpFName,
-			Dependencies: dep.Dependencies,
-			Properties:   dep.Properties,
+			CodeVersion:   "", //exec have no code version
+			InstanceName:  instanceName,
+			SockPath:      tmpFName,
+			Dependencies:  dep.Dependencies,
+			Properties:    dep.Properties,
 		}
 		initedNode[instanceName] = tmpFName
 
-		newFn, err := makeExecPluginSetupFunc(params, path.Join(pluginStore, execPlugin.Path), instanceName)
+		newFn, err := makeExecPluginSetupFunc(params, initedNode, path.Join(pluginStore, execPlugin.Path), instanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -141,7 +128,7 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlugi
 	return fx_opt.Options(opts...)
 }
 
-func makeDeployPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceName string) (interface{}, error) {
+func makeDeployPluginSetupFunc(params *plugin.InitParams, initedNode InitedNode, pluginPath, instanceName string) (interface{}, error) {
 	// prepare params
 	//start exec
 	//return interface type
@@ -169,6 +156,11 @@ func makeDeployPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceNa
 	}
 	fnT := reflect.FuncOf([]reflect.Type{depedencyT}, []reflect.Type{retType, types.ErrT}, false)
 	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
+		for _, dependency := range params.Dependencies {
+			sockPath := initedNode[dependency.Value]
+			dependency.SockPath = sockPath
+		}
+
 		process, err := runPluginAndWaitForReady(params, pluginPath)
 		if err != nil {
 			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}
@@ -251,7 +243,7 @@ func (serve *MasterDeployInvoker) Stop(ctx context.Context) error {
 	return serve.process.Kill()
 }
 
-func makeExecPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceName string) (interface{}, error) {
+func makeExecPluginSetupFunc(params *plugin.InitParams, initedNode InitedNode, pluginPath, instanceName string) (interface{}, error) {
 	// prepare params
 	// start exec
 	// return interface type
@@ -279,6 +271,11 @@ func makeExecPluginSetupFunc(params *plugin.InitParams, pluginPath, instanceName
 	}
 	fnT := reflect.FuncOf([]reflect.Type{depedencyT}, []reflect.Type{retType, types.ErrT}, false)
 	return reflect.MakeFunc(fnT, func(args []reflect.Value) (results []reflect.Value) {
+		for _, dependency := range params.Dependencies {
+			sockPath := initedNode[dependency.Value]
+			dependency.SockPath = sockPath
+		}
+
 		process, err := runPluginAndWaitForReady(params, pluginPath)
 		if err != nil {
 			return []reflect.Value{reflect.Zero(retType), reflect.ValueOf(err)}

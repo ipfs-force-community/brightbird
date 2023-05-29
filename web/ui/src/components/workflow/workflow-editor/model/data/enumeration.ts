@@ -50,19 +50,6 @@ export enum FailureModeEnum {
 }
 
 /**
- * 节点分组枚举
- */
-export enum NodeGroupEnum {
-  // TRIGGER = 'trigger',
-  // INNER = 'inner',
-  // LOCAL = 'local',
-  // OFFICIAL = 'official',
-  // COMMUNITY = 'community',
-  DEPLOY = 'deploy',
-  EXEC = 'exec',
-}
-
-/**
  * 唯一标识类型枚举
  */
 export enum RefTypeEnum {

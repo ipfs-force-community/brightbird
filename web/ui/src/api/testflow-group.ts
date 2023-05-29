@@ -1,5 +1,6 @@
 import { restProxy } from '@/api';
 import {
+  ICountGroupParam,
   IProjectGroupCreatingDto,
   IProjectGroupEditingDto,
   IProjectGroupSortUpdatingDto,
@@ -102,5 +103,17 @@ export function updateProjectGroupShow(groupId: string): Promise<void> {
     url: `${baseUrl}/${groupId}/is_show`,
     method: 'put',
     auth: true,
+  });
+}
+
+/**
+ * 获取group数量
+ * @param groupId
+ */
+export function countGroup(params: ICountGroupParam): Promise<number> {
+  return restProxy({
+    url: `${baseUrl}/count`,
+    method: 'get',
+    payload: params,
   });
 }

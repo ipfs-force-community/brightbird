@@ -11,9 +11,9 @@
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
         <node-group
-          :type="NodeGroupEnum.DEPLOY" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="PluginTypeEnum.Deploy" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
         <node-group
-          :type="NodeGroupEnum.EXEC" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="PluginTypeEnum.Exec" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
       </div>
       <div class="empty" v-if="nodeCount<=0">
         <jm-empty description="没有搜到相关结果" :image="noDataImage">
@@ -29,8 +29,8 @@ import { Graph } from '@antv/x6';
 import { WorkflowDnd } from '../../model/workflow-dnd';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import NodeGroup from './node-group.vue';
-import { NodeGroupEnum } from '../../model/data/enumeration';
 import noDataImage from '../../svgs/no-data.svg';
+import { PluginTypeEnum } from '@/api/dto/enumeration';
 
 export default defineComponent({
   components: { NodeGroup },
@@ -67,7 +67,7 @@ export default defineComponent({
       noDataImage,
       nodeCount,
       getNodeCount,
-      NodeGroupEnum,
+      PluginTypeEnum,
       collapsed,
       keyword,
       tempKeyword,

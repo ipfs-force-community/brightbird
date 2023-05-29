@@ -20,6 +20,14 @@
         </jm-select>
       </jm-form-item>
 
+      <jm-form-item label="类型:" prop="jobType">
+        <span>{{jobType}}</span>
+      </jm-form-item>
+
+      <jm-form-item label="cron表达式" v-show="jobType === JobEnum.CronJob" prop="cronExpression">
+        <jm-input v-model="editorForm.cronExpression" clearable placeholder="请输入Cron表达式" />
+      </jm-form-item>
+
 
       <jm-form-item v-show="jobType == JobEnum.CronJob" label="版本设置" prop="version">
         <div class="form-inter"  v-for="(version, component) in editorForm.versions">

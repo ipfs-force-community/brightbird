@@ -2,7 +2,7 @@ package cmds
 
 import (
 	"github.com/hunjixin/brightbird/web/backend/client"
-	"github.com/hunjixin/brightbird/web/backend/client/operations"
+	"github.com/hunjixin/brightbird/web/backend/client/plugin"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,9 +18,9 @@ var ImportPluginsCmds = &cli.Command{
 	},
 	Action: func(cliCtx *cli.Context) error {
 		api := DefaulAPI()
-		params := operations.NewImportPluginParamsWithContext(cliCtx.Context)
+		params := plugin.NewImportPluginParamsWithContext(cliCtx.Context)
 		params.SetPath(cliCtx.String("path"))
-		_, err := api.Operations.ImportPlugin(params)
+		_, err := api.Plugin.ImportPlugin(params)
 		return err
 	},
 }

@@ -2,8 +2,9 @@ package api
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"net/http"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"github.com/gin-gonic/gin"
 	"github.com/hunjixin/brightbird/repo"
@@ -14,7 +15,7 @@ import (
 func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
 
-	// swagger:route GET /task listTasks
+	// swagger:route GET /task task listTasks
 	//
 	// Lists all tasks.
 	//
@@ -68,7 +69,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 		c.JSON(http.StatusOK, tasks)
 	})
 
-	// swagger:route Get /task/{id} getTask
+	// swagger:route Get /task/{id} task getTask
 	//
 	// Get task by id
 	//
@@ -109,7 +110,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 		c.JSON(http.StatusOK, task)
 	})
 
-	// swagger:route DELETE /task/{id} deleteTask
+	// swagger:route DELETE /task/{id} task deleteTask
 	//
 	// Delete task by id
 	//
@@ -149,7 +150,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route DELETE /task/stop/{id} stopTask
+	// swagger:route DELETE /task/stop/{id} task stopTask
 	//
 	// stop task
 	//

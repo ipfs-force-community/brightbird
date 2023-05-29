@@ -25,16 +25,6 @@
             :key="idx"
             class="item"
         >
-          <div class="deprecated" v-if="i.deprecated">
-            <jm-tooltip placement="top-start">
-              <template #content>
-                <div style="line-height: 20px">
-                  由于某些原因，该插件不被推荐使用（如该插件可<br/>能会导致一些已知问题或有更好的插件可替代它）
-                </div>
-              </template>
-              <img src="~@/assets/svgs/node-library/deprecated.svg" alt="">
-            </jm-tooltip>
-          </div>
           <div class="item-t">
             <span class="item-t-t">
               <jm-text-viewer :value="i.name"/>
@@ -47,7 +37,7 @@
 
           <div
               class="item-pos"
-              :class="{ 'node-definition-default-icon': !i.icon, 'deprecated-icon':i.deprecated}"
+              :class="{ 'node-definition-default-icon': !i.icon}"
           >
             <img
                 v-if="i.icon"
@@ -73,16 +63,6 @@
           :key="idx"
           class="item"
         >
-          <div class="deprecated" v-if="i.deprecated">
-            <jm-tooltip placement="top-start">
-              <template #content>
-                <div style="line-height: 20px">
-                  由于某些原因，该插件不被推荐使用（如该插件可<br/>能会导致一些已知问题或有更好的插件可替代它）
-                </div>
-              </template>
-              <img src="~@/assets/svgs/node-library/deprecated.svg" alt="">
-            </jm-tooltip>
-          </div>
           <div class="item-t">
             <span class="item-t-t">
               <jm-text-viewer :value="i.name"/>
@@ -95,7 +75,7 @@
 
           <div
             class="item-pos"
-            :class="{ 'node-definition-default-icon': !i.icon, 'deprecated-icon':i.deprecated}"
+            :class="{ 'node-definition-default-icon': !i.icon}"
           >
             <img
               v-if="i.icon"
@@ -121,14 +101,14 @@ import {
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
 import { fetchDeployPlugins, fetchExecPlugins } from "@/api/view-no-auth";
-import { PluginOut } from "@/api/dto/testflow.js";
+import { PluginDetail } from "@/api/dto/testflow.js";
 
 export default defineComponent({
   components: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
-    const deployPlugins = reactive<Mutable<INode<PluginOut>>>({total:0, list:[]});
-    const execPlugins = reactive<Mutable<INode<PluginOut>>>({total:0, list:[]});
+    const deployPlugins = reactive<Mutable<INode<PluginDetail>>>({total:0, list:[]});
+    const execPlugins = reactive<Mutable<INode<PluginDetail>>>({total:0, list:[]});
     fetchDeployPlugins()
       .then(res => {
         deployPlugins.list = res

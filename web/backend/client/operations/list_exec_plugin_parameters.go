@@ -60,6 +60,13 @@ ListExecPluginParams contains all the parameters to send to the API endpoint
 	Typically these are written to a http.Request.
 */
 type ListExecPluginParams struct {
+
+	/* Name.
+
+	   name of plugin
+	*/
+	Name string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -113,6 +120,17 @@ func (o *ListExecPluginParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithName adds the name to the list exec plugin params
+func (o *ListExecPluginParams) WithName(name string) *ListExecPluginParams {
+	o.SetName(name)
+	return o
+}
+
+// SetName adds the name to the list exec plugin params
+func (o *ListExecPluginParams) SetName(name string) {
+	o.Name = name
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *ListExecPluginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -120,6 +138,16 @@ func (o *ListExecPluginParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		return err
 	}
 	var res []error
+
+	// query param name
+	qrName := o.Name
+	qName := qrName
+	if qName != "" {
+
+		if err := r.SetQueryParam("name", qName); err != nil {
+			return err
+		}
+	}
 
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)

@@ -6,7 +6,7 @@
     <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
 
       <jm-form-item label="Job名称" label-position="top" prop="name">
-        <jm-input v-model="createForm.name" clearable placeholder="请输入Job名称" />
+        <jm-input v-model="createForm.name" @blur="checkJobName" v-bind:class="isDupName ? 'invadateName' : ''" clearable placeholder="请输入Job名称" />
       </jm-form-item>
 
       <jm-form-item label="测试流" prop="testFlowId">
@@ -92,14 +92,14 @@
 
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
-import { createJob, getJobTypes } from '@/api/job';
-import { fetchDeployPlugins, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
+import { countJob, createJob, getJobTypes } from '@/api/job';
+import { fetchDeployPlugins, fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail, PluginOut } from '@/api/dto/testflow.js';
+import { ITestFlowDetail, PluginDetail } from '@/api/dto/testflow.js';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
@@ -108,6 +108,7 @@ export default defineComponent({
   setup(_, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
+      const isDupName = ref<boolean>(true);
     const createFormRef = ref<any>(null);
     const jobTypesLoading = ref<boolean>(false);
     const groupLoading = ref<boolean>(false);
@@ -138,6 +139,11 @@ export default defineComponent({
         if (!valid) {
           return;
         }
+        if (isDupName.value) {
+          proxy.$error('Job名称不合法，空或者重复')
+          return;
+        }
+
         loading.value = true;
         try {
           await createJob(createForm.value);
@@ -215,27 +221,35 @@ export default defineComponent({
     };
     const onSelectJobtype = async () => {
       try {
+        //fetch testflow
+       const nodeInUse = new Set<string>();
+       const testflow = await fetchTestFlowDetail({id: createForm.value.testFlowId, name:""})
+       testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version))
         //fetch plugins
-        const pluginMap = new Map<string, PluginOut>();
-        (await fetchDeployPlugins()).map(a => pluginMap.set(a.name, a));
+        const pluginMap = new Map<string, PluginDetail>();
+        (await fetchDeployPlugins()).map(a => {
+          if (nodeInUse.has(a.name + a.version)) {
+            pluginMap.set(a.name, a)
+          }
+        });
 
-        const filter = new Set<string>();
+        const repos = new Set<string>();
         Object.entries(createForm.value.versions).map(([k, v]) => {
           const repoName = pluginMap.get(k)?.repo ?? "";
-          if (!filter.has(repoName)) {
-            filter.add(repoName);
+          if (!repos.has(repoName)) {
+            repos.add(repoName);
           }
         });
 
         if (createForm.value.jobType == JobEnum.TagCreated) {
           createForm.value.tagCreateEventMatchs = [];
-          [...filter].map(repoName => createForm.value.tagCreateEventMatchs.push({
+          [...repos].map(repoName => createForm.value.tagCreateEventMatchs.push({
             repo: repoName,
             tagPattern: "tag/.+",
           }));
         } else if (createForm.value.jobType == JobEnum.PRMerged) {
           createForm.value.prMergedEventMatchs = [];
-          [...filter].map(repoName => createForm.value.prMergedEventMatchs.push({
+          [...repos].map(repoName => createForm.value.prMergedEventMatchs.push({
             repo: repoName,
             sourcePattern: "feat\/.+|fix\/.+",
             basePattern: "master|main",
@@ -244,6 +258,18 @@ export default defineComponent({
       }
       catch (err) {
         proxy.$throw(err, proxy);
+      }
+    };
+    const checkJobName = async () => {
+      try {
+        const count = await countJob({
+          name: createForm.value.name
+        });
+        isDupName.value = count > 0
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        loading.value = false;
       }
     };
     const onSelectTf = async () => {
@@ -276,6 +302,8 @@ export default defineComponent({
       create,
       //utils
       getRepoName,
+      checkJobName,
+      isDupName,
     };
   }
 });
@@ -304,5 +332,8 @@ export default defineComponent({
 .tips {
   color: #6b7b8d;
   margin-left: 15px;
+}
+.invadateName ::v-deep input{
+    border-color: #f56c6c;
 }
 </style>
