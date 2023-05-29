@@ -3,7 +3,6 @@
     <div class="left">
       <button class="jm-icon-button-left" @click="goBack"></button>
       <div class="title">{{ workflowData.name }}</div>
-<!--      <button class="jm-icon-workflow-edit" @click="edit"></button>-->
     </div>
     <div class="right">
       <div class="tools">
@@ -141,14 +140,8 @@ export default defineComponent({
                     name: jsonObject.name,
                     version: jsonObject.version,
                     properties: jsonObject.inputs,
-<<<<<<< HEAD
-                    dependencies: jsonObject.svcProperties,
-                    instanceName: jsonObject.out,
-=======
                     dependencies: jsonObject.dependencies,
-                    version: jsonObject.version,
                     instance: jsonObject.instance,
->>>>>>> 733a448... feat: fix testrunner
                   };
                   caseList.push(CaseObj);
                 } else if (jsonObject.pluginType === 'Deployer') {
@@ -203,14 +196,8 @@ export default defineComponent({
                 name: jsonObject.name,
                 version: jsonObject.version,
                 properties: jsonObject.inputs,
-<<<<<<< HEAD
-                dependencies: jsonObject.svcProperties,
-                instanceName: jsonObject.out,
-=======
                 dependencies: jsonObject.dependencies,
-                version: jsonObject.version,
                 instance: jsonObject.instance,
->>>>>>> 733a448... feat: fix testrunner
               };
               caseList.push(CaseObj);
             } else if (jsonObject.pluginType === 'Deployer') {
@@ -218,14 +205,8 @@ export default defineComponent({
                 name: jsonObject.name,
                 version: jsonObject.version,
                 properties: jsonObject.inputs,
-<<<<<<< HEAD
-                dependencies: jsonObject.svcProperties,
-                instanceName: jsonObject.out,
-=======
                 dependencies: jsonObject.dependencies,
-                version: jsonObject.version,
                 instance: jsonObject.instance,
->>>>>>> 733a448... feat: fix testrunner
               };
               nodeList.push(NodeObj);
             }
@@ -255,7 +236,7 @@ export default defineComponent({
 @import '../../vars';
 
 .jm-workflow-editor-toolbar {
-  height: @tool-bar-height;
+  height: @tool-bar-height;∂
   background: #ffffff;
   z-index: 3;
   font-size: 14px;

@@ -390,6 +390,11 @@ config:
         Match *venus*
         Database zsk
         Url mongodb://192.168.200.103:27017
+    [OUTPUT]
+        Name mongo
+        Match *venus*
+        Database testplatform
+        Url mongodb://192.168.200.103:27017
   ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
   ## This configuration is deprecated, please use `extraFiles` instead.
   upstream: {}
