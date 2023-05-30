@@ -42,8 +42,8 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		params := repo.ListTestFlowParams{
 			Name: req.Name,
 		}
-		if req.GroupId != nil {
-			params.GroupID, err = primitive.ObjectIDFromHex(*req.GroupId)
+		if req.GroupID != nil {
+			params.GroupID, err = primitive.ObjectIDFromHex(*req.GroupID)
 			if err != nil {
 				c.Error(err)
 				return

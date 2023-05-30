@@ -15,7 +15,7 @@ import (
 )
 
 type ListTaskParams struct {
-	JobId      primitive.ObjectID `form:"jobId"`
+	JobID      primitive.ObjectID `form:"jobId"`
 	State      []models.State     `form:"state"`
 	CreateTime *int64             `form:"createtime"`
 }
@@ -67,8 +67,8 @@ type TaskRepo struct {
 
 func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error) {
 	filter := bson.D{}
-	if !params.Params.JobId.IsZero() {
-		filter = append(filter, bson.E{Key: "jobid", Value: params.Params.JobId})
+	if !params.Params.JobID.IsZero() {
+		filter = append(filter, bson.E{Key: "jobid", Value: params.Params.JobID})
 	}
 
 	if len(params.Params.State) > 0 {

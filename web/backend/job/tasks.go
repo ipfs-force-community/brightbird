@@ -3,10 +3,11 @@ package job
 import (
 	"context"
 	"fmt"
-	"github.com/hunjixin/brightbird/models"
 	"math"
 	"os"
 	"time"
+
+	"github.com/hunjixin/brightbird/models"
 
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 
@@ -72,7 +73,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				PageNum:  1,
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
-					JobId: job.ID,
+					JobID: job.ID,
 					State: []models.State{models.Running, models.TempError},
 				},
 			})
@@ -114,7 +115,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				PageNum:  1,
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
-					JobId: job.ID,
+					JobID: job.ID,
 					State: []models.State{models.Init},
 				},
 			})

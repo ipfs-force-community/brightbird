@@ -231,13 +231,13 @@ func (o *ListTasksReqParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		}
 	}
 
-	if o.JobId != nil {
+	if o.JobID != nil {
 
 		// query param jobId
 		var qrJobID string
 
-		if o.JobId != nil {
-			qrJobID = *o.JobId
+		if o.JobID != nil {
+			qrJobID = *o.JobID
 		}
 		qJobID := qrJobID
 		if qJobID != "" {

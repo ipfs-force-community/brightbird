@@ -314,7 +314,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			PageNum:  1,
 			PageSize: math.MaxInt64,
 			Params: repo.ListTaskParams{
-				JobId: id,
+				JobID: id,
 			},
 		})
 		if err != nil {

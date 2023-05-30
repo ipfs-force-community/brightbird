@@ -42,7 +42,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		jobId, err := primitive.ObjectIDFromHex(params.JobId)
+		JobID, err := primitive.ObjectIDFromHex(params.JobID)
 		if err != nil {
 			c.Error(err)
 			return
@@ -52,7 +52,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			PageNum:  params.PageNum,
 			PageSize: params.PageSize,
 			Params: repo.ListTaskParams{
-				JobId:      jobId,
+				JobID:      JobID,
 				State:      params.State,
 				CreateTime: params.CreateTime,
 			},

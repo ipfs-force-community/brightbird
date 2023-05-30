@@ -88,7 +88,7 @@ type LogListResp []string
 // swagger:parameters listTasksParams
 type ListTasksParams struct {
 	// id of job
-	JobId string `form:"jobId" json:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
+	JobID string `form:"jobId" json:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
 	// task state
 	State []State `form:"state" json:"state"`
 	// createtime of task
@@ -127,7 +127,7 @@ type ListTasksResp struct { //todo https://github.com/go-swagger/go-swagger/issu
 // swagger:parameters listInGroupParams
 type ListInGroupParams struct {
 	//id of group
-	GroupId *string `form:"groupId" json:"groupId"`
+	GroupID *string `form:"groupId" json:"groupId"`
 	//name of testflow
 	Name *string `form:"name" json:"name"`
 }

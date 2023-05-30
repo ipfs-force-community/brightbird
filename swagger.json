@@ -950,7 +950,7 @@
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "JobId",
+            "x-go-name": "JobID",
             "description": "id of job",
             "name": "jobId",
             "in": "query"
@@ -1290,7 +1290,7 @@
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "GroupId",
+            "x-go-name": "GroupID",
             "description": "id of group",
             "name": "groupId",
             "in": "query"

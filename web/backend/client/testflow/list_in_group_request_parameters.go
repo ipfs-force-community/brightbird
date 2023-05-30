@@ -189,13 +189,13 @@ func (o *ListInGroupRequestParams) WriteToRequest(r runtime.ClientRequest, reg s
 	}
 	var res []error
 
-	if o.GroupId != nil {
+	if o.GroupID != nil {
 
 		// query param groupId
 		var qrGroupID string
 
-		if o.GroupId != nil {
-			qrGroupID = *o.GroupId
+		if o.GroupID != nil {
+			qrGroupID = *o.GroupID
 		}
 		qGroupID := qrGroupID
 		if qGroupID != "" {
