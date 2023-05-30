@@ -1,13 +1,19 @@
 package plugin
 
 import (
+	"regexp"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestGetPluginInfo(t *testing.T) {
-	GetPluginInfo("/root/brightbird/plugins/deploy/chain-co")
+	file := "../../dist/plugins/deploy/chain-co"
+	info, err := GetPluginInfo(file)
+	assert.NoError(t, err)
+	reg, err := regexp.Compile(`^v[\d]+?.[\d]+?.[\d]+?$`)
+	assert.NoError(t, err)
+	assert.True(t, reg.MatchString(info.Version))
 }
 
 func TestReadCMD(t *testing.T) {

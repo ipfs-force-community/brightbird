@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"regexp"
 	"runtime/debug"
 	"strings"
 
@@ -148,6 +149,8 @@ func GetPluginInfo(path string) (*types.PluginInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer w.Close()
+
 	process, err := os.StartProcess(path, []string{path, "info"}, &os.ProcAttr{
 		Files: []*os.File{os.Stdin, w, os.Stderr},
 	})
@@ -163,9 +166,7 @@ func GetPluginInfo(path string) (*types.PluginInfo, error) {
 		return nil, fmt.Errorf("get mainfest of plugin %s fail exitcode %d", path, st.ExitCode())
 	}
 
-	w.Close()
 	reader := bufio.NewReader(io.TeeReader(r, os.Stdout))
-
 	for {
 		line, err := reader.ReadBytes('\n')
 		if err != nil && err != io.EOF {
@@ -179,6 +180,15 @@ func GetPluginInfo(path string) (*types.PluginInfo, error) {
 				if err != nil {
 					return nil, err
 				}
+				reg, err := regexp.Compile(`v[\d]+?.[\d]+?.[\d]+?`)
+				if err != nil {
+					return nil, err
+				}
+				version := reg.FindString(info.Version)
+				if len(version) == 0 {
+					return nil, fmt.Errorf("not validate version string %s. must contain substring vx.x.x", info.Version)
+				}
+				info.Version = version
 				return info, nil
 			}
 		}

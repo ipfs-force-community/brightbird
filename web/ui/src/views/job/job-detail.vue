@@ -121,14 +121,11 @@ export default defineComponent({
       }
     };
 
-    const loadNew = async () => {
-
-    }
-    // 更新状态
+    // 更新状态 
     setInterval(async () => {
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
-          if (pageData.value.tasks[i].state != TaskStateEnum.Error) {
+          if (pageData.value.tasks[i].state != TaskStateEnum.Error && pageData.value.tasks[i].state != TaskStateEnum.Successful) {
             pageData.value.tasks[i] = await getTask(pageData.value.tasks[i].id)
           }
         }
