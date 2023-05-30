@@ -46,7 +46,7 @@ export default defineComponent({
 
       try {
         loading.value = true;
-        const { name, nodes, graph} = await fetchTestFlowDetail({id:props.projectId, name:""});
+        const { name, nodes, graph} = await fetchTestFlowDetail({id:props.projectId});
         title.value = name
         dsl.value = graph
         nodeDefs.value = nodes

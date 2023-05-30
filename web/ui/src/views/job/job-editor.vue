@@ -157,7 +157,7 @@ export default defineComponent({
       groupLoading.value = true;
       try {
         groups.value = await listTestflowGroup();
-        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId, name: "" });
+        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId});
         selectGroupId.value = testflow.groupId;
       } catch (err) {
         proxy.$throw(err, proxy);

@@ -223,7 +223,7 @@ export default defineComponent({
       try {
         //fetch testflow
        const nodeInUse = new Set<string>();
-       const testflow = await fetchTestFlowDetail({id: createForm.value.testFlowId, name:""})
+       const testflow = await fetchTestFlowDetail({id: createForm.value.testFlowId})
        testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version))
         //fetch plugins
         const pluginMap = new Map<string, PluginDetail>();
