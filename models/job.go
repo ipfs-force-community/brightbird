@@ -9,6 +9,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// JobType  task state
+// swagger:alias
 type JobType string
 
 const (

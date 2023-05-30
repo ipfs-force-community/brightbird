@@ -271,8 +271,8 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(fx_opt.NextInvoke(), runnerctl.SetupAPI),
 
 		//exec testflow
-		DeployFLow(pCtx, initNodes, pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Nodes),
-		ExecFlow(pCtx, initNodes, pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Cases),
+		DeployFLow(pCtx, initNodes, types.BootstrapPeers(cfg.BootstrapPeers), pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Nodes),
+		ExecFlow(pCtx, initNodes, types.BootstrapPeers(cfg.BootstrapPeers), pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Cases),
 	)
 	if err != nil {
 		return

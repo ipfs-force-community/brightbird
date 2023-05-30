@@ -45,7 +45,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		c.JSON(http.StatusOK, jobs)
 	})
 
-	// swagger:route GET /job/count job countJob
+	// swagger:route GET /job/count job countJobRequest
 	//
 	// Count all jobs by condition.
 	//
@@ -59,18 +59,6 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: id
-	//         in: query
-	//         description: job id
-	//         required: false
-	//         type: string
-	//       + name: name
-	//         in: query
-	//         description: job name
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200: listJobResp

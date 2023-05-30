@@ -64,10 +64,12 @@ type JobDetailResp struct {
 }
 
 // CountJobRequest
-// swagger:model countJobRequest
+// swagger:parameters countJobRequest
 type CountJobRequest struct {
-	ID   *string `form:"id"`
-	Name *string `form:"name"`
+	// id of job
+	ID *string `form:"id" json:"id"`
+	// name of job
+	Name *string `form:"name" json:"name"`
 }
 
 // ListJobResp
@@ -83,18 +85,33 @@ type PodListResp []string
 type LogListResp []string
 
 // ListTasksParams
-// swagger:model listTasksParams
+// swagger:parameters listTasksParams
 type ListTasksParams struct {
-	JobId string  `form:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
-	State []State `form:"state"`
+	// id of job
+	JobId string `form:"jobId" json:"jobId"` //todo use objectid directly issue https://github.com/gin-gonic/gin/issues/2447
+	// task state
+	State []State `form:"state" json:"state"`
+	// createtime of task
+	CreateTime *int64 `form:"createTime" json:"createTime"`
 }
 
 // ListTasksReq
-// swagger:model listTasksReq
+// swagger:parameters listTasksReq
 type ListTasksReq struct { //todo https://github.com/go-swagger/go-swagger/issues/2802
-	PageNum  int64           `form:"pageNum" binding:"required,gte=1"`
-	PageSize int64           `form:"pageSize" binding:"required,gte=1"`
-	Params   ListTasksParams `form:"params"`
+
+	// pageNum
+	//
+	// required: true
+	// in: query
+	PageNum int64 `form:"pageNum" json:"pageNum" binding:"required,gte=1"`
+
+	// pageSize
+	//
+	// required: true
+	// in: query
+	PageSize int64 `form:"pageSize" json:"pageSize" binding:"required,gte=1"`
+
+	ListTasksParams
 }
 
 // ListTasksResp
@@ -107,32 +124,38 @@ type ListTasksResp struct { //todo https://github.com/go-swagger/go-swagger/issu
 }
 
 // ListInGroupParams
-// swagger:model listInGroupParams
+// swagger:parameters listInGroupParams
 type ListInGroupParams struct {
-	GroupId *string `form:"groupId"`
-	Name    *string `form:"name"`
+	//id of group
+	GroupId *string `form:"groupId" json:"groupId"`
+	//name of testflow
+	Name *string `form:"name" json:"name"`
 }
 
 // ListInGroupRequest
-// swagger:model listInGroupRequest
+// swagger:parameters listInGroupRequest
 type ListInGroupRequest struct { //todo https://github.com/go-swagger/go-swagger/issues/2802
-	PageNum  int64             `form:"pageNum" binding:"required,gte=1"`
-	PageSize int64             `form:"pageSize" binding:"required,gte=1"`
-	Params   ListInGroupParams `form:"params"`
+	PageNum  int64 `form:"pageNum" json:"pageNum" binding:"required,gte=1"`
+	PageSize int64 `form:"pageSize" json:"pageSize" binding:"required,gte=1"`
+	ListInGroupParams
 }
 
 // GetTestFlowRequest
-// swagger:model getTestFlowRequest
+// swagger:parameters getTestFlowRequest
 type GetTestFlowRequest struct {
-	ID   *string `form:"id"`
-	Name *string `form:"name"`
+	//id of testflow
+	ID *string `form:"id" json:"id"`
+	//name of testflow
+	Name *string `form:"name" json:"name"`
 }
 
 // CountTestFlowRequest
-// swagger:model countTestFlowRequest
+// swagger:parameters countTestFlowRequest
 type CountTestFlowRequest struct {
-	GroupID *string `form:"groupId"`
-	Name    *string `form:"name"`
+	//id of group
+	GroupID *string `form:"groupId" json:"groupId"`
+	//name of testflow
+	Name *string `form:"name" json:"name"`
 }
 
 // ListTestFlowResp

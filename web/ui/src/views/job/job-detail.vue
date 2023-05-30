@@ -45,6 +45,8 @@ import { ITaskVo } from '@/api/dto/tasks';
 
 import { StateEnum } from '@/components/load-more/enumeration';
 import TaskItem from "@/views/common/task-item.vue"
+import { TaskStateEnum } from '@/api/dto/enumeration';
+import { getTask } from '@/api/tasks';
 
 export default defineComponent({
   components: { TaskItem },
@@ -86,7 +88,7 @@ export default defineComponent({
         pageData.value.pages = queryTask.pages;
         pageData.value.tasks.push(...queryTask.list);
         initialized.value = true;
-        if (queryTask.pages == 1 ) {
+        if (queryTask.pages == 1) {
           loadState.value = StateEnum.NO_MORE
         } else {
           loadState.value = StateEnum.MORE
@@ -111,13 +113,30 @@ export default defineComponent({
           if (pageData.value.pageNum == pageData.value.pages) {
             loadState.value = StateEnum.NO_MORE;
           }
-        } 
+        }
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
         // bottomLoading.value = false;
       }
     };
+
+    const loadNew = async () => {
+
+    }
+    // 更新状态
+    setInterval(async () => {
+      try {
+        for (var i = 0; i < pageData.value.tasks.length; i++) {
+          if (pageData.value.tasks[i].state != TaskStateEnum.Error) {
+            pageData.value.tasks[i] = await getTask(pageData.value.tasks[i].id)
+          }
+        }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } 
+    },5000)
+
 
     onMounted(async () => {
       await fetchJobDetail();

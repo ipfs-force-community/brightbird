@@ -29,11 +29,12 @@ var logDetail = &log.SugaredLogger
 
 type InitParams struct {
 	env.K8sInitParams
-	CodeVersion  string                      //todo allow config as tag commit id brance
-	InstanceName string                      //plugin instance name
-	SockPath     string                      //path to listen
-	Dependencies []*types.DependencyProperty // get depedencies
-	Properties   []*types.Property           // get params form this fields
+	BoostrapPeers types.BootstrapPeers
+	CodeVersion   string                      //todo allow config as tag commit id brance
+	InstanceName  string                      //plugin instance name
+	SockPath      string                      //path to listen
+	Dependencies  []*types.DependencyProperty // get depedencies
+	Properties    []*types.Property           // get params form this fields
 }
 
 func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
@@ -85,6 +86,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	_, err = fx_opt.New(ctx,
 		fx_opt.Override(new(context.Context), ctx),
 		fx_opt.Override(new(*InitParams), incomingParams),
+		fx_opt.Override(new(types.BootstrapPeers), incomingParams.BoostrapPeers),
 		fx_opt.Override(new(*env.K8sEnvDeployer), func() (*env.K8sEnvDeployer, error) {
 			return env.NewK8sEnvDeployer(incomingParams.K8sInitParams)
 		}),

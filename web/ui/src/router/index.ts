@@ -82,6 +82,8 @@ export default (appContext: AppContext) => {
       document.title = '建木';
     }
 
+    router.push
+
     const store = _store as any;
     store.commit('mutateFromRoute', { to, from });
     next();

@@ -1,5 +1,7 @@
 package types
 
+// PluginType  type of plugin
+// swagger:alias
 type PluginType string
 
 const (

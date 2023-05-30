@@ -24,7 +24,7 @@ import (
 func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1group *V1RouterGroup, service repo.IPluginService) {
 	group := v1group.Group("/plugin")
 
-	// swagger:route GET /plugin/mainfest plugin getPluginMainfest
+	// swagger:route GET /plugin/mainfest plugin listMainFestParams
 	//
 	// Get plugin mainfest.
 	//
@@ -38,18 +38,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: name
-	//         in: query
-	//         description: name of plugin
-	//         required: false
-	//         type: string
-	//       + name: pluginType
-	//         in: query
-	//         description: pluginType of plugin
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200: []pluginInfo
@@ -71,7 +59,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /plugin plugin getPlugin
+	// swagger:route GET /plugin plugin listPluginParams
 	//
 	// Get plugin by name and version.
 	//
@@ -85,23 +73,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: name
-	//         in: query
-	//         description: name of plugin
-	//         required: false
-	//         type: string
-	//       + name: version
-	//         in: query
-	//         description: version of plugin
-	//         required: false
-	//         type: string
-	//       + name: pluginType
-	//         in: query
-	//         description: pluginType of plugin
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200: []pluginDetail

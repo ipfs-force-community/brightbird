@@ -15,11 +15,14 @@ import (
 )
 
 // ListPluginParams
-// swagger:model listPluginParams
+// swagger:parameters listPluginParams
 type ListPluginParams struct {
-	Name       *string           `form:"name"`
-	Version    *string           `form:"version"`
-	PluginType *types.PluginType `form:"pluginType"`
+	// name of plugin
+	Name *string `form:"name" json:"name"`
+	// version of plugin
+	Version *string `form:"version" json:"version"`
+	// plugin type
+	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
 }
 
 func NewListPluginParams() *ListPluginParams {
@@ -42,10 +45,10 @@ func (params *ListPluginParams) SetVersion(version string) *ListPluginParams {
 }
 
 // ListMainFestParams
-// swagger:model listMainFestParams
+// swagger:parameters listMainFestParams
 type ListMainFestParams struct {
-	Name       *string           `form:"name"`
-	PluginType *types.PluginType `form:"pluginType"`
+	Name       *string           `form:"name" json:"name"`
+	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
 }
 
 func NewListMainFestParams() *ListMainFestParams {

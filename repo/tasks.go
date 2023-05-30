@@ -2,8 +2,9 @@ package repo
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"time"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
@@ -14,8 +15,9 @@ import (
 )
 
 type ListTaskParams struct {
-	JobId primitive.ObjectID `form:"jobId"`
-	State []models.State     `form:"state"`
+	JobId      primitive.ObjectID `form:"jobId"`
+	State      []models.State     `form:"state"`
+	CreateTime *int64             `form:"createtime"`
 }
 
 type ITaskRepo interface {
@@ -45,6 +47,13 @@ func NewTaskRepo(ctx context.Context, db *mongo.Database) (*TaskRepo, error) {
 				{Key: "state", Value: bsonx.Int32(-1)},
 			},
 		},
+		{
+			Keys: bsonx.Doc{
+				{Key: "jobid", Value: bsonx.Int32(-1)},
+				{Key: "state", Value: bsonx.Int32(-1)},
+				{Key: "createtime", Value: bsonx.Int32(-1)},
+			},
+		},
 	})
 	if err != nil {
 		return nil, err
@@ -64,6 +73,10 @@ func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParam
 
 	if len(params.Params.State) > 0 {
 		filter = append(filter, bson.E{Key: "state", Value: bson.M{"$in": params.Params.State}})
+	}
+
+	if params.Params.CreateTime != nil {
+		filter = append(filter, bson.E{Key: "createtime", Value: bson.M{"$gt": *params.Params.CreateTime}})
 	}
 
 	count, err := j.taskCol.CountDocuments(ctx, filter)

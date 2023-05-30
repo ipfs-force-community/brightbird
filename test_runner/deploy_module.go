@@ -28,7 +28,7 @@ import (
 
 type InitedNode map[string]string
 
-func DeployFLow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, deployers []*types.DeployNode) fx_opt.Option {
+func DeployFLow(ctx context.Context, initedNode InitedNode, boostrapPeers types.BootstrapPeers, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, deployers []*types.DeployNode) fx_opt.Option {
 	var opts []fx_opt.Option
 	for _, dep := range deployers {
 		deployPlugin, err := pluginRepo.GetPlugin(ctx, dep.Name, dep.Version)
@@ -42,6 +42,7 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlu
 		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
+			BoostrapPeers: boostrapPeers,
 			CodeVersion:   codeVersionProp.Value,
 			InstanceName:  instanceName,
 			SockPath:      tmpFName,
@@ -67,7 +68,7 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlu
 	return fx_opt.Options(opts...)
 }
 
-func ExecFlow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, testItems []*types.TestItem) fx_opt.Option {
+func ExecFlow(ctx context.Context, initedNode InitedNode, boostrapPeers types.BootstrapPeers, pluginRepo repo.IPluginService, pluginStore, testId string, k8sEnvParams *env.K8sInitParams, testItems []*types.TestItem) fx_opt.Option {
 	var opts []fx_opt.Option
 	var invokeFields []reflect.StructField
 	for index, dep := range testItems {
@@ -81,6 +82,7 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, pluginRepo repo.IPlugi
 		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
+			BoostrapPeers: boostrapPeers,
 			CodeVersion:   "", //exec have no code version
 			InstanceName:  instanceName,
 			SockPath:      tmpFName,

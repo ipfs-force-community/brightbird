@@ -384,17 +384,19 @@
           "job"
         ],
         "summary": "Count all jobs by condition.",
-        "operationId": "countJob",
+        "operationId": "countJobRequest",
         "parameters": [
           {
             "type": "string",
-            "description": "job id",
+            "x-go-name": "ID",
+            "description": "id of job",
             "name": "id",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "job name",
+            "x-go-name": "Name",
+            "description": "name of job",
             "name": "name",
             "in": "query"
           }
@@ -687,23 +689,26 @@
           "plugin"
         ],
         "summary": "Get plugin by name and version.",
-        "operationId": "getPlugin",
+        "operationId": "listPluginParams",
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "Name",
             "description": "name of plugin",
             "name": "name",
             "in": "query"
           },
           {
             "type": "string",
+            "x-go-name": "Version",
             "description": "version of plugin",
             "name": "version",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "pluginType of plugin",
+            "x-go-name": "PluginType",
+            "description": "plugin type",
             "name": "pluginType",
             "in": "query"
           }
@@ -821,17 +826,17 @@
           "plugin"
         ],
         "summary": "Get plugin mainfest.",
-        "operationId": "getPluginMainfest",
+        "operationId": "listMainFestParams",
         "parameters": [
           {
             "type": "string",
-            "description": "name of plugin",
+            "x-go-name": "Name",
             "name": "name",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "pluginType of plugin",
+            "x-go-name": "PluginType",
             "name": "pluginType",
             "in": "query"
           }
@@ -941,13 +946,51 @@
           "task"
         ],
         "summary": "Lists all tasks.",
-        "operationId": "listTasks",
+        "operationId": "listTasksReq",
         "parameters": [
           {
             "type": "string",
-            "description": "job id",
+            "x-go-name": "JobId",
+            "description": "id of job",
             "name": "jobId",
             "in": "query"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "x-go-name": "State",
+            "description": "task state",
+            "name": "state",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "CreateTime",
+            "description": "createtime of task",
+            "name": "createTime",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "PageNum",
+            "description": "pageNum",
+            "name": "pageNum",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "PageSize",
+            "description": "pageSize",
+            "name": "pageSize",
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -1104,18 +1147,20 @@
           "testflow"
         ],
         "summary": "Get specific test case by condition.",
-        "operationId": "getTestFlow",
+        "operationId": "getTestFlowRequest",
         "parameters": [
           {
             "type": "string",
-            "description": "name of test flow",
-            "name": "name",
+            "x-go-name": "ID",
+            "description": "id of testflow",
+            "name": "id",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "id of test flow",
-            "name": "id",
+            "x-go-name": "Name",
+            "description": "name of testflow",
+            "name": "name",
             "in": "query"
           }
         ],
@@ -1194,17 +1239,19 @@
         "tags": [
           "testflow"
         ],
-        "operationId": "countTestFlowsInGroup",
+        "operationId": "countTestFlowRequest",
         "parameters": [
           {
             "type": "string",
-            "description": "group id  of test flow",
+            "x-go-name": "GroupID",
+            "description": "id of group",
             "name": "groupId",
             "in": "query"
           },
           {
             "type": "string",
-            "description": "name  of test flow",
+            "x-go-name": "Name",
+            "description": "name of testflow",
             "name": "name",
             "in": "query"
           }
@@ -1239,23 +1286,33 @@
           "testflow"
         ],
         "summary": "Lists test flows.",
-        "operationId": "listTestFlows",
+        "operationId": "listInGroupRequest",
         "parameters": [
           {
             "type": "string",
-            "description": "group id  of test flow",
+            "x-go-name": "GroupId",
+            "description": "id of group",
             "name": "groupId",
             "in": "query"
           },
           {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of testflow",
+            "name": "name",
+            "in": "query"
+          },
+          {
             "type": "integer",
-            "description": "page number  of test flow",
+            "format": "int64",
+            "x-go-name": "PageNum",
             "name": "pageNum",
             "in": "query"
           },
           {
             "type": "integer",
-            "description": "page size  of test flow",
+            "format": "int64",
+            "x-go-name": "PageSize",
             "name": "pageSize",
             "in": "query"
           }
@@ -3010,10 +3067,6 @@
       },
       "x-go-package": "github.com/mittwald/goharbor-client/v5/apiv2/model"
     },
-    "JobType": {
-      "type": "string",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
     "Label": {
       "description": "Label label",
       "type": "object",
@@ -3561,7 +3614,8 @@
           "x-go-name": "Name"
         },
         "pluginType": {
-          "$ref": "#/definitions/PluginType"
+          "type": "string",
+          "x-go-name": "PluginType"
         },
         "properties": {
           "type": "array",
@@ -3599,10 +3653,6 @@
           "x-go-name": "Properties"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/types"
-    },
-    "PluginType": {
-      "type": "string",
       "x-go-package": "github.com/hunjixin/brightbird/types"
     },
     "PreheatPolicy": {
@@ -5958,11 +6008,6 @@
       },
       "x-go-package": "github.com/mittwald/goharbor-client/v5/apiv2/model"
     },
-    "State": {
-      "type": "integer",
-      "format": "int64",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
     "Statistic": {
       "description": "Statistic statistic",
       "type": "object",
@@ -6889,48 +6934,6 @@
       "x-go-name": "CountGroupRequest",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "countJobRequest": {
-      "description": "CountJobRequest",
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string"
-        },
-        "Name": {
-          "type": "string"
-        }
-      },
-      "x-go-name": "CountJobRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "countTestFlowRequest": {
-      "description": "CountTestFlowRequest",
-      "type": "object",
-      "properties": {
-        "GroupID": {
-          "type": "string"
-        },
-        "Name": {
-          "type": "string"
-        }
-      },
-      "x-go-name": "CountTestFlowRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "getTestFlowRequest": {
-      "description": "GetTestFlowRequest",
-      "type": "object",
-      "properties": {
-        "ID": {
-          "type": "string"
-        },
-        "Name": {
-          "type": "string"
-        }
-      },
-      "x-go-name": "GetTestFlowRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
     "group": {
       "description": "Group",
       "type": "object",
@@ -7046,7 +7049,8 @@
           "x-go-name": "ID"
         },
         "jobType": {
-          "$ref": "#/definitions/JobType"
+          "type": "string",
+          "x-go-name": "JobType"
         },
         "modifiedTime": {
           "description": "最后修改时间",
@@ -7119,7 +7123,8 @@
           "x-go-name": "ID"
         },
         "jobType": {
-          "$ref": "#/definitions/JobType"
+          "type": "string",
+          "x-go-name": "JobType"
         },
         "modifiedTime": {
           "description": "最后修改时间",
@@ -7173,39 +7178,6 @@
       "x-go-name": "ListGroupResp",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "listInGroupParams": {
-      "description": "ListInGroupParams",
-      "type": "object",
-      "properties": {
-        "GroupId": {
-          "type": "string"
-        },
-        "Name": {
-          "type": "string"
-        }
-      },
-      "x-go-name": "ListInGroupParams",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "listInGroupRequest": {
-      "description": "ListInGroupRequest",
-      "type": "object",
-      "properties": {
-        "PageNum": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "PageSize": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "Params": {
-          "$ref": "#/definitions/listInGroupParams"
-        }
-      },
-      "x-go-name": "ListInGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
     "listJobResp": {
       "description": "ListJobResp",
       "type": "array",
@@ -7213,73 +7185,6 @@
         "$ref": "#/definitions/job"
       },
       "x-go-name": "ListJobResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "listMainFestParams": {
-      "description": "ListMainFestParams",
-      "type": "object",
-      "properties": {
-        "Name": {
-          "type": "string"
-        },
-        "PluginType": {
-          "$ref": "#/definitions/PluginType"
-        }
-      },
-      "x-go-name": "ListMainFestParams",
-      "x-go-package": "github.com/hunjixin/brightbird/repo"
-    },
-    "listPluginParams": {
-      "description": "ListPluginParams",
-      "type": "object",
-      "properties": {
-        "Name": {
-          "type": "string"
-        },
-        "PluginType": {
-          "$ref": "#/definitions/PluginType"
-        },
-        "Version": {
-          "type": "string"
-        }
-      },
-      "x-go-name": "ListPluginParams",
-      "x-go-package": "github.com/hunjixin/brightbird/repo"
-    },
-    "listTasksParams": {
-      "description": "ListTasksParams",
-      "type": "object",
-      "properties": {
-        "JobId": {
-          "type": "string"
-        },
-        "State": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/State"
-          }
-        }
-      },
-      "x-go-name": "ListTasksParams",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "listTasksReq": {
-      "description": "ListTasksReq",
-      "type": "object",
-      "properties": {
-        "PageNum": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "PageSize": {
-          "type": "integer",
-          "format": "int64"
-        },
-        "Params": {
-          "$ref": "#/definitions/listTasksParams"
-        }
-      },
-      "x-go-name": "ListTasksReq",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "listTasksResp": {
@@ -7410,7 +7315,8 @@
           "x-go-name": "Path"
         },
         "pluginType": {
-          "$ref": "#/definitions/PluginType"
+          "type": "string",
+          "x-go-name": "PluginType"
         },
         "properties": {
           "type": "array",
@@ -7444,7 +7350,8 @@
           "x-go-name": "Name"
         },
         "pluginType": {
-          "$ref": "#/definitions/PluginType"
+          "type": "string",
+          "x-go-name": "PluginType"
         }
       },
       "x-go-name": "PluginInfo",
@@ -7508,7 +7415,8 @@
           "x-go-name": "SockPath"
         },
         "type": {
-          "$ref": "#/definitions/PluginType"
+          "type": "string",
+          "x-go-name": "Type"
         },
         "value": {
           "type": "string",
@@ -7565,7 +7473,9 @@
           "x-go-name": "PodName"
         },
         "state": {
-          "$ref": "#/definitions/State"
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "State"
         },
         "testFlowId": {
           "type": "string",

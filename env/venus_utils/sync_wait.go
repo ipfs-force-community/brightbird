@@ -2,23 +2,25 @@ package venus_utils
 
 import (
 	"context"
+	"strconv"
+	"time"
+
 	v1 "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	corev1 "k8s.io/api/core/v1"
-	"time"
 )
 
 var log = logging.Logger("env")
 
 // SyncWait returns when ChainHead is within 20 epochs of the expected height
-func SyncWait(ctx context.Context, k8sEnv *env.K8sEnvDeployer, pod corev1.Pod, adminToken string) error {
-	endpoint := types.EndpointFromString(pod.Status.PodIP)
+func SyncWait(ctx context.Context, k8sEnv *env.K8sEnvDeployer, pod corev1.Pod, port int, adminToken string) error {
+	endpoint := types.EndpointFromString(pod.Status.PodIP + ":" + strconv.Itoa(port))
 	if env.Debug {
 		var err error
-		endpoint, err = k8sEnv.PortForwardPod(ctx, pod.Name, 3453)
+		endpoint, err = k8sEnv.PortForwardPod(ctx, pod.Name, port)
 		if err != nil {
 			return err
 		}

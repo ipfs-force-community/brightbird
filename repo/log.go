@@ -80,7 +80,10 @@ func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string) ([]string
 
 	logs := make([]string, len(logResults))
 	for index, r := range logResults {
-		logs[index] = r["log"].(string)
+		rLog, ok := r["log"]
+		if ok {
+			logs[index] = rLog.(string)
+		}
 	}
 	return logs, nil
 }

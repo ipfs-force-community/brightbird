@@ -32,13 +32,13 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	Changetestflow(params *ChangetestflowParams, opts ...ClientOption) (*ChangetestflowOK, error)
 
-	CountTestFlowsInGroup(params *CountTestFlowsInGroupParams, opts ...ClientOption) (*CountTestFlowsInGroupOK, error)
+	CountTestFlowRequest(params *CountTestFlowRequestParams, opts ...ClientOption) (*CountTestFlowRequestOK, error)
 
 	DeleteTestFlow(params *DeleteTestFlowParams, opts ...ClientOption) (*DeleteTestFlowOK, error)
 
-	GetTestFlow(params *GetTestFlowParams, opts ...ClientOption) (*GetTestFlowOK, error)
+	GetTestFlowRequest(params *GetTestFlowRequestParams, opts ...ClientOption) (*GetTestFlowRequestOK, error)
 
-	ListTestFlows(params *ListTestFlowsParams, opts ...ClientOption) (*ListTestFlowsOK, error)
+	ListInGroupRequest(params *ListInGroupRequestParams, opts ...ClientOption) (*ListInGroupRequestOK, error)
 
 	SaveTestFlow(params *SaveTestFlowParams, opts ...ClientOption) (*SaveTestFlowOK, error)
 
@@ -84,22 +84,22 @@ func (a *Client) Changetestflow(params *ChangetestflowParams, opts ...ClientOpti
 }
 
 /*
-CountTestFlowsInGroup Count testflow numbers in group
+CountTestFlowRequest Count testflow numbers in group
 */
-func (a *Client) CountTestFlowsInGroup(params *CountTestFlowsInGroupParams, opts ...ClientOption) (*CountTestFlowsInGroupOK, error) {
+func (a *Client) CountTestFlowRequest(params *CountTestFlowRequestParams, opts ...ClientOption) (*CountTestFlowRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewCountTestFlowsInGroupParams()
+		params = NewCountTestFlowRequestParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "countTestFlowsInGroup",
+		ID:                 "countTestFlowRequest",
 		Method:             "GET",
 		PathPattern:        "/testflow/count",
 		ProducesMediaTypes: []string{"application/json", "application/text"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &CountTestFlowsInGroupReader{formats: a.formats},
+		Reader:             &CountTestFlowRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -111,13 +111,13 @@ func (a *Client) CountTestFlowsInGroup(params *CountTestFlowsInGroupParams, opts
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*CountTestFlowsInGroupOK)
+	success, ok := result.(*CountTestFlowRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for countTestFlowsInGroup: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for countTestFlowRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -160,22 +160,22 @@ func (a *Client) DeleteTestFlow(params *DeleteTestFlowParams, opts ...ClientOpti
 }
 
 /*
-GetTestFlow gets specific test case by condition
+GetTestFlowRequest gets specific test case by condition
 */
-func (a *Client) GetTestFlow(params *GetTestFlowParams, opts ...ClientOption) (*GetTestFlowOK, error) {
+func (a *Client) GetTestFlowRequest(params *GetTestFlowRequestParams, opts ...ClientOption) (*GetTestFlowRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetTestFlowParams()
+		params = NewGetTestFlowRequestParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "getTestFlow",
+		ID:                 "getTestFlowRequest",
 		Method:             "GET",
 		PathPattern:        "/testflow",
 		ProducesMediaTypes: []string{"application/json", "application/text"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &GetTestFlowReader{formats: a.formats},
+		Reader:             &GetTestFlowRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -187,33 +187,33 @@ func (a *Client) GetTestFlow(params *GetTestFlowParams, opts ...ClientOption) (*
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*GetTestFlowOK)
+	success, ok := result.(*GetTestFlowRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getTestFlow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTestFlowRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
 /*
-ListTestFlows lists test flows
+ListInGroupRequest lists test flows
 */
-func (a *Client) ListTestFlows(params *ListTestFlowsParams, opts ...ClientOption) (*ListTestFlowsOK, error) {
+func (a *Client) ListInGroupRequest(params *ListInGroupRequestParams, opts ...ClientOption) (*ListInGroupRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewListTestFlowsParams()
+		params = NewListInGroupRequestParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "listTestFlows",
+		ID:                 "listInGroupRequest",
 		Method:             "GET",
 		PathPattern:        "/testflow/list",
 		ProducesMediaTypes: []string{"application/json", "application/text"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &ListTestFlowsReader{formats: a.formats},
+		Reader:             &ListInGroupRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -225,13 +225,13 @@ func (a *Client) ListTestFlows(params *ListTestFlowsParams, opts ...ClientOption
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*ListTestFlowsOK)
+	success, ok := result.(*ListInGroupRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listTestFlows: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for listInGroupRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

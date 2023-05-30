@@ -13,7 +13,7 @@ import (
 
 func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service repo.ITestFlowRepo) {
 	group := v1group.Group("/testflow")
-	// swagger:route GET /testflow/list testflow listTestFlows
+	// swagger:route GET /testflow/list testflow listInGroupRequest
 	//
 	// Lists test flows.
 	//
@@ -28,23 +28,6 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//
 	//     Deprecated: false
 	//
-	//     Parameters:
-	//       + name: groupId
-	//         in: query
-	//         description: group id  of test flow
-	//         required: false
-	//         type: string
-	//       + name: pageNum
-	//         in: query
-	//         description: page number  of test flow
-	//         required: false
-	//         type: integer
-	//       + name: pageSize
-	//         in: query
-	//         description: page size  of test flow
-	//         required: false
-	//         type: integer
-	//
 	//     Responses:
 	//       200: listTestFlowResp
 	//		 503: apiError
@@ -57,10 +40,10 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		}
 
 		params := repo.ListTestFlowParams{
-			Name: req.Params.Name,
+			Name: req.Name,
 		}
-		if req.Params.GroupId != nil {
-			params.GroupID, err = primitive.ObjectIDFromHex(*req.Params.GroupId)
+		if req.GroupId != nil {
+			params.GroupID, err = primitive.ObjectIDFromHex(*req.GroupId)
 			if err != nil {
 				c.Error(err)
 				return
@@ -80,7 +63,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow/count testflow countTestFlowsInGroup
+	// swagger:route GET /testflow/count testflow countTestFlowRequest
 	//
 	// Count testflow numbers in group
 	//
@@ -94,18 +77,6 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: groupId
-	//         in: query
-	//         description: group id  of test flow
-	//         required: false
-	//         type: string
-	//       + name: name
-	//         in: query
-	//         description: name  of test flow
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200:
@@ -140,7 +111,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /testflow testflow getTestFlow
+	// swagger:route GET /testflow testflow getTestFlowRequest
 	//
 	// Get specific test case by condition.
 	//
@@ -154,18 +125,6 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: name
-	//         in: query
-	//         description: name of test flow
-	//         required: false
-	//         type: string
-	//       + name: id
-	//         in: query
-	//         description: id of test flow
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200: testFlow

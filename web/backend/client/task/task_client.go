@@ -34,7 +34,7 @@ type ClientService interface {
 
 	GetTask(params *GetTaskParams, opts ...ClientOption) (*GetTaskOK, error)
 
-	ListTasks(params *ListTasksParams, opts ...ClientOption) (*ListTasksOK, error)
+	ListTasksReq(params *ListTasksReqParams, opts ...ClientOption) (*ListTasksReqOK, error)
 
 	StopTask(params *StopTaskParams, opts ...ClientOption) (*StopTaskOK, error)
 
@@ -118,22 +118,22 @@ func (a *Client) GetTask(params *GetTaskParams, opts ...ClientOption) (*GetTaskO
 }
 
 /*
-ListTasks lists all tasks
+ListTasksReq lists all tasks
 */
-func (a *Client) ListTasks(params *ListTasksParams, opts ...ClientOption) (*ListTasksOK, error) {
+func (a *Client) ListTasksReq(params *ListTasksReqParams, opts ...ClientOption) (*ListTasksReqOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewListTasksParams()
+		params = NewListTasksReqParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "listTasks",
+		ID:                 "listTasksReq",
 		Method:             "GET",
 		PathPattern:        "/task",
 		ProducesMediaTypes: []string{"application/json", "application/text"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &ListTasksReader{formats: a.formats},
+		Reader:             &ListTasksReqReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -145,13 +145,13 @@ func (a *Client) ListTasks(params *ListTasksParams, opts ...ClientOption) (*List
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*ListTasksOK)
+	success, ok := result.(*ListTasksReqOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listTasks: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for listTasksReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

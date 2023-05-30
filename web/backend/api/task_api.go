@@ -15,7 +15,7 @@ import (
 func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager *job.TaskMgr, tasksRepo repo.ITaskRepo) {
 	group := v1group.Group("/task")
 
-	// swagger:route GET /task task listTasks
+	// swagger:route GET /task task listTasksReq
 	//
 	// Lists all tasks.
 	//
@@ -30,12 +30,6 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Deprecated: false
 	//
-	//     Parameters:
-	//       + name: jobId
-	//         in: query
-	//         description: job id
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200: listTasksResp
@@ -48,7 +42,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		jobId, err := primitive.ObjectIDFromHex(params.Params.JobId)
+		jobId, err := primitive.ObjectIDFromHex(params.JobId)
 		if err != nil {
 			c.Error(err)
 			return
@@ -58,8 +52,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			PageNum:  params.PageNum,
 			PageSize: params.PageSize,
 			Params: repo.ListTaskParams{
-				JobId: jobId,
-				State: params.Params.State,
+				JobId:      jobId,
+				State:      params.State,
+				CreateTime: params.CreateTime,
 			},
 		})
 		if err != nil {

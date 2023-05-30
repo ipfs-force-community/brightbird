@@ -5,6 +5,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// State  task state
+// swagger:alias
 type State int
 
 func (st State) Stringer() string {
