@@ -155,10 +155,12 @@ var runCmd = &cli.Command{
 
 func run(pCtx context.Context, cfg config.Config) error {
 	e := gin.Default()
-	e.NoRoute(func(ctx *gin.Context) {
-		ctx.Redirect(http.StatusTemporaryRedirect, "/index.html")
-	})
-	e.Use(static.Serve("/", static.LocalFile(cfg.StaticRoot, false)))
+	if len(cfg.StaticRoot) > 0 {
+		e.NoRoute(func(ctx *gin.Context) {
+			ctx.Redirect(http.StatusTemporaryRedirect, "/index.html")
+		})
+		e.Use(static.Serve("/", static.LocalFile(cfg.StaticRoot, false)))
+	}
 	e.Use(corsMiddleWare())
 	e.Use(errorHandleMiddleWare())
 

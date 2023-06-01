@@ -5,12 +5,11 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, inject, nextTick, onMounted, ref, provide } from 'vue';
+import { defineComponent, getCurrentInstance, inject, onMounted, ref, provide } from 'vue';
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
-import { createNamespacedHelpers, useStore } from 'vuex';
-import { Case, Node} from "@/api/dto/testflow.js";
+import { Node} from "@/api/dto/testflow";
 import yaml from 'yaml';
 import JmWorkflowEditor from "@/components/workflow/workflow-editor/index.vue";
 

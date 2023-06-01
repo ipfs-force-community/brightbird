@@ -3,7 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
-	"sort"
+	"time"
 
 	"github.com/hunjixin/brightbird/models"
 	"github.com/hunjixin/brightbird/types"
@@ -19,10 +19,43 @@ import (
 type ListPluginParams struct {
 	// name of plugin
 	Name *string `form:"name" json:"name"`
-	// version of plugin
-	Version *string `form:"version" json:"version"`
 	// plugin type
 	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
+}
+
+// GetPluginParams
+// swagger:parameters getPluginParams
+type GetPluginParams struct {
+	// name of plugin
+	Name *string `form:"name" json:"name"`
+	// plugin type
+	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
+}
+
+// AddLabelParams
+// swagger:parameters addLabelParams
+type AddLabelParams struct {
+	// name of plugin
+	Name *string `form:"name" json:"name"`
+	// plugin type
+	Label *string `form:"label" json:"label"`
+}
+
+// DeleteLabelParams
+// swagger:parameters deleteLabelParams
+type DeleteLabelParams struct {
+	// name of plugin
+	Name *string `form:"name" json:"name"`
+	// plugin type
+	Label *string `form:"label" json:"label"`
+}
+
+// DeletePluginParams
+type DeletePluginParams struct {
+	// id of plugin
+	Id primitive.ObjectID
+	// specific plugin version
+	Version string
 }
 
 func NewListPluginParams() *ListPluginParams {
@@ -36,11 +69,6 @@ func (params *ListPluginParams) SetPluginType(pluginType types.PluginType) *List
 
 func (params *ListPluginParams) SetName(name string) *ListPluginParams {
 	params.Name = &name
-	return params
-}
-
-func (params *ListPluginParams) SetVersion(version string) *ListPluginParams {
-	params.Version = &version
 	return params
 }
 
@@ -66,11 +94,13 @@ func (params *ListMainFestParams) SetName(name string) *ListMainFestParams {
 }
 
 type IPluginService interface {
-	DeletePlugin(context.Context, primitive.ObjectID) error
+	AddLabel(context.Context, string, string) error
+	DeleteLabel(context.Context, string, string) error
+	DeletePluginByVersion(context.Context, *DeletePluginParams) error
+	GetPluginDetail(context.Context, *GetPluginParams) (*models.PluginDetail, error)
 	ListPlugin(context.Context, *ListPluginParams) ([]*models.PluginDetail, error)
-	GetPlugin(context.Context, string, string) (*models.PluginDetail, error)
-	SavePlugins(context.Context, []*models.PluginDetail) error
-	PluginSummary(context.Context, *ListMainFestParams) ([]*models.PluginInfo, error)
+	GetPlugin(context.Context, string, string) (*models.Plugin, error)
+	SavePlugins(context.Context, *models.Plugin) error
 }
 
 type PluginSvc struct {
@@ -102,10 +132,6 @@ func (p *PluginSvc) ListPlugin(ctx context.Context, listPluginParams *ListPlugin
 		filter = append(filter, bson.E{"name", listPluginParams.Name})
 	}
 
-	if listPluginParams.Version != nil {
-		filter = append(filter, bson.E{"version", listPluginParams.Version})
-	}
-
 	if listPluginParams.PluginType != nil {
 		filter = append(filter, bson.E{"plugintype", listPluginParams.PluginType})
 	}
@@ -122,87 +148,148 @@ func (p *PluginSvc) ListPlugin(ctx context.Context, listPluginParams *ListPlugin
 	}
 	return plugins, nil
 }
-func (p *PluginSvc) DeletePlugin(ctx context.Context, id primitive.ObjectID) error {
-	_, err := p.pluginCol.DeleteMany(ctx, bson.D{{"_id", id}})
-	return err
+
+func (p *PluginSvc) GetPluginDetail(ctx context.Context, getPluginParams *GetPluginParams) (*models.PluginDetail, error) {
+	filter := bson.D{}
+	if getPluginParams.Name != nil {
+		filter = append(filter, bson.E{"name", getPluginParams.Name})
+	}
+
+	if getPluginParams.PluginType != nil {
+		filter = append(filter, bson.E{"plugintype", getPluginParams.PluginType})
+	}
+
+	var plugin models.PluginDetail
+	err := p.pluginCol.FindOne(ctx, filter).Decode(&plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin, nil
 }
 
-func (p *PluginSvc) SavePlugins(ctx context.Context, pluginOuts []*models.PluginDetail) error {
-	//do some check
-	for _, plugin := range pluginOuts {
-		count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": plugin.Name, "version": plugin.Version})
+func (p *PluginSvc) DeletePluginByVersion(ctx context.Context, params *DeletePluginParams) error {
+	update := bson.M{
+		"$pull": bson.M{
+			"plugins": bson.M{
+				"version": params.Version,
+			},
+		},
+	}
+
+	_, err := p.pluginCol.UpdateOne(ctx, bson.D{{"_id", params.Id}}, update)
+	if err != nil {
+		return err
+	}
+
+	var plugin models.PluginDetail
+	err = p.pluginCol.FindOne(ctx, bson.M{"_id": params.Id}).Decode(&plugin)
+	if err != nil {
+		return err
+	}
+
+	if len(plugin.Plugins) == 0 {
+		_, err = p.pluginCol.DeleteOne(ctx, bson.M{"_id": params.Id})
 		if err != nil {
 			return err
 		}
-		if count > 0 {
-			return fmt.Errorf("plugin %s version %s already exit, please remove first", plugin.Name, plugin.Version)
-		}
-	}
-
-	var models []mongo.WriteModel
-	for _, p := range pluginOuts {
-		p.ID = primitive.NewObjectID()
-		models = append(models, mongo.NewInsertOneModel().SetDocument(p))
-	}
-
-	_, err := p.pluginCol.BulkWrite(ctx, models)
-	if err != nil {
-		return err
 	}
 
 	return nil
 }
 
-func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*models.PluginDetail, error) {
-	var pluginDetail *models.PluginDetail
-	err := p.pluginCol.FindOne(ctx, bson.D{{"name", name}, {"version", version}}).Decode(&pluginDetail)
+func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin) error {
+	//do some check
+	pluginDetail := &models.PluginDetail{}
+	err := p.pluginCol.FindOne(ctx, bson.M{"name": pluginImport.Name}).Decode(pluginDetail)
 	if err != nil {
-		return nil, err
+		if err == mongo.ErrNoDocuments {
+			//add a plugin collection
+			pluginDetail.ID = primitive.NewObjectID()
+			pluginDetail = &models.PluginDetail{
+				ID:          primitive.NewObjectID(),
+				Name:        pluginImport.Name,
+				PluginType:  pluginImport.PluginType,
+				Description: pluginImport.Description,
+				Labels:      []string{pluginImport.Name}, //set name as default label
+				Plugins:     []models.Plugin{*pluginImport},
+				BaseTime: models.BaseTime{
+					CreateTime:   time.Now().Unix(),
+					ModifiedTime: time.Now().Unix(),
+				},
+			}
+			_, err = p.pluginCol.InsertOne(ctx, pluginDetail)
+			return err
+		}
+		return err
 	}
-	return pluginDetail, nil
+	//insert a version
+	count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": pluginImport.Name, "plugins": bson.M{"$elemMatch": bson.M{
+		"version": pluginImport.Version,
+	}}})
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return fmt.Errorf("plugin %s version %s already exit, please remove first", pluginImport.Name, pluginImport.Version)
+	}
+	if pluginImport.PluginType != pluginDetail.PluginType {
+		return fmt.Errorf("plugin type change")
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"description":  pluginImport.Description,
+			"modifiedtime": time.Now().Unix(),
+		},
+		"$push": bson.M{
+			"plugins": pluginImport,
+		},
+	}
+	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": pluginImport.Name}, update)
+	return err
 }
 
-func (p *PluginSvc) PluginSummary(ctx context.Context, listPluginParams *ListMainFestParams) ([]*models.PluginInfo, error) {
-	filter := bson.D{}
-	if listPluginParams.Name != nil {
-		filter = append(filter, bson.E{"name", listPluginParams.Name})
-	}
-
-	if listPluginParams.PluginType != nil {
-		filter = append(filter, bson.E{"plugintype", listPluginParams.PluginType})
-	}
-
-	matchStage := bson.D{{"$match", filter}}
-	groupStage := bson.D{
-		{"$group", bson.D{
-			{"_id", bson.D{
-				{"name", "$name"},
-				{"plugintype", "$plugintype"},
-			}},
-			{"description", bson.M{"$last": "$description"}},
-		},
-		},
-	}
-	projectStage := bson.D{
-		{"$project", bson.D{
-			{"_id", 0},
-			{"description", 1},
-			{"name", "$_id.name"},
-			{"plugintype", "$_id.plugintype"},
-		}},
-	}
-	groupResultsCur, err := p.pluginCol.Aggregate(ctx, mongo.Pipeline{matchStage, groupStage, projectStage}, options.Aggregate().SetAllowDiskUse(true))
+func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*models.Plugin, error) {
+	plugin := &models.PluginDetail{}
+	err := p.pluginCol.FindOne(ctx, bson.M{"name": name}).Decode(plugin)
 	if err != nil {
 		return nil, err
 	}
-
-	var pluginSummary []*models.PluginInfo
-	err = groupResultsCur.All(ctx, &pluginSummary)
-	if err != nil {
-		return nil, err
+	for _, p := range plugin.Plugins {
+		if p.Version == version {
+			return &p, nil
+		}
 	}
-	sort.Slice(pluginSummary, func(i, j int) bool {
-		return pluginSummary[i].Name < pluginSummary[j].Name
-	})
-	return pluginSummary, nil
+	return nil, fmt.Errorf("plugin %s(%s not found)", name, version)
+}
+
+func (p *PluginSvc) AddLabel(ctx context.Context, name string, newLabel string) error {
+	count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": name, "labels": newLabel})
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return fmt.Errorf("plugin %s label %s already exit, please remove first", name, newLabel)
+	}
+
+	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$push": bson.M{
+		"labels": newLabel,
+	}})
+	return err
+}
+
+func (p *PluginSvc) DeleteLabel(ctx context.Context, name string, toDeleteLabel string) error {
+	count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": name, "labels": toDeleteLabel})
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		return nil
+	}
+
+	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$pull": bson.M{
+		"labels": toDeleteLabel,
+	}})
+	return err
 }

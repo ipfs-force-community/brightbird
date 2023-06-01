@@ -2,11 +2,11 @@
   <div class="platform" ref="platFormRef">
     <div class="header"></div>
     <jm-container class="container">
-      <jm-header height="64px">
+      <el-header height="64px">
         <top-nav/>
-      </jm-header>
+      </el-header>
       <jm-container>
-        <jm-header v-if="pathNavsDisplay" class="path-nav">
+        <el-header v-if="pathNavsDisplay" class="path-nav">
           <jm-breadcrumb>
             <jm-breadcrumb-item
               v-for="{ name, path } in pathNavs"
@@ -16,7 +16,7 @@
             </jm-breadcrumb-item
             >
           </jm-breadcrumb>
-        </jm-header>
+        </el-header>
         <jm-main :class="mainClass">
           <jm-scrollbar ref="mainScrollbarRef">
             <div class="main-content" v-if="loadMain" id="platform-main">
@@ -102,7 +102,7 @@ export default defineComponent({
       proxy.$nextTick(() => (loadMain.value = true));
     };
     const setScrollbarOffset = async () => {
-      const scrollableEl = mainScrollbarRef.value?.scrollbar.firstElementChild;
+      const scrollableEl = mainScrollbarRef.value?.wrapRef?.firstElementChild;
 
       if (!scrollableEl) {
         setTimeout(() => setScrollbarOffset(), 300);
@@ -126,11 +126,11 @@ export default defineComponent({
 
     provide('reloadMain', reloadMain);
     provide('scrollableEl', () => {
-      return mainScrollbarRef.value?.scrollbar.firstElementChild;
+      return mainScrollbarRef.value?.wrapRef?.firstElementChild;
     });
     provide('setScrollbarOffset', setScrollbarOffset);
     provide('updateScrollbarOffset', () => {
-      const scrollableEl = mainScrollbarRef.value?.scrollbar.firstElementChild;
+      const scrollableEl = mainScrollbarRef.value?.wrapRef?.firstElementChild;
       if (!scrollableEl) {
         return;
       }
@@ -170,13 +170,14 @@ export default defineComponent({
     position: fixed;
     left: 0;
     top: 0;
-    width: 100vw;
+    width: 100%;
     height: 64px;
     background-color: #ffffff;
     box-shadow: 0 0 8px 0 #cfd7e5;
   }
 
   .container {
+    max-width: 100%;
     .el-header {
       width: 100%;
       max-width: @main-max-width;
