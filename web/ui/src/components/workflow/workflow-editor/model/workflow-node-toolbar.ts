@@ -106,12 +106,6 @@ export class WorkflowNodeToolbar {
     let title = '删除';
     switch (nodeData.getType()) {
       case NodeTypeEnum.ASYNC_TASK:
-      case NodeTypeEnum.SHELL:
-        title += '节点';
-        break;
-      case NodeTypeEnum.CRON:
-      case NodeTypeEnum.WEBHOOK:
-        title += '触发器';
         break;
     }
 

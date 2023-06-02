@@ -8,13 +8,30 @@
           </jm-button>
         </router-link>
       </div>
-
+      <div>
+        <el-upload
+          class="upload-demo"
+          action="http://192.168.200.171/brightbird"
+          :auto-upload="false"
+          :on-change="handleFileChange"
+        >
+          <template #trigger>
+              <el-button type="primary">select file</el-button>
+          </template>
+          <el-button
+            style="margin-left: 10px"
+            size="primary"
+            type="success"
+            @click="uploadFiles"
+          >upload to server</el-button>
+          <div class="el-upload__tip">
+              jpg/png files with a size less than 500kb
+          </div>
+        </el-upload>
+      </div>
       <div class="title" style="display: flex; justify-content: space-between;">
         <span>测试插件</span>
         <span class="desc">（共有 {{ execPlugins.total }} 个插件定义）</span>
-        <div class="upload-button" style="margin-left: auto;">
-            <jm-button type="primary" @click="handleUpload">上传</jm-button>
-        </div>
       </div>
 
       <div class="content">
@@ -35,14 +52,8 @@
             </p>
           </div>
 
-          <div
-              class="item-pos"
-              :class="{ 'node-definition-default-icon': !i.icon}"
-          >
-            <img
-                v-if="i.icon"
-                :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
-            />
+          <div class="item-pos" >
+              <button class="delete-label" @click="handleDelete(idx.toString())"></button>
           </div>
         </div>
       </div>
@@ -50,9 +61,6 @@
       <div class="title" style="display: flex; justify-content: space-between;">
         <span>部署插件</span>
         <span class="desc">（共有 {{ deployPlugins.total }} 个插件定义）</span>
-        <div class="upload-button" style="margin-left: auto;">
-            <jm-button type="primary" @click="handleUpload">上传</jm-button>
-        </div>
       </div>
 
       <div class="content">
@@ -73,19 +81,12 @@
             </p>
           </div>
 
-          <div
-            class="item-pos"
-            :class="{ 'node-definition-default-icon': !i.icon}"
-          >
-            <img
-              v-if="i.icon"
-              :src="`${i.icon}?imageMogr2/thumbnail/81x/sharpen/1`"
-            />
+          <div class="item-pos" >
+              <button class="delete-label" @click="handleDelete(idx.toString())"></button>
           </div>
         </div>
       </div>
     </div>
-
   </jm-scrollbar>
 </template>
 
@@ -94,54 +95,85 @@ import {
   defineComponent,
   getCurrentInstance,
   reactive,
-  ref,
-  Ref,
-  inject,
+    Ref,
+    ref,
 } from 'vue';
 import { INode } from '@/model/modules/node-library';
 import { Mutable } from '@/utils/lib';
-import { fetchDeployPlugins, fetchExecPlugins } from "@/api/view-no-auth";
+import {deletePlugin, fetchDeployPlugins, fetchExecPlugins, uploadPlugin} from "@/api/view-no-auth";
 import { PluginDetail } from "@/api/dto/testflow.js";
+import { ElButton, ElUpload } from 'element-plus';
+import JmEmpty from "@/components/data/empty/index.vue";
+import JmTextViewer from "@/components/text-viewer/index.vue";
+
 
 export default defineComponent({
-  components: {},
-  setup() {
-    const { proxy } = getCurrentInstance() as any;
-    const deployPlugins = reactive<Mutable<INode<PluginDetail>>>({total:0, list:[]});
-    const execPlugins = reactive<Mutable<INode<PluginDetail>>>({total:0, list:[]});
-    fetchDeployPlugins()
-      .then(res => {
-        deployPlugins.list = res
-        deployPlugins.total = res.length
-      })
-      .catch((err: Error) => {
-        proxy.$throw(err, proxy);
-      });
+    components: {JmTextViewer, JmEmpty, ElButton, ElUpload },
+    setup() {
+        const { proxy } = getCurrentInstance() as any;
+        const deployPlugins = reactive<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
+        const execPlugins = reactive<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
+
+        const fileList: Ref<FileList> = ref(new FileList());
+
+        const handleFileChange = (event: Event) => {
+            const inputElement = event.target as HTMLInputElement;
+            if (inputElement.files) {
+                fileList.value = inputElement.files;
+            }
+        };
 
 
-      fetchExecPlugins()
-      .then(res => {
-        execPlugins.list = res
-        execPlugins.total = res.length
-      })
-      .catch((err: Error) => {
-        proxy.$throw(err, proxy);
-      });
-      const handleUpload = async () => {
+        const uploadFiles = async () => {
+            try {
+                await uploadPlugin(fileList.value);
+            } catch (error) {
+            }
+        };
 
-      };
-      const handleDelete = (index: number) => {
-      };
+        const handleDelete = (index: string) => {
+            deletePlugin(index)
+                .then(() => {
+                    console.log('插件删除成功');
+                })
+                .catch((error: Error) => {
+                    console.error('插件删除失败', error);
+                });
+        };
 
-    return {
-      deployPlugins,
-      execPlugins,
-      handleUpload,
-      handleDelete,
-    };
-  },
+        fetchDeployPlugins()
+            .then(res => {
+                deployPlugins.list = res;
+                deployPlugins.total = res.length;
+            })
+            .catch((err: Error) => {
+                proxy.$throw(err, proxy);
+            });
+
+
+        fetchExecPlugins()
+            .then(res => {
+                execPlugins.list = res;
+                execPlugins.total = res.length;
+            })
+            .catch((err: Error) => {
+                proxy.$throw(err, proxy);
+            });
+
+
+
+        return {
+            deployPlugins,
+            execPlugins,
+            fileList,
+            handleFileChange,
+            uploadFiles,
+            handleDelete,
+        };
+    },
 });
 </script>
+
 
 <style scoped lang="less">
 .plugin-manager {
@@ -233,63 +265,6 @@ export default defineComponent({
         }
       }
 
-      .item-mid {
-        background: #f8fcff;
-        margin: 0px -15px 0px -15px;
-        padding: 6px 0px 6px 15px;
-        position: relative;
-        height: 62px;
-
-        .down {
-          width: 16px;
-          height: 16px;
-          position: absolute;
-          right: 20px;
-          top: 10px;
-          cursor: pointer;
-          z-index: 2;
-          background-image: url('@/assets/svgs/nav/top/down.svg');
-        }
-
-        .down.direction-down {
-          transform: rotate(180deg);
-        }
-
-        .item-mid-items {
-          display: flex;
-          justify-content: flex-start;
-          flex-wrap: wrap;
-          padding-right: 50px;
-          height: 26px;
-          overflow: hidden;
-
-          .item-mid-item {
-            padding: 5px;
-            font-size: 12px;
-            color: #385775;
-            background: #eff4f8;
-            border-radius: 2px;
-            margin-right: 10px;
-            overflow-y: auto;
-            margin-bottom: 10px;
-            max-width: 350px;
-          }
-        }
-
-        .item-mid-items.is-scroll {
-          height: auto;
-          overflow: auto;
-        }
-      }
-
-      .item-mid.is-background {
-        background: #ffffff;
-        min-height: auto;
-        overflow: hidden;
-        height: 26px;
-        margin-bottom: 10px;
-      }
-
       .item-btm {
         display: flex;
         justify-content: space-between;
@@ -315,28 +290,6 @@ export default defineComponent({
             border-radius: 4px;
           }
         }
-
-        .sync {
-          background-image: url('@/assets/svgs/btn/sync.svg');
-
-          &.doing {
-            animation: rotating 2s linear infinite;
-
-            &:active {
-              background-color: transparent;
-            }
-          }
-        }
-
-        .doing {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .del {
-          background-image: url('@/assets/svgs/btn/del.svg');
-        }
-
         .item-btm-r {
           justify-content: end;
           color: #7c91a5;
@@ -369,25 +322,12 @@ export default defineComponent({
         border-radius: 25.5%;
         overflow: hidden;
 
-        &.deprecated-icon {
-          opacity: .4;
-        }
-
         img {
           width: 100%;
           height: 100%;
         }
       }
-
-      .item-pos.node-definition-default-icon {
-        background-image: url('@/assets/svgs/node-library/node-definition-default-icon.svg');
-        background-size: 100%;
-      }
     }
-  }
-
-  .load-more {
-    text-align: center;
   }
 }
 </style>

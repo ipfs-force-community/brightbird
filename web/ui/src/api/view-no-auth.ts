@@ -7,8 +7,16 @@ import {
   ITaskParamVo,
 } from '@/api/dto/workflow-execution-record';
 import {
-  IProcessTemplateVo, ITestFlowDetail,
-  IProjectQueryingDto, IChangeTestflowGroupDto, ITestFlowIdVo, IGetTestFlowParam, PluginDetail, PluginInfo, GetPlugibMainfestReq, ICountTestFlowParam
+  IProcessTemplateVo,
+  ITestFlowDetail,
+  IProjectQueryingDto,
+  IChangeTestflowGroupDto,
+  ITestFlowIdVo,
+  IGetTestFlowParam,
+  PluginDetail,
+  PluginInfo,
+  GetPlugibMainfestReq,
+  ICountTestFlowParam,
 } from '@/api/dto/testflow';
 import { IPageVo } from '@/api/dto/common';
 import { ITriggerEventVo, ITriggerWebhookVo } from '@/api/dto/trigger';
@@ -260,13 +268,31 @@ export function fetchExecPlugins(): Promise<PluginDetail[]> {
 /**
  * 删除插件
  */
-export function deletePlugin(id: string): Promise<PluginDetail[]> {
-  return restProxy<PluginDetail[]>({
+export function deletePlugin(id: string): Promise<void> {
+  return restProxy({
     url: `${baseUrl.plugin}?id=${id}`,
     method: 'delete',
   });
 }
 
+/**
+ * 上传插件
+ */
+export function uploadPlugin(files: FileList): Promise<void> {
+  const formData = new FormData();
+  for (let i = 0; i < files.length; i++) {
+    formData.append('plugins', files[i]);
+  }
+
+  return restProxy({
+    url: `${baseUrl.testflow}/plugin/upload`,
+    method: 'post',
+    payload: formData,
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}
 /**
  * 获取项目缓存
  */
