@@ -278,7 +278,7 @@ export function deletePlugin(id: string): Promise<void> {
 /**
  * 上传插件
  */
-export function uploadPlugin(files: FileList): Promise<void> {
+export function uploadPlugin(files: File[]): Promise<void> {
   const formData = new FormData();
   for (let i = 0; i < files.length; i++) {
     formData.append('plugins', files[i]);
