@@ -151,6 +151,11 @@ export default defineComponent({
       }
     };
 
+    const generateRandomNumber = () => {
+      const randomNumber = Math.floor(1000 + Math.random() * 9000);
+      return randomNumber.toString();
+    };
+
     onMounted(async () => {
       if (form.value.version) {
         failureVisible.value = true;
@@ -165,6 +170,18 @@ export default defineComponent({
           form.value.version = versionList.value.versions[0];
           form.value.inputs = getPlugins[0].properties ?? [];
           form.value.dependencies = getPlugins[0].dependencies ?? [];
+        }
+
+        if (!form.value.instance || !form.value.instance.value) {
+          const defaultInstanceName = `${form.value.name}-${generateRandomNumber()}`;
+          form.value.instance = {
+            name: '组件实例名称',
+            value: defaultInstanceName,
+            type: form.value.instance.type,
+            sockPath: '',
+            require: true,
+            description: '',
+          };
         }
 
       } catch (err) {
