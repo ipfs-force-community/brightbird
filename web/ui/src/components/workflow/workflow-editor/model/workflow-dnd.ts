@@ -46,7 +46,7 @@ export class WorkflowDnd {
         const proxy = new CustomX6NodeProxy(targetNode);
         const _data = proxy.getData();
         const data = _data as AsyncTask;
-        data.setInstanceName(data +"-"+ uuid().slice(0, 8))
+        data.setInstanceName(data.name +"-"+ uuid().slice(0, 8))
         proxy.setData(data);
         // 保证不偏移
         setTimeout(() => {

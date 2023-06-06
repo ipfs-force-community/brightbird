@@ -157,7 +157,15 @@ export class AsyncTask extends BaseNode {
   }
 
   setInstanceName(name: string) {
-    this.displayName = name;
     this.instance.value = name;
   }
+
+  getDisplayName(): string {
+    if (this.instance.value) {
+      return this.instance.value
+    } else {
+      return this.name
+    }
+  }
+
 }
