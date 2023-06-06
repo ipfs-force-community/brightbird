@@ -26,7 +26,7 @@ export default defineComponent({
 
     const refresh = (data: IWorkflowNode) => {
       iconUrl.value = data.getIcon();
-      nameVal.value = data.getName();
+      nameVal.value = data.getDisplayName();
     };
 
     onMounted(() => {

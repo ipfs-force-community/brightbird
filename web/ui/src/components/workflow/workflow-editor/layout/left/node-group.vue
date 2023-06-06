@@ -16,7 +16,7 @@
         <div class="nodes-wrapper">
           <x6-vue-shape
             v-for="item in nodes"
-            :key="item.getName()"
+            :key="item.getDisplayName()"
             :node-data="item"
             @mousedown="(e) => drag(item, e)"/>
         </div>

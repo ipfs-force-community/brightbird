@@ -15,7 +15,7 @@ export type CustomRule = CustomRuleItem | CustomRuleItem[];
  * 节点数据
  */
 export interface IWorkflowNode {
-  getName(): string;
+  getDisplayName(): string;
 
   getType(): NodeTypeEnum;
 
@@ -25,6 +25,7 @@ export interface IWorkflowNode {
 
   getFormRules(): Record<string, CustomRule>;
 
+  setInstanceName(name:string): void;
   /**
    * 校验
    * @throws Error
@@ -52,7 +53,3 @@ export interface IWorkflow {
   description?: string;
   data: string;
 }
-
-export type ValidateParamFn = (value: string) => void;
-
-export type ValidateCacheFn = (name: string) => void;

@@ -76,7 +76,7 @@ export class WorkflowValidator {
       const connectedNodes = Array.from(nodeSet);
       const unconnectedNodes = nodes.filter(node => !connectedNodes.includes(node));
       if (unconnectedNodes.length > 0) {
-        const nodeName = new CustomX6NodeProxy(unconnectedNodes[0]).getData().getName();
+        const nodeName = new CustomX6NodeProxy(unconnectedNodes[0]).getData().getDisplayName();
         // 存在未连接的节点
         throw new Error(`${nodeName}节点：尚未连接任何其他节点`);
       }
@@ -87,7 +87,7 @@ export class WorkflowValidator {
       try {
         await workflowNode.validate();
       } catch ({ errors }) {
-        throw new Error(`${workflowNode.getName()}节点：${errors[0].message}`);
+        throw new Error(`${workflowNode.getDisplayNames()}节点：${errors[0].message}`);
       }
     }
   }

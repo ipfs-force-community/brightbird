@@ -75,7 +75,7 @@ export class CustomX6NodeProxy {
           const cell = graph.getCellById(reference.nodeId);
           if (cell) {
             const workflowNode = new CustomX6NodeProxy(cell as Node).getData();
-            const nodeName = workflowNode.getName();
+            const nodeName = workflowNode.getDisplayName();
             throw new Error(`${reference.raw}参数不可用，${nodeName}节点参数不可引用`);
           }
           throw err;
@@ -85,7 +85,7 @@ export class CustomX6NodeProxy {
           const cell = graph.getCellById(reference.nodeId);
           if (cell) {
             const workflowNode = new CustomX6NodeProxy(cell as Node).getData();
-            const nodeName = workflowNode.getName();
+            const nodeName = workflowNode.getDisplayName();
             throw new Error(`${reference.raw}参数不可用，${nodeName}节点不存在此参数`);
           }
           throw err;

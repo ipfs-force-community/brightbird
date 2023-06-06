@@ -147,7 +147,7 @@ export class WorkflowTool {
     nodeProxyArr.forEach((nodeProxy, index) => {
       // const ref = `node_${index}`;
       const nodeData = nodeProxy.getData();
-      const ref = nodeData.getName();
+      const ref = nodeData.getDisplayName();
 
       if (nodeData instanceof AsyncTask && (nodeData as AsyncTask).instance) {
         // 只有在异步任务节点有输出参数时，才有可能被下游节点引用

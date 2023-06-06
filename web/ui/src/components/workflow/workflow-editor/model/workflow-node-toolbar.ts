@@ -102,7 +102,7 @@ export class WorkflowNodeToolbar {
     const nodeData = nodeProxy.getData();
 
     let msg = '<div>确定要删除吗?</div>';
-    msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${nodeData.getName()}</div>`;
+    msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${nodeData.getDisplayNames()}</div>`;
     let title = '删除';
     switch (nodeData.getType()) {
       case NodeTypeEnum.ASYNC_TASK:

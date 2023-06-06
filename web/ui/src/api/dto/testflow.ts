@@ -210,13 +210,12 @@ export interface INodeDefVo
     type: string;
   }> { }
 
-export interface Property extends Readonly<{
-  name: string;
-  type: string;
-  description: string;
-  value: any;
-  require: true;
-}> {
+export interface Property  {
+    name: string;
+    type: string;
+    description: string;
+    value: any;
+    require: true;
 }
 
 export interface GetPluginReq extends Readonly<{
@@ -233,43 +232,39 @@ export interface GetPlugibMainfestReq extends Readonly<{
 }
 
 
-export interface DependencyProperty extends Readonly<{
-  name: string;
-  value: string;
-  type: PluginTypeEnum;
-  sockPath: string;
-  require: true;
-  description: string;
-}> {
-
+export interface DependencyProperty {
+    name: string;
+    value: string;
+    type: PluginTypeEnum;
+    sockPath: string;
+    require: true;
+    description: string;
 }
 
-export interface PluginInfo extends Readonly<{
-  name: string;
-  pluginType: PluginTypeEnum;
-  description: string,
+export interface PluginInfo  {
+    name: string;
+    pluginType: PluginTypeEnum;
+    description: string,
 
-  icon: string;
-}> {
+    icon: string;
 }
 
-export interface PluginDetail extends Readonly<{
-  id: number;
-  name: string;
-  version: string;
-  pluginType: PluginTypeEnum;
-  description: string,
-  repo: string,
-  imageTarget: string,
-  path: string;
-  dependencies: DependencyProperty[];
-  properties: Property[];
-  instance: DependencyProperty;
-  createTime: number;
-  modifiedTime: number;
+export interface PluginDetail {
+    id: number;
+    name: string;
+    version: string;
+    pluginType: PluginTypeEnum;
+    description: string,
+    repo: string,
+    imageTarget: string,
+    path: string;
+    dependencies: DependencyProperty[];
+    properties: Property[];
+    instance: DependencyProperty;
+    createTime: number;
+    modifiedTime: number;
 
-  icon: string;
-}> {
+    icon: string;
 }
 
 /**

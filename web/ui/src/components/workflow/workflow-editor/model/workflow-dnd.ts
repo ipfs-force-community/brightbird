@@ -7,6 +7,7 @@ import {ClickNodeWarningCallbackFnType, WorkflowValidator} from './workflow-vali
 import {CustomX6NodeProxy} from './data/custom-x6-node-proxy';
 import {NodeTypeEnum} from './data/enumeration';
 import {AsyncTask} from './data/node/async-task';
+import {uuid} from "@antv/x6/es/util/string/uuid";
 
 const { icon: { width, height }, textMaxHeight } = NODE;
 
@@ -42,6 +43,11 @@ export class WorkflowDnd {
 
         // 结束拖拽时，必须克隆拖动的节点，因为拖动的节点和目标节点不在一个画布
         const targetNode = draggingNode.clone();
+        const proxy = new CustomX6NodeProxy(targetNode);
+        const _data = proxy.getData();
+        const data = _data as AsyncTask;
+        data.setInstanceName(data +"-"+ uuid().slice(0, 8))
+        proxy.setData(data);
         // 保证不偏移
         setTimeout(() => {
           const { x, y } = targetNode.getPosition();
@@ -58,11 +64,12 @@ export class WorkflowDnd {
         // 验证节点是否有效放置在画布中，true代表成功
         const flag = workflowValidator.checkDroppingNode(droppingNode, mousePosition, nodePanelRect);
         const proxy = new CustomX6NodeProxy(droppingNode);
-        const _data = proxy.getData();
+
         if (!flag) {
           return false;
         }
 
+        const _data = proxy.getData();
         if (_data.getType() !== NodeTypeEnum.ASYNC_TASK) {
           _data
               .validate()
@@ -71,8 +78,7 @@ export class WorkflowDnd {
           return true;
         }
         const data = _data as AsyncTask;
-        
-        proxy.setData(data);
+
         data
             .validate()
             // 校验节点有误时，加警告

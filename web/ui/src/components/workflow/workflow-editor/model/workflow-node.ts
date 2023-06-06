@@ -27,7 +27,7 @@ export class WorkflowNode {
       }));
 
     return {
-      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
+      content: keyword ? arr.filter(item => item.getDisplayName().includes(keyword)) : arr,
     };
   }
 
@@ -44,7 +44,7 @@ export class WorkflowNode {
         description:"节点实例名称",
       }));
     return {
-      content: keyword ? arr.filter(item => item.getName().includes(keyword)) : arr,
+      content: keyword ? arr.filter(item => item.getDisplayName().includes(keyword)) : arr,
     };
   }
 }

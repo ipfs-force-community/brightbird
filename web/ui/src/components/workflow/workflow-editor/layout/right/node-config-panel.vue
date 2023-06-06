@@ -2,7 +2,7 @@
   <jm-drawer title="节点配置面板" :size="410" direction="rtl" destroy-on-close @closed="save">
     <template #title>
       <div>
-        <span>{{ nodeData.getName() }}</span>
+        <span>{{ nodeData.getDisplayName() }}</span>
       </div>
     </template>
     <div class="jm-workflow-editor-node-config-panel">
