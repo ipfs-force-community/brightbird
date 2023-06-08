@@ -26,6 +26,8 @@ type ListPluginParams struct {
 // GetPluginParams
 // swagger:parameters getPluginParams
 type GetPluginParams struct {
+	// id of plugin
+	Id *string `form:"id" json:"id"`
 	// name of plugin
 	Name *string `form:"name" json:"name"`
 	// plugin type
@@ -151,6 +153,14 @@ func (p *PluginSvc) ListPlugin(ctx context.Context, listPluginParams *ListPlugin
 
 func (p *PluginSvc) GetPluginDetail(ctx context.Context, getPluginParams *GetPluginParams) (*models.PluginDetail, error) {
 	filter := bson.D{}
+	if getPluginParams.Id != nil {
+		id, err := primitive.ObjectIDFromHex(*getPluginParams.Id)
+		if err != nil {
+			return nil, err
+		}
+		filter = append(filter, bson.E{"_id", id})
+	}
+
 	if getPluginParams.Name != nil {
 		filter = append(filter, bson.E{"name", getPluginParams.Name})
 	}

@@ -185,7 +185,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 	// swagger:route DELETE /plugin plugin deletePlugin
 	//
-	// Delete plugin by id
+	// Delete plugin by id and specific version
 	//
 	//     Consumes:
 	//     - application/json
@@ -230,7 +230,27 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			return
 		}
 
+		pluginDetail, err := service.GetPluginDetail(ctx, &repo.GetPluginParams{
+			Id: &req.Id,
+		})
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		plugin, err := service.GetPlugin(ctx, pluginDetail.Name, req.Version)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
 		err = service.DeletePluginByVersion(c, params)
+		if err != nil {
+			c.Error(err)
+			return
+		}
+
+		err = os.Remove(plugin.Path)
 		if err != nil {
 			c.Error(err)
 			return

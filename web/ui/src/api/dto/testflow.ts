@@ -268,17 +268,16 @@ export interface Plugin extends Readonly<{
 }> {
 }
 
-export interface PluginDetail extends Readonly<{
-  id: number;
+export interface PluginDetail {
+  id: string;
   name: string;
   pluginType: PluginTypeEnum;
   description: string,
   labels:string[];
-  plugins: Plugin[];
+  plugins: Plugin[]|undefined;
   createTime: number;
   modifiedTime: number;
   icon: string;
-}> {
 }
 
 /**

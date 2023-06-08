@@ -9,17 +9,16 @@
           </jm-button>
         </router-link>
       </div>
-      <div>
-        <el-upload ref="unloadRef" class="upload-demo" :auto-upload="false" multiple @change="handleChange($event)">
+
+      <div class="upload">
+        <el-upload ref="unloadRef" :auto-upload="false" multiple @change="handleChange($event)">
           <template #trigger>
             <el-button type="primary">选择文件</el-button>
           </template>
           <el-button style="margin-left: 10px" type="success" @click="submitUpload()">上传</el-button>
-          <div class="el-upload__tip">
-            jpg/png files with a size less than 500kb
-          </div>
         </el-upload>
       </div>
+
       <div class="title" style="display: flex; justify-content: space-between;">
         <span>测试插件</span>
         <span class="desc">（共有 {{ execPlugins.total }} 个插件定义）</span>
@@ -91,7 +90,7 @@ import { ElButton, ElUpload } from 'element-plus';
 import JmEmpty from "@/components/data/empty/index.vue";
 import JmTextViewer from "@/components/text-viewer/index.vue";
 import { ElMessageBox } from 'element-plus';
-import { Delete, Edit, Search, Share, Upload } from '@element-plus/icons-vue'
+import { Delete} from '@element-plus/icons-vue'
 
 import {
   onBeforeRouteUpdate,
@@ -193,6 +192,9 @@ export default defineComponent({
     }
   }
 
+  .upload {
+    display: flex;
+  }
   .title {
     font-size: 20px;
     font-weight: bold;
