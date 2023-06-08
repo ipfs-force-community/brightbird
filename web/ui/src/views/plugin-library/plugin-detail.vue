@@ -54,7 +54,7 @@
 
       <el-row class="row-t" v-for="p in pluginDetail?.plugins" >
         <el-col :span="2">
-          <el-text class="mx-1">{{ p.version }}详情</el-text>
+          <el-text class="mx-1">{{ p.version }} 详情:</el-text>
         </el-col>
         <el-col :span="22">
           <el-collapse>

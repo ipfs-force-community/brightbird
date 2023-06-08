@@ -6,6 +6,7 @@ import 'dayjs/locale/zh-cn';
 import './theme/custom-element-plus/index.scss';
 import 'bootstrap/dist/css/bootstrap.min.css';
 // 设置公共组件全局样式
+
 // 必须晚于element-plus全局样式加载，否则，无法覆盖
 import './theme/index.less';
 // 设置jm-icon样式
