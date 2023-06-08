@@ -9,7 +9,6 @@ import { globalErrorHandler } from './utils/global-error-handler';
 import './utils/operation-btn-position.ts';
 // 安装百度统计
 import './utils/baidu-tongji.ts';
-import 'element-plus/lib/theme-chalk/el-button.css';
 
 // 打印环境变量，用于调试
 console.debug(import.meta.env);

@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/url"
 	"os"
-	"strings"
 
 	"github.com/cskr/pubsub"
 	"github.com/google/go-github/v51/github"
@@ -50,10 +49,12 @@ func NewWebhoobPubsub(cfg config.Config) func(ctx context.Context) (modules.WebH
 					log.Info("parse event fail drop event")
 					continue
 				}
-				if eventType == "push" {
-					pushEvent := event.(*github.PushEvent)
-					if strings.Contains(pushEvent.GetRef(), "tags") { //commit or tags
-						webhookPubsub.Pub(event, modules.CREATE_TAG_TOPIC)
+
+				if eventType == "release" {
+					releaseEvent := event.(*github.ReleaseEvent)
+					if releaseEvent.GetRelease().TagName != nil { //commit or tags
+						webhookPubsub.Pub(releaseEvent, modules.RELEASE_TOPIC)
+						continue
 					}
 				}
 
@@ -61,6 +62,7 @@ func NewWebhoobPubsub(cfg config.Config) func(ctx context.Context) (modules.WebH
 					prEvent := event.(*github.PullRequestEvent)
 					if prEvent.GetPullRequest().GetMerged() && prEvent.GetPullRequest().GetState() == "closed" {
 						webhookPubsub.Pub(event, modules.PR_MERGED_TOPIC)
+						continue
 					}
 				}
 			}

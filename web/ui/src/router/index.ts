@@ -42,7 +42,7 @@ export default (appContext: AppContext) => {
         '首页',
         false,
         import('@/layout/platform.vue'),
-        import.meta.globEager('./modules/platform.ts'),
+        import.meta.glob('./modules/platform.ts',{eager: true}),
       ),
       // full模块
       loadModuleRoute(
@@ -50,7 +50,7 @@ export default (appContext: AppContext) => {
         undefined,
         false,
         import('@/layout/full.vue'),
-        import.meta.globEager('./modules/full.ts'),
+        import.meta.glob('./modules/full.ts',{eager: true}),
       ),
       // error模块
       loadModuleRoute(
@@ -58,7 +58,7 @@ export default (appContext: AppContext) => {
         undefined,
         false,
         import('@/layout/error.vue'),
-        import.meta.globEager('./modules/error.ts'),
+        import.meta.glob('./modules/error.ts',{eager: true}),
       ),
       {
         // 默认
@@ -82,10 +82,9 @@ export default (appContext: AppContext) => {
       document.title = '建木';
     }
 
-    router.push
-
     const store = _store as any;
-    store.commit('mutateFromRoute', { to, from });
+    store.commit('mutateFromRoute', { to, from })
+
     next();
   });
   return router;

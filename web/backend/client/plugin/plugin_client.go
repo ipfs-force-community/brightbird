@@ -30,17 +30,57 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error)
+
 	DeletePlugin(params *DeletePluginParams, opts ...ClientOption) (*DeletePluginOK, error)
 
-	ImportPlugin(params *ImportPluginParams, opts ...ClientOption) (*ImportPluginOK, error)
+	GetPluginParams(params *GetPluginParamsParams, opts ...ClientOption) (*GetPluginParamsOK, error)
 
-	ListMainFestParams(params *ListMainFestParamsParams, opts ...ClientOption) (*ListMainFestParamsOK, error)
+	ImportPlugin(params *ImportPluginParams, opts ...ClientOption) (*ImportPluginOK, error)
 
 	ListPluginParams(params *ListPluginParamsParams, opts ...ClientOption) (*ListPluginParamsOK, error)
 
 	UploadPluginFilesParams(params *UploadPluginFilesParamsParams, opts ...ClientOption) (*UploadPluginFilesParamsOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+DeleteLabelParams deletes label in plugin
+*/
+func (a *Client) DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeleteLabelParamsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "deleteLabelParams",
+		Method:             "GET",
+		PathPattern:        "/plugin/label",
+		ProducesMediaTypes: []string{"application/json", "application/text"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &DeleteLabelParamsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeleteLabelParamsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deleteLabelParams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -78,6 +118,44 @@ func (a *Client) DeletePlugin(params *DeletePluginParams, opts ...ClientOption) 
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for deletePlugin: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetPluginParams gets plugin by name and version
+*/
+func (a *Client) GetPluginParams(params *GetPluginParamsParams, opts ...ClientOption) (*GetPluginParamsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPluginParamsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "getPluginParams",
+		Method:             "GET",
+		PathPattern:        "/plugin",
+		ProducesMediaTypes: []string{"application/json", "application/text"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetPluginParamsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPluginParamsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getPluginParams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -120,45 +198,7 @@ func (a *Client) ImportPlugin(params *ImportPluginParams, opts ...ClientOption) 
 }
 
 /*
-ListMainFestParams gets plugin mainfest
-*/
-func (a *Client) ListMainFestParams(params *ListMainFestParamsParams, opts ...ClientOption) (*ListMainFestParamsOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListMainFestParamsParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "listMainFestParams",
-		Method:             "GET",
-		PathPattern:        "/plugin/mainfest",
-		ProducesMediaTypes: []string{"application/json", "application/text"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &ListMainFestParamsReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListMainFestParamsOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listMainFestParams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-ListPluginParams gets plugin by name and version
+ListPluginParams lists plugin by name and version
 */
 func (a *Client) ListPluginParams(params *ListPluginParamsParams, opts ...ClientOption) (*ListPluginParamsOK, error) {
 	// TODO: Validate the params before sending
@@ -168,7 +208,7 @@ func (a *Client) ListPluginParams(params *ListPluginParamsParams, opts ...Client
 	op := &runtime.ClientOperation{
 		ID:                 "listPluginParams",
 		Method:             "GET",
-		PathPattern:        "/plugin",
+		PathPattern:        "/plugin/list",
 		ProducesMediaTypes: []string{"application/json", "application/text"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http", "https"},

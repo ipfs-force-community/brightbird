@@ -135,10 +135,7 @@ export default defineComponent({
       collapsed.value = !collapsed.value;
     };
     // 显示更多
-    // const btnDown = async () => {
-    //   loadState.value = StateEnum.LOADING;
-    //   await loadNodes(keyWord.value, false, initialPageSize, currentPage.value += 1);
-    // };
+     const btnDown = async () => {};
     onMounted(async () => {
       await loadNodes(keyWord.value, false);
     });
@@ -162,7 +159,7 @@ export default defineComponent({
       nodes,
       collapsed,
       toggle,
-      // btnDown,
+      btnDown,
       drag: (data: IWorkflowNode, event: MouseEvent) => {
         getWorkflowDnd().drag(data, event);
       },

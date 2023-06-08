@@ -19,7 +19,7 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, onBeforeMount, ref, SetupContext } from 'vue';
 import { fetchTestFlowDetail } from '@/api/view-no-auth';
-import { Node } from '@/api/dto/testflow.js';
+import { Node } from '@/api/dto/testflow';
 
 export default defineComponent({
   props: {

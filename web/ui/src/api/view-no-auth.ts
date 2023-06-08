@@ -1,8 +1,5 @@
 import { restProxy } from '@/api/index';
 import {
-  PluginTypeEnum
-} from '@/api/dto/enumeration'
-import {
   ITaskExecutionRecordVo,
   ITaskParamVo,
 } from '@/api/dto/workflow-execution-record';
@@ -13,9 +10,6 @@ import {
   IChangeTestflowGroupDto,
   ITestFlowIdVo,
   IGetTestFlowParam,
-  PluginDetail,
-  PluginInfo,
-  GetPlugibMainfestReq,
   ICountTestFlowParam,
 } from '@/api/dto/testflow';
 import { IPageVo } from '@/api/dto/common';
@@ -213,86 +207,6 @@ export function fetchVersion(): Promise<string> {
   });
 }
 
-/**
- * 获取所有插件 按名称和版本分类
- */
-export function fetchPluginsMainfest(req: GetPlugibMainfestReq): Promise<PluginInfo[]> {
-  return restProxy<PluginInfo[]>({
-    url: `${baseUrl.plugin}/mainfest`,
-    method: 'get',
-    payload: req
-  });
-}
-
-
-/**
- * 获取deploy插件
- */
-export function fetchDeployPlugins(): Promise<PluginDetail[]> {
-  return restProxy<PluginDetail[]>({
-    url: `${baseUrl.plugin}`,
-    method: 'get',
-    payload: {
-      "pluginType":PluginTypeEnum.Deploy
-    },
-  });
-}
-
-/**
- * 根据name获取插件
- * @param name
- */
-export function fetchPluginByName(name: string): Promise<PluginDetail[]> {
-  return restProxy<PluginDetail[]>({
-    url: `${baseUrl.plugin}`,
-    method: 'get',
-    payload: {
-      "name":name
-    },
-  });
-}
-
-/**
- * 获取exec插件
- */
-export function fetchExecPlugins(): Promise<PluginDetail[]> {
-  return restProxy<PluginDetail[]>({
-    url: `${baseUrl.plugin}`,
-    method: 'get',
-    payload: {
-      "pluginType":PluginTypeEnum.Exec
-    },
-  });
-}
-
-/**
- * 删除插件
- */
-export function deletePlugin(id: string): Promise<void> {
-  return restProxy({
-    url: `${baseUrl.plugin}?id=${id}`,
-    method: 'delete',
-  });
-}
-
-/**
- * 上传插件
- */
-export function uploadPlugin(files: File[]): Promise<void> {
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append('plugins', files[i]);
-  }
-
-  return restProxy({
-    url: `${baseUrl.testflow}/plugin/upload`,
-    method: 'post',
-    payload: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
-  });
-}
 /**
  * 获取项目缓存
  */

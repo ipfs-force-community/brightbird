@@ -51,27 +51,27 @@ import { defineComponent } from 'vue';
 export default defineComponent({
   setup() {
     const buttonIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/button/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/button/svgs/*.svg', {eager: true})).forEach(key =>
       buttonIconClasses.push(`jm-icon-button-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     const tabIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/tabs/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/tabs/svgs/*.svg', {eager: true})).forEach(key =>
       tabIconClasses.push(`jm-icon-tab-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     const linkIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/link/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/link/svgs/*.svg', {eager: true})).forEach(key =>
       linkIconClasses.push(`jm-icon-link-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     const menuIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/menu/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/menu/svgs/*.svg', {eager: true})).forEach(key =>
       menuIconClasses.push(`jm-icon-menu-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     const inputIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/input/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/input/svgs/*.svg', {eager: true})).forEach(key =>
       inputIconClasses.push(`jm-icon-input-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     const workflowIconClasses: string[] = [];
-    Object.keys(import.meta.globEager('../../components/theme/workflow/svgs/*.svg')).forEach(key =>
+    Object.keys(import.meta.glob('../../components/theme/workflow/svgs/*.svg', {eager: true})).forEach(key =>
       workflowIconClasses.push(`jm-icon-workflow-${key.substring(key.lastIndexOf('/') + 1, key.lastIndexOf('.'))}`));
 
     return {

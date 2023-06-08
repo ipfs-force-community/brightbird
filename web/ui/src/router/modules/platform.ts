@@ -26,13 +26,32 @@ export default [
   },
   // 节点库路由
   {
-    name: 'node-library',
-    path: 'node-library',
-    component: () => import('@/views/node-library/node-library-manager.vue'),
+    name: 'plugin-library',
+    path: 'plugin',
+    component: () => import('@/views/plugin-library/plugin-library-manager.vue'),
     meta: {
-      title: '本地节点库',
+      title: '插件库',
     },
+    children:[
+      {
+        name: 'plugin-library-detail',
+        path: 'detail/:name',
+        component: () => import('@/views/plugin-library/plugin-detail.vue'),
+        props: ({ params: { name } }: RouteLocationNormalizedLoaded) => ({ name }),
+        meta: {
+          title: '插件详情',
+        },
+      }, 
+    ]
   },
+    // 组件库路由
+    {
+      path: 'component-lib',
+      component: () => import('@/views/component-lib/index.vue'),
+      meta: {
+        title: '组件库',
+      },
+    },
   // job路由
   {
     name: 'job',
@@ -77,8 +96,7 @@ export default [
       {
         name: 'project-group-detail',
         path: 'detail/:id',
-        component: () =>
-          import('@/views/project-group/project-group-detail.vue'),
+        component: () => import('@/views/project-group/project-group-detail.vue'),
         props: ({ params: { id } }: RouteLocationNormalizedLoaded) => ({ id }),
         meta: {
           title: '详情',

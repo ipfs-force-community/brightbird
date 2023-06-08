@@ -67,6 +67,12 @@ type DeletePluginParams struct {
 	*/
 	ID *string
 
+	/* Version.
+
+	   version of plugin
+	*/
+	Version *string
+
 	timeout    time.Duration
 	Context    context.Context
 	HTTPClient *http.Client
@@ -131,6 +137,17 @@ func (o *DeletePluginParams) SetID(id *string) {
 	o.ID = id
 }
 
+// WithVersion adds the version to the delete plugin params
+func (o *DeletePluginParams) WithVersion(version *string) *DeletePluginParams {
+	o.SetVersion(version)
+	return o
+}
+
+// SetVersion adds the version to the delete plugin params
+func (o *DeletePluginParams) SetVersion(version *string) {
+	o.Version = version
+}
+
 // WriteToRequest writes these params to a swagger request
 func (o *DeletePluginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -151,6 +168,23 @@ func (o *DeletePluginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.
 		if qID != "" {
 
 			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if o.Version != nil {
+
+		// query param version
+		var qrVersion string
+
+		if o.Version != nil {
+			qrVersion = *o.Version
+		}
+		qVersion := qrVersion
+		if qVersion != "" {
+
+			if err := r.SetQueryParam("version", qVersion); err != nil {
 				return err
 			}
 		}
