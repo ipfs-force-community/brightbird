@@ -32,10 +32,10 @@
           </div>
         </div>
         <div class="inputs-container set-padding" v-if="tabFlag === 1">
-          <div v-if="!form.inputs">
+          <div v-if="!form.inputs.toString()">
             <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
-          <div v-if="form.inputs">
+            <div v-else>
             <jm-form-item v-for="(item, index) in form.inputs" :key="item.name" :prop="`inputs.${index}.value`"
               :rules="nodeData.getFormRules().version" class="node-name">
               <template #label>
@@ -50,7 +50,10 @@
           </div>
         </div>
         <div class="outputs-container set-padding" v-else-if="tabFlag === 2">
-          <div v-if="form.instance">
+          <div v-if="!form.instance.toString()">
+              <jm-empty description="无输出参数" :image="noParamImage"></jm-empty>
+          </div>
+          <div v-else>
             <div class="label">
               <i class="required-icon" v-if="form.instance.require"></i>
               组件实例名称
@@ -63,12 +66,12 @@
               :placeholder="form.instance.description ? form.instance.description : '请输入' + form.instance.type"
               show-word-limit :maxlength="36" />
           </div>
-          <div v-if="!form.instance">
-            <jm-empty description="无输出参数" :image="noParamImage"></jm-empty>
-          </div>
         </div>
         <div class="optional-container set-padding" v-else-if="tabFlag === 3">
-          <div v-if="form.dependencies">
+          <div v-if="!form.dependencies.toString()">
+              <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
+          </div>
+          <div v-else>
             <jm-form-item v-for="(item, index) in form.dependencies" :key="item.name"
               :prop="form.dependencies.length ? `dependencies.${index}.value` : null" class="node-name">
               <template #label>
@@ -77,12 +80,16 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <jm-input v-model="item.value" :node-id="nodeId"
-                :placeholder="item.description ? item.description : '请输入' + item.name" show-word-limit :maxlength="36" />
+              <jm-select
+                v-model="item.value"
+                :node-id="nodeId"
+                :placeholder="item.description ? item.description : '请输入' + item.name"
+                show-word-limit
+                :maxlength="36"
+              >
+                <jm-option v-for="nodeName in nodeNames" :key="nodeName" :label="nodeName" :value="nodeName" />
+              </jm-select>
             </jm-form-item>
-          </div>
-          <div v-else>
-            <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
           </div>
         </div>
       </div>
@@ -97,16 +104,18 @@ import { ParamTypeEnum } from '../../model/data/enumeration';
 import noParamImage from '../../svgs/no-param.svg';
 import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
 import ExpressionEditor from './form/expression-editor.vue';
-import { Node } from '@antv/x6';
+import {Graph, Node} from '@antv/x6';
 import JmEmpty from "@/components/data/empty/index.vue";
 import JmForm from "@/components/form/form";
 import jmFormItem from "@/components/form/form-item";
 import JmInput from "@/components/form/input";
 import { fetchPluginByName } from '@/api/view-no-auth';
 import { PluginDetail } from '@/api/dto/testflow';
+import {CustomX6NodeProxy} from "@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy";
+import JmSelect from "@/components/form/select";
 
 export default defineComponent({
-  components: { JmEmpty, ExpressionEditor, JmForm, jmFormItem, JmInput },
+  components: { JmEmpty, ExpressionEditor, JmForm, jmFormItem, JmInput, JmSelect },
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,
@@ -121,6 +130,22 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const formRef = ref();
     const form = ref<AsyncTask>(props.nodeData);
+    // 依赖组件列表
+    const getGraph = inject('getGraph') as () => Graph;
+    const graph = getGraph();
+
+    const instanceName = props.nodeData.getDisplayName();
+    const nodeNames: string[] = [];
+    graph.getNodes().forEach(node=>{
+        const proxy = new CustomX6NodeProxy(node);
+        // 不能为ref，否则，表单内容的变化影响数据绑定
+        const nodeData = proxy.getData(graph);
+       const  displayName = nodeData.getDisplayName();
+        if (displayName&&displayName!=instanceName) {
+            nodeNames.push(displayName)
+        }
+    })
+
     // 版本列表
     const plugins = new Map<string, PluginDetail>();
     const versionList = ref<INodeDefVersionListVo>({ versions: [] });
@@ -207,6 +232,7 @@ export default defineComponent({
       optionalFlag,
       outputTabSelected,
       noParamImage,
+      nodeNames,
     };
 
   },
