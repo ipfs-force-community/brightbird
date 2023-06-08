@@ -41,7 +41,7 @@ func DefaultConfig() Config {
 		StaticRoot: "dist",
 		NameSpace:  "default",
 		MongoUrl:   "mongodb://localhost:27017",
-		Listen:     "127.0.0.1:12356",
+		Listen:     "0.0.0.0:12356",
 		DockerRegistry: []DockerRegistry{
 			{
 				URL: "https://registry.hub.docker.com",

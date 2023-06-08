@@ -231,6 +231,19 @@ export interface GetPlugibMainfestReq extends Readonly<{
 }> {
 }
 
+export interface AddLabelReq extends Readonly<{
+  name: string;
+  label: string;
+}> {
+}
+
+export interface DeleteLabelReq extends Readonly<{
+  name: string;
+  label: string;
+}> {
+}
+
+
 
 export interface DependencyProperty {
     name: string;
@@ -241,16 +254,7 @@ export interface DependencyProperty {
     description: string;
 }
 
-export interface PluginInfo  {
-    name: string;
-    pluginType: PluginTypeEnum;
-    description: string,
-
-    icon: string;
-}
-
-export interface PluginDetail {
-    id: number;
+export interface Plugin extends Readonly<{
     name: string;
     version: string;
     pluginType: PluginTypeEnum;
@@ -261,10 +265,20 @@ export interface PluginDetail {
     dependencies: DependencyProperty[];
     properties: Property[];
     instance: DependencyProperty;
-    createTime: number;
-    modifiedTime: number;
+}> {
+}
 
-    icon: string;
+export interface PluginDetail extends Readonly<{
+  id: number;
+  name: string;
+  pluginType: PluginTypeEnum;
+  description: string,
+  labels:string[];
+  plugins: Plugin[];
+  createTime: number;
+  modifiedTime: number;
+  icon: string;
+}> {
 }
 
 /**

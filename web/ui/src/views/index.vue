@@ -11,9 +11,9 @@
           </router-link>
         </div>
         <div class="right-area">
-          <router-link :to="{ name: 'node-library' }">
+          <router-link :to="{ name: 'plugin-library' }">
             <div class="btn-item">
-              <button class="node-library"></button>
+              <button class="plugin-library"></button>
               <span class="text">本地节点</span>
             </div>
           </router-link>
@@ -118,7 +118,7 @@ export default defineComponent({
             background-image: url('@/assets/svgs/index/git-btn.svg');
           }
 
-          &.node-library {
+          &.plugin-library {
             background-image: url('@/assets/svgs/index/node-library-btn.svg');
           }
 

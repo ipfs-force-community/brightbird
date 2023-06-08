@@ -3,8 +3,9 @@
 </template>
 
 <script lang='ts'>
+
 import { defineComponent, inject, nextTick, onMounted, ref } from 'vue';
-import { ElFormItemContext, elFormItemKey } from 'element-plus/es/el-form';
+import ElementPlus from 'element-plus'
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../../model/data/custom-x6-node-proxy';
 import { ISelectableParam } from '../../../../workflow-expression-editor/model/data';
@@ -18,7 +19,7 @@ export default defineComponent({
   },
   emits: ['editor-created'],
   setup(props, { emit }) {
-    const elFormItem = inject(elFormItemKey, {} as ElFormItemContext);
+    const elFormItem = inject(formItemContextKey, {} as FormItemContext);
     // 获取此时进行编辑的节点信息
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();

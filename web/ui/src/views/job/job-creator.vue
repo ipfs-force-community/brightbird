@@ -93,13 +93,14 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { countJob, createJob, getJobTypes } from '@/api/job';
-import { fetchDeployPlugins, fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
+import {fetchDeployPlugins} from '@/api/plugin';
+import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail, PluginDetail } from '@/api/dto/testflow.js';
+import { ITestFlowDetail, PluginDetail } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({

@@ -109,8 +109,8 @@ import JmEmpty from "@/components/data/empty/index.vue";
 import JmForm from "@/components/form/form";
 import jmFormItem from "@/components/form/form-item";
 import JmInput from "@/components/form/input";
-import { fetchPluginByName } from '@/api/view-no-auth';
-import { PluginDetail } from '@/api/dto/testflow';
+import { getPluginByName } from '@/api/plugin';
+import { Plugin } from '@/api/dto/testflow';
 import {CustomX6NodeProxy} from "@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy";
 import JmSelect from "@/components/form/select";
 
@@ -147,7 +147,7 @@ export default defineComponent({
     })
 
     // 版本列表
-    const plugins = new Map<string, PluginDetail>();
+    const plugins = new Map<string, Plugin>();
     const versionList = ref<INodeDefVersionListVo>({ versions: [] });
     const nodeId = ref<string>('');
     const getNode = inject('getNode') as () => Node;
@@ -166,7 +166,6 @@ export default defineComponent({
         failureVisible.value = false;
         const selectPlugin = plugins.get(form.value.version);
         form.value.inputs = selectPlugin?.properties ?? [];
-        form.value.version = form.value.version
         form.value.dependencies = selectPlugin?.dependencies ?? [];
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -186,15 +185,15 @@ export default defineComponent({
         failureVisible.value = true;
       }
       try {
-        const getPlugins = await fetchPluginByName(props.nodeData.name);
-        getPlugins.forEach(a => {
+        const pluginDetail = await getPluginByName(props.nodeData.name);
+        pluginDetail.plugins.forEach(a => {
           plugins.set(a.version, a);
           versionList.value.versions.push(a.version)
         });
         if (!form.value.version) {
           form.value.version = versionList.value.versions[0];
-          form.value.inputs = getPlugins[0].properties ?? [];
-          form.value.dependencies = getPlugins[0].dependencies ?? [];
+          form.value.inputs = pluginDetail.plugins[0].properties ?? [];
+          form.value.dependencies = pluginDetail.plugins[0].dependencies ?? [];
         }
 
         if (!form.value.instance || !form.value.instance.value) {

@@ -109,7 +109,7 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 	return tagCreateJob.generateTaskFromJob(ctx, job)
 }
 
-func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, pushEvent *github.PushEvent) error {
+func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, releaseEvent *github.ReleaseEvent) error {
 	job, err := tagCreateJob.jobRepo.Get(ctx, tagCreateJob.jobId)
 	if err != nil {
 		return err
@@ -122,8 +122,8 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, pushEvent *github
 		return err
 	}
 
-	fullName := pushEvent.GetRepo().GetFullName()
-	ref := pushEvent.GetRef()
+	fullName := releaseEvent.GetRepo().GetFullName()
+	ref := releaseEvent.GetRelease().GetTagName()
 
 	for _, match := range job.TagCreateEventMatchs {
 		if strings.Contains(match.Repo, fullName) {
@@ -161,8 +161,8 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, pushEvent *github
 
 func (tagCreateJob *TagCreateJob) Run(ctx context.Context) error {
 	go func() {
-		for event := range tagCreateJob.pubsub.Sub(modules.CREATE_TAG_TOPIC) {
-			err := tagCreateJob.execTag(ctx, event.(*github.PushEvent))
+		for event := range tagCreateJob.pubsub.Sub(modules.RELEASE_TOPIC) {
+			err := tagCreateJob.execTag(ctx, event.(*github.ReleaseEvent))
 			if err != nil {
 				tagCreateJob.logger.Infof("tag exec fail %v", err)
 			}

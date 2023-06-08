@@ -85,11 +85,11 @@ func (o *ListPluginParamsOK) Code() int {
 }
 
 func (o *ListPluginParamsOK) Error() string {
-	return fmt.Sprintf("[GET /plugin][%d] listPluginParamsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /plugin/list][%d] listPluginParamsOK  %+v", 200, o.Payload)
 }
 
 func (o *ListPluginParamsOK) String() string {
-	return fmt.Sprintf("[GET /plugin][%d] listPluginParamsOK  %+v", 200, o.Payload)
+	return fmt.Sprintf("[GET /plugin/list][%d] listPluginParamsOK  %+v", 200, o.Payload)
 }
 
 func (o *ListPluginParamsOK) GetPayload() []*models.PluginDetail {
@@ -151,11 +151,11 @@ func (o *ListPluginParamsServiceUnavailable) Code() int {
 }
 
 func (o *ListPluginParamsServiceUnavailable) Error() string {
-	return fmt.Sprintf("[GET /plugin][%d] listPluginParamsServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[GET /plugin/list][%d] listPluginParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *ListPluginParamsServiceUnavailable) String() string {
-	return fmt.Sprintf("[GET /plugin][%d] listPluginParamsServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[GET /plugin/list][%d] listPluginParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *ListPluginParamsServiceUnavailable) GetPayload() *models.APIError {

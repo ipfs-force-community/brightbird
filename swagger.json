@@ -23,7 +23,7 @@
     },
     "version": "0.0.1"
   },
-  "host": "192.168.200.103:12356",
+  "host": "127.0.0.1:12356",
   "basePath": "/api/v1",
   "paths": {
     "/changegroup": {
@@ -689,20 +689,13 @@
           "plugin"
         ],
         "summary": "Get plugin by name and version.",
-        "operationId": "listPluginParams",
+        "operationId": "getPluginParams",
         "parameters": [
           {
             "type": "string",
             "x-go-name": "Name",
             "description": "name of plugin",
             "name": "name",
-            "in": "query"
-          },
-          {
-            "type": "string",
-            "x-go-name": "Version",
-            "description": "version of plugin",
-            "name": "version",
             "in": "query"
           },
           {
@@ -717,10 +710,7 @@
           "200": {
             "description": "pluginDetail",
             "schema": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/pluginDetail"
-              }
+              "$ref": "#/definitions/pluginDetail"
             }
           },
           "503": {
@@ -753,6 +743,12 @@
             "type": "string",
             "description": "id of plugin",
             "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "version of plugin",
+            "name": "version",
             "in": "query"
           }
         ],
@@ -809,7 +805,7 @@
         }
       }
     },
-    "/plugin/mainfest": {
+    "/plugin/label": {
       "get": {
         "consumes": [
           "application/json"
@@ -825,29 +821,78 @@
         "tags": [
           "plugin"
         ],
-        "summary": "Get plugin mainfest.",
-        "operationId": "listMainFestParams",
+        "summary": "Delete label in plugin.",
+        "operationId": "deleteLabelParams",
         "parameters": [
           {
             "type": "string",
             "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Label",
+            "description": "plugin type",
+            "name": "label",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/list": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "List plugin by name and version.",
+        "operationId": "listPluginParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
             "name": "name",
             "in": "query"
           },
           {
             "type": "string",
             "x-go-name": "PluginType",
+            "description": "plugin type",
             "name": "pluginType",
             "in": "query"
           }
         ],
         "responses": {
           "200": {
-            "description": "pluginInfo",
+            "description": "pluginDetail",
             "schema": {
               "type": "array",
               "items": {
-                "$ref": "#/definitions/pluginInfo"
+                "$ref": "#/definitions/pluginDetail"
               }
             }
           },
@@ -7268,16 +7313,10 @@
       "x-go-name": "ObjectId",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "pluginDetail": {
-      "description": "PluginDetail",
+    "plugin": {
+      "description": "Plugin",
       "type": "object",
       "properties": {
-        "createTime": {
-          "description": "创建时间",
-          "type": "string",
-          "format": "int64",
-          "x-go-name": "CreateTime"
-        },
         "dependencies": {
           "type": "array",
           "items": {
@@ -7289,22 +7328,12 @@
           "type": "string",
           "x-go-name": "Description"
         },
-        "id": {
-          "type": "string",
-          "x-go-name": "ID"
-        },
         "imageTarget": {
           "type": "string",
           "x-go-name": "ImageTarget"
         },
         "instance": {
           "$ref": "#/definitions/svcProperty"
-        },
-        "modifiedTime": {
-          "description": "最后修改时间",
-          "type": "string",
-          "format": "int64",
-          "x-go-name": "ModifiedTime"
         },
         "name": {
           "type": "string",
@@ -7334,16 +7363,39 @@
           "x-go-name": "Version"
         }
       },
-      "x-go-name": "PluginDetail",
+      "x-go-name": "Plugin",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "pluginInfo": {
-      "description": "PluginInfo",
+    "pluginDetail": {
+      "description": "PluginDetail",
       "type": "object",
       "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
         "description": {
           "type": "string",
           "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Labels"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
         },
         "name": {
           "type": "string",
@@ -7352,9 +7404,16 @@
         "pluginType": {
           "type": "string",
           "x-go-name": "PluginType"
+        },
+        "plugins": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/plugin"
+          },
+          "x-go-name": "Plugins"
         }
       },
-      "x-go-name": "PluginInfo",
+      "x-go-name": "PluginDetail",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "podListResp": {

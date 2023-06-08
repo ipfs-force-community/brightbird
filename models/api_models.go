@@ -173,3 +173,16 @@ type ChangeTestflowGroupRequest struct {
 	GroupID     primitive.ObjectID   `json:"groupId"`
 	TestflowIDs []primitive.ObjectID `json:"testflowIds"`
 }
+
+// DeletePluginReq
+// swagger:parameters deletePluginReq
+type DeletePluginReq struct {
+	// id of plugin
+	//
+	// required: true
+	Id string `form:"id" json:"id" binding:"required"`
+	// specific plugin version
+	//
+	// required: true
+	Version string `form:"version" json:"version" binding:"required"`
+}

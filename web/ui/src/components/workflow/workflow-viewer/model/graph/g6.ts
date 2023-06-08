@@ -1,5 +1,5 @@
 import { BaseGraph } from '../base-graph';
-import { G6Event, Graph, IBBox, IG6GraphEvent, IShape, Item, LayoutConfig, NodeConfig } from '@antv/g6';
+import { Graph, IBBox, IG6GraphEvent, IShape, Item, LayoutConfig, NodeConfig } from '@antv/g6';
 import { DslTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
 import { INodeDefVo } from '@/api/dto/testflow';
 import { parse } from '../../model/dsl/g6';
@@ -145,7 +145,7 @@ export class G6Graph extends BaseGraph {
   }
 
   configNodeAction(mouseoverNode: ((evt: INodeMouseoverEvent) => void)): void {
-    this.graph.on(G6Event.NODE_MOUSEENTER, (ev: IG6GraphEvent) => {
+    this.graph.on("node:mouseenter", (ev: IG6GraphEvent) => {
       const node = ev.item as Item;
       const model = node.getModel();
 
@@ -165,7 +165,7 @@ export class G6Graph extends BaseGraph {
     });
 
     // 设置鼠标滑过事件
-    this.graph.on(G6Event.NODE_MOUSEOVER, (ev: IG6GraphEvent) => {
+    this.graph.on("node:mouserover", (ev: IG6GraphEvent) => {
       const node = ev.item as Item;
       const model = node.getModel();
 

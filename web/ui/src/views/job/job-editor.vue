@@ -100,7 +100,7 @@ import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/vie
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { IJobUpdateVo, IPRMergedEventMatch } from '@/api/dto/job';
 import { getJob, updateJob } from '@/api/job'
-import { ITestFlowDetail } from '@/api/dto/testflow.js';
+import { ITestFlowDetail } from '@/api/dto/testflow';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { JobEnum } from '@/api/dto/enumeration';
