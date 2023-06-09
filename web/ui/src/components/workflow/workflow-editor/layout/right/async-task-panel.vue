@@ -186,14 +186,16 @@ export default defineComponent({
       }
       try {
         const pluginDetail = await getPluginByName(props.nodeData.name);
-        pluginDetail.plugins.forEach(a => {
+        pluginDetail.plugins?.forEach(a => {
           plugins.set(a.version, a);
           versionList.value.versions.push(a.version)
         });
         if (!form.value.version) {
           form.value.version = versionList.value.versions[0];
-          form.value.inputs = pluginDetail.plugins[0].properties ?? [];
-          form.value.dependencies = pluginDetail.plugins[0].dependencies ?? [];
+          if (pluginDetail.plugins) {
+              form.value.inputs = pluginDetail.plugins[0]?.properties ?? [];
+              form.value.dependencies = pluginDetail.plugins[0]?.dependencies ?? [];
+          }
         }
 
         if (!form.value.instance || !form.value.instance.value) {
