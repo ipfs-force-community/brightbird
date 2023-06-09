@@ -1,6 +1,15 @@
 package env
 
 type BaseConfig struct {
-	CodeVersion  string `json:"codeVersion"` //todo allow config as tag commit id brance
-	InstanceName string `json:"-"`           //plugin instance name
+	// CodeVersion deploy image commit
+	CodeVersion string `json:"-"` //
+	// InstanceName plugin instance name
+	InstanceName string `json:"-"`
+}
+
+func NewBaseConfig(codeVersion, instance string) BaseConfig {
+	return BaseConfig{
+		CodeVersion:  codeVersion,
+		InstanceName: instance,
+	}
 }

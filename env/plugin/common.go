@@ -243,11 +243,12 @@ func ConvertDeployConstructor(incomingParams *InitParams, pluginInfo types.Plugi
 					if err != nil {
 						return []reflect.Value{reflect.Zero(newOutArgs[0]), reflect.ValueOf(err)}
 					}
-					instanceNameField := val.Elem().FieldByName("InstanceName")
-					emp := reflect.Value{}
-					if emp != instanceNameField {
-						instanceNameField.Set(reflect.ValueOf(incomingParams.InstanceName))
+
+					baseConfig := val.Elem().FieldByName("BaseConfig")
+					if (baseConfig != reflect.Value{}) {
+						baseConfig.Set(reflect.ValueOf(env.NewBaseConfig(incomingParams.CodeVersion, incomingParams.InstanceName)))
 					}
+
 					dstVal.FieldByName(fieldName).Set(val.Elem())
 				} else {
 					dstVal.FieldByName(fieldName).Set(args[1].FieldByName(fieldName))
