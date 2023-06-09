@@ -17,11 +17,14 @@ swagger-srv: gen-swagger
 
 .PHONY: exec-plugin
 exec-plugin:
-	@for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
+	for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
 		rm -f $(DISTPATH)/plugins/exec/$$i;\
    		cmd="go build -o $(DISTPATH)/plugins/exec/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
 		echo $$cmd; \
 		eval $$cmd; \
+		if [ $$? -ne 0 ]; then \
+			exit 1; \
+		fi \
 	done
 
 .PHONY: deploy-plugin
@@ -31,6 +34,10 @@ deploy-plugin:
    		cmd="go build -o $(DISTPATH)/plugins/deploy/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/deploy/$$i/plugin"; \
 		echo $$cmd; \
 		eval $$cmd; \
+		eval $$cmd; \
+		if [ $$? -ne 0 ]; then \
+			exit 1; \
+		fi \
 	done
 
 .PHONY: runner
