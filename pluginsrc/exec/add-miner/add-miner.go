@@ -3,15 +3,19 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.uber.org/fx"
 	"math/rand"
+
+	"go.uber.org/fx"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("add-miner")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -39,7 +43,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](walletAddr.Raw())
 	if err != nil {
 		panic(err)
 	}
@@ -55,8 +59,8 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo)
 
+	log.Infof("miner info: %v", minerInfo)
 	return env.NewSimpleExec().Add("Miner", env.ParamsFromVal(minerAddr)), nil
 }
 
@@ -77,7 +81,7 @@ func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.
 
 	minerAddr, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletPods[0].GetName(), cmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerAddr), nil
@@ -97,7 +101,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 	}
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletPods[0].GetName(), getMinerCmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerInfo), nil

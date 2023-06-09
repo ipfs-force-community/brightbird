@@ -130,7 +130,7 @@ func main() {
 			}
 
 			if c.IsSet("dbName") {
-				cfg.DbName = c.String("dbName")
+				cfg.DBName = c.String("dbName")
 			}
 
 			if c.IsSet("tmpPath") {
@@ -138,7 +138,7 @@ func main() {
 			}
 
 			if c.IsSet("mongoUrl") {
-				cfg.MongoUrl = c.String("mongoUrl")
+				cfg.MongoURL = c.String("mongoUrl")
 			}
 
 			if c.IsSet("mysql") {
@@ -287,11 +287,11 @@ func getDatabase(ctx context.Context, cfg *Config) (*mongo.Database, error) {
 		},
 	}
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl).SetMonitor(cmdMonitor))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURL).SetMonitor(cmdMonitor))
 	if err != nil {
 		return nil, err
 	}
-	return client.Database(cfg.DbName), nil
+	return client.Database(cfg.DBName), nil
 }
 
 func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*models.TestFlow, error) {
@@ -342,7 +342,7 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*mo
 func CatchShutdown(pCtx context.Context, timeout int) (context.Context, types.Shutdown) {
 	innerCtx := pCtx
 	if timeout > 0 {
-		innerCtx, _ = context.WithTimeout(pCtx, time.Minute*time.Duration(timeout))
+		innerCtx, _ = context.WithTimeout(pCtx, time.Minute*time.Duration(timeout)) //nolint
 	}
 	shutdown := make(types.Shutdown)
 	innerCtx, cancel := context.WithCancel(innerCtx)

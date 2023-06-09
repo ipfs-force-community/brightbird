@@ -67,7 +67,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminToken.MustString())
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminToken.MustString())
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 			return "", err
 		}
 	}
-	chainRpc, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
+	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
 		return "", err
 	}
@@ -128,15 +128,15 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 		return "", err
 	}
 
-	chainHead, err := chainRpc.ChainHead(ctx)
+	chainHead, err := chainRPC.ChainHead(ctx)
 	read := err == nil && chainHead != nil
 
-	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](walletAddr.Raw())
 	if err != nil {
 		panic(err)
 	}
 
-	writeErr := chainRpc.MpoolPublishByAddr(ctx, addr)
+	writeErr := chainRPC.MpoolPublishByAddr(ctx, addr)
 	write := writeErr == nil
 
 	msg := types2.Message{
@@ -147,11 +147,11 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 		GasPremium: abi.NewTokenAmount(0),
 	}
 
-	signedMsg, signErr := chainRpc.WalletSignMessage(ctx, addr, &msg)
+	signedMsg, signErr := chainRPC.WalletSignMessage(ctx, addr, &msg)
 	sign := signErr == nil && signedMsg != nil
 
-	adminAddrs := chainRpc.WalletAddresses(ctx)
-	admin := adminAddrs != nil && len(adminAddrs) > 0
+	adminAddrs := chainRPC.WalletAddresses(ctx)
+	admin := len(adminAddrs) > 0
 
 	if read && !write && !sign && !admin {
 		return "read", nil

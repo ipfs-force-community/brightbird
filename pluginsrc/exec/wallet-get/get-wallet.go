@@ -38,6 +38,9 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	walletAddr, err := params.AddWallet.Param("Wallet")
+	if err != nil {
+		return nil, err
+	}
 
 	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), walletAddr.MustString())
 	if err != nil {
@@ -70,7 +73,7 @@ func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string,
 		}
 	}
 
-	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}

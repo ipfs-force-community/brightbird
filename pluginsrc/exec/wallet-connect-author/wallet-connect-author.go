@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("wallet-connect-author")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -41,7 +45,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 	for id, addr := range walletAddrs {
-		fmt.Println("wallet %v is: %v", id, addr)
+		log.Infof("wallet %v is: %v", id, addr)
 	}
 
 	err = ConnectAuthor(ctx, params)
@@ -70,7 +74,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
-		return nil, fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	for _, b := range walletAaddrs {
@@ -96,7 +100,7 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 
 	_, err = params.K8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
-		return fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return nil

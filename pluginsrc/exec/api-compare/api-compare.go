@@ -28,12 +28,12 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	Params struct {
-		venusUrl     string `json:"venus_url"`
-		venusToken   string `json:"venus_token"`
-		lotusUrl     string `json:"lotus_url"`
-		lotusToken   string `json:"lotus_token"`
-		stopHeight   string `json:"stop_height"`
-		enableEthRpc string `json:"enable_eth_rpc"`
+		VenusURL     string `json:"venus_url"`
+		VenusToken   string `json:"venus_token"`
+		LotusURL     string `json:"lotus_url"`
+		LotusToken   string `json:"lotus_token"`
+		StopHeight   string `json:"stop_height"`
+		EnableEthRPC string `json:"enable_eth_rpc"`
 	} `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer `json:"-"`
 }
@@ -42,27 +42,45 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	cliCtx := &cli.Context{
 		Context: ctx,
 	}
-	if params.Params.venusUrl != "" {
-		cliCtx.Set("venus-url", params.Params.venusUrl)
+	if params.Params.VenusURL != "" {
+		err := cliCtx.Set("venus-url", params.Params.VenusURL)
+		if err != nil {
+			return nil, err
+		}
 	}
-	if params.Params.venusToken != "" {
-		cliCtx.Set("venus-token", params.Params.venusToken)
-	}
-
-	if params.Params.lotusUrl != "" {
-		cliCtx.Set("lotus-url", params.Params.lotusUrl)
-	}
-
-	if params.Params.lotusToken != "" {
-		cliCtx.Set("lotus-token", params.Params.lotusToken)
+	if params.Params.VenusToken != "" {
+		err := cliCtx.Set("venus-token", params.Params.VenusToken)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if params.Params.stopHeight != "" {
-		cliCtx.Set("stop-height", params.Params.stopHeight)
+	if params.Params.LotusURL != "" {
+		err := cliCtx.Set("lotus-url", params.Params.LotusURL)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	if params.Params.enableEthRpc != "" {
-		cliCtx.Set("enable-eth-rpc", params.Params.enableEthRpc)
+	if params.Params.LotusToken != "" {
+		err := cliCtx.Set("lotus-token", params.Params.LotusToken)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if params.Params.StopHeight != "" {
+		err := cliCtx.Set("stop-height", params.Params.StopHeight)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if params.Params.EnableEthRPC != "" {
+		err := cliCtx.Set("enable-eth-rpc", params.Params.EnableEthRPC)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	err := cmd.Run(cliCtx)

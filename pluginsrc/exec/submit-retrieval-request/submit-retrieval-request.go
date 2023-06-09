@@ -18,8 +18,11 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs/go-cid"
+	logging "github.com/ipfs/go-log/v2"
 	"go.uber.org/fx"
 )
+
+var log = logging.Logger("submit-retrieval-request")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -48,7 +51,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +61,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo)
+	log.Infof("miner info: %v", minerInfo)
 
 	err = SubmitRetrievalRequest(ctx, params, addr)
 	if err != nil {
@@ -84,7 +87,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerInfo), nil
@@ -111,7 +114,7 @@ func SubmitRetrievalRequest(ctx context.Context, params TestCaseParams, minerAdd
 			return err
 		}
 	}
-	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHttp(), nil)
+	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}

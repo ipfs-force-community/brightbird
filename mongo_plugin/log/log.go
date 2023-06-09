@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// FluentBitLogLevelEnvironment
 // https://github.com/fluent/fluent-bit/blob/03f3339594bdb472315823db78ca209b7ba319fb/src/flb_config.c#L433-L441
 const FluentBitLogLevelEnvironment = "FLB_LOG_LEVEL"
 
@@ -95,9 +96,9 @@ func (l *logger) argsToMeta(args map[string]interface{}) []interface{} {
 	i := 0
 	for k, v := range args {
 		meta[i] = k
-		i += 1
+		i++
 		meta[i] = v
-		i += 1
+		i++
 	}
 
 	return meta

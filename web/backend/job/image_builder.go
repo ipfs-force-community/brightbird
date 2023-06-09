@@ -119,11 +119,12 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 		})
 	}
 
-	if err := g.Wait(); err == nil {
-		return versionMap, nil
-	} else {
+	err := g.Wait()
+	if err != nil {
 		return nil, err
 	}
+
+	return versionMap, nil
 }
 
 func (mgr *ImageBuilderMgr) AddBuildTask(task *BuildTask) {
@@ -163,14 +164,11 @@ type BuildWorker struct {
 
 func (worker *BuildWorker) Start(ctx context.Context, taskCh <-chan *BuildTask) {
 	worker.logger.Infof("worker start wait build task")
-	for {
-		select {
-		case buildTask := <-taskCh:
-			version, err := worker.do(ctx, buildTask)
-			buildTask.Result <- BuildResult{
-				Version: version,
-				Err:     err,
-			}
+	for buildTask := range taskCh {
+		version, err := worker.do(ctx, buildTask)
+		buildTask.Result <- BuildResult{
+			Version: version,
+			Err:     err,
 		}
 	}
 }
@@ -268,7 +266,7 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) 
 		return err
 	}
 
-	sshFormat, err := toSShFormat(repoUrl)
+	sshFormat, err := toSSHFormat(repoUrl)
 	if err != nil {
 		return err
 	}
@@ -506,7 +504,7 @@ func getRepoNameFromUrl(repoUrl string) (string, error) {
 	return phase[2], nil
 }
 
-func toSShFormat(repoUrl string) (string, error) {
+func toSSHFormat(repoUrl string) (string, error) {
 	schema, err := giturls.Parse(repoUrl)
 	if err != nil {
 		return "", err

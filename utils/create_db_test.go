@@ -17,7 +17,7 @@ func TestListDatabase(t *testing.T) {
 	format := "root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci&readTimeout=10s&writeTimeout=10s"
 	databasePrix := "aaaabbbbccccc-"
 
-	rand.Seed(time.Now().Unix())
+	rand.Seed(time.Now().Unix()) //nolint
 	for i := 0; i < 10; i++ {
 		err := CreateDatabase(fmt.Sprintf(format, databasePrix+strconv.Itoa(rand.Int())))
 		require.NoError(t, err)

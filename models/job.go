@@ -14,8 +14,11 @@ import (
 type JobType string
 
 const (
-	CronJobType       JobType = "cron_job"
-	PRMergedJobType   JobType = "pr_merged_hook"
+	// CronJobType cron work
+	CronJobType JobType = "cron_job"
+	//PRMergedJobType run when pr merged
+	PRMergedJobType JobType = "pr_merged_hook"
+	//TagCreatedJobTyperun when tag create
 	TagCreatedJobType JobType = "tag_created_hook"
 )
 

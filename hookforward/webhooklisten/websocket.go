@@ -31,11 +31,13 @@ func (h *WebHookHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		hookListenLog.Errorf("unable to accept header %v %v ", req.Header, err)
 		if c != nil {
-			c.Close(websocket.StatusInternalError, "unable to accept")
+			_ = c.Close(websocket.StatusInternalError, "unable to accept")
 		}
 		return
 	}
-	defer c.Close(websocket.StatusInternalError, "falling")
+	defer func() {
+		_ = c.Close(websocket.StatusInternalError, "falling")
+	}()
 
 	ctx := req.Context()
 
@@ -45,14 +47,18 @@ func (h *WebHookHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	defer tm.Stop()
 
 	ctx = c.CloseRead(ctx)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*30)
+	defer cancel()
+
 	for {
 		select {
-		case <-ctx.Done():
-			return
 		case val := <-h.hookEvents:
-			wsjson.Write(context.Background(), c, val)
+			err = wsjson.Write(ctx, c, val)
+			if err != nil {
+				hookListenLog.Errorf("send val to %s fail %v", req.RemoteAddr, err)
+				return
+			}
 		case <-tm.C:
-			ctx, _ := context.WithTimeout(ctx, time.Second*30)
 			err := c.Ping(ctx)
 			if err != nil {
 				hookListenLog.Errorf("ping fail close connection %v", err)
@@ -62,7 +68,7 @@ func (h *WebHookHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func WaitForWebHookEvent(ctx context.Context, remoteUrl string) (chan *WebHook, error) {
+func WaitForWebHookEvent(ctx context.Context, remoteURL string) (chan *WebHook, error) {
 	webhookCh := make(chan *WebHook, 20)
 
 	listen := func(c *websocket.Conn) error {
@@ -107,16 +113,16 @@ func WaitForWebHookEvent(ctx context.Context, remoteUrl string) (chan *WebHook, 
 				return
 			default:
 				time.Sleep(time.Second * 5)
-				c, _, err := websocket.Dial(ctx, remoteUrl, &websocket.DialOptions{
+				c, _, err := websocket.Dial(ctx, remoteURL, &websocket.DialOptions{
 					HTTPClient: httpClient,
 				})
 				if err != nil {
-					hookListenLog.Errorf("dial %s fail %v", remoteUrl, err)
+					hookListenLog.Errorf("dial %s fail %v", remoteURL, err)
 					continue
 				}
 
 				c.SetReadLimit(1 << 32)
-				defer c.Close(websocket.StatusInternalError, "falling")
+				defer c.Close(websocket.StatusInternalError, "falling") //nolint
 
 				err = listen(c)
 				if err != nil {

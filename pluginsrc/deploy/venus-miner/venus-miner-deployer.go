@@ -1,4 +1,4 @@
-package venus_miner
+package venusminer
 
 import (
 	"context"
@@ -52,7 +52,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusMinerDeployer)(nil)
 
-type VenusMinerDeployer struct {
+type VenusMinerDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 
@@ -125,7 +125,10 @@ func (deployer *VenusMinerDeployer) Deploy(ctx context.Context) (err error) {
 		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("venus-miner-" + renderParams.UniqueId)
 	}
 	if len(renderParams.MysqlDSN) > 0 {
-		deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
+		err = deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
+		if err != nil {
+			return err
+		}
 	}
 	//create configmap
 	configMapCfg, err := f.Open("venus-miner/venus-miner-configmap.yaml")

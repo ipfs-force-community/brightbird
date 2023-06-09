@@ -1,4 +1,4 @@
-package venus_utils
+package venusutils
 
 import (
 	"context"

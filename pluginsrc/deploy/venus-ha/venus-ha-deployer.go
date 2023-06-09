@@ -1,4 +1,4 @@
-package venus_ha
+package venus
 
 import (
 	"context"
@@ -55,11 +55,9 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusHADeployer)(nil)
 
-type VenusHADeployer struct {
-	outClusterEndpoint string
-	endpoints          string
-	env                *env.K8sEnvDeployer
-	cfg                *Config
+type VenusHADeployer struct { //nolint
+	env *env.K8sEnvDeployer
+	cfg *Config
 
 	svcEndpoint types.Endpoint
 

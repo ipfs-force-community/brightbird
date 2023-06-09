@@ -8,11 +8,11 @@ type Config struct {
 	RunnerConfig string
 
 	BootstrapPeers []string
-	MongoUrl       string
-	DbName         string
+	MongoURL       string
+	DBName         string
 	Listen         string
 
-	WebhookUrl string
+	WebhookURL string
 	Mysql      string
 
 	BuildSpace string
@@ -40,7 +40,7 @@ func DefaultConfig() Config {
 	return Config{
 		StaticRoot: "dist",
 		NameSpace:  "default",
-		MongoUrl:   "mongodb://localhost:27017",
+		MongoURL:   "mongodb://localhost:27017",
 		Listen:     "0.0.0.0:12356",
 		DockerRegistry: []DockerRegistry{
 			{

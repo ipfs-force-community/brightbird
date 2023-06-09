@@ -1,4 +1,4 @@
-package venus_wallet
+package venuswallet
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func TestDefaultConfig(t *testing.T) {
 func TestNewVenusWalletDeployer(t *testing.T) {
 	type args struct {
 		env             *env.K8sEnvDeployer
-		gatewayUrl      string
+		gatewayURL      string
 		userToken       string
 		supportAccounts []string
 	}
@@ -44,7 +44,7 @@ func TestNewVenusWalletDeployer(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewVenusWalletDeployer(tt.args.env, tt.args.gatewayUrl, tt.args.userToken, tt.args.supportAccounts...); !reflect.DeepEqual(got, tt.want) {
+			if got := NewVenusWalletDeployer(tt.args.env, tt.args.gatewayURL, tt.args.userToken, tt.args.supportAccounts...); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewVenusWalletDeployer() = %v, want %v", got, tt.want)
 			}
 		})

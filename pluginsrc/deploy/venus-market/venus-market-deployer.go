@@ -1,4 +1,4 @@
-package venus_market
+package venusmarket
 
 import (
 	"context"
@@ -54,7 +54,7 @@ var PluginInfo = types2.PluginInfo{
 
 var _ env.IDeployer = (*VenusMarketDeployer)(nil)
 
-type VenusMarketDeployer struct {
+type VenusMarketDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

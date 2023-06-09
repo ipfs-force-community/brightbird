@@ -73,7 +73,7 @@ func (j *JobRepo) Count(ctx context.Context, params *CountJobParams) (int64, err
 
 func (j *JobRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Job, error) {
 	tf := &models.Job{}
-	err := j.jobCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	err := j.jobCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +88,7 @@ func (j *JobRepo) IncExecCount(ctx context.Context, id primitive.ObjectID) (*mod
 			"execcount": 1,
 		},
 	}
-	err := j.jobCol.FindOneAndUpdate(ctx, bson.D{{"_id", id}}, inc).Decode(tf)
+	err := j.jobCol.FindOneAndUpdate(ctx, bson.D{{Key: "_id", Value: id}}, inc).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (j *JobRepo) Save(ctx context.Context, job *models.Job) (primitive.ObjectID
 		job.ID = primitive.NewObjectID()
 	}
 
-	count, err := j.jobCol.CountDocuments(ctx, bson.D{{"_id", job.ID}})
+	count, err := j.jobCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: job.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -114,7 +114,7 @@ func (j *JobRepo) Save(ctx context.Context, job *models.Job) (primitive.ObjectID
 	update := bson.M{
 		"$set": job,
 	}
-	_, err = j.jobCol.UpdateOne(ctx, bson.D{{"name", job.Name}}, update, options.Update().SetUpsert(true))
+	_, err = j.jobCol.UpdateOne(ctx, bson.D{{Key: "name", Value: job.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -122,7 +122,7 @@ func (j *JobRepo) Save(ctx context.Context, job *models.Job) (primitive.ObjectID
 }
 
 func (j *JobRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := j.jobCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	_, err := j.jobCol.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return err
 	}

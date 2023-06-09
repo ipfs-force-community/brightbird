@@ -34,7 +34,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	}
 
 	deployer, err := venus.DeployerFromConfig(depParams.K8sEnv, venus.Config{
-		AuthUrl:        svcEndpoint.ToHttp(),
+		AuthUrl:        svcEndpoint.ToHTTP(),
 		AdminToken:     adminToken.MustString(),
 		BootstrapPeers: depParams.BootstrapPeers,
 	}, depParams.Params)

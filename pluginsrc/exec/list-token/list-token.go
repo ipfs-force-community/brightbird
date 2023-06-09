@@ -27,8 +27,8 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	Params struct {
-		skip  string `json:"skip"`
-		limit string `json:"limit"`
+		Skip  string `json:"skip"`
+		Limit string `json:"limit"`
 	} `optional:"true"`
 
 	K8sEnv    *env.K8sEnvDeployer `json:"-"`
@@ -62,13 +62,20 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), adminTokenV.MustString())
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminTokenV.MustString())
 	if err != nil {
 		return nil, err
 	}
 
-	skip, err := strconv.ParseInt(params.Params.skip, 10, 64)
-	limit, err := strconv.ParseInt(params.Params.limit, 10, 64)
+	skip, err := strconv.ParseInt(params.Params.Skip, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+
+	limit, err := strconv.ParseInt(params.Params.Limit, 10, 64)
+	if err != nil {
+		return nil, err
+	}
 	tokenList, err := authAPIClient.Tokens(ctx, skip, limit)
 	if err != nil {
 		return nil, err

@@ -33,9 +33,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//		 503: apiError
 	group.GET("list", func(c *gin.Context) {
 		req := &models.ListInGroupRequest{}
-		err := c.ShouldBindWith(req, paginationQueryBind)
+		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -45,7 +45,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		if req.GroupID != nil {
 			params.GroupID, err = primitive.ObjectIDFromHex(*req.GroupID)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 		}
@@ -56,7 +56,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			Params:   params,
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -85,7 +85,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		req := &models.CountTestFlowRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -96,7 +96,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		if req.GroupID != nil {
 			groupID, err := primitive.ObjectIDFromHex(*req.GroupID)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 			params.GroupID = groupID
@@ -104,7 +104,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 
 		output, err := service.Count(ctx, params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -133,7 +133,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		req := &models.GetTestFlowRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -143,14 +143,14 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		if req.ID != nil {
 			params.ID, err = primitive.ObjectIDFromHex(*req.ID)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 		}
 
 		output, err := service.Get(ctx, params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -187,13 +187,13 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		testFlow := models.TestFlow{}
 		err := c.ShouldBindJSON(&testFlow)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		id, err := service.Save(ctx, testFlow)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -228,12 +228,12 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		err = service.Delete(c, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -270,13 +270,13 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		changeTestflowGroup := models.ChangeTestflowGroupRequest{}
 		err := c.ShouldBindJSON(&changeTestflowGroup)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
-		err = service.ChangeTestflowGroup(ctx, repo.ChangeTestflowGroup(changeTestflowGroup))
+		err = service.ChangeTestflowGroup(ctx, changeTestflowGroup)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 

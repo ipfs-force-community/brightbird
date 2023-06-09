@@ -94,7 +94,7 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 		}
 	}
 
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), adminTokenV.MustString(), nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), adminTokenV.MustString(), nil)
 	if err != nil {
 		return err
 	}
@@ -130,7 +130,7 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 			return cid.Undef, err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return cid.Undef, err
 	}
@@ -205,7 +205,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Addr
 			return vtypes.MinerInfo{}, err
 		}
 	}
-	client, closer, err := v1api.NewFullNodeRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := v1api.NewFullNodeRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return vtypes.MinerInfo{}, err
 	}

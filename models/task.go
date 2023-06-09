@@ -31,10 +31,15 @@ func (st State) String() string {
 
 const (
 	_ State = iota //skip default 0
+	// Init init state
 	Init
+	// Running task was running
 	Running
+	// TempError task got temp error and try late
 	TempError
+	// Error task  was error and never retry
 	Error
+	// Successful task success
 	Successful
 )
 

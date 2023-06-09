@@ -46,7 +46,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](walletAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](walletAddr.Raw())
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +83,7 @@ func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string,
 		}
 	}
 
-	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}

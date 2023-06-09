@@ -3,13 +3,17 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("wallet-fbls-import")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -32,14 +36,13 @@ type TestCaseParams struct {
 
 // Exec
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
 	walletAddrs, err := ImportFbls(ctx, params)
 	if err != nil {
 		fmt.Printf("create miner failed: %v\n", err)
 		return nil, err
 	}
 	for id, addr := range walletAddrs {
-		fmt.Println("wallet %v is: %v", id, addr)
+		log.Infof("wallet %v is: %v", id, addr)
 	}
 
 	return env.NewSimpleExec(), nil
@@ -63,7 +66,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
-		return nil, fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	for _, b := range walletAaddrs {

@@ -62,13 +62,13 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		}
 	}
 
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
+	walletRPC, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer closer()
 
-	version, err := walletRpc.Version(ctx)
+	version, err := walletRPC.Version(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +84,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	addr, err := walletRpc.WalletImport(ctx, &ki)
+	addr, err := walletRPC.WalletImport(ctx, &ki)
 	if err != nil {
 		return nil, err
 	}
