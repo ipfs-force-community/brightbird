@@ -5,15 +5,15 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	market_client "github.com/hunjixin/brightbird/pluginsrc/deploy/market-client"
+	marketclient "github.com/hunjixin/brightbird/pluginsrc/deploy/market-client"
 )
 
 func main() {
-	plugin.SetupPluginFromStdin(market_client.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(marketclient.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params market_client.Config `optional:"true"`
+	Params marketclient.Config `optional:"true"`
 
 	VenusDep        env.IDeployer `svcname:"Venus"`
 	WalletDeploy    env.IDeployer `svcname:"VenusWallet"`
@@ -48,7 +48,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := market_client.DeployerFromConfig(depParams.K8sEnv, market_client.Config{
+	deployer, err := marketclient.DeployerFromConfig(depParams.K8sEnv, marketclient.Config{
 		NodeUrl:     venusEndpoin.ToMultiAddr(),
 		NodeToken:   adminToken.MustString(),
 		WalletUrl:   walletPoint.ToMultiAddr(),

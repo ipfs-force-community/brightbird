@@ -48,7 +48,7 @@ ui:
 	rm -f $(DISTPATH)/ui
 	cd web/ui && PUBLICDIR=../../$(DISTPATH)/front yarn run build
 
-build-all: exec-plugin deploy-plugin runner ui backend
+build-all: exec-plugin deploy-plugin runner backend ui 
 
 TAG=latest
 docker-runner:

@@ -15,7 +15,7 @@ func TestParams_Params(t *testing.T) {
 		actualParams := Params{}
 		err = json.Unmarshal(jsonBytes, &actualParams)
 		assert.Nil(t, err)
-		actualStr, err := UnmarshalJson[string](actualParams.Raw())
+		actualStr, err := UnmarshalJSON[string](actualParams.Raw())
 		assert.Nil(t, err)
 		assert.Equal(t, "123", actualStr)
 	}
@@ -29,7 +29,7 @@ func TestParams_Params(t *testing.T) {
 		actualParams := Params{}
 		err = json.Unmarshal(jsonBytes, &actualParams)
 		assert.Nil(t, err)
-		actual, err := UnmarshalJson[A](actualParams.Raw())
+		actual, err := UnmarshalJSON[A](actualParams.Raw())
 		assert.Nil(t, err)
 		assert.Equal(t, "aaaa", actual.M)
 	}
@@ -40,7 +40,7 @@ func TestParams_Params(t *testing.T) {
 		actualParams := Params{}
 		err = json.Unmarshal(jsonBytes, &actualParams)
 		assert.Nil(t, err)
-		actualStr, err := UnmarshalJson[int](actualParams.Raw())
+		actualStr, err := UnmarshalJSON[int](actualParams.Raw())
 		assert.Nil(t, err)
 		assert.Equal(t, 10, actualStr)
 	}

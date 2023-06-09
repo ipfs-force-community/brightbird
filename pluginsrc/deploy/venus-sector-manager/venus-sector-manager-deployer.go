@@ -1,4 +1,4 @@
-package venus_sector_manager
+package venussectormanager
 
 import (
 	"context"
@@ -25,8 +25,8 @@ type Config struct {
 	AuthUrl     string `json:"-"`
 	AuthToken   string `json:"-"`
 
-	DbPlugin     string `json:"dbPlugin"`
-	DbDns        string `json:"dbDns"`
+	DBPlugin     string `json:"dbPlugin"`
+	DBDNS        string `json:"dbDns"`
 	SendAddress  string `json:"sendAddress"`
 	MinerAddress int64  `json:"minerAddress"`
 }
@@ -56,7 +56,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusSectorManagerDeployer)(nil)
 
-type VenusSectorManagerDeployer struct {
+type VenusSectorManagerDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 
@@ -140,6 +140,10 @@ func (deployer *VenusSectorManagerDeployer) Deploy(ctx context.Context) (err err
 
 	// create service
 	svcCfg, err := f.Open("venus-sector-manager/venus-sector-manager-headless.yaml")
+	if err != nil {
+		return err
+	}
+
 	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
 		return err

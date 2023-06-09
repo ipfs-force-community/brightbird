@@ -67,13 +67,13 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) e
 			return err
 		}
 	}
-	chainRpc, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
+	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
 		return err
 	}
 	defer closer()
 
-	_, err = chainRpc.ChainHead(ctx)
+	_, err = chainRPC.ChainHead(ctx)
 	if err != nil {
 		return err
 	}

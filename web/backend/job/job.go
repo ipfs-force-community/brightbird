@@ -24,7 +24,7 @@ type IJobManager interface {
 }
 
 type IJob interface {
-	Id() string
+	ID() string
 	Run(ctx context.Context) error
 	RunImmediately(ctx context.Context) (primitive.ObjectID, error)
 	Stop(ctx context.Context) error
@@ -32,7 +32,7 @@ type IJob interface {
 
 var _ IJobManager = (*JobManager)(nil)
 
-type JobManager struct {
+type JobManager struct { //nolint
 	lk sync.Mutex
 
 	cron         *cron.Cron
@@ -126,9 +126,8 @@ func (j *JobManager) ExecJobImmediately(ctx context.Context, jobId primitive.Obj
 	defer j.lk.Unlock()
 	if job, ok := j.runningJob[jobId]; ok {
 		return job.RunImmediately(ctx)
-	} else {
-		return primitive.NilObjectID, fmt.Errorf("job %s not running", jobId)
 	}
+	return primitive.NilObjectID, fmt.Errorf("job %s not running", jobId)
 }
 
 func (j *JobManager) StopJob(ctx context.Context, jobId primitive.ObjectID) error {

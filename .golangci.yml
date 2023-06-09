@@ -1,0 +1,34 @@
+linters:
+  disable-all: true
+  enable:
+    - gofmt
+    - govet
+    - misspell
+    - goconst
+    - revive
+    - errcheck
+    - unconvert
+    - staticcheck
+    - unused
+    - stylecheck
+    - gosimple
+    - goimports
+issues:
+  exclude-rules:
+  exclude-use-default: false
+  exclude:
+    - "\\w+Id should be \\w+ID"
+    - "main redeclared in this block"
+    - "should have comment or be unexported"
+    - "should have a package comment"
+    - "should be of the form"
+    - "\\w+Url should be \\w+URL"
+    - "var-naming: (struct field)|(func parameter)|(method parameter) \\w+ should be \\w+"
+
+linters-settings:
+  goconst:
+    min-occurrences: 6
+run:
+  skip-dirs-use-default: false
+  skip-dirs: "(testing)"
+  skip-files: "(.*_gen\\.go$)"

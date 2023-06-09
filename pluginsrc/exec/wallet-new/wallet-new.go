@@ -58,15 +58,15 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		}
 	}
 
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
+	walletRPC, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer closer()
 
-	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
+	walletAddr, err := walletRPC.WalletNew(ctx, vTypes.KTBLS)
 	if err != nil {
-		return nil, fmt.Errorf("create wallet failed: %w\n", err)
+		return nil, fmt.Errorf("create wallet failed: %w", err)
 	}
 	fmt.Printf("wallet: %v\n", walletAddr)
 

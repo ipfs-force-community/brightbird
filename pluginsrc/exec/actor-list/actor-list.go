@@ -64,7 +64,7 @@ func actorList(ctx context.Context, params TestCaseParams) (string, error) {
 			return "", err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return "", err
 	}

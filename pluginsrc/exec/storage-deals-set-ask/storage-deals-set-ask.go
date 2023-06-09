@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.uber.org/fx"
 	"os"
 	"strings"
 	"text/tabwriter"
 	"time"
+
+	"go.uber.org/fx"
 
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
@@ -22,7 +23,10 @@ import (
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("storage-deals")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -50,7 +54,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +64,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo, addr)
+	log.Infof("miner info: %v", minerInfo, addr)
 
 	err = StorageAskSet(ctx, params, addr)
 	if err != nil {
@@ -98,7 +102,7 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 			return err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}
@@ -197,7 +201,7 @@ func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Add
 			return err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}
@@ -238,7 +242,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerInfo), nil

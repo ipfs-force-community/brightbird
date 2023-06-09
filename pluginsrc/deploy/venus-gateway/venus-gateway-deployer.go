@@ -1,4 +1,4 @@
-package venus_gateway
+package venusgateway
 
 import (
 	"context"
@@ -50,7 +50,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusGatewayDeployer)(nil)
 
-type VenusGatewayDeployer struct {
+type VenusGatewayDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

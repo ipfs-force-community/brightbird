@@ -3,10 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.uber.org/fx"
 	"os"
 	"strings"
 	"text/tabwriter"
+
+	"go.uber.org/fx"
 
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
@@ -19,7 +20,10 @@ import (
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("retrieval-deals-set-ask")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -47,7 +51,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +61,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo)
+	log.Infof("miner info: %v", minerInfo)
 
 	err = StorageAskSet(ctx, params, addr)
 	if err != nil {
@@ -95,7 +99,7 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 			return err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}
@@ -109,29 +113,29 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 		ask = &retrievalmarket.Ask{}
 	}
 
-	price_str := "0.0000001"
-	price, err := vTypes.ParseFIL(price_str)
+	priceStr := "0.0000001"
+	price, err := vTypes.ParseFIL(priceStr)
 	if err != nil {
 		return err
 	}
 	ask.PricePerByte = vTypes.BigDiv(vTypes.BigInt(price), vTypes.NewInt(1<<30))
 
-	unseal_price := "0.0000001"
-	unsealPrice, err := vTypes.ParseFIL(unseal_price)
+	unsealPriceStr := "0.0000001"
+	unsealPrice, err := vTypes.ParseFIL(unsealPriceStr)
 	if err != nil {
 		return err
 	}
 	ask.UnsealPrice = abi.TokenAmount(unsealPrice)
 
-	payment_interval := "100MB"
-	paymentInterval, err := units.RAMInBytes(payment_interval)
+	paymentIntervalStr := "100MB"
+	paymentInterval, err := units.RAMInBytes(paymentIntervalStr)
 	if err != nil {
 		return err
 	}
 	ask.PaymentInterval = uint64(paymentInterval)
 
-	payment_interval_increase := "100"
-	paymentIntervalIncrease, err := units.RAMInBytes(payment_interval_increase)
+	paymentIntervalIncreaseStr := "100"
+	paymentIntervalIncrease, err := units.RAMInBytes(paymentIntervalIncreaseStr)
 	if err != nil {
 		return err
 	}
@@ -166,7 +170,7 @@ func StorageGetAsk(ctx context.Context, params TestCaseParams, mAddr address.Add
 			return err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}
@@ -207,7 +211,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerInfo), nil

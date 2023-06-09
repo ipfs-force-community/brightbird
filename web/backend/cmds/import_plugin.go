@@ -8,7 +8,7 @@ import (
 
 var ImportPluginsCmds = &cli.Command{
 	Name:  "import-plugin",
-	Usage: "import plugin mainfest to database",
+	Usage: "import plugin to database",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:     "path",

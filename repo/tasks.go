@@ -97,7 +97,7 @@ func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParam
 
 	return &models.PageResp[*models.Task]{
 		Total:   count,
-		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
+		Pages:   (count + params.PageSize - 1) / params.PageSize,
 		PageNum: params.PageNum,
 		List:    tasks,
 	}, nil
@@ -105,7 +105,7 @@ func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParam
 
 func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Task, error) {
 	tf := &models.Task{}
-	err := j.taskCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	err := j.taskCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
@@ -151,7 +151,7 @@ func (j *TaskRepo) Save(ctx context.Context, task *models.Task) (primitive.Objec
 	if task.Logs == nil {
 		task.Logs = []string{} // init logs as aray
 	}
-	count, err := j.taskCol.CountDocuments(ctx, bson.D{{"_id", task.ID}})
+	count, err := j.taskCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: task.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -165,7 +165,7 @@ func (j *TaskRepo) Save(ctx context.Context, task *models.Task) (primitive.Objec
 	update := bson.M{
 		"$set": task,
 	}
-	_, err = j.taskCol.UpdateOne(ctx, bson.D{{"_id", task.ID}}, update, options.Update().SetUpsert(true))
+	_, err = j.taskCol.UpdateOne(ctx, bson.D{{Key: "_id", Value: task.ID}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -174,7 +174,7 @@ func (j *TaskRepo) Save(ctx context.Context, task *models.Task) (primitive.Objec
 }
 
 func (j *TaskRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
-	_, err := j.taskCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	_, err := j.taskCol.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return err
 	}
@@ -182,7 +182,7 @@ func (j *TaskRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
 }
 
 func (j *TaskRepo) DeleteByJobId(ctx context.Context, jobId primitive.ObjectID) error {
-	_, err := j.taskCol.DeleteMany(ctx, bson.D{{"jobid", jobId}})
+	_, err := j.taskCol.DeleteMany(ctx, bson.D{{Key: "jobid", Value: jobId}})
 	if err != nil {
 		return err
 	}

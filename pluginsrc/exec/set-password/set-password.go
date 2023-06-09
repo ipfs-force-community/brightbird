@@ -59,22 +59,21 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		}
 	}
 
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
+	walletRPC, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
 		return nil, err
 	}
 	defer closer()
 
-	version, err := walletRpc.Version(ctx)
+	version, err := walletRPC.Version(ctx)
 	if err != nil {
 		return nil, err
 	}
 	fmt.Println("wallet:", version)
 
-	err = walletRpc.SetPassword(ctx, params.Params.Password)
+	err = walletRPC.SetPassword(ctx, params.Params.Password)
 	if err != nil {
 		return nil, err
 	}
-
 	return env.NewSimpleExec(), nil
 }

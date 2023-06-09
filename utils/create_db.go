@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" //nolint
 )
 
 func ListDatabase(dsn string) ([]string, error) {
@@ -24,7 +24,7 @@ func ListDatabase(dsn string) ([]string, error) {
 		return nil, err
 	}
 
-	defer rows.Close()
+	defer rows.Close() //nolint
 	var databases []string
 	for rows.Next() {
 		name := ""

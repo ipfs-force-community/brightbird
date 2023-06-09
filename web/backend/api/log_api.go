@@ -40,7 +40,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 		testID := c.Param("testid")
 		pods, err := logRepo.ListPodsInTest(c, testID)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, pods)
@@ -75,7 +75,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 		podName := c.Param("podName")
 		pods, err := logRepo.GetPodLog(c, podName)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, pods)

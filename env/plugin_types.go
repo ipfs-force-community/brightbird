@@ -83,7 +83,7 @@ func ParamsFromVal(val interface{}) Params {
 	}
 }
 
-func UnmarshalJson[T any](data []byte) (T, error) {
+func UnmarshalJSON[T any](data []byte) (T, error) {
 	val := new(T)
 	err := json.Unmarshal(data, val)
 	if err != nil {

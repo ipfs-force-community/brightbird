@@ -51,7 +51,7 @@ func NewTagCreateJob(job models.Job, pluginRepo repo.IPluginService, pubsub modu
 	}
 }
 
-func (tagCreateJob *TagCreateJob) Id() string {
+func (tagCreateJob *TagCreateJob) ID() string {
 	return tagCreateJob.jobId.Hex()
 }
 
@@ -161,7 +161,7 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, releaseEvent *git
 
 func (tagCreateJob *TagCreateJob) Run(ctx context.Context) error {
 	go func() {
-		for event := range tagCreateJob.pubsub.Sub(modules.RELEASE_TOPIC) {
+		for event := range tagCreateJob.pubsub.Sub(modules.ReleaseTopic) {
 			err := tagCreateJob.execTag(ctx, event.(*github.ReleaseEvent))
 			if err != nil {
 				tagCreateJob.logger.Infof("tag exec fail %v", err)

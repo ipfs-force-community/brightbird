@@ -1,4 +1,4 @@
-package venus_worker
+package venusworker
 
 import (
 	"context"
@@ -14,11 +14,11 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type VenusWorkerConfig string //just mock here
+type VenusWorkerConfig string //nolint
 
 type Config struct {
 	env.BaseConfig
-	VenusSectorManagerUrl string `json:"-"`
+	VenusSectorManagerURL string `json:"-"`
 	AuthToken             string `json:"-"`
 
 	MinerAddress string `json:"minerAddress"`
@@ -49,7 +49,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusWorkerDeployer)(nil)
 
-type VenusWorkerDeployer struct {
+type VenusWorkerDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

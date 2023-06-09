@@ -68,7 +68,7 @@ func ParserProperties(configT reflect.Type) ([]types.Property, error) {
 			continue
 		}
 
-		fieldName := getFieldJsonName(field)
+		fieldName := getFieldJSONName(field)
 		if fieldName == "-" || fieldName == "" {
 			continue
 		}
@@ -84,7 +84,7 @@ func ParserProperties(configT reflect.Type) ([]types.Property, error) {
 	return properties, nil
 }
 
-func getFieldJsonName(field reflect.StructField) string {
+func getFieldJSONName(field reflect.StructField) string {
 	fieldName := field.Name
 	jsonTag := field.Tag.Get("json")
 	jsonFlags := strings.Split(jsonTag, ",")
@@ -230,7 +230,7 @@ func ConvertValue[T any](value string) (T, error) {
 		if err != nil {
 			return *dstValue, err
 		}
-		valR.Set(reflect.ValueOf(float64(val)))
+		valR.Set(reflect.ValueOf(val))
 	case reflect.String:
 		valR.Set(reflect.ValueOf(value))
 	default:

@@ -26,7 +26,6 @@ import (
 	"gopkg.in/yaml.v2"
 	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"
@@ -185,7 +184,7 @@ func (env *K8sEnvDeployer) setPrivateRegistry(statefulSet *corev1.PodTemplateSpe
 	}
 }
 
-func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []v1.Pod) error {
+func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []corev1.Pod) error {
 	for _, pod := range pods {
 		err := env.k8sClient.CoreV1().Pods(env.namespace).Delete(ctx, pod.GetName(), metav1.DeleteOptions{})
 		if err != nil {
@@ -555,15 +554,14 @@ func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
 	if svc.Spec.Type == corev1.ServiceTypeClusterIP {
 		if svc.Spec.ClusterIP == "None" {
 			return fmt.Sprintf("%s:%d", svc.GetName(), svc.Spec.Ports[0].Port), nil
-		} else {
-			//todo check service is work
-			if len(svc.Spec.ClusterIP) > 0 {
-				//take first
-				return fmt.Sprintf("%s:%d", svc.Spec.ClusterIP, svc.Spec.Ports[0].Port), nil
-			} else {
-				return "", fmt.Errorf("unable to get cluser ip for %s", svc.GetName())
-			}
 		}
+
+		//todo check service is work
+		if len(svc.Spec.ClusterIP) > 0 {
+			//take first
+			return fmt.Sprintf("%s:%d", svc.Spec.ClusterIP, svc.Spec.Ports[0].Port), nil
+		}
+		return "", fmt.Errorf("unable to get cluser ip for %s", svc.GetName())
 	} else if svc.Spec.Type == corev1.ServiceTypeNodePort {
 		return fmt.Sprintf("%s:%d", env.hostIP, svc.Spec.Ports[0].Port), nil
 	}
@@ -723,16 +721,13 @@ func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName st
 }
 
 func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
+	tCtx, cancel := context.WithTimeout(ctx, time.Second*5)
+	defer cancel()
+
 	for {
-		select {
-		case <-ctx.Done():
-			return errors.New("context cancel")
-		default:
-			tCtx, _ := context.WithTimeout(ctx, time.Second*5)
-			_, err := env.dialCtx(tCtx, "tcp", string(endpoint))
-			if err == nil {
-				return err
-			}
+		_, err := env.dialCtx(tCtx, "tcp", string(endpoint))
+		if err == nil {
+			return err
 		}
 	}
 }

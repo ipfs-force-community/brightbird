@@ -5,15 +5,15 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	venus_miner "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-miner"
+	venusminer "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-miner"
 )
 
 func main() {
-	plugin.SetupPluginFromStdin(venus_miner.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(venusminer.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params venus_miner.Config `optional:"true"`
+	Params venusminer.Config `optional:"true"`
 
 	VenusAuth env.IDeployer `svcname:"VenusAuth"`
 	Venus     env.IDeployer `svcname:"Venus"`
@@ -43,10 +43,10 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := venus_miner.DeployerFromConfig(depParams.K8sEnv, venus_miner.Config{
+	deployer, err := venusminer.DeployerFromConfig(depParams.K8sEnv, venusminer.Config{
 		NodeUrl:    venusEndpoint.ToMultiAddr(),
 		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-		AuthUrl:    venusAuthEndpoint.ToHttp(),
+		AuthUrl:    venusAuthEndpoint.ToHTTP(),
 		AuthToken:  adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {

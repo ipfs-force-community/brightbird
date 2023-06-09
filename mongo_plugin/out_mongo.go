@@ -16,12 +16,13 @@ import (
 	"github.com/hunjixin/brightbird/mongo_plugin/log"
 	"github.com/vmihailenco/msgpack/v5"
 
-	mongoDriver "go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 const PluginID = "mongo"
 
+// FLBPluginRegister
+//
 //export FLBPluginRegister
 func FLBPluginRegister(ctxPointer unsafe.Pointer) int {
 	logger, err := log.New(log.OutputPlugin, PluginID)
@@ -47,7 +48,7 @@ func FLBPluginRegister(ctxPointer unsafe.Pointer) int {
 	return result
 }
 
-// (fluentbit will call this)
+// FLBPluginInit (fluentbit will call this)
 // ctx (context) pointer to fluentbit context (state/ c code)
 //
 //export FLBPluginInit
@@ -75,7 +76,7 @@ func FLBPluginInit(ctxPointer unsafe.Pointer) int {
 		"user": cfg.Database,
 	})
 
-	client, err := mongoDriver.Connect(context.Background(), options.Client().ApplyURI(cfg.URL))
+	client, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.URL))
 	if err != nil {
 		value.Logger.Error("error connect mongo", map[string]interface{}{
 			"error": err,
@@ -84,19 +85,30 @@ func FLBPluginInit(ctxPointer unsafe.Pointer) int {
 		return output.FLB_ERROR
 	}
 	db := client.Database(cfg.Database)
-	db.Collection("logs").Indexes().CreateMany(context.Background(), []mongoDriver.IndexModel{{Keys: "kubernetes.labels.testid"}, {Keys: "kubernetes.pod_name"}, {Keys: "time"}})
-	value.Db = db
+	_, err = db.Collection("logs").Indexes().CreateMany(context.Background(), []mongo.IndexModel{{Keys: "kubernetes.labels.testid"}, {Keys: "kubernetes.pod_name"}, {Keys: "time"}})
+	if err != nil {
+		value.Logger.Error("create index fail", map[string]interface{}{
+			"error": err,
+		})
+
+		return output.FLB_ERROR
+	}
+	value.DB = db
 	Set(ctxPointer, value)
 
 	msgpack.RegisterExt(0, &EventTime{})
 	return output.FLB_OK
 }
 
+// FLBPluginFlush
+//
 //export FLBPluginFlush
 func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 	panic(errors.New("not supported call"))
 }
 
+// FLBPluginFlushCtx
+//
 //export FLBPluginFlushCtx
 func FLBPluginFlushCtx(ctxPointer, data unsafe.Pointer, length C.int, tag *C.char) (result int) {
 	value, err := Get(ctxPointer)
@@ -109,7 +121,7 @@ func FLBPluginFlushCtx(ctxPointer, data unsafe.Pointer, length C.int, tag *C.cha
 	logger := value.Logger
 	ctx := log.WithLogger(context.TODO(), logger)
 	msgPacks := GetBytes(data, int(length)) // Create Fluent Bit decoder
-	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), value.Db); err != nil {
+	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), value.DB); err != nil {
 		logger.Error("Failed to process logs", map[string]interface{}{
 			"error": err,
 		})
@@ -171,6 +183,8 @@ func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database
 	return nil
 }
 
+// FLBPluginExit
+//
 //export FLBPluginExit
 func FLBPluginExit() int {
 	return output.FLB_OK

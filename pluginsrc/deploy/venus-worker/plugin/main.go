@@ -5,15 +5,15 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	venus_worker "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-worker"
+	venusworker "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-worker"
 )
 
 func main() {
-	plugin.SetupPluginFromStdin(venus_worker.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(venusworker.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params venus_worker.Config `optional:"true"`
+	Params venusworker.Config `optional:"true"`
 
 	VenusAuth     env.IDeployer `svcname:"VenusAuth"`
 	SectorManager env.IDeployer `svcname:"VenusSectorManager"`
@@ -33,8 +33,8 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := venus_worker.DeployerFromConfig(depParams.K8sEnv, venus_worker.Config{
-		VenusSectorManagerUrl: sectorManagerEndpoint.ToHttp(),
+	deployer, err := venusworker.DeployerFromConfig(depParams.K8sEnv, venusworker.Config{
+		VenusSectorManagerURL: sectorManagerEndpoint.ToHTTP(),
 		AuthToken:             adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {

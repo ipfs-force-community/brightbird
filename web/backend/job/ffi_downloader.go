@@ -22,7 +22,7 @@ type ffiDownloader struct {
 	token    string
 }
 
-func NewFFIDownloader(token string) *ffiDownloader {
+func NewFFIDownloader(token string) FFIDownloader {
 	return &ffiDownloader{
 		tempPath: os.TempDir(),
 		token:    token,

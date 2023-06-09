@@ -5,7 +5,7 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/env/venus_utils"
+	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"go.uber.org/fx"
@@ -42,7 +42,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	for _, pod := range pods {
-		err := venus_utils.SyncWait(ctx, params.K8sEnv, pod, 3453, adminToken.MustString())
+		err := venusutils.SyncWait(ctx, params.K8sEnv, pod, 3453, adminToken.MustString())
 		if err != nil {
 			return nil, err
 		}

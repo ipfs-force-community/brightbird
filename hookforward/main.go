@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/hunjixin/brightbird/hookforward/webhooklisten"
 	logging "github.com/ipfs/go-log/v2"
@@ -24,7 +25,7 @@ var (
 
 func usage() {
 	logging.SetAllLoggers(logging.LevelDebug)
-	fmt.Fprintln(os.Stderr, "Receives git webhooks, keeps a local mirror of the repo up-to-date, then forwards the webhook to another server.\n")
+	fmt.Fprintln(os.Stderr, "Receives git webhooks, keeps a local mirror of the repo up-to-date, then forwards the webhook to another server.")
 	fmt.Fprintln(os.Stderr, "Usage:", os.Args[0])
 	flag.PrintDefaults()
 	os.Exit(2)
@@ -33,11 +34,11 @@ func usage() {
 func startListening(handler http.Handler, address, tlsAddress, tlsCertFile, tlsKeyFile string) {
 	isRunning := false
 	if *listenAddress != "" {
-		go serveHttp(address, handler)
+		go serveHTTP(address, handler)
 		isRunning = true
 	}
 	if *tlsListenAddress != "" {
-		go serveTls(tlsAddress, tlsCertFile, tlsKeyFile, handler)
+		go serveTLS(tlsAddress, tlsCertFile, tlsKeyFile, handler)
 		isRunning = true
 	}
 	if !isRunning {
@@ -58,16 +59,12 @@ func main() {
 	}
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
-	mux.HandleFunc("/hel", func(res http.ResponseWriter, _ *http.Request) {
-		res.Write([]byte("hello world"))
-		res.WriteHeader(http.StatusOK)
-	})
 	mux.Handle("/ws", webhooklisten.NewWebHookHandler(hookEvents))
 	startListening(mux, *listenAddress, *tlsListenAddress, *tlsCertificateFile, *tlsPrivateKeyFile)
 
 	// Wait for our eventual death
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 	mainLog.Errorln("Shutting down...")
 }

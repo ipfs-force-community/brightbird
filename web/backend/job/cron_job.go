@@ -2,8 +2,9 @@ package job
 
 import (
 	"context"
-	"github.com/hunjixin/brightbird/models"
 	"strconv"
+
+	"github.com/hunjixin/brightbird/models"
 
 	"github.com/google/uuid"
 	"github.com/hunjixin/brightbird/repo"
@@ -30,7 +31,7 @@ func NewCronJob(job models.Job, cron *cron.Cron, taskRepo repo.ITaskRepo, jobRep
 	return &CronJob{job: job, cron: cron, taskRepo: taskRepo, jobRepo: jobRepo}
 }
 
-func (cronJob *CronJob) Id() string {
+func (cronJob *CronJob) ID() string {
 	return cronJob.job.ID.Hex()
 }
 

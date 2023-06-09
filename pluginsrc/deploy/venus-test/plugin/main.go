@@ -42,22 +42,22 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 type VenusTestDeploy struct {
 }
 
-func (dep *VenusTestDeploy) InstanceName() (string, error) {
+func (deployer *VenusTestDeploy) InstanceName() (string, error) {
 	return "venus-test", nil
 }
 
-func (dep *VenusTestDeploy) Pods(ctx context.Context) ([]corev1.Pod, error) {
+func (deployer *VenusTestDeploy) Pods(ctx context.Context) ([]corev1.Pod, error) {
 	return nil, nil
 }
 
-func (dep *VenusTestDeploy) Svc(_ context.Context) (*corev1.Service, error) {
+func (deployer *VenusTestDeploy) Svc(_ context.Context) (*corev1.Service, error) {
 	return nil, nil
 }
 
-func (dep *VenusTestDeploy) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
+func (deployer *VenusTestDeploy) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
 	return nil, nil
 }
-func (dep *VenusTestDeploy) SvcEndpoint() (types2.Endpoint, error) {
+func (deployer *VenusTestDeploy) SvcEndpoint() (types2.Endpoint, error) {
 	return "", nil
 }
 
@@ -65,13 +65,13 @@ func (deployer *VenusTestDeploy) Param(key string) (env.Params, error) {
 	return env.Params{}, errors.New("no params")
 }
 
-func (dep *VenusTestDeploy) Deploy(ctx context.Context) (err error) {
+func (deployer *VenusTestDeploy) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (dep *VenusTestDeploy) GetConfig(ctx context.Context) (env.Params, error) {
+func (deployer *VenusTestDeploy) GetConfig(ctx context.Context) (env.Params, error) {
 	return env.Params{}, nil
 }
-func (dep *VenusTestDeploy) Update(ctx context.Context, updateCfg interface{}) error {
+func (deployer *VenusTestDeploy) Update(ctx context.Context, updateCfg interface{}) error {
 	return nil
 }

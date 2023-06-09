@@ -39,7 +39,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	group.GET("list", func(c *gin.Context) {
 		jobs, err := jobRepo.List(ctx)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, jobs)
@@ -67,7 +67,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		req := &models.CountJobRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -78,14 +78,14 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		if req.ID != nil {
 			params.ID, err = primitive.ObjectIDFromHex(*req.ID)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 		}
 
 		count, err := jobRepo.Count(ctx, params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, count)
@@ -119,13 +119,13 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		job, err := jobRepo.Get(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -160,31 +160,31 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	group.GET("detail/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		job, err := jobRepo.Get(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		testflow, err := testFlowRepo.Get(ctx, &repo.GetTestFlowParams{ID: job.TestFlowId})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		tfGroup, err := groupRepo.Get(ctx, testflow.GroupId)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, models.JobDetailResp{
-			*job,
-			testflow.Name,
-			tfGroup.Name,
+			Job:          *job,
+			TestFlowName: testflow.Name,
+			GroupName:    tfGroup.Name,
 		})
 	})
 
@@ -222,19 +222,19 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		params := &models.UpdateJobRequest{}
 		err := c.ShouldBindJSON(params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		job, err := jobRepo.Get(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -246,19 +246,19 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 
 		err = job.CheckParams()
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		_, err = jobRepo.Save(ctx, job)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = jobManager.InsertOrReplaceJob(ctx, job)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, job)
@@ -292,20 +292,20 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = jobRepo.Delete(c, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		//remove job
 		err = jobManager.StopJob(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -318,7 +318,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			},
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -337,7 +337,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 
 		err = taskRepo.Delete(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -374,25 +374,25 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		job := &models.Job{}
 		err := c.ShouldBindJSON(job)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = job.CheckParams()
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		id, err := jobRepo.Save(ctx, job)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = jobManager.InsertOrReplaceJob(ctx, job)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.String(http.StatusOK, id.Hex())
@@ -424,16 +424,16 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 	//       200:
 	//		 503: apiError
 	group.POST("/run/:jobid", func(c *gin.Context) {
-		jobIdStr := c.Param("jobid")
-		jobId, err := primitive.ObjectIDFromHex(jobIdStr)
+		jobIDStr := c.Param("jobid")
+		jobId, err := primitive.ObjectIDFromHex(jobIDStr)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		taskID, err := jobManager.ExecJobImmediately(c, jobId)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 

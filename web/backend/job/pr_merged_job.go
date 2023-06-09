@@ -44,11 +44,11 @@ func NewPRMergedJob(job models.Job, pubsub modules.WebHookPubsub, githubClient *
 		taskRepo:     taskRepo,
 		jobRepo:      jobRepo,
 		testflowRepo: testflowRepo,
-		logger:       tagCreateLog.With("type", "PRMergedJob", "job", job.ID, "testflow", job.TestFlowId),
+		logger:       prMergedjobLog.With("type", "PRMergedJob", "job", job.ID, "testflow", job.TestFlowId),
 	}
 }
 
-func (prMerged *PRMergedJob) Id() string {
+func (prMerged *PRMergedJob) ID() string {
 	return prMerged.jobId.Hex()
 }
 
@@ -120,7 +120,7 @@ func (prMerged *PRMergedJob) execTag(ctx context.Context, pushEvent *github.Pull
 
 func (prMerged *PRMergedJob) Run(ctx context.Context) error {
 	go func() {
-		for event := range prMerged.pubsub.Sub(modules.PR_MERGED_TOPIC) {
+		for event := range prMerged.pubsub.Sub(modules.PRMergeTopic) {
 			err := prMerged.execTag(ctx, event.(*github.PullRequestEvent))
 			if err != nil {
 				prMerged.logger.Infof("tag exec fail %v", err)

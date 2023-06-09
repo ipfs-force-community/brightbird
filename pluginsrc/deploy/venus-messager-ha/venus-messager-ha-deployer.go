@@ -1,12 +1,10 @@
-package venus_messager_ha
+package venusmessager
 
 import (
 	"context"
 	"embed"
 	"errors"
 	"fmt"
-
-	types2 "github.com/hunjixin/brightbird/types"
 
 	"github.com/filecoin-project/venus-messager/config"
 	"github.com/hunjixin/brightbird/env"
@@ -48,7 +46,7 @@ func DefaultConfig() Config {
 	}
 }
 
-var PluginInfo = types2.PluginInfo{
+var PluginInfo = types.PluginInfo{
 	Name:        "venus-message-ha",
 	Version:     version.Version(),
 	PluginType:  types.Deploy,
@@ -59,11 +57,11 @@ var PluginInfo = types2.PluginInfo{
 
 var _ env.IDeployer = (*VenusMessagerHADeployer)(nil)
 
-type VenusMessagerHADeployer struct {
+type VenusMessagerHADeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 
-	svcEndpoint types2.Endpoint
+	svcEndpoint types.Endpoint
 
 	pushPodName     string
 	configMapName   string
@@ -128,7 +126,7 @@ func (deployer *VenusMessagerHADeployer) Svc(ctx context.Context) (*corev1.Servi
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusMessagerHADeployer) SvcEndpoint() (types2.Endpoint, error) {
+func (deployer *VenusMessagerHADeployer) SvcEndpoint() (types.Endpoint, error) {
 	return deployer.svcEndpoint, nil
 }
 

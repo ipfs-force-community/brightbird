@@ -5,7 +5,6 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-var cron_log = logging.Logger("cron")
 var _ cron.Logger = (*CronLog)(nil)
 
 type CronLog struct {
@@ -14,7 +13,7 @@ type CronLog struct {
 
 func NewCronLog() *CronLog {
 	return &CronLog{
-		log: cron_log,
+		log: cronLog,
 	}
 }
 

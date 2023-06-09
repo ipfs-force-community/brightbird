@@ -95,7 +95,7 @@ func (c *TestFlowRepo) List(ctx context.Context, params models.PageReq[ListTestF
 
 	return &models.PageResp[models.TestFlow]{
 		Total:   count,
-		Pages:   (count + params.PageSize - 1) / int64(params.PageSize),
+		Pages:   (count + params.PageSize - 1) / params.PageSize,
 		PageNum: params.PageNum,
 		List:    tf,
 	}, nil
@@ -134,7 +134,7 @@ func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.
 		tf.ID = primitive.NewObjectID()
 	}
 
-	count, err := c.caseCol.CountDocuments(ctx, bson.D{{"_id", tf.ID}})
+	count, err := c.caseCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: tf.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -148,7 +148,7 @@ func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.
 	update := bson.M{
 		"$set": tf,
 	}
-	_, err = c.caseCol.UpdateOne(ctx, bson.D{{"name", tf.Name}}, update, options.Update().SetUpsert(true))
+	_, err = c.caseCol.UpdateOne(ctx, bson.D{{Key: "name", Value: tf.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -158,12 +158,12 @@ func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.
 
 func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error {
 	tf := &models.TestFlow{}
-	err := c.caseCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	err := c.caseCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
 	if err != nil || err == mongo.ErrNoDocuments {
 		return fmt.Errorf("test flow (%d) not exis", id)
 	}
 
-	_, err = c.caseCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	_, err = c.caseCol.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return err
 	}
@@ -174,9 +174,9 @@ func (c *TestFlowRepo) ChangeTestflowGroup(ctx context.Context, params ChangeTes
 	var updateModels []mongo.WriteModel
 	for _, testflowID := range params.TestflowIDs {
 		update := bson.M{
-			"$set": bson.D{{"groupid", params.GroupID}},
+			"$set": bson.D{{Key: "groupid", Value: params.GroupID}},
 		}
-		updateModels = append(updateModels, mongo.NewUpdateOneModel().SetFilter(bson.D{{"_id", testflowID}}).SetUpdate(update))
+		updateModels = append(updateModels, mongo.NewUpdateOneModel().SetFilter(bson.D{{Key: "_id", Value: testflowID}}).SetUpdate(update))
 	}
 
 	_, err := c.caseCol.BulkWrite(ctx, updateModels)

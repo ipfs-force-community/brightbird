@@ -37,7 +37,7 @@ func UseGitToken(cfg config.Config) error {
 func NewWebhoobPubsub(cfg config.Config) func(ctx context.Context) (modules.WebHookPubsub, error) {
 	return func(ctx context.Context) (modules.WebHookPubsub, error) {
 		webhookPubsub := pubsub.New(10)
-		ch, err := webhooklisten.WaitForWebHookEvent(ctx, cfg.WebhookUrl)
+		ch, err := webhooklisten.WaitForWebHookEvent(ctx, cfg.WebhookURL)
 		if err != nil {
 			return nil, err
 		}
@@ -53,7 +53,7 @@ func NewWebhoobPubsub(cfg config.Config) func(ctx context.Context) (modules.WebH
 				if eventType == "release" {
 					releaseEvent := event.(*github.ReleaseEvent)
 					if releaseEvent.GetRelease().TagName != nil { //commit or tags
-						webhookPubsub.Pub(releaseEvent, modules.RELEASE_TOPIC)
+						webhookPubsub.Pub(releaseEvent, modules.ReleaseTopic)
 						continue
 					}
 				}
@@ -61,7 +61,7 @@ func NewWebhoobPubsub(cfg config.Config) func(ctx context.Context) (modules.WebH
 				if eventType == "pull_request" {
 					prEvent := event.(*github.PullRequestEvent)
 					if prEvent.GetPullRequest().GetMerged() && prEvent.GetPullRequest().GetState() == "closed" {
-						webhookPubsub.Pub(event, modules.PR_MERGED_TOPIC)
+						webhookPubsub.Pub(event, modules.PRMergeTopic)
 						continue
 					}
 				}

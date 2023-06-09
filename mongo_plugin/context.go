@@ -12,7 +12,7 @@ import (
 type Value struct {
 	Logger log.Logger
 	Config interface{}
-	Db     *mongo.Database
+	DB     *mongo.Database
 }
 
 func Get(ctxPointer unsafe.Pointer) (*Value, error) {

@@ -180,7 +180,7 @@ type DeletePluginReq struct {
 	// id of plugin
 	//
 	// required: true
-	Id string `form:"id" json:"id" binding:"required"`
+	ID string `form:"id" json:"id" binding:"required"`
 	// specific plugin version
 	//
 	// required: true

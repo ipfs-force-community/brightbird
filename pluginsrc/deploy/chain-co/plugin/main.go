@@ -6,15 +6,15 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	chain_co "github.com/hunjixin/brightbird/pluginsrc/deploy/chain-co"
+	chainco "github.com/hunjixin/brightbird/pluginsrc/deploy/chain-co"
 )
 
 func main() {
-	plugin.SetupPluginFromStdin(chain_co.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(chainco.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params chain_co.Config `optional:"true"`
+	Params chainco.Config `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer
 
 	VenusDep        env.IDeployer `svcname:"Venus"`
@@ -46,9 +46,9 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := chain_co.DeployerFromConfig(depParams.K8sEnv, chain_co.Config{
+	deployer, err := chainco.DeployerFromConfig(depParams.K8sEnv, chainco.Config{
 		Replicas:   1,
-		AuthUrl:    venusAuthEndpoint.ToHttp(),
+		AuthUrl:    venusAuthEndpoint.ToHTTP(),
 		AdminToken: depParams.Params.AdminToken,
 		Nodes:      podEndpoints,
 	}, depParams.Params)
