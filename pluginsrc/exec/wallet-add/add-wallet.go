@@ -27,18 +27,22 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	K8sEnv      *env.K8sEnvDeployer `json:"-"`
-	VenusAuth   env.IDeployer       `json:"-" svcname:"VenusAuth"`
 	VenusWallet env.IDeployer       `json:"-" svcname:"VenusWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	walletPods, err := params.VenusWallet.Pods(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	walletAddr, err := CreateWallet(ctx, params, adminTokenV.MustString())
+	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, walletPods[0].GetName())
+	if err != nil {
+		return nil, err
+	}
+
+	walletAddr, err := CreateWallet(ctx, params, walletToken)
 	if err != nil {
 		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err
