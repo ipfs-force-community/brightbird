@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
-	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
@@ -76,10 +75,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	addr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println("wallet:", addr)
+
 	return env.NewSimpleExec(), nil
 }

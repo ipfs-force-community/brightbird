@@ -18,10 +18,10 @@ func main() {
 }
 
 var Info = types.PluginInfo{
-	Name:        "add_wallet",
+	Name:        "wallet_new",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "add wallet",
+	Description: "wallet_new",
 }
 
 type TestCaseParams struct {
@@ -42,56 +42,33 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	walletAddr, err := CreateWallet(ctx, params, walletToken)
+	endpoint, err := params.VenusWallet.SvcEndpoint()
 	if err != nil {
-		fmt.Printf("create wallet failed: %v\n", err)
 		return nil, err
 	}
 
-	return env.NewSimpleExec().Add("Wallet", env.ParamsFromVal(walletAddr)), nil
-}
-
-func CreateWallet(ctx context.Context, params TestCaseParams, token string) (string, error) {
-	pods, err := params.VenusWallet.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	svc, err := params.VenusWallet.Svc(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	endpoint, err := params.VenusWallet.SvcEndpoint()
-	if err != nil {
-		return "", err
-	}
-
 	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
+		svc, err := params.VenusWallet.Svc(ctx)
 		if err != nil {
-			return "", fmt.Errorf("port forward failed: %w\n", err)
+			return nil, err
+		}
+		endpoint, err = params.K8sEnv.PortForwardPod(ctx, walletPods[0].GetName(), int(svc.Spec.Ports[0].Port))
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), token, nil)
+	walletRpc, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
-		return "", fmt.Errorf("dial iFullAPI rpc failed: %w\n", err)
+		return nil, err
 	}
 	defer closer()
 
-	password := "123456"
-	err = walletRpc.SetPassword(ctx, password)
-	if err != nil {
-		return "", fmt.Errorf("set password failed: %w\n", err)
-	}
-
 	walletAddr, err := walletRpc.WalletNew(ctx, vTypes.KTBLS)
 	if err != nil {
-		return "", fmt.Errorf("create wallet failed: %w\n", err)
+		return nil, fmt.Errorf("create wallet failed: %w\n", err)
 	}
 	fmt.Printf("wallet: %v\n", walletAddr)
 
-	return walletAddr.String(), nil
+	return env.NewSimpleExec().Add("Wallet", env.ParamsFromVal(walletAddr)), nil
 }
