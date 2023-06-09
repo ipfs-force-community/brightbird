@@ -26,13 +26,13 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 	Params struct {
-		Perm  string `json:"perm"`
-		Extra string `json:"extra"`
+		Perm  string `json:"perm" description:"[OPTIONS] custom string in JWT payload"`
+		Extra string `json:"extra" description:"[OPTIONS] permission for API auth (read, write, sign, admin)"`
 	} `optional:"true"`
 
-	UserExec  env.IExec           `json:"-" svcname:"UserName"`
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	CreateUser env.IExec           `json:"-" svcname:"CreateUser" description:"[Exec]create-user"`
+	VenusAuth  env.IDeployer       `json:"-" svcname:"VenusAuth" description:"[Deploy]venus-auth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -65,7 +65,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	userName, err := params.UserExec.Param("UserName")
+	userName, err := params.CreateUser.Param("UserName")
 	if err != nil {
 		return nil, err
 	}
