@@ -64,8 +64,8 @@ export default defineComponent({
       }
     });
     // 组件初始加载的节点个数
-    const initialPageSize: number = 12;
-    const searchPageSize: number = 10000;
+    const initialPageSize = 12;
+    const searchPageSize = 10000;
     // 显示更多组件状态
     const loadState = ref<StateEnum>(StateEnum.NONE);
     // 控制整个分组的显隐
@@ -94,13 +94,13 @@ export default defineComponent({
       try {
         loading.value = true;
         switch (props.type) {
-            // 官方节点
+          // 官方节点
           case PluginTypeEnum.Deploy: {
             const { content } = await workflowNode.loadDeployPlugins(keyword);
             nodes.value = content;
             break;
           }
-            // 社区节点
+          // 社区节点
           case PluginTypeEnum.Exec: {
             const { content } = await workflowNode.loadExecPlugins(keyword);
             // 显示更多
@@ -135,7 +135,7 @@ export default defineComponent({
       collapsed.value = !collapsed.value;
     };
     // 显示更多
-     const btnDown = async () => {};
+    const btnDown = async () => {};
     onMounted(async () => {
       await loadNodes(keyWord.value, false);
     });

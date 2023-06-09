@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory, RouteLocationNormalizedLoaded, RouteRecordRaw } from 'vue-router';
 import _store from '@/store';
-import {PLATFORM_INDEX } from '@/router/path-def';
+import { PLATFORM_INDEX } from '@/router/path-def';
 import { AppContext } from 'vue';
 
 /**
@@ -42,7 +42,7 @@ export default (appContext: AppContext) => {
         '首页',
         false,
         import('@/layout/platform.vue'),
-        import.meta.glob('./modules/platform.ts',{eager: true}),
+        import.meta.glob('./modules/platform.ts', { eager: true }),
       ),
       // full模块
       loadModuleRoute(
@@ -50,7 +50,7 @@ export default (appContext: AppContext) => {
         undefined,
         false,
         import('@/layout/full.vue'),
-        import.meta.glob('./modules/full.ts',{eager: true}),
+        import.meta.glob('./modules/full.ts', { eager: true }),
       ),
       // error模块
       loadModuleRoute(
@@ -58,7 +58,7 @@ export default (appContext: AppContext) => {
         undefined,
         false,
         import('@/layout/error.vue'),
-        import.meta.glob('./modules/error.ts',{eager: true}),
+        import.meta.glob('./modules/error.ts', { eager: true }),
       ),
       {
         // 默认
@@ -83,7 +83,7 @@ export default (appContext: AppContext) => {
     }
 
     const store = _store as any;
-    store.commit('mutateFromRoute', { to, from })
+    store.commit('mutateFromRoute', { to, from });
 
     next();
   });

@@ -9,9 +9,9 @@ import { defineComponent, getCurrentInstance, inject, onMounted, ref, provide } 
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
-import { Node} from "@/api/dto/testflow";
+import { Node } from '@/api/dto/testflow';
 import yaml from 'yaml';
-import JmWorkflowEditor from "@/components/workflow/workflow-editor/index.vue";
+import JmWorkflowEditor from '@/components/workflow/workflow-editor/index.vue';
 
 export default defineComponent({
   components: { JmWorkflowEditor },
@@ -44,9 +44,9 @@ export default defineComponent({
         try {
           loading.value = true;
           loaded.value = true;
-          const fetchedData = await fetchTestFlowDetail({id: props.id as string});
+          const fetchedData = await fetchTestFlowDetail({ id: props.id as string });
           const rawData = yaml.parse(fetchedData.graph)['raw-data'];
-          flowCreateTime.value = fetchedData.createTime
+          flowCreateTime.value = fetchedData.createTime;
           workflow.value = {
             name: fetchedData.name,
             groupId: fetchedData.groupId,

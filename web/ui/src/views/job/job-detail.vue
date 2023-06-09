@@ -33,8 +33,8 @@
 </template>
 
 <script lang="ts">
-import { getJobDetail } from '@/api/job'
-import { getTaskInJob } from '@/api/tasks'
+import { getJobDetail } from '@/api/job';
+import { getTaskInJob } from '@/api/tasks';
 import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
@@ -44,7 +44,7 @@ import { IJobDetailVo } from '@/api/dto/job';
 import { ITaskVo } from '@/api/dto/tasks';
 
 import { StateEnum } from '@/components/load-more/enumeration';
-import TaskItem from "@/views/common/task-item.vue"
+import TaskItem from '@/views/common/task-item.vue';
 import { TaskStateEnum } from '@/api/dto/enumeration';
 import { getTask } from '@/api/tasks';
 
@@ -77,21 +77,21 @@ export default defineComponent({
       pages: 0,
       total: 0,
       tasks: [],
-    })
+    });
 
     const fetchJobDetail = async () => {
       try {
         loadingTop.value = true;
-        jobDetail.value = await getJobDetail(props.id)
+        jobDetail.value = await getJobDetail(props.id);
         const queryTask = await getTaskInJob({ jobId: props.id, pageNum: 1, pageSize: 10 });
         pageData.value.total = queryTask.total;
         pageData.value.pages = queryTask.pages;
         pageData.value.tasks.push(...queryTask.list);
         initialized.value = true;
         if (queryTask.pages == 1) {
-          loadState.value = StateEnum.NO_MORE
+          loadState.value = StateEnum.NO_MORE;
         } else {
-          loadState.value = StateEnum.MORE
+          loadState.value = StateEnum.MORE;
         }
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -126,13 +126,13 @@ export default defineComponent({
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
           if (pageData.value.tasks[i].state != TaskStateEnum.Error && pageData.value.tasks[i].state != TaskStateEnum.Successful) {
-            pageData.value.tasks[i] = await getTask(pageData.value.tasks[i].id)
+            pageData.value.tasks[i] = await getTask(pageData.value.tasks[i].id);
           }
         }
       } catch (err) {
         proxy.$throw(err, proxy);
       } 
-    },5000)
+    }, 5000);
 
 
     onMounted(async () => {

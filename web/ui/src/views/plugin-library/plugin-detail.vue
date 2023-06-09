@@ -91,7 +91,7 @@ import { getPluginByName, deletePlugin } from '@/api/plugin';
 import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { IRootState } from '@/model'
+import { IRootState } from '@/model';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import PluginLabel from './plugin-label.vue';
 import { version } from 'os';
@@ -117,7 +117,7 @@ export default defineComponent({
     const fetchProjectGroupDetail = async () => {
       try {
         loadingTop.value = true;
-        pluginDetail.value = await getPluginByName(props.name)
+        pluginDetail.value = await getPluginByName(props.name);
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -128,13 +128,13 @@ export default defineComponent({
     const deleteVersion = async (id: string | undefined, version: string) => {
       try {
         if (pluginDetail.value) {
-          await deletePlugin(id ?? "", version);
+          await deletePlugin(id ?? '', version);
           pluginDetail.value.plugins = pluginDetail.value?.plugins?.filter(a => a.version != version);
         }
       } catch (err) {
         proxy.$throw(err, proxy);
       }
-    }
+    };
     onMounted(async () => {
       await fetchProjectGroupDetail();
     });

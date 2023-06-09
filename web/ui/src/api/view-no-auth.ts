@@ -200,7 +200,7 @@ export function fetchTriggerWebhook(projectId: string): Promise<ITriggerWebhookV
  * 获取版本列表
  */
 export function fetchVersion(): Promise<string> {
- return restProxy({
+  return restProxy({
     url: `${baseUrl.version}`,
     method: 'get',
     timeout: 1000,

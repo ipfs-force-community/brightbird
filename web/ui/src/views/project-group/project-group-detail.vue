@@ -45,13 +45,13 @@
 
 <script lang="ts">
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import {getProjectGroup} from '@/api/view-no-auth';
+import { getProjectGroup } from '@/api/view-no-auth';
 import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
 import ProjectAdder from '@/views/project-group/project-adder.vue';
 import ProjectGroup from '@/views/common/project-group.vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
-import { IRootState } from '@/model'
+import { IRootState } from '@/model';
 
 export default defineComponent({
   props: {
@@ -81,7 +81,7 @@ export default defineComponent({
     const fetchProjectGroupDetail = async () => {
       try {
         loadingTop.value = true;
-        testflowGroup.value = await getProjectGroup(props.id)
+        testflowGroup.value = await getProjectGroup(props.id);
         initialized.value = true;
       } catch (err) {
         proxy.$throw(err, proxy);

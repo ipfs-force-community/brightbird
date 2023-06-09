@@ -1,8 +1,8 @@
-import {BaseNode} from './base-node';
-import {NodeTypeEnum, ParamTypeEnum} from '../enumeration';
+import { BaseNode } from './base-node';
+import { NodeTypeEnum, ParamTypeEnum } from '../enumeration';
 import defaultIcon from '../../../svgs/shape/async-task.svg';
-import {PluginTypeEnum, TaskStatusEnum} from '@/api/dto/enumeration';
-import { DependencyProperty, Property } from "@/api/dto/testflow";
+import { PluginTypeEnum, TaskStatusEnum } from '@/api/dto/enumeration';
+import { DependencyProperty, Property } from '@/api/dto/testflow';
 import { CustomRule } from '../common';
 export interface IAsyncTaskParam {
   readonly ref: string;
@@ -44,22 +44,22 @@ export class AsyncTask extends BaseNode {
   modifiedTime: number;
 
   constructor(
-      name: string,
-      type: NodeTypeEnum,
-      icon = '',
-      groupType: PluginTypeEnum,
-      version = '',
-      pluginType = '',
-      inputs: Property[],
-      dependencies: DependencyProperty[],
-      createTime = 0,
-      modifiedTime = 0,
-      instance: DependencyProperty,
+    name: string,
+    type: NodeTypeEnum,
+    icon = '',
+    groupType: PluginTypeEnum,
+    version = '',
+    pluginType = '',
+    inputs: Property[],
+    dependencies: DependencyProperty[],
+    createTime = 0,
+    modifiedTime = 0,
+    instance: DependencyProperty,
   ) {
     super(
-        name,
-        NodeTypeEnum.ASYNC_TASK,
-        checkDefaultIcon(icon) ? defaultIcon : icon,
+      name,
+      NodeTypeEnum.ASYNC_TASK,
+      checkDefaultIcon(icon) ? defaultIcon : icon,
     );
     this.groupType = groupType;
     this.version = version;
@@ -72,9 +72,8 @@ export class AsyncTask extends BaseNode {
   }
 
 
-
   static build(
-      { name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance}: any,
+    { name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance }: any,
   ): AsyncTask {
     return new AsyncTask(name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance);
   }
@@ -86,7 +85,7 @@ export class AsyncTask extends BaseNode {
       [key: string]: string | number | boolean;
     } = {};
     if (inputs && inputs.length > 0) {
-      inputs.forEach(({name, type, require, value}) => {
+      inputs.forEach(({ name, type, require, value }) => {
         switch (type) {
           case ParamTypeEnum.NUMBER: {
             const val = parseFloat(value);
@@ -123,7 +122,7 @@ export class AsyncTask extends BaseNode {
       [key: string]: string | number | boolean;
     } = {};
     if (dependencies && dependencies.length > 0) {
-      dependencies.forEach(({name, type, require, value}) => {
+      dependencies.forEach(({ name, type, require, value }) => {
         if (!svc[name]) {
           svc[name] = value;
         }
@@ -162,9 +161,9 @@ export class AsyncTask extends BaseNode {
 
   getDisplayName(): string {
     if (this.instance.value) {
-      return this.instance.value
+      return this.instance.value;
     } else {
-      return this.name
+      return this.name;
     }
   }
 

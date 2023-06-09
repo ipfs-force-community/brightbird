@@ -54,9 +54,9 @@ export class TextViewer {
   // 组件外层容器宽度变化触发的回调函数
   private readonly callback: Callback;
   // 身略号占据的宽度
-  private ellipsisWidth: number = 0;
+  private ellipsisWidth = 0;
   // 文本占据的行高
-  private lineHeight: number = 0;
+  private lineHeight = 0;
   // 应用组件的外层元素的宽高
   private wrapperSize: ISize = { height: 0, width: 0 };
 

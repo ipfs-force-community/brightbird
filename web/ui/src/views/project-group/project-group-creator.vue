@@ -52,7 +52,7 @@ export default defineComponent({
           return;
         }
         if (isDupName.value) {
-          proxy.$error('测试流名称不合法，空或者重复')
+          proxy.$error('测试流名称不合法，空或者重复');
           return;
         }
 
@@ -78,9 +78,9 @@ export default defineComponent({
     const checkGroup = async () => {
       try {
         const count = await countGroup({
-          name: createForm.value.name
+          name: createForm.value.name,
         });
-        isDupName.value = count > 0
+        isDupName.value = count > 0;
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {

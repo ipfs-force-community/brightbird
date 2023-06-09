@@ -10,7 +10,7 @@ export interface IScrollOffset {
  * vuex根状态
  */
 export interface IRootState {
-  version: "";
+  version: '';
   thirdPartyType: string;
   authMode: string;
   parameterTypes: string[];

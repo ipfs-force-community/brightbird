@@ -26,7 +26,7 @@ jobs:
           GOPROXY: "https://proxy.golang.org,direct"
           GO111MODULE: "on"
         run: |
-          make build-all
+          make build-go
 
       - name: go-lint
         run: |
@@ -40,7 +40,7 @@ jobs:
           test -z "$(git status --porcelain)"
 
       - name: Run coverage
-        run:  go test -coverpkg=./... -race -coverprofile=coverage.txt -covermode=atomic ./... -v --timeout ${{ inputs.test_timeout }}m
+        run:  go test -coverpkg=./... -race -coverprofile=coverage.txt -covermode=atomic ./... -v --timeout 20m
 
       - name: Upload
         uses: codecov/codecov-action@v3

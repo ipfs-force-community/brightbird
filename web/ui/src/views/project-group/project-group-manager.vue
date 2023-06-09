@@ -99,7 +99,7 @@ import {
 } from 'vue';
 import GroupCreator from './project-group-creator.vue';
 import GroupEditor from './project-group-editor.vue';
-import {listTestflowGroup} from '@/api/view-no-auth';
+import { listTestflowGroup } from '@/api/view-no-auth';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { datetimeFormatter } from '@/utils/formatter';
 import {

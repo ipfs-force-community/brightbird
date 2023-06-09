@@ -18,10 +18,10 @@ export default ({ command, mode }: ConfigEnv): UserConfigExport => {
     },
     server: {
       port:3000,
-      host:"0.0.0.0",
+      host:'0.0.0.0',
     },
     build: {
-      outDir: process.env.PUBLICDIR
-    }
+      outDir: process.env.PUBLICDIR,
+    },
   };
 };

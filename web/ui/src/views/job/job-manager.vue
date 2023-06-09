@@ -88,12 +88,12 @@ import JobCreator from './job-creator.vue';
 import JobEditor from './job-editor.vue';
 import { datetimeFormatter } from '@/utils/formatter';
 import { IJobVo } from '@/api/dto/job';
-import {getTask} from '@/api/tasks';
+import { getTask } from '@/api/tasks';
 
 import {
- listJobs,
- deleteJob,
- execImmediately
+  listJobs,
+  deleteJob,
+  execImmediately,
 } from '@/api/job';
 import { Mutable } from '@/utils/lib';
 import {
@@ -101,7 +101,7 @@ import {
   RouteLocationNormalized,
   RouteLocationNormalizedLoaded,
   useRoute,
-useRouter,
+  useRouter,
 } from 'vue-router';
 
 
@@ -154,12 +154,12 @@ export default defineComponent({
       creationActivated.value = true;
     };
 
-    const run = async (id:String) => {
+    const run = async (id:string) => {
       try {
-       const taskId = await execImmediately(id);
-       const task = await getTask(taskId);
-       proxy.$alert(`create new task ${task.name}`);
-       router.push({ name: 'job-detail', params: { id } });
+        const taskId = await execImmediately(id);
+        const task = await getTask(taskId);
+        proxy.$alert(`create new task ${task.name}`);
+        router.push({ name: 'job-detail', params: { id } });
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -169,7 +169,7 @@ export default defineComponent({
     const toEdit = (
       id: string,
     ) => {
-      jobId.value = id
+      jobId.value = id;
       editionActivated.value = true;
     };
     const toDelete = async (name: string, jobId: string) => {

@@ -70,7 +70,6 @@
       </jm-form-ite>
 
 
-
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="editorForm.description" clearable maxlength="256" show-word-limit
           placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
@@ -99,7 +98,7 @@ import {
 import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { IJobUpdateVo, IPRMergedEventMatch } from '@/api/dto/job';
-import { getJob, updateJob } from '@/api/job'
+import { getJob, updateJob } from '@/api/job';
 import { ITestFlowDetail } from '@/api/dto/testflow';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
@@ -118,13 +117,13 @@ export default defineComponent({
     const editorFormRef = ref<any>(null);
     const jobType = ref<JobEnum>(JobEnum.CronJob);
     const editorForm = ref<Mutable<IJobUpdateVo>>({
-      testFlowId: "",
-      name: "",
-      description: "",
-      versions: { "a": "b" },
+      testFlowId: '',
+      name: '',
+      description: '',
+      versions: { 'a': 'b' },
 
-      //cron
-      cronExpression: "",
+      // cron
+      cronExpression: '',
       prMergedEventMatchs: [],
       tagCreateEventMatchs: [],
     });
@@ -146,7 +145,7 @@ export default defineComponent({
       }
     };
 
-    //testflow select
+    // testflow select
     const selectGroupId = ref<string>();
     const groupLoading = ref<boolean>(false);
     const testflowsLoading = ref<boolean>(false);
@@ -157,35 +156,35 @@ export default defineComponent({
       groupLoading.value = true;
       try {
         groups.value = await listTestflowGroup();
-        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId});
+        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId });
         selectGroupId.value = testflow.groupId;
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
         groupLoading.value = false;
       }
-    }
+    };
 
     const refreshSelect = (testflow: ITestFlowDetail) => {
-      editorForm.value.testFlowId = testflow.id ?? "";
+      editorForm.value.testFlowId = testflow.id ?? '';
       let versions: any = {};
       testflow?.nodes?.forEach(f => {
-        versions[f.name] = "";
-      })
+        versions[f.name] = '';
+      });
       editorForm.value.versions = versions;
-    }
+    };
 
     const changeGroup = async () => {
       testflowsLoading.value = true;
-      editorForm.value.testFlowId = "";
+      editorForm.value.testFlowId = '';
       editorForm.value.versions = {};
       try {
         testflows.value = (await queryTestFlow({
-          groupId: selectGroupId.value ?? "",
+          groupId: selectGroupId.value ?? '',
           pageNum: START_PAGE_NUM,
           pageSize: Number.MAX_SAFE_INTEGER,
         })).list;
-        const firstflow = testflows.value[0]
+        const firstflow = testflows.value[0];
         if (firstflow) {
           refreshSelect(firstflow);
         }
@@ -194,14 +193,14 @@ export default defineComponent({
       } finally {
         testflowsLoading.value = false;
       }
-    }
+    };
 
     const onSelectTf = async () => {
-      const selTf = testflows.value?.find(a => a.id == editorForm.value.testFlowId)
+      const selTf = testflows.value?.find(a => a.id == editorForm.value.testFlowId);
       if (selTf) {
         refreshSelect(selTf);
       }
-    }
+    };
 
     const save = async () => {
       editorFormRef.value.validate(async (valid: boolean) => {
@@ -231,18 +230,18 @@ export default defineComponent({
       });
     };
     onMounted(async () => {
-      await fetchJob()
-      await fetchGroupList()
+      await fetchJob();
+      await fetchGroupList();
       testflows.value = (await queryTestFlow({
-        groupId: selectGroupId.value ?? "",
+        groupId: selectGroupId.value ?? '',
         pageNum: START_PAGE_NUM,
         pageSize: Number.MAX_SAFE_INTEGER,
-      })).list
+      })).list;
     });
 
     const getRepoName = (gitURL: string): string => {
       const url = new URL(gitURL);
-      return url.pathname.replace(".git", "").substring(1).split("/")[1];
+      return url.pathname.replace('.git', '').substring(1).split('/')[1];
     };
     return {
       dialogVisible,

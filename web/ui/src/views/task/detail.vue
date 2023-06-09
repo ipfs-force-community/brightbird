@@ -24,10 +24,10 @@
 </template>
 
 <script lang="ts">
-import {defineComponent, getCurrentInstance, onMounted, provide, ref} from 'vue';
+import { defineComponent, getCurrentInstance, onMounted, provide, ref } from 'vue';
 import { listAllPod, getPodLog } from '@/api/view-no-auth';
-import sleep from "@/utils/sleep";
-import {HttpError, TimeoutError} from "@/utils/rest/error";
+import sleep from '@/utils/sleep';
+import { HttpError, TimeoutError } from '@/utils/rest/error';
 
 export default defineComponent({
   props: {

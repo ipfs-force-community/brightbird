@@ -104,15 +104,15 @@ import { ParamTypeEnum } from '../../model/data/enumeration';
 import noParamImage from '../../svgs/no-param.svg';
 import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
 import ExpressionEditor from './form/expression-editor.vue';
-import {Graph, Node} from '@antv/x6';
-import JmEmpty from "@/components/data/empty/index.vue";
-import JmForm from "@/components/form/form";
-import jmFormItem from "@/components/form/form-item";
-import JmInput from "@/components/form/input";
+import { Graph, Node } from '@antv/x6';
+import JmEmpty from '@/components/data/empty/index.vue';
+import JmForm from '@/components/form/form';
+import jmFormItem from '@/components/form/form-item';
+import JmInput from '@/components/form/input';
 import { getPluginByName } from '@/api/plugin';
 import { Plugin } from '@/api/dto/testflow';
-import {CustomX6NodeProxy} from "@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy";
-import JmSelect from "@/components/form/select";
+import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
+import JmSelect from '@/components/form/select';
 
 export default defineComponent({
   components: { JmEmpty, ExpressionEditor, JmForm, jmFormItem, JmInput, JmSelect },
@@ -137,14 +137,14 @@ export default defineComponent({
     const instanceName = props.nodeData.getDisplayName();
     const nodeNames: string[] = [];
     graph.getNodes().forEach(node=>{
-        const proxy = new CustomX6NodeProxy(node);
-        // 不能为ref，否则，表单内容的变化影响数据绑定
-        const nodeData = proxy.getData(graph);
-       const  displayName = nodeData.getDisplayName();
-        if (displayName&&displayName!=instanceName) {
-            nodeNames.push(displayName)
-        }
-    })
+      const proxy = new CustomX6NodeProxy(node);
+      // 不能为ref，否则，表单内容的变化影响数据绑定
+      const nodeData = proxy.getData(graph);
+      const  displayName = nodeData.getDisplayName();
+      if (displayName&&displayName!=instanceName) {
+        nodeNames.push(displayName);
+      }
+    });
 
     // 版本列表
     const plugins = new Map<string, Plugin>();
@@ -188,13 +188,13 @@ export default defineComponent({
         const pluginDetail = await getPluginByName(props.nodeData.name);
         pluginDetail.plugins?.forEach(a => {
           plugins.set(a.version, a);
-          versionList.value.versions.push(a.version)
+          versionList.value.versions.push(a.version);
         });
         if (!form.value.version) {
           form.value.version = versionList.value.versions[0];
           if (pluginDetail.plugins) {
-              form.value.inputs = pluginDetail.plugins[0]?.properties ?? [];
-              form.value.dependencies = pluginDetail.plugins[0]?.dependencies ?? [];
+            form.value.inputs = pluginDetail.plugins[0]?.properties ?? [];
+            form.value.dependencies = pluginDetail.plugins[0]?.dependencies ?? [];
           }
         }
 
