@@ -16,11 +16,9 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	// List all pod names in test.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -51,11 +49,9 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	// get all logs in pod.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//

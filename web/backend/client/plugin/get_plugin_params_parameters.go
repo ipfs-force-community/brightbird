@@ -61,6 +61,12 @@ GetPluginParamsParams contains all the parameters to send to the API endpoint
 */
 type GetPluginParamsParams struct {
 
+	/* ID.
+
+	   id of plugin
+	*/
+	ID *string
+
 	/* Name.
 
 	   name of plugin
@@ -126,6 +132,17 @@ func (o *GetPluginParamsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithID adds the id to the get plugin params params
+func (o *GetPluginParamsParams) WithID(id *string) *GetPluginParamsParams {
+	o.SetID(id)
+	return o
+}
+
+// SetID adds the id to the get plugin params params
+func (o *GetPluginParamsParams) SetID(id *string) {
+	o.ID = id
+}
+
 // WithName adds the name to the get plugin params params
 func (o *GetPluginParamsParams) WithName(name *string) *GetPluginParamsParams {
 	o.SetName(name)
@@ -155,6 +172,23 @@ func (o *GetPluginParamsParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		return err
 	}
 	var res []error
+
+	if o.ID != nil {
+
+		// query param id
+		var qrID string
+
+		if o.ID != nil {
+			qrID = *o.ID
+		}
+		qID := qrID
+		if qID != "" {
+
+			if err := r.SetQueryParam("id", qID); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.Name != nil {
 

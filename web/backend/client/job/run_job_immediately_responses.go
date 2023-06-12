@@ -48,9 +48,10 @@ func NewRunJobImmediatelyOK() *RunJobImmediatelyOK {
 /*
 RunJobImmediatelyOK describes a response with status code 200, with default header values.
 
-RunJobImmediatelyOK run job immediately o k
+myString
 */
 type RunJobImmediatelyOK struct {
+	Payload models.MyString
 }
 
 // IsSuccess returns true when this run job immediately o k response has a 2xx status code
@@ -84,14 +85,23 @@ func (o *RunJobImmediatelyOK) Code() int {
 }
 
 func (o *RunJobImmediatelyOK) Error() string {
-	return fmt.Sprintf("[POST /run/{jobid}][%d] runJobImmediatelyOK ", 200)
+	return fmt.Sprintf("[POST /run/{jobid}][%d] runJobImmediatelyOK  %+v", 200, o.Payload)
 }
 
 func (o *RunJobImmediatelyOK) String() string {
-	return fmt.Sprintf("[POST /run/{jobid}][%d] runJobImmediatelyOK ", 200)
+	return fmt.Sprintf("[POST /run/{jobid}][%d] runJobImmediatelyOK  %+v", 200, o.Payload)
+}
+
+func (o *RunJobImmediatelyOK) GetPayload() models.MyString {
+	return o.Payload
 }
 
 func (o *RunJobImmediatelyOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

@@ -84,11 +84,11 @@ func (o *DeleteLabelParamsOK) Code() int {
 }
 
 func (o *DeleteLabelParamsOK) Error() string {
-	return fmt.Sprintf("[GET /plugin/label][%d] deleteLabelParamsOK ", 200)
+	return fmt.Sprintf("[DELETE /plugin/label][%d] deleteLabelParamsOK ", 200)
 }
 
 func (o *DeleteLabelParamsOK) String() string {
-	return fmt.Sprintf("[GET /plugin/label][%d] deleteLabelParamsOK ", 200)
+	return fmt.Sprintf("[DELETE /plugin/label][%d] deleteLabelParamsOK ", 200)
 }
 
 func (o *DeleteLabelParamsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -141,11 +141,11 @@ func (o *DeleteLabelParamsServiceUnavailable) Code() int {
 }
 
 func (o *DeleteLabelParamsServiceUnavailable) Error() string {
-	return fmt.Sprintf("[GET /plugin/label][%d] deleteLabelParamsServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[DELETE /plugin/label][%d] deleteLabelParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *DeleteLabelParamsServiceUnavailable) String() string {
-	return fmt.Sprintf("[GET /plugin/label][%d] deleteLabelParamsServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[DELETE /plugin/label][%d] deleteLabelParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *DeleteLabelParamsServiceUnavailable) GetPayload() *models.APIError {

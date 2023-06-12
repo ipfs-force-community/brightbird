@@ -20,11 +20,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Lists all tasks.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -69,11 +67,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Get task by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -110,11 +106,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Delete task by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -150,11 +144,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// stop task
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//

@@ -28,11 +28,9 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	// Get plugin by name and version.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -68,11 +66,9 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	// List plugin by name and version.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -103,16 +99,14 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /plugin/label plugin addLabelParams
+	// swagger:route POST /plugin/label plugin addLabelParams
 	//
 	// Add label in plugin.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -143,16 +137,14 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route GET /plugin/label plugin deleteLabelParams
+	// swagger:route DELETE /plugin/label plugin deleteLabelParams
 	//
 	// Delete label in plugin.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -183,32 +175,18 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route DELETE /plugin plugin deletePlugin
+	// swagger:route DELETE /plugin plugin deletePluginReq
 	//
 	// Delete plugin by id and specific version
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: id
-	//         in: query
-	//         description: id of plugin
-	//         required: false
-	//         type: string
-	//       + name: version
-	//         in: query
-	//         description: version of plugin
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200:
@@ -274,9 +252,14 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//
 	// Upload plugin files
 	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
 	// Responses:
 	//	    200:
-	//	    403: apiError
+	//	    503: apiError
 	group.POST("upload", func(c *gin.Context) {
 		params := &UploadPluginFilesParams{}
 		err := c.ShouldBind(params)
@@ -294,8 +277,25 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				return
 			}
 
+			err = os.Chmod(tmpPath, 0750)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+
 			pluginInfo, err := plugin.GetPluginInfo(tmpPath)
 			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+
+			_, err = service.GetPlugin(c, pluginInfo.Name, pluginInfo.Version)
+			if err == nil {
+				c.Error(fmt.Errorf("plugin %s(%s) already exit", pluginInfo.Name, pluginInfo.Version)) //nolint
+				return
+			}
+
+			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
 				c.Error(err) //nolint
 				return
 			}
@@ -376,6 +376,17 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		for _, pluginPath := range filePaths {
 			pluginInfo, err := plugin.GetPluginInfo(pluginPath)
 			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+
+			_, err = service.GetPlugin(c, pluginInfo.Name, pluginInfo.Version)
+			if err == nil {
+				c.Error(fmt.Errorf("plugin %s(%s) already exit", pluginInfo.Name, pluginInfo.Version)) //nolint
+				return
+			}
+
+			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
 				c.Error(err) //nolint
 				return
 			}

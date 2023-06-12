@@ -49,7 +49,7 @@ func copyFileContents(src, dst string) (err error) {
 		return
 	}
 	defer in.Close() //nolint
-	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0777)
+	out, err := os.OpenFile(dst, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0750)
 	if err != nil {
 		return
 	}
