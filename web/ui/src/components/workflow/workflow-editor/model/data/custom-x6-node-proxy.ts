@@ -19,7 +19,7 @@ export class CustomX6NodeProxy {
 
     switch (obj.type) {
       case NodeTypeEnum.ASYNC_TASK:
-        nodeData = AsyncTask.build(
+        nodeData = AsyncTask.build( 
           obj,
         );
         break;

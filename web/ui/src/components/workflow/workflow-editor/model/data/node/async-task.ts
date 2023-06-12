@@ -44,22 +44,23 @@ export class AsyncTask extends BaseNode {
   modifiedTime: number;
 
   constructor(
-    name: string,
-    type: NodeTypeEnum,
-    icon = '',
-    groupType: PluginTypeEnum,
-    version = '',
-    pluginType = '',
-    inputs: Property[],
-    dependencies: DependencyProperty[],
-    createTime = 0,
-    modifiedTime = 0,
-    instance: DependencyProperty,
+      name: string,
+      type: NodeTypeEnum,
+      icon = '',
+      labels: string[] = [],
+      groupType: PluginTypeEnum,
+      version = '',
+      pluginType = '',
+      inputs: Property[],
+      dependencies: DependencyProperty[],
+      createTime = 0,
+      modifiedTime = 0,
+      instance: DependencyProperty,
   ) {
     super(
-      name,
-      NodeTypeEnum.ASYNC_TASK,
-      checkDefaultIcon(icon) ? defaultIcon : icon,
+        name,
+        NodeTypeEnum.ASYNC_TASK,
+        checkDefaultIcon(icon) ? defaultIcon : icon,labels
     );
     this.groupType = groupType;
     this.version = version;
@@ -73,9 +74,9 @@ export class AsyncTask extends BaseNode {
 
 
   static build(
-    { name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance }: any,
+      { name, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance);
+    return new AsyncTask(name, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types

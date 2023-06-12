@@ -5,14 +5,16 @@ import { ISelectableParam } from '../../../../workflow-expression-editor/model/d
 
 export abstract class BaseNode implements IWorkflowNode {
   name: string;
+  labels: string[];
   private readonly type: NodeTypeEnum;
   private readonly icon: string;
 
   protected constructor(name: string,
-    type: NodeTypeEnum, icon: string) {
+    type: NodeTypeEnum, icon: string, labels: string[]) {
     this.name = name;
     this.type = type;
     this.icon = icon;
+    this.labels = labels;
   }
 
   getDisplayName(): string {
@@ -25,6 +27,10 @@ export abstract class BaseNode implements IWorkflowNode {
 
   getIcon(): string {
     return this.icon;
+  }
+
+  getLabels(): string[] {
+    return this.labels;
   }
 
   buildSelectableParam(nodeId: string): ISelectableParam | undefined {
