@@ -18,11 +18,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// Lists test flows.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -68,11 +66,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// Count testflow numbers in group
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -116,11 +112,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// Get specific test case by condition.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -162,11 +156,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// save test case, create if not exist
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -205,11 +197,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// Delete test flow by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -245,11 +235,9 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	// change testflow group id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//

@@ -23,18 +23,14 @@
     },
     "version": "0.0.1"
   },
-  "host": "127.0.0.1:12356",
+  "host": "192.168.200.103:12356",
   "basePath": "/api/v1",
   "paths": {
     "/changegroup": {
       "post": {
         "description": "change testflow group id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -73,12 +69,8 @@
     "/group": {
       "post": {
         "description": "Save group",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -103,7 +95,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
           },
           "503": {
             "description": "apiError",
@@ -116,12 +111,8 @@
     },
     "/group/count": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -161,12 +152,8 @@
     },
     "/group/list": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -195,12 +182,8 @@
     },
     "/group/{id}": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -237,12 +220,8 @@
       },
       "post": {
         "description": "Update group name/show/description",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -286,12 +265,8 @@
       },
       "delete": {
         "description": "Delete group by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -326,12 +301,8 @@
     "/job": {
       "post": {
         "description": "save job entity, create if not exist",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -356,7 +327,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
           },
           "503": {
             "description": "apiError",
@@ -369,12 +343,8 @@
     },
     "/job/count": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -420,12 +390,8 @@
     "/job/detail/{id}": {
       "get": {
         "description": "Get job detail by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -462,12 +428,8 @@
     },
     "/job/list": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -497,12 +459,8 @@
     "/job/{id}": {
       "get": {
         "description": "Update job",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -549,12 +507,8 @@
       },
       "delete": {
         "description": "Delete job by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -588,12 +542,8 @@
     },
     "/logs/pods/{testid}": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -631,12 +581,8 @@
     },
     "/logs/{podName}": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -674,12 +620,8 @@
     },
     "/plugin": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -691,6 +633,13 @@
         "summary": "Get plugin by name and version.",
         "operationId": "getPluginParams",
         "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of plugin",
+            "name": "id",
+            "in": "query"
+          },
           {
             "type": "string",
             "x-go-name": "Name",
@@ -722,13 +671,9 @@
         }
       },
       "delete": {
-        "description": "Delete plugin by id",
-        "consumes": [
-          "application/json"
-        ],
+        "description": "Delete plugin by id and specific version",
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -737,19 +682,23 @@
         "tags": [
           "plugin"
         ],
-        "operationId": "deletePlugin",
+        "operationId": "deletePluginReq",
         "parameters": [
           {
             "type": "string",
+            "x-go-name": "ID",
             "description": "id of plugin",
             "name": "id",
-            "in": "query"
+            "in": "query",
+            "required": true
           },
           {
             "type": "string",
-            "description": "version of plugin",
+            "x-go-name": "Version",
+            "description": "specific plugin version",
             "name": "version",
-            "in": "query"
+            "in": "query",
+            "required": true
           }
         ],
         "responses": {
@@ -781,7 +730,7 @@
         "tags": [
           "plugin"
         ],
-        "summary": "import plugin mainfest.",
+        "summary": "import plugin.",
         "operationId": "importPlugin",
         "parameters": [
           {
@@ -806,13 +755,50 @@
       }
     },
     "/plugin/label": {
-      "get": {
-        "consumes": [
+      "post": {
+        "produces": [
           "application/json"
         ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Add label in plugin.",
+        "operationId": "addLabelParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Label",
+            "description": "plugin type",
+            "name": "label",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -854,12 +840,8 @@
     },
     "/plugin/list": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -908,6 +890,9 @@
     "/plugin/upload": {
       "post": {
         "description": "Upload plugin files",
+        "produces": [
+          "application/json"
+        ],
         "tags": [
           "plugin"
         ],
@@ -925,7 +910,7 @@
           "200": {
             "description": ""
           },
-          "403": {
+          "503": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -937,12 +922,8 @@
     "/run/{jobid}": {
       "post": {
         "description": "run job immediately",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -963,7 +944,10 @@
         ],
         "responses": {
           "200": {
-            "description": ""
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
           },
           "503": {
             "description": "apiError",
@@ -976,12 +960,8 @@
     },
     "/task": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1057,12 +1037,8 @@
     "/task/stop/{id}": {
       "delete": {
         "description": "stop task",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1097,12 +1073,8 @@
     "/task/{id}": {
       "get": {
         "description": "Get task by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1138,12 +1110,8 @@
       },
       "delete": {
         "description": "Delete task by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1177,12 +1145,8 @@
     },
     "/testflow": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1226,12 +1190,8 @@
       },
       "post": {
         "description": "save test case, create if not exist",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1270,12 +1230,8 @@
     "/testflow/count": {
       "get": {
         "description": "Count testflow numbers in group",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1316,12 +1272,8 @@
     },
     "/testflow/list": {
       "get": {
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1381,12 +1333,8 @@
     "/testflow/{id}": {
       "delete": {
         "description": "Delete test flow by id",
-        "consumes": [
-          "application/json"
-        ],
         "produces": [
-          "application/json",
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1422,7 +1370,7 @@
       "get": {
         "description": "get backend version",
         "produces": [
-          "application/text"
+          "application/json"
         ],
         "schemes": [
           "http",
@@ -1437,6 +1385,12 @@
             "description": "myString",
             "schema": {
               "$ref": "#/definitions/myString"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
             }
           }
         }
@@ -7302,7 +7256,7 @@
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "myString": {
-      "description": "MyString",
+      "description": "MyString  repretation string",
       "type": "string",
       "x-go-name": "MyString",
       "x-go-package": "github.com/hunjixin/brightbird/models"

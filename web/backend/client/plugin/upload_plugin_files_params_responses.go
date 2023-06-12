@@ -29,8 +29,8 @@ func (o *UploadPluginFilesParamsReader) ReadResponse(response runtime.ClientResp
 			return nil, err
 		}
 		return result, nil
-	case 403:
-		result := NewUploadPluginFilesParamsForbidden()
+	case 503:
+		result := NewUploadPluginFilesParamsServiceUnavailable()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -96,63 +96,63 @@ func (o *UploadPluginFilesParamsOK) readResponse(response runtime.ClientResponse
 	return nil
 }
 
-// NewUploadPluginFilesParamsForbidden creates a UploadPluginFilesParamsForbidden with default headers values
-func NewUploadPluginFilesParamsForbidden() *UploadPluginFilesParamsForbidden {
-	return &UploadPluginFilesParamsForbidden{}
+// NewUploadPluginFilesParamsServiceUnavailable creates a UploadPluginFilesParamsServiceUnavailable with default headers values
+func NewUploadPluginFilesParamsServiceUnavailable() *UploadPluginFilesParamsServiceUnavailable {
+	return &UploadPluginFilesParamsServiceUnavailable{}
 }
 
 /*
-UploadPluginFilesParamsForbidden describes a response with status code 403, with default header values.
+UploadPluginFilesParamsServiceUnavailable describes a response with status code 503, with default header values.
 
 apiError
 */
-type UploadPluginFilesParamsForbidden struct {
+type UploadPluginFilesParamsServiceUnavailable struct {
 	Payload *models.APIError
 }
 
-// IsSuccess returns true when this upload plugin files params forbidden response has a 2xx status code
-func (o *UploadPluginFilesParamsForbidden) IsSuccess() bool {
+// IsSuccess returns true when this upload plugin files params service unavailable response has a 2xx status code
+func (o *UploadPluginFilesParamsServiceUnavailable) IsSuccess() bool {
 	return false
 }
 
-// IsRedirect returns true when this upload plugin files params forbidden response has a 3xx status code
-func (o *UploadPluginFilesParamsForbidden) IsRedirect() bool {
+// IsRedirect returns true when this upload plugin files params service unavailable response has a 3xx status code
+func (o *UploadPluginFilesParamsServiceUnavailable) IsRedirect() bool {
 	return false
 }
 
-// IsClientError returns true when this upload plugin files params forbidden response has a 4xx status code
-func (o *UploadPluginFilesParamsForbidden) IsClientError() bool {
+// IsClientError returns true when this upload plugin files params service unavailable response has a 4xx status code
+func (o *UploadPluginFilesParamsServiceUnavailable) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this upload plugin files params service unavailable response has a 5xx status code
+func (o *UploadPluginFilesParamsServiceUnavailable) IsServerError() bool {
 	return true
 }
 
-// IsServerError returns true when this upload plugin files params forbidden response has a 5xx status code
-func (o *UploadPluginFilesParamsForbidden) IsServerError() bool {
-	return false
+// IsCode returns true when this upload plugin files params service unavailable response a status code equal to that given
+func (o *UploadPluginFilesParamsServiceUnavailable) IsCode(code int) bool {
+	return code == 503
 }
 
-// IsCode returns true when this upload plugin files params forbidden response a status code equal to that given
-func (o *UploadPluginFilesParamsForbidden) IsCode(code int) bool {
-	return code == 403
+// Code gets the status code for the upload plugin files params service unavailable response
+func (o *UploadPluginFilesParamsServiceUnavailable) Code() int {
+	return 503
 }
 
-// Code gets the status code for the upload plugin files params forbidden response
-func (o *UploadPluginFilesParamsForbidden) Code() int {
-	return 403
+func (o *UploadPluginFilesParamsServiceUnavailable) Error() string {
+	return fmt.Sprintf("[POST /plugin/upload][%d] uploadPluginFilesParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
-func (o *UploadPluginFilesParamsForbidden) Error() string {
-	return fmt.Sprintf("[POST /plugin/upload][%d] uploadPluginFilesParamsForbidden  %+v", 403, o.Payload)
+func (o *UploadPluginFilesParamsServiceUnavailable) String() string {
+	return fmt.Sprintf("[POST /plugin/upload][%d] uploadPluginFilesParamsServiceUnavailable  %+v", 503, o.Payload)
 }
 
-func (o *UploadPluginFilesParamsForbidden) String() string {
-	return fmt.Sprintf("[POST /plugin/upload][%d] uploadPluginFilesParamsForbidden  %+v", 403, o.Payload)
-}
-
-func (o *UploadPluginFilesParamsForbidden) GetPayload() *models.APIError {
+func (o *UploadPluginFilesParamsServiceUnavailable) GetPayload() *models.APIError {
 	return o.Payload
 }
 
-func (o *UploadPluginFilesParamsForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *UploadPluginFilesParamsServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.APIError)
 

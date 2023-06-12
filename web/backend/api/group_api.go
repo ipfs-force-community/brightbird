@@ -20,11 +20,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Lists all group.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -62,11 +60,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Count group by condition.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -119,11 +115,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Get specific group by id.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -171,11 +165,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Save group
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -190,7 +182,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//         allowEmpty:  false
 	//
 	//     Responses:
-	//       200:
+	//       200: myString
 	//		 503: apiError
 	group.POST("", func(c *gin.Context) {
 		testFlow := models.Group{}
@@ -214,11 +206,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Update group name/show/description
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -278,11 +268,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Delete group by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//

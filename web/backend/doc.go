@@ -3,7 +3,7 @@
 // Terms Of Service:
 //
 //	Schemes: http, https
-//	Host: 127.0.0.1:12356
+//	Host: 192.168.200.103:12356
 //	BasePath: /api/v1
 //	Version: 0.0.1
 //	License: MIT http://opensource.org/licenses/MIT

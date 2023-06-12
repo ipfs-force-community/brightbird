@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
+
+var ErrPluginNotFound = errors.New("plugin not found")
 
 // ListPluginParams
 // swagger:parameters listPluginParams
@@ -264,6 +267,9 @@ func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*model
 	plugin := &models.PluginDetail{}
 	err := p.pluginCol.FindOne(ctx, bson.M{"name": name}).Decode(plugin)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("plugin %s(%s) %w", name, version, ErrPluginNotFound)
+		}
 		return nil, err
 	}
 	for _, p := range plugin.Plugins {
@@ -271,7 +277,7 @@ func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*model
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("plugin %s(%s not found)", name, version)
+	return nil, fmt.Errorf("plugin %s(%s) %w", name, version, ErrPluginNotFound)
 }
 
 func (p *PluginSvc) AddLabel(ctx context.Context, name string, newLabel string) error {

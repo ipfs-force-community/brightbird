@@ -30,9 +30,11 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	AddLabelParams(params *AddLabelParamsParams, opts ...ClientOption) (*AddLabelParamsOK, error)
+
 	DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error)
 
-	DeletePlugin(params *DeletePluginParams, opts ...ClientOption) (*DeletePluginOK, error)
+	DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOption) (*DeletePluginReqOK, error)
 
 	GetPluginParams(params *GetPluginParamsParams, opts ...ClientOption) (*GetPluginParamsOK, error)
 
@@ -46,6 +48,44 @@ type ClientService interface {
 }
 
 /*
+AddLabelParams adds label in plugin
+*/
+func (a *Client) AddLabelParams(params *AddLabelParamsParams, opts ...ClientOption) (*AddLabelParamsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewAddLabelParamsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "addLabelParams",
+		Method:             "POST",
+		PathPattern:        "/plugin/label",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &AddLabelParamsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*AddLabelParamsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for addLabelParams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
 DeleteLabelParams deletes label in plugin
 */
 func (a *Client) DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error) {
@@ -55,10 +95,10 @@ func (a *Client) DeleteLabelParams(params *DeleteLabelParamsParams, opts ...Clie
 	}
 	op := &runtime.ClientOperation{
 		ID:                 "deleteLabelParams",
-		Method:             "GET",
+		Method:             "DELETE",
 		PathPattern:        "/plugin/label",
-		ProducesMediaTypes: []string{"application/json", "application/text"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &DeleteLabelParamsReader{formats: a.formats},
@@ -84,22 +124,22 @@ func (a *Client) DeleteLabelParams(params *DeleteLabelParamsParams, opts ...Clie
 }
 
 /*
-DeletePlugin Delete plugin by id
+DeletePluginReq Delete plugin by id and specific version
 */
-func (a *Client) DeletePlugin(params *DeletePluginParams, opts ...ClientOption) (*DeletePluginOK, error) {
+func (a *Client) DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOption) (*DeletePluginReqOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewDeletePluginParams()
+		params = NewDeletePluginReqParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "deletePlugin",
+		ID:                 "deletePluginReq",
 		Method:             "DELETE",
 		PathPattern:        "/plugin",
-		ProducesMediaTypes: []string{"application/json", "application/text"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &DeletePluginReader{formats: a.formats},
+		Reader:             &DeletePluginReqReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -111,13 +151,13 @@ func (a *Client) DeletePlugin(params *DeletePluginParams, opts ...ClientOption) 
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*DeletePluginOK)
+	success, ok := result.(*DeletePluginReqOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for deletePlugin: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for deletePluginReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -133,8 +173,8 @@ func (a *Client) GetPluginParams(params *GetPluginParamsParams, opts ...ClientOp
 		ID:                 "getPluginParams",
 		Method:             "GET",
 		PathPattern:        "/plugin",
-		ProducesMediaTypes: []string{"application/json", "application/text"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &GetPluginParamsReader{formats: a.formats},
@@ -160,7 +200,7 @@ func (a *Client) GetPluginParams(params *GetPluginParamsParams, opts ...ClientOp
 }
 
 /*
-ImportPlugin imports plugin mainfest
+ImportPlugin imports plugin
 */
 func (a *Client) ImportPlugin(params *ImportPluginParams, opts ...ClientOption) (*ImportPluginOK, error) {
 	// TODO: Validate the params before sending
@@ -209,8 +249,8 @@ func (a *Client) ListPluginParams(params *ListPluginParamsParams, opts ...Client
 		ID:                 "listPluginParams",
 		Method:             "GET",
 		PathPattern:        "/plugin/list",
-		ProducesMediaTypes: []string{"application/json", "application/text"},
-		ConsumesMediaTypes: []string{"application/json"},
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
 		Reader:             &ListPluginParamsReader{formats: a.formats},
@@ -247,7 +287,7 @@ func (a *Client) UploadPluginFilesParams(params *UploadPluginFilesParamsParams, 
 		ID:                 "uploadPluginFilesParams",
 		Method:             "POST",
 		PathPattern:        "/plugin/upload",
-		ProducesMediaTypes: []string{"application/json", "application/xml"},
+		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,

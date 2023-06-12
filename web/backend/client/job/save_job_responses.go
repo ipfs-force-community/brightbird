@@ -48,9 +48,10 @@ func NewSaveJobOK() *SaveJobOK {
 /*
 SaveJobOK describes a response with status code 200, with default header values.
 
-SaveJobOK save job o k
+myString
 */
 type SaveJobOK struct {
+	Payload models.MyString
 }
 
 // IsSuccess returns true when this save job o k response has a 2xx status code
@@ -84,14 +85,23 @@ func (o *SaveJobOK) Code() int {
 }
 
 func (o *SaveJobOK) Error() string {
-	return fmt.Sprintf("[POST /job][%d] saveJobOK ", 200)
+	return fmt.Sprintf("[POST /job][%d] saveJobOK  %+v", 200, o.Payload)
 }
 
 func (o *SaveJobOK) String() string {
-	return fmt.Sprintf("[POST /job][%d] saveJobOK ", 200)
+	return fmt.Sprintf("[POST /job][%d] saveJobOK  %+v", 200, o.Payload)
+}
+
+func (o *SaveJobOK) GetPayload() models.MyString {
+	return o.Payload
 }
 
 func (o *SaveJobOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

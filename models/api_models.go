@@ -4,7 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// MyString
+// MyString  repretation string
 // swagger:model myString
 type MyString string
 
