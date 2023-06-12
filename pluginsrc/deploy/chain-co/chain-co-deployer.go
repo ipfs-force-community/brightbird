@@ -26,7 +26,7 @@ type ChainCoConfig struct {
 
 type Config struct {
 	env.BaseConfig
-	Replicas int `json:"replicas"`
+	Replicas int `json:"replicas" description:"[OPTIONS] number of replicas"`
 
 	AuthUrl    string   `json:"-"`
 	AdminToken string   `json:"-"`
