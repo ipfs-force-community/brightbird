@@ -5,7 +5,7 @@
 <script lang='ts'>
 
 import { defineComponent, inject, nextTick, onMounted, ref } from 'vue';
-import ElementPlus from 'element-plus'
+import ElementPlus from 'element-plus';
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../../model/data/custom-x6-node-proxy';
 import { ISelectableParam } from '../../../../workflow-expression-editor/model/data';

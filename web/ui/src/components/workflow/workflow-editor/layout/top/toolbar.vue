@@ -27,8 +27,8 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref,  } from 'vue';
-import {Cell, Graph } from '@antv/x6';
+import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref  } from 'vue';
+import { Cell, Graph } from '@antv/x6';
 import { ZoomTypeEnum } from '../../model/data/enumeration';
 import { WorkflowTool } from '../../model/workflow-tool';
 import ProjectPanel from './project-panel.vue';
@@ -55,7 +55,7 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     let workflowBackUp = cloneDeep(props.workflowData);
     const workflowForm = ref<IWorkflow>(props.workflowData);
-    const projectPanelVisible = inject('projectPanelVisible') as Boolean;
+    const projectPanelVisible = inject('projectPanelVisible') as boolean;
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();
     const getWorkflowValidator = inject('getWorkflowValidator') as () => WorkflowValidator;
@@ -157,8 +157,8 @@ export default defineComponent({
               });
 
               workflowForm.value.graph = JSON.stringify(targetData);
-              workflowForm.value.cases = caseList
-              workflowForm.value.nodes = nodeList
+              workflowForm.value.cases = caseList;
+              workflowForm.value.nodes = nodeList;
               emit('save', true,  caseList, nodeList, workflowTool.toDsl(workflowForm.value));
             })
             .catch((action: string) => {
@@ -186,7 +186,7 @@ export default defineComponent({
 
           const caseList: Case[] = [];
           const nodeList: Node[] = [];
-          graphData.cells.forEach((cell) => {
+          graphData.cells.forEach(cell => {
             if (cell.shape === 'edge') {
               return;
             }
@@ -213,8 +213,8 @@ export default defineComponent({
           });
 
           workflowForm.value.graph = JSON.stringify(graphData);
-          workflowForm.value.cases = caseList
-          workflowForm.value.nodes = nodeList
+          workflowForm.value.cases = caseList;
+          workflowForm.value.nodes = nodeList;
 
           emit('save', back, caseList, nodeList, workflowTool.toDsl(workflowForm.value));
           workflowBackUp = cloneDeep(workflowForm.value);

@@ -244,7 +244,6 @@ export interface DeleteLabelReq extends Readonly<{
 }
 
 
-
 export interface DependencyProperty {
     name: string;
     value: string;

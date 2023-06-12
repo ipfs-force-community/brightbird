@@ -165,8 +165,8 @@ export class WorkflowTool {
 
     if (idMap && idMap.size > 0) {
       idMap.forEach(
-          (value, key) =>
-              (dsl = dsl.replaceAll('${' + key + '.', '${' + value + '.')),
+        (value, key) =>
+          (dsl = dsl.replaceAll('${' + key + '.', '${' + value + '.')),
       );
     }
 

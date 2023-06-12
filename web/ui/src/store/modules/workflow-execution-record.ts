@@ -5,7 +5,7 @@ import {
   fetchTestFlowDetail,
 } from '@/api/view-no-auth';
 import yaml from 'yaml';
-import {INodeDefVo, ITestFlowDetail} from '@/api/dto/testflow';
+import { INodeDefVo, ITestFlowDetail } from '@/api/dto/testflow';
 
 /**
  * 命名空间
@@ -54,10 +54,10 @@ export default {
 //       recordDetail.taskRecords = taskRecords;
 //       recordDetail.nodeInfos = nodeInfos;
 //     },
-    // mutateRecordDetailNavScrollLeft(state: IState, navScrollLeft) {
-    //   const { recordDetail } = state;
-    //   recordDetail.navScrollLeft = navScrollLeft;
-    // },
+  // mutateRecordDetailNavScrollLeft(state: IState, navScrollLeft) {
+  //   const { recordDetail } = state;
+  //   recordDetail.navScrollLeft = navScrollLeft;
+  // },
   // },
   // actions: {
   //   async fetchDetail(

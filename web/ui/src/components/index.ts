@@ -16,7 +16,7 @@ import './theme/icon/link/css/jm-icon-link.css';
 import './theme/icon/menu/css/jm-icon-menu.css';
 import './theme/icon/input/css/jm-icon-input.css';
 import './theme/icon/workflow/css/jm-icon-workflow.css';
-import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
 import JmLoading from './notice/loading';
 import JmMessage from './notice/message';
@@ -28,13 +28,13 @@ export default {
   install: (app: App) => {
     app.use(ElementPlus, {
       locale: lang,
-    })
+    });
     for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-      app.component(key, component)
+      app.component(key, component);
     }
     // 动态加载组件
     Object.values(import.meta.glob('./**/index.vue', { eager: true }))
-      .concat(Object.values(import.meta.glob('./**/index.ts',{ eager: true })))
+      .concat(Object.values(import.meta.glob('./**/index.ts', { eager: true })))
       // 全局注册组件
       .forEach(({ default: component }) => {
         if (!component.name) {

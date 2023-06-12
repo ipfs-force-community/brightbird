@@ -167,7 +167,7 @@ export default defineComponent({
         // 获取选中数组中的id
         compSelectedList.value.forEach(item => {
           if (item.id) {
-            testflowIds.push(item.id)
+            testflowIds.push(item.id);
           }
         });
         try {

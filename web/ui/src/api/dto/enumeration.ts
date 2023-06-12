@@ -137,16 +137,16 @@ export namespace TaskStateEnum {
   export function toString(st: TaskStateEnum): string {
     switch (st) {
       case TaskStateEnum.Init:
-        return "init"
+        return 'init';
       case TaskStateEnum.Running:
-        return "running"
+        return 'running';
       case TaskStateEnum.TempError:
-        return "temperr"
+        return 'temperr';
       case TaskStateEnum.Error:
-        return "error"
+        return 'error';
       case TaskStateEnum.Successful:
-        return "success"
-      }
+        return 'success';
+    }
   }
 }
 
@@ -154,6 +154,6 @@ export namespace TaskStateEnum {
  * task state枚举类型
  */
 export enum PluginTypeEnum {
-	Deploy        = "Deployer",
-	Exec     = "Exec",
+	Deploy        = 'Deployer',
+	Exec     = 'Exec',
 }
