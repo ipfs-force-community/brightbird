@@ -76,9 +76,13 @@ func ParserProperties(configT reflect.Type) ([]types.Property, error) {
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
+
+		description := field.Tag.Get("description")
+
 		properties = append(properties, types.Property{
-			Name: fieldName,
-			Type: typeName,
+			Name:        fieldName,
+			Type:        typeName,
+			Description: description,
 		})
 	}
 	return properties, nil
