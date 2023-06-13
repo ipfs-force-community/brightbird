@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	venus_worker "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-worker"
@@ -20,6 +21,8 @@ type DepParams struct {
 	WalletDeploy  env.IDeployer `svcname:"VenusWallet"`
 
 	K8sEnv *env.K8sEnvDeployer
+
+	Miner env.IExec `svcname:"MinerInfo"`
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
@@ -33,9 +36,19 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
+	minerP, err := depParams.Miner.Param("Miner")
+	if err != nil {
+		return nil, err
+	}
+	minerAddr, err := env.UnmarshalJson[address.Address](minerP.Raw())
+	if err != nil {
+		return nil, err
+	}
+
 	deployer, err := venus_worker.DeployerFromConfig(depParams.K8sEnv, venus_worker.Config{
 		VenusSectorManagerUrl: sectorManagerEndpoint.ToHttp(),
 		AuthToken:             adminToken.MustString(),
+		MinerAddress:          minerAddr,
 	}, depParams.Params)
 	if err != nil {
 		return nil, err

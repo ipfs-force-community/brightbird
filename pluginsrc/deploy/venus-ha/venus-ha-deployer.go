@@ -23,8 +23,8 @@ type Config struct {
 	AdminToken     string   `json:"-"`
 	BootstrapPeers []string `json:"-"`
 
-	NetType  string `json:"netType"`
-	Replicas int    `json:"replicas"`
+	NetType  string `json:"netType" description:"network type: mainnet,2k,calibrationnet,force"`
+	Replicas int    `json:"replicas" description:"number of replicas"`
 }
 
 type RenderParams struct {

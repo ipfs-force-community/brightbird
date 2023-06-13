@@ -3,8 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"go.uber.org/fx"
 	"math/rand"
+
+	"go.uber.org/fx"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
@@ -57,7 +58,10 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 	fmt.Println("miner info: %v", minerInfo)
 
-	return env.NewSimpleExec().Add("Miner", env.ParamsFromVal(minerAddr)), nil
+	return env.NewSimpleExec().
+		Add("Miner", env.ParamsFromVal(minerAddr)).
+		Add("Owner", env.ParamsFromVal(addr)).
+		Add("Worker", env.ParamsFromVal(addr)), nil
 }
 
 func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {
