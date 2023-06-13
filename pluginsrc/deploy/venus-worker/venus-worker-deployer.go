@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -21,7 +22,7 @@ type Config struct {
 	VenusSectorManagerURL string `json:"-"`
 	AuthToken             string `json:"-"`
 
-	MinerAddress string `json:"minerAddress"`
+	MinerAddress address.Address `json:"-"`
 }
 
 type RenderParams struct {

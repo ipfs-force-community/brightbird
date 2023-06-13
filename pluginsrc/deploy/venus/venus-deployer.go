@@ -22,7 +22,7 @@ type Config struct {
 	AuthUrl        string   `json:"-"`
 	AdminToken     string   `json:"-"`
 	BootstrapPeers []string `json:"-"`
-	Replicas       int      `json:"replicas"`
+	Replicas       int      `json:"replicas" description:"number of replicas"`
 
 	NetType string `json:"netType"`
 }

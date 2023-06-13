@@ -39,7 +39,7 @@
             <jm-form-item v-for="(item, index) in form.inputs" :key="item.name" :prop="`inputs.${index}.value`"
               :rules="nodeData.getFormRules().version" class="node-name">
               <template #label>
-                {{ item.name }} ({{ item.type }})
+                {{ item.name }} ({{ item.type }}, require = {{ item.require }})
                 <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
@@ -75,7 +75,7 @@
             <jm-form-item v-for="(item, index) in form.dependencies" :key="item.name"
               :prop="form.dependencies.length ? `dependencies.${index}.value` : null" class="node-name">
               <template #label>
-                {{ item.name }}
+                {{ item.name }} ({{ item.type }})
                 <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>

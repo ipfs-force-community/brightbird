@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
@@ -18,17 +19,14 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	NodeUrl     string `json:"-"`
-	MessagerUrl string `json:"-"`
-	MarketUrl   string `json:"-"`
-	GatewayUrl  string `json:"-"`
-	AuthUrl     string `json:"-"`
-	AuthToken   string `json:"-"`
-
-	DBPlugin     string `json:"dbPlugin"`
-	DBDNS        string `json:"dbDns"`
-	SendAddress  string `json:"sendAddress"`
-	MinerAddress int64  `json:"minerAddress"`
+	NodeUrl             string          `json:"-"`
+	MessagerUrl         string          `json:"-"`
+	MarketUrl           string          `json:"-"`
+	GatewayUrl          string          `json:"-"`
+	AuthUrl             string          `json:"-"`
+	AuthToken           string          `json:"-"`
+	SenderWalletAddress address.Address `json:"-"`
+	MinerAddress        address.Address `json:"-"`
 }
 
 type RenderParams struct {

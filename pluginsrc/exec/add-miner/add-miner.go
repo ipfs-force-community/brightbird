@@ -59,9 +59,12 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
+	log.Debug("miner Info is %v", minerInfo)
 
-	log.Infof("miner info: %v", minerInfo)
-	return env.NewSimpleExec().Add("Miner", env.ParamsFromVal(minerAddr)), nil
+	return env.NewSimpleExec().
+		Add("Miner", env.ParamsFromVal(minerAddr)).
+		Add("Owner", env.ParamsFromVal(addr)).
+		Add("Worker", env.ParamsFromVal(addr)), nil
 }
 
 func CreateMiner(ctx context.Context, params TestCaseParams, walletAddr address.Address) (string, error) {

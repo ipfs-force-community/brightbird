@@ -17,8 +17,8 @@ type DepParams struct {
 	Params chainco.Config `optional:"true"`
 	K8sEnv *env.K8sEnvDeployer
 
-	VenusDep        env.IDeployer `svcname:"Venus"`
-	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth"`
+	VenusDep        env.IDeployer `svcname:"Venus" description:"[Deploy]venus"`
+	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth" description:"[Deploy]venus-auth"`
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {

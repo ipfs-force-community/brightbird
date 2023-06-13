@@ -31,18 +31,19 @@ func ParseParams(params reflect.Type) (types.PluginParams, error) {
 			if len(svcName) == 0 {
 				continue
 			}
+			description := field.Tag.Get("description")
 			if field.Type == env.IDeployerT {
 				svcProperties = append(svcProperties, types.DependencyProperty{
 					Name:        svcName,
 					Type:        types.Deploy,
-					Description: "",
+					Description: description,
 					Require:     optional != "true",
 				})
 			} else if field.Type == env.IExecT {
 				svcProperties = append(svcProperties, types.DependencyProperty{
 					Name:        svcName,
 					Type:        types.TestExec,
-					Description: "",
+					Description: description,
 					Require:     optional != "true",
 				})
 			} else {
@@ -76,9 +77,13 @@ func ParserProperties(configT reflect.Type) ([]types.Property, error) {
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
+
+		description := field.Tag.Get("description")
+
 		properties = append(properties, types.Property{
-			Name: fieldName,
-			Type: typeName,
+			Name:        fieldName,
+			Type:        typeName,
+			Description: description,
 		})
 	}
 	return properties, nil

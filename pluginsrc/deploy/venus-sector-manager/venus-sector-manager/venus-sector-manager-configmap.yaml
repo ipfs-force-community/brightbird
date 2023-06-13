@@ -35,16 +35,11 @@ data:
     [Common.PersistStores.Meta]
     #SomeKey = "SomeValue"
 
-    [Common.Plugins]
-    Dir = "/root/venus-cluster/dist/bin/dist/bin"
     [Common.DB]
-    Driver = "plugin"
+    Driver = "badger"
     [Common.DB.Badger]
-    BaseDir = "/root/.venus-sector-manager"
-    [Common.DB.Plugin]
-    PluginName = "{{.DBPlugin}}"
-    [Common.DB.Plugin.Meta]
-    dsn = "{{.DNS}}"
+    # BaseDir = ""
+
     [Common.Proving]
     #ParallelCheckLimit = 128
     #SingleCheckTimeout = "10m0s"
@@ -61,27 +56,11 @@ data:
     EnableDeals = true
     LifetimeDays = 540
     Verbose = false
-    
-    [Miners.SnapUp]
-    Enabled = false
-    Sender = "{{.SenderAddress}}" 
-    SendFund = true
-    GasOverEstimation = 1.2
-    GasOverPremium = 0.0
-    GasFeeCap = "5 nanoFIL"
-    #MaxFeeCap = ""
-    MessageConfidence = 15
-    ReleaseConfidence = 30
-    [Miners.SnapUp.Retry]
-    MaxAttempts = 10
-    PollInterval = "3m0s"
-    APIFailureWait = "3m0s"
-    LocalFailureWait = "3m0s"
-    
+
     [Miners.Commitment]
     Confidence = 10
     [Miners.Commitment.Pre]
-    Sender = "{{.SenderAddress}}" 
+    Sender = "{{.SenderWalletAddress}}" 
     SendFund = false
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
@@ -99,7 +78,7 @@ data:
     MaxFeeCap = ""
     
     [Miners.Commitment.Prove]
-    Sender = "{{.SenderAddress}}" 
+    Sender = "{{.SenderWalletAddress}}" 
     SendFund = false
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
@@ -117,7 +96,7 @@ data:
     #MaxFeeCap = ""
     
     [Miners.Commitment.Terminate]
-    Sender = "{{.SenderAddress}}"
+    Sender = "{{.SenderWalletAddress}}"
     SendFund = false
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
@@ -135,7 +114,7 @@ data:
     #MaxFeeCap = ""
     
     [Miners.PoSt]
-    Sender = "{{.SenderAddress}}" 
+    Sender = "{{.SenderWalletAddress}}" 
     Enabled = true
     StrictCheck = true
     Parallel = false
