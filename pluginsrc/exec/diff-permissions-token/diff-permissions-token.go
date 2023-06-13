@@ -3,6 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"strconv"
+	"time"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
@@ -23,7 +26,7 @@ func main() {
 }
 
 var Info = types.PluginInfo{
-	Name:        "admin-sign-write-read-token ",
+	Name:        "admin-sign-write-read-token",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "generate diff permissions token",
@@ -72,16 +75,18 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
+	suffix := generateRandomSuffix()
+	name := params.Params.Permission + suffix
 	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    params.Params.Permission,
-		Comment: utils.StringPtr("comment " + params.Params.Permission),
+		Name:    name,
+		Comment: utils.StringPtr("comment " + name),
 		State:   0,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := authAPIClient.GenerateToken(ctx, params.Params.Permission, params.Params.Permission, "")
+	token, err := authAPIClient.GenerateToken(ctx, name, params.Params.Permission, "")
 	if err != nil {
 		return nil, err
 	}
@@ -167,4 +172,11 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	}
 
 	return "", nil
+}
+
+// 生成随机数后缀的函数
+func generateRandomSuffix() string {
+	rand.Seed(time.Now().UnixNano())
+	randomNum := rand.Intn(10000)
+	return "_" + strconv.Itoa(randomNum)
 }
