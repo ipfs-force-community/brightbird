@@ -59,6 +59,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
+	fmt.Printf("miner Info is %v", minerInfo)
 
 	return env.NewSimpleExec().
 		Add("Miner", env.ParamsFromVal(minerAddr)).
