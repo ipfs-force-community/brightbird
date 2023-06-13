@@ -176,7 +176,9 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 
 // 生成随机数后缀的函数
 func generateRandomSuffix() string {
-	rand.Seed(time.Now().UnixNano())
-	randomNum := rand.Intn(10000)
+	seed := time.Now().UnixNano()
+	rng := rand.New(rand.NewSource(seed))
+
+	randomNum := rng.Intn(10000)
 	return "_" + strconv.Itoa(randomNum)
 }
