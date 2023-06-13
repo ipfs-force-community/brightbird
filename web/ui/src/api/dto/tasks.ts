@@ -1,5 +1,5 @@
-import { TaskStateEnum } from "./enumeration";
-import { IPageDto } from "./common";
+import { TaskStateEnum } from './enumeration';
+import { IPageDto } from './common';
 export interface ITaskVo extends Readonly<{
   id: string;
   name: string;

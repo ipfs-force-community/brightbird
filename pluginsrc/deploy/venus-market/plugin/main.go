@@ -5,17 +5,17 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	venus_market "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-market"
+	venusmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-market"
 )
 
-var Info = venus_market.PluginInfo
+var Info = venusmarket.PluginInfo
 
 func main() {
-	plugin.SetupPluginFromStdin(venus_market.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(venusmarket.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params venus_market.Config `optional:"true"`
+	Params venusmarket.Config `optional:"true"`
 
 	VenusAuth env.IDeployer `svcname:"VenusAuth"`
 	Venus     env.IDeployer `svcname:"Venus"`
@@ -51,7 +51,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := venus_market.DeployerFromConfig(depParams.K8sEnv, venus_market.Config{
+	deployer, err := venusmarket.DeployerFromConfig(depParams.K8sEnv, venusmarket.Config{
 		NodeUrl:     venusEndpoint.ToMultiAddr(),
 		GatewayUrl:  gatewayEndpoint.ToMultiAddr(),
 		MessagerUrl: messagerEndpoint.ToMultiAddr(),

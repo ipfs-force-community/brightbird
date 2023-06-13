@@ -34,7 +34,7 @@ func GetFreePort() (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	defer l.Close()
+	defer l.Close() //nolint
 	return l.Addr().(*net.TCPAddr).Port, nil
 }
 
@@ -45,7 +45,7 @@ func ToMultiAddr(endpoint string) string {
 	addr := net.ParseIP(ipOrDsn)
 	if addr != nil {
 		return fmt.Sprintf("/ip4/%s/tcp/%s", ipOrDsn, port)
-	} else {
-		return fmt.Sprintf("/dsn/%s/tcp/%s", ipOrDsn, port)
 	}
+
+	return fmt.Sprintf("/dsn/%s/tcp/%s", ipOrDsn, port)
 }

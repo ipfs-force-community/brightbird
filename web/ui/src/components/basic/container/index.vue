@@ -6,7 +6,7 @@
 
 <script lang="ts">
 import { ElContainer } from 'element-plus';
-import { Component, computed, VNode,defineComponent } from 'vue';
+import { Component, computed, VNode, defineComponent } from 'vue';
 
 export default defineComponent({
   extends: ElContainer,

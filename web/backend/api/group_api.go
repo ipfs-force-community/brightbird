@@ -20,11 +20,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Lists all group.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -36,7 +34,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	group.GET("/list", func(c *gin.Context) {
 		groups, err := groupSvc.List(ctx)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		groupOutList := make([]models.GroupResp, len(groups))
@@ -45,7 +43,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 				GroupID: group.ID,
 			})
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 
@@ -62,11 +60,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Count group by condition.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -91,7 +87,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 		req := &models.CountGroupRequest{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 
@@ -102,14 +98,14 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 		if req.ID != nil {
 			params.ID, err = primitive.ObjectIDFromHex(*req.ID)
 			if err != nil {
-				c.Error(err)
+				_ = c.Error(err)
 				return
 			}
 		}
 
 		count, err := groupSvc.Count(ctx, params)
 		if err != nil {
-			c.Error(err)
+			_ = c.Error(err)
 			return
 		}
 		c.JSON(http.StatusOK, count)
@@ -119,11 +115,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Get specific group by id.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -142,13 +136,13 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		group, err := groupSvc.Get(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -156,7 +150,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 			GroupID: group.ID,
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -171,11 +165,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Save group
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -190,19 +182,19 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	//         allowEmpty:  false
 	//
 	//     Responses:
-	//       200:
+	//       200: myString
 	//		 503: apiError
 	group.POST("", func(c *gin.Context) {
 		testFlow := models.Group{}
 		err := c.ShouldBindJSON(&testFlow)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		id, err := groupSvc.Save(ctx, testFlow)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -214,11 +206,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Update group name/show/description
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -243,20 +233,20 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	group.POST("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		req := models.UpdateGroupRequest{}
 		err = c.ShouldBindJSON(&req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		group, err := groupSvc.Get(c, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -267,7 +257,7 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 
 		_, err = groupSvc.Save(ctx, *group)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -278,11 +268,9 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	// Delete group by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -301,12 +289,12 @@ func RegisterGroupRouter(ctx context.Context, v1group *V1RouterGroup, groupSvc r
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		err = groupSvc.Delete(c, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 

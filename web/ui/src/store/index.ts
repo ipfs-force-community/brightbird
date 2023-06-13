@@ -8,7 +8,7 @@ const store = createStore<IRootState>({
   strict: process.env.NODE_ENV !== 'production',
   // 根状态
   state: {
-    version: "",
+    version: '',
     thirdPartyType: '',
     authMode: 'readonly',
     parameterTypes: [],
@@ -20,7 +20,7 @@ const store = createStore<IRootState>({
   },
   // 根mutation
   mutations: {
-    mutateVersion(state: IRootState, payload: ""): void {
+    mutateVersion(state: IRootState, payload: ''): void {
       state.version = payload;
     },
 
@@ -76,7 +76,7 @@ const store = createStore<IRootState>({
 });
 
 // 动态加载模块
-Object.values(import.meta.glob('./modules/*.ts', {eager: true})).forEach(({ default: module, namespace }) =>
+Object.values(import.meta.glob('./modules/*.ts', { eager: true })).forEach(({ default: module, namespace }) =>
   store.registerModule(namespace, module),
 );
 

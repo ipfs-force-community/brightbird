@@ -11,7 +11,10 @@ import (
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 )
+
+var log = logging.Logger("walletpro_gateway")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -38,11 +41,11 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	walletAddrs, err := ImportFbls(ctx, params)
 	if err != nil || len(walletAddrs) <= 0 {
-		fmt.Printf("create miner failed: %v\n", err)
+		log.Infof("create miner failed: %v", err)
 		return nil, err
 	}
 	for id, addr := range walletAddrs {
-		fmt.Println("wallet %v is: %v", id, addr)
+		log.Infof("wallet %v is: %v", id, addr)
 	}
 
 	err = ConnectAuthor(ctx, params)
@@ -57,7 +60,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), walletAddrs[0])
 	if err != nil {
-		fmt.Printf("get wallet info failed: %v\n", err)
+		log.Infof("get wallet info failed: %v", err)
 		return nil, err
 	}
 
@@ -82,7 +85,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
-		return nil, fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	for _, b := range walletAaddrs {
@@ -108,7 +111,7 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 
 	_, err = params.K8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
-		return fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return nil
@@ -135,7 +138,7 @@ func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string,
 		}
 	}
 
-	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}

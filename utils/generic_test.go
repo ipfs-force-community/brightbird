@@ -11,7 +11,7 @@ func TestMergeMapStructAndJson(t *testing.T) {
 	type A struct {
 		P1 map[string]string
 	}
-	result, err := MergeStructAndJson(A{}, A{}, json.RawMessage(`{"P1":{"Out":"xxx"}}`))
+	result, err := MergeStructAndJSON(A{}, A{}, json.RawMessage(`{"P1":{"Out":"xxx"}}`))
 	assert.NoError(t, err)
 	assert.Equal(t, result.P1["Out"], "xxx")
 }
@@ -24,7 +24,7 @@ func TestMergeStructAndJson(t *testing.T) {
 		P4 int
 	}
 
-	result, err := MergeStructAndJson(A{
+	result, err := MergeStructAndJSON(A{
 		P1: "aaa",
 		P2: 1,
 	}, A{
@@ -37,7 +37,7 @@ func TestMergeStructAndJson(t *testing.T) {
 	assert.Equal(t, result.P2, 2)
 	assert.Equal(t, result.P3, 1)
 
-	result, err = MergeStructAndJson(A{
+	result, err = MergeStructAndJSON(A{
 		P1: "aaa",
 		P2: 1,
 	}, A{

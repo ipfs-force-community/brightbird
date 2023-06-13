@@ -74,7 +74,7 @@ func (g *GroupSvc) Count(ctx context.Context, params *CountGroupParams) (int64, 
 
 func (g *GroupSvc) Get(ctx context.Context, id primitive.ObjectID) (*models.Group, error) {
 	tf := &models.Group{}
-	err := g.groupCol.FindOne(ctx, bson.D{{"_id", id}}).Decode(tf)
+	err := g.groupCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func (g *GroupSvc) Delete(ctx context.Context, id primitive.ObjectID) error {
 		return fmt.Errorf("test flow (%d) in this group, remove test flow first", count)
 	}
 
-	_, err = g.groupCol.DeleteOne(ctx, bson.D{{"_id", id}})
+	_, err = g.groupCol.DeleteOne(ctx, bson.D{{Key: "_id", Value: id}})
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func (g *GroupSvc) Save(ctx context.Context, group models.Group) (primitive.Obje
 		group.ID = primitive.NewObjectID()
 	}
 
-	count, err := g.groupCol.CountDocuments(ctx, bson.D{{"_id", group.ID}})
+	count, err := g.groupCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: group.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
@@ -119,7 +119,7 @@ func (g *GroupSvc) Save(ctx context.Context, group models.Group) (primitive.Obje
 	update := bson.M{
 		"$set": group,
 	}
-	_, err = g.groupCol.UpdateOne(ctx, bson.D{{"name", group.Name}}, update, options.Update().SetUpsert(true))
+	_, err = g.groupCol.UpdateOne(ctx, bson.D{{Key: "name", Value: group.Name}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}

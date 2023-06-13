@@ -4,8 +4,8 @@ import {
 } from '@/api/dto/testflow-group';
 
 import {
-  IChangeTestflowGroupDto
-} from '@/api/dto/testflow'
+  IChangeTestflowGroupDto,
+} from '@/api/dto/testflow';
 import { Mutable } from '@/utils/lib';
 
 export interface IProjectGroupCreateFrom

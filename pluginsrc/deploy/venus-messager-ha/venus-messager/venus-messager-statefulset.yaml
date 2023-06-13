@@ -20,7 +20,7 @@ spec:
           volumeMounts:
             - mountPath: /root
               name: venus-messager-pvc
-            - name: venus-messager-ha-cfg
+            - name: venus-messager-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       containers:
@@ -33,13 +33,13 @@ spec:
           volumeMounts:
             - mountPath: /root
               name: venus-messager-pvc
-            - name: venus-messager-ha-cfg
+            - name: venus-messager-cfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
       volumes:
-        - name: venus-messager-ha-cfg
+        - name: venus-messager-cfg
           configMap:
-            name: venus-messager-ha-{{.UniqueId}}
+            name: venus-messager-{{.UniqueId}}
             items:
               - key: config.toml
                 path: config.toml   

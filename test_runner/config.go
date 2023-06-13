@@ -9,8 +9,8 @@ type Config struct {
 	Timeout        int
 	Listen         string
 
-	MongoUrl string
-	DbName   string
+	MongoURL string
+	DBName   string
 
 	Mysql string
 

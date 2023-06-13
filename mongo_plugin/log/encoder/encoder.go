@@ -191,7 +191,7 @@ func (enc *Encoder) AppendByteString(value []byte) {
 
 func (enc *Encoder) AppendComplex128(val complex128) {
 	// Cast to a platform-independent, fixed-size type.
-	r, i := float64(real(val)), float64(imag(val))
+	r, i := real(val), imag(val)
 	enc.AppendByte('"')
 	// Because we're always in a quoted string, we can use strconv without
 	// special-casing NaN and +/-Inf.

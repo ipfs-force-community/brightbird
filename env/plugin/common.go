@@ -34,12 +34,18 @@ type InitParams struct {
 	CodeVersion   string                      //todo allow config as tag commit id brance
 	InstanceName  string                      //plugin instance name
 	SockPath      string                      //path to listen
-	Dependencies  []*types.DependencyProperty // get depedencies
+	Dependencies  []*types.DependencyProperty // get dependencies
 	Properties    []*types.Property           // get params form this fields
 }
 
 func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
-	logging.SetLogLevel("*", "DEBUG")
+	err := logging.SetLogLevel("*", "DEBUG")
+	if err != nil {
+		fmt.Println("init log fail", err.Error())
+		os.Exit(1)
+		return
+	}
+
 	logDetail = logDetail.With("plugin name", info.Name)
 	logDetail.Infof("start running plugin")
 	fnT := reflect.TypeOf(constructor)
@@ -53,7 +59,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	info.PluginParams = pluginParams
 
 	if len(os.Args) > 1 && os.Args[1] == "info" {
-		respJson(info) //NOTE never remove this print code!!!!!, println for testrunner to read
+		respJSON(info) //NOTE never remove this print code!!!!!, println for testrunner to read
 		return
 	}
 
@@ -149,7 +155,7 @@ func GetPluginInfo(path string) (*types.PluginInfo, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer w.Close()
+	defer w.Close() //nolint
 
 	process, err := os.StartProcess(path, []string{path, "info"}, &os.ProcAttr{
 		Files: []*os.File{os.Stdin, w, os.Stderr},
@@ -163,7 +169,7 @@ func GetPluginInfo(path string) (*types.PluginInfo, error) {
 	}
 
 	if st.ExitCode() != 0 {
-		return nil, fmt.Errorf("get mainfest of plugin %s fail exitcode %d", path, st.ExitCode())
+		return nil, fmt.Errorf("get detail of plugin %s fail exitcode %d", path, st.ExitCode())
 	}
 
 	reader := bufio.NewReader(io.TeeReader(r, os.Stdout))
@@ -531,7 +537,7 @@ func StartDeployPlugin(deployer env.IDeployer, intParmas *InitParams) error {
 	go types.CatchSig(context.Background(), shutdownCh)
 	respState(COMPLETELOG)
 	<-shutdownCh
-	logDetail.Infof("gracefuly shutdown")
+	logDetail.Infof("gracefully shutdown")
 	return nil
 }
 
@@ -566,7 +572,7 @@ func StartExecPlugin(exec env.IExec, intParmas *InitParams) error {
 	go types.CatchSig(context.Background(), shutdownCh)
 	respState(COMPLETELOG)
 	<-shutdownCh
-	logDetail.Infof("gracefuly shutdown")
+	logDetail.Infof("gracefully shutdown")
 	return nil
 }
 
@@ -575,7 +581,7 @@ func errorHandleMiddleWare() gin.HandlerFunc {
 		c.Next()
 		if c.Errors != nil {
 			c.Writer.WriteHeader(http.StatusInternalServerError)
-			c.Writer.Write([]byte(strings.Join(c.Errors.Errors(), ",")))
+			c.Writer.Write([]byte(strings.Join(c.Errors.Errors(), ","))) //nolint
 			return
 		}
 		c.Writer.WriteHeader(http.StatusOK)

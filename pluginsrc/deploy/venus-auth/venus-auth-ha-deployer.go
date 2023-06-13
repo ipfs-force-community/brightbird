@@ -1,4 +1,4 @@
-package venus_auth
+package venusauth
 
 import (
 	"context"
@@ -54,7 +54,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusAuthHADeployer)(nil)
 
-type VenusAuthHADeployer struct {
+type VenusAuthHADeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 
@@ -205,7 +205,7 @@ func (deployer *VenusAuthHADeployer) prepareParams(ctx context.Context) error {
 		return err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHttp(), string(localToken))
+	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), string(localToken))
 	if err != nil {
 		return err
 	}

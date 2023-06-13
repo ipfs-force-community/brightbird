@@ -22,7 +22,6 @@
       </jm-form-item>
 
 
-
       <jm-form-item label="类型" prop="jobType">
         <jm-select v-loading="jobTypesLoading" :disabled="jobTypesLoading" v-model="createForm.jobType"
           @change="onSelectJobtype" placeholder="请选择Job类型">
@@ -93,7 +92,7 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, ref, SetupContext } from 'vue';
 import { countJob, createJob, getJobTypes } from '@/api/job';
-import {fetchDeployPlugins} from '@/api/plugin';
+import { fetchDeployPlugins } from '@/api/plugin';
 import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
@@ -104,12 +103,12 @@ import { ITestFlowDetail, PluginDetail } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
-  emits: ["completed"],
+  emits: ['completed'],
   components: { ElRow, ElCol },
   setup(_, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
-      const isDupName = ref<boolean>(true);
+    const isDupName = ref<boolean>(true);
     const createFormRef = ref<any>(null);
     const jobTypesLoading = ref<boolean>(false);
     const groupLoading = ref<boolean>(false);
@@ -119,19 +118,19 @@ export default defineComponent({
     const groups = ref<ITestflowGroupVo[]>([]);
     const testflows = ref<ITestFlowDetail[]>([]);
     const createForm = ref<Mutable<IJobCreateVo>>({
-      name: "",
-      testFlowId: "",
+      name: '',
+      testFlowId: '',
       jobType: JobEnum.CronJob,
-      description: "",
+      description: '',
       versions: {},
-      cronExpression: "",
+      cronExpression: '',
       prMergedEventMatchs: [],
       tagCreateEventMatchs: [],
     });
     const editorRule = ref<object>({
-      name: [{ required: true, message: "job名称不能为空", trigger: "blur" }],
-      testFlowId: [{ required: true, message: "需要选择测试流", trigger: "blur" }],
-      jobType: [{ required: true, message: "选择job类型", trigger: "blur" }],
+      name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
+      testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
+      jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
     });
 
     const loading = ref<boolean>(false);
@@ -141,15 +140,15 @@ export default defineComponent({
           return;
         }
         if (isDupName.value) {
-          proxy.$error('Job名称不合法，空或者重复')
+          proxy.$error('Job名称不合法，空或者重复');
           return;
         }
 
         loading.value = true;
         try {
           await createJob(createForm.value);
-          proxy.$success("Job创建成功");
-          emit("completed");
+          proxy.$success('Job创建成功');
+          emit('completed');
           dialogVisible.value = false;
         }
         catch (err) {
@@ -191,20 +190,20 @@ export default defineComponent({
     fetchGroupList();
 
     const refreshSelect = async (testflow: ITestFlowDetail) => {
-      createForm.value.testFlowId = testflow.id ?? "";
+      createForm.value.testFlowId = testflow.id ?? '';
       let versions: any = {};
       testflow?.nodes?.forEach(f => {
-        versions[f.name] = "";
+        versions[f.name] = '';
       });
-      //use for cron
+      // use for cron
       createForm.value.versions = versions;
     };
     const changeGroup = async () => {
       testflowsLoading.value = true;
-      createForm.value.testFlowId = "";
+      createForm.value.testFlowId = '';
       try {
         testflows.value = (await queryTestFlow({
-          groupId: selectGroupId.value ?? "",
+          groupId: selectGroupId.value ?? '',
           pageNum: START_PAGE_NUM,
           pageSize: Number.MAX_SAFE_INTEGER,
         })).list;
@@ -222,21 +221,21 @@ export default defineComponent({
     };
     const onSelectJobtype = async () => {
       try {
-        //fetch testflow
-       const nodeInUse = new Set<string>();
-       const testflow = await fetchTestFlowDetail({id: createForm.value.testFlowId})
-       testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version))
-        //fetch plugins
+        // fetch testflow
+        const nodeInUse = new Set<string>();
+        const testflow = await fetchTestFlowDetail({ id: createForm.value.testFlowId });
+        testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version));
+        // fetch plugins
         const pluginMap = new Map<string, PluginDetail>();
         (await fetchDeployPlugins()).map(a => {
           if (nodeInUse.has(a.name + a.version)) {
-            pluginMap.set(a.name, a)
+            pluginMap.set(a.name, a);
           }
         });
 
         const repos = new Set<string>();
         Object.entries(createForm.value.versions).map(([k, v]) => {
-          const repoName = pluginMap.get(k)?.repo ?? "";
+          const repoName = pluginMap.get(k)?.repo ?? '';
           if (!repos.has(repoName)) {
             repos.add(repoName);
           }
@@ -246,14 +245,14 @@ export default defineComponent({
           createForm.value.tagCreateEventMatchs = [];
           [...repos].map(repoName => createForm.value.tagCreateEventMatchs.push({
             repo: repoName,
-            tagPattern: "tag/.+",
+            tagPattern: 'tag/.+',
           }));
         } else if (createForm.value.jobType == JobEnum.PRMerged) {
           createForm.value.prMergedEventMatchs = [];
           [...repos].map(repoName => createForm.value.prMergedEventMatchs.push({
             repo: repoName,
-            sourcePattern: "feat\/.+|fix\/.+",
-            basePattern: "master|main",
+            sourcePattern: 'feat\/.+|fix\/.+',
+            basePattern: 'master|main',
           }));
         }
       }
@@ -264,9 +263,9 @@ export default defineComponent({
     const checkJobName = async () => {
       try {
         const count = await countJob({
-          name: createForm.value.name
+          name: createForm.value.name,
         });
-        isDupName.value = count > 0
+        isDupName.value = count > 0;
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -281,7 +280,7 @@ export default defineComponent({
     };
     const getRepoName = (gitURL: string): string => {
       const url = new URL(gitURL);
-      return url.pathname.replace(".git", "").substring(1).split("/")[1];
+      return url.pathname.replace('.git', '').substring(1).split('/')[1];
     };
     return {
       JobEnum,
@@ -301,12 +300,12 @@ export default defineComponent({
       testflowsLoading,
       testflows,
       create,
-      //utils
+      // utils
       getRepoName,
       checkJobName,
       isDupName,
     };
-  }
+  },
 });
 </script>
 

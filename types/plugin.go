@@ -5,7 +5,9 @@ package types
 type PluginType string
 
 const (
-	Deploy   PluginType = "Deployer"
+	// Deploy deploy conponet
+	Deploy PluginType = "Deployer"
+	// TestExec test case
 	TestExec PluginType = "Exec"
 )
 

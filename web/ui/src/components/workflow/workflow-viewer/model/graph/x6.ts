@@ -183,7 +183,7 @@ export class X6Graph extends BaseGraph {
     runningNodes.forEach(node => this.startAnimation(node));
   }
 
-  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing: boolean = false): void {
+  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing = false): void {
     super.highlightNodeState(status, active, refreshing);
 
     this.graph.getNodes().forEach(node => {

@@ -145,7 +145,7 @@ export class G6Graph extends BaseGraph {
   }
 
   configNodeAction(mouseoverNode: ((evt: INodeMouseoverEvent) => void)): void {
-    this.graph.on("node:mouseenter", (ev: IG6GraphEvent) => {
+    this.graph.on('node:mouseenter', (ev: IG6GraphEvent) => {
       const node = ev.item as Item;
       const model = node.getModel();
 
@@ -165,7 +165,7 @@ export class G6Graph extends BaseGraph {
     });
 
     // 设置鼠标滑过事件
-    this.graph.on("node:mouserover", (ev: IG6GraphEvent) => {
+    this.graph.on('node:mouserover', (ev: IG6GraphEvent) => {
       const node = ev.item as Item;
       const model = node.getModel();
 
@@ -299,7 +299,7 @@ export class G6Graph extends BaseGraph {
    * @param active
    * @param refreshing
    */
-  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing: boolean = false): void {
+  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing = false): void {
     super.highlightNodeState(status, active, refreshing);
 
     this.graph.getNodes()
@@ -316,7 +316,7 @@ export class G6Graph extends BaseGraph {
    * 检查内容是否溢出
    * @param ratio
    */
-  private checkContentOverflow(ratio: number = 1): boolean {
+  private checkContentOverflow(ratio = 1): boolean {
     const bBoxes: IBBox[] = [];
     bBoxes.push(...this.graph.getNodes().map(node => node.getCanvasBBox()));
     bBoxes.push(...this.graph.getEdges().map(node => node.getCanvasBBox()));

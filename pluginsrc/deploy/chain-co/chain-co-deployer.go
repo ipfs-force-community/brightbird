@@ -1,4 +1,4 @@
-package chain_co
+package chainco
 
 import (
 	"context"
@@ -15,10 +15,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-//// The following types are used for components without configuration files or implemation with other lanaguage
+////  The following types are used for components without configuration files or implemation with other lanaguage
 
-// ChainCoUpdate
-type ChainCoConfig struct {
+// ChainCoConfig used to update chain co
+type ChainCoConfig struct { //nolint
 	Nodes     []string
 	AuthUrl   string
 	AuthToken string
@@ -58,7 +58,7 @@ var PluginInfo = types2.PluginInfo{
 
 var _ env.IDeployer = (*ChainCoDeployer)(nil)
 
-type ChainCoDeployer struct {
+type ChainCoDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

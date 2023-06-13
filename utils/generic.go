@@ -6,7 +6,7 @@ import (
 	"github.com/imdario/mergo"
 )
 
-func MergeStructAndJson[T any](defaultCfg T, incomingCfg T, frontCfgBytes json.RawMessage) (T, error) {
+func MergeStructAndJSON[T any](defaultCfg T, incomingCfg T, frontCfgBytes json.RawMessage) (T, error) {
 	err := mergo.Merge(&defaultCfg, incomingCfg, mergo.WithOverride)
 	if err != nil {
 		return Default[T](), err

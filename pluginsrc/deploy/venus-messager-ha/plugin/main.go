@@ -5,15 +5,15 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	venus_messager_ha "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-messager-ha"
+	venusmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-messager-ha"
 )
 
 func main() {
-	plugin.SetupPluginFromStdin(venus_messager_ha.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(venusmessager.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params venus_messager_ha.Config `optional:"true"`
+	Params venusmessager.Config `optional:"true"`
 
 	VenusAuth env.IDeployer `svcname:"VenusAuth"`
 	Venus     env.IDeployer `svcname:"Venus"`
@@ -43,10 +43,10 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 		return nil, err
 	}
 
-	deployer, err := venus_messager_ha.DeployerFromConfig(depParams.K8sEnv, venus_messager_ha.Config{
+	deployer, err := venusmessager.DeployerFromConfig(depParams.K8sEnv, venusmessager.Config{
 		NodeUrl:    venusEndpoint.ToMultiAddr(),
 		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-		AuthUrl:    venusAuthEndpoint.ToHttp(),
+		AuthUrl:    venusAuthEndpoint.ToHTTP(),
 		AuthToken:  adminToken.MustString(),
 	}, depParams.Params)
 	if err != nil {

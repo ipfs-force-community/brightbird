@@ -67,7 +67,7 @@ import { WorkflowGraph } from './model/workflow-graph';
 import './utils/array.ts';
 
 // 注册自定义g6元素
-Object.values(import.meta.glob('./shapes/**', {eager: true})).forEach(({ default: register }) => register(G6));
+Object.values(import.meta.glob('./shapes/**', { eager: true })).forEach(({ default: register }) => register(G6));
 
 export default defineComponent({
   name: 'jm-workflow-viewer',

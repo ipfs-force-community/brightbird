@@ -9,7 +9,6 @@ import (
 )
 
 func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
-	group := v1group.Group("/deploy")
 	// swagger:route GET /version version getVersion
 	//
 	// get backend version
@@ -17,7 +16,7 @@ func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
 	//     Consumes:
 	//
 	//     Produces:
-	//     - application/text
+	//     - application/json
 	//
 	//     Schemes: http, https
 	//
@@ -25,7 +24,8 @@ func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {
 	//
 	//     Responses:
 	//       200: myString
-	group.GET("version", func(c *gin.Context) {
+	//		 503: apiError
+	v1group.GET("version", func(c *gin.Context) {
 		c.JSON(http.StatusOK, version.Version())
 	})
 }

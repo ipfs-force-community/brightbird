@@ -52,7 +52,7 @@ import {
   PropType,
   ref,
 } from 'vue';
-import {ITestFlowDetail} from '@/api/dto/testflow';
+import { ITestFlowDetail } from '@/api/dto/testflow';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { queryTestFlow } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
@@ -109,7 +109,7 @@ export default defineComponent({
 
     const queryForm = ref<IQueryForm>({
       pageNum: START_PAGE_NUM,
-      pageSize:  40 ,
+      pageSize:  40,
       groupId: props.testflowGroup?.id,
       name: props.name,
     });
@@ -130,7 +130,7 @@ export default defineComponent({
         // 获得当前已经加载了的总数
         const currentCount = pageSize * pageNum;
         projectPage.value =  await queryTestFlow({ ...queryForm.value, pageNum: START_PAGE_NUM, pageSize: currentCount });
-        console.log(projectPage.value)
+        console.log(projectPage.value);
       } catch (err) {
         proxy.$throw(err, proxy);
       }
@@ -160,7 +160,7 @@ export default defineComponent({
     });
     const currentItem = ref<string>('');
 
-    reloadCurrentProjectList() //init
+    reloadCurrentProjectList(); // init
     return {
       noDataImg,
       ...mapMutations({

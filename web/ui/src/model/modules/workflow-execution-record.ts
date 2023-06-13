@@ -1,5 +1,5 @@
 import { ITaskExecutionRecordVo, IWorkflowExecutionRecordVo } from '@/api/dto/workflow-execution-record';
-import { INodeDefVo, ITestFlowDetail} from '@/api/dto/testflow';
+import { INodeDefVo, ITestFlowDetail } from '@/api/dto/testflow';
 import { NodeToolbarTabTypeEnum } from '@/components/workflow/workflow-viewer/model/data/enumeration';
 import { TriggerTypeEnum } from '@/api/dto/enumeration';
 

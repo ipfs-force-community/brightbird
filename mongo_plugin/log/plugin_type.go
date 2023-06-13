@@ -6,9 +6,12 @@ import "fmt"
 type PluginType int
 
 const (
-	InputPlugin  PluginType = iota // input
-	FilterPlugin                   // filter
-	OutputPlugin                   // output
+	// InputPlugin input
+	InputPlugin PluginType = iota
+	// FilterPlugin filter
+	FilterPlugin
+	// OutputPlugin output
+	OutputPlugin
 )
 
 var _ fmt.Stringer = PluginType(0)

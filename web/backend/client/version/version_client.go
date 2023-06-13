@@ -47,7 +47,7 @@ func (a *Client) GetVersion(params *GetVersionParams, opts ...ClientOption) (*Ge
 		ID:                 "getVersion",
 		Method:             "GET",
 		PathPattern:        "/version",
-		ProducesMediaTypes: []string{"application/text"},
+		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,

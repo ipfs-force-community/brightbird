@@ -20,11 +20,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Lists all tasks.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -36,15 +34,15 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//		 503: apiError
 	group.GET("list", func(c *gin.Context) {
 		params := models.ListTasksReq{}
-		err := c.ShouldBindWith(&params, paginationQueryBind)
+		err := c.ShouldBindQuery(&params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		JobID, err := primitive.ObjectIDFromHex(params.JobID)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -58,7 +56,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			},
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		c.JSON(http.StatusOK, tasks)
@@ -69,11 +67,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Get task by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -92,13 +88,13 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	group.GET(":id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		task, err := tasksRepo.Get(ctx, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -110,11 +106,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// Delete task by id
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -133,12 +127,12 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	group.DELETE("/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 		err = tasksRepo.Delete(c, id)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -150,11 +144,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	// stop task
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -173,10 +165,15 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	group.POST("/stop/:id", func(c *gin.Context) {
 		id, err := primitive.ObjectIDFromHex(c.Param("id"))
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
-		taskManager.StopOneTask(ctx, id)
+		err = taskManager.StopOneTask(ctx, id)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
 		c.Status(http.StatusOK)
 	})
 }

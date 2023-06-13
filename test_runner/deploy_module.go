@@ -180,7 +180,7 @@ func makeDeployPluginSetupFunc(params *plugin.InitParams, initedNode InitedNode,
 
 }
 
-func makeDedenciesType(depedencies []*types.DependencyProperty) (reflect.Type, error) {
+func makeDedenciesType(dependencies []*types.DependencyProperty) (reflect.Type, error) {
 	depedenceiesFields := []reflect.StructField{
 		{
 			Name:      "In",
@@ -191,7 +191,7 @@ func makeDedenciesType(depedencies []*types.DependencyProperty) (reflect.Type, e
 		},
 	}
 
-	for index, depedepedency := range depedencies {
+	for index, depedepedency := range dependencies {
 		tagVal := ""
 		if len(depedepedency.Value) > 0 {
 			tagVal = fmt.Sprintf(`name:"%s"`, depedepedency.Value)
@@ -206,7 +206,7 @@ func makeDedenciesType(depedencies []*types.DependencyProperty) (reflect.Type, e
 			Type:      MasterDeployInvokerT,
 			Tag:       reflect.StructTag(tagVal),
 			Offset:    uintptr(index + 1),
-			Index:     []int{int(index + 1)},
+			Index:     []int{index + 1},
 			Anonymous: false,
 		}
 		switch depedepedency.Type {

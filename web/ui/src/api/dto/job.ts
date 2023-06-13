@@ -1,4 +1,4 @@
-import { JobEnum } from "./enumeration"
+import { JobEnum } from './enumeration';
 
 export interface IJobIdVo
   extends Readonly<{
@@ -41,7 +41,7 @@ export interface IJobVo extends Readonly<{
   }> {
   }
   
-  export interface IJobDetailVo extends Readonly<{
+export interface IJobDetailVo extends Readonly<{
     id: string;
     testFlowId: string;
     name: string;

@@ -55,7 +55,7 @@ export abstract class BaseGraph {
   updateNodeStates(tasks: ITaskExecutionRecordVo[]): void {
   }
 
-  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing: boolean = false): void {
+  highlightNodeState(status: TaskStatusEnum, active: boolean, refreshing = false): void {
     if (refreshing) {
       // 刷新时，忽略，不会改变当前高亮状态
       return;

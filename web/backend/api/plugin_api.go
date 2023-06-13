@@ -28,11 +28,9 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	// Get plugin by name and version.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -45,18 +43,18 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		req := &repo.GetPluginParams{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		if req.Name == nil && req.PluginType == nil {
-			c.Error(errors.New("no params"))
+			c.Error(errors.New("no params")) //nolint
 			return
 		}
 
 		output, err := service.GetPluginDetail(c, req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -68,11 +66,9 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	// List plugin by name and version.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -85,34 +81,32 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		req := &repo.ListPluginParams{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		if req.Name == nil && req.PluginType == nil {
-			c.Error(errors.New("no params"))
+			c.Error(errors.New("no params")) //nolint
 			return
 		}
 
 		output, err := service.ListPlugin(c, req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		c.JSON(http.StatusOK, output)
 	})
 
-	// swagger:route GET /plugin/label plugin addLabelParams
+	// swagger:route POST /plugin/label plugin addLabelParams
 	//
 	// Add label in plugin.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -125,34 +119,32 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		req := &repo.AddLabelParams{}
 		err := c.ShouldBindJSON(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		if req.Name == nil && req.Label == nil {
-			c.Error(errors.New("no params"))
+			c.Error(errors.New("no params")) //nolint
 			return
 		}
 
 		err = service.AddLabel(c, *req.Name, *req.Label)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route GET /plugin/label plugin deleteLabelParams
+	// swagger:route DELETE /plugin/label plugin deleteLabelParams
 	//
 	// Delete label in plugin.
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
@@ -165,50 +157,36 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		req := &repo.DeleteLabelParams{}
 		err := c.ShouldBindQuery(req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		if req.Name == nil && req.Label == nil {
-			c.Error(errors.New("no params"))
+			c.Error(errors.New("no params")) //nolint
 			return
 		}
 
 		err = service.DeleteLabel(c, *req.Name, *req.Label)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route DELETE /plugin plugin deletePlugin
+	// swagger:route DELETE /plugin plugin deletePluginReq
 	//
 	// Delete plugin by id and specific version
 	//
 	//     Consumes:
-	//     - application/json
 	//
 	//     Produces:
 	//     - application/json
-	//     - application/text
 	//
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: id
-	//         in: query
-	//         description: id of plugin
-	//         required: false
-	//         type: string
-	//       + name: version
-	//         in: query
-	//         description: version of plugin
-	//         required: false
-	//         type: string
 	//
 	//     Responses:
 	//       200:
@@ -217,42 +195,42 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		req := &models.DeletePluginReq{}
 		err := c.ShouldBind(&req)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		params := &repo.DeletePluginParams{
 			Version: req.Version,
 		}
-		params.Id, err = primitive.ObjectIDFromHex(req.Id)
+		params.ID, err = primitive.ObjectIDFromHex(req.ID)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		pluginDetail, err := service.GetPluginDetail(ctx, &repo.GetPluginParams{
-			Id: &req.Id,
+			ID: &req.ID,
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		plugin, err := service.GetPlugin(ctx, pluginDetail.Name, req.Version)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = service.DeletePluginByVersion(c, params)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		err = os.Remove(plugin.Path)
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -274,15 +252,20 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//
 	// Upload plugin files
 	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
 	// Responses:
 	//	    200:
-	//	    403: apiError
+	//	    503: apiError
 	group.POST("upload", func(c *gin.Context) {
 		params := &UploadPluginFilesParams{}
 		err := c.ShouldBind(params)
 		// The file cannot be received.
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
@@ -290,13 +273,30 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			// The file is received, so let's save it
 			tmpPath := path.Join(os.TempDir(), uuid.NewString())
 			if err := c.SaveUploadedFile(fileHeader, tmpPath); err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
+				return
+			}
+
+			err = os.Chmod(tmpPath, 0750)
+			if err != nil {
+				c.Error(err) //nolint
 				return
 			}
 
 			pluginInfo, err := plugin.GetPluginInfo(tmpPath)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
+				return
+			}
+
+			_, err = service.GetPlugin(c, pluginInfo.Name, pluginInfo.Version)
+			if err == nil {
+				c.Error(fmt.Errorf("plugin %s(%s) already exit", pluginInfo.Name, pluginInfo.Version)) //nolint
+				return
+			}
+
+			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
+				c.Error(err) //nolint
 				return
 			}
 
@@ -304,7 +304,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
 			err = utils.CopyFile(tmpPath, filepath.Join(string(pluginStore), fname))
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 
@@ -323,7 +323,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 			err = service.SavePlugins(c, plugin)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 		}
@@ -333,7 +333,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 	// swagger:route POST /plugin/import plugin importPlugin
 	//
-	// import plugin mainfest.
+	// import plugin.
 	//
 	//     Consumes:
 	//     - application/json
@@ -369,14 +369,25 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			return nil
 		})
 		if err != nil {
-			c.Error(err)
+			c.Error(err) //nolint
 			return
 		}
 
 		for _, pluginPath := range filePaths {
 			pluginInfo, err := plugin.GetPluginInfo(pluginPath)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
+				return
+			}
+
+			_, err = service.GetPlugin(c, pluginInfo.Name, pluginInfo.Version)
+			if err == nil {
+				c.Error(fmt.Errorf("plugin %s(%s) already exit", pluginInfo.Name, pluginInfo.Version)) //nolint
+				return
+			}
+
+			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
+				c.Error(err) //nolint
 				return
 			}
 
@@ -384,8 +395,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
 			err = utils.CopyFile(pluginPath, filepath.Join(string(pluginStore), fname))
 			if err != nil {
-				fmt.Println(err)
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 
@@ -404,7 +414,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 			err = service.SavePlugins(c, plugin)
 			if err != nil {
-				c.Error(err)
+				c.Error(err) //nolint
 				return
 			}
 		}

@@ -54,7 +54,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusDeployer)(nil)
 
-type VenusDeployer struct {
+type VenusDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

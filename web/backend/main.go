@@ -130,11 +130,11 @@ var runCmd = &cli.Command{
 		}
 
 		if c.IsSet("dbName") {
-			cfg.DbName = c.String("dbBane")
+			cfg.DBName = c.String("dbBane")
 		}
 
 		if c.IsSet("mongoUrl") {
-			cfg.MongoUrl = c.String("mongoUrl")
+			cfg.MongoURL = c.String("mongoUrl")
 		}
 
 		if c.IsSet("proxy") {
@@ -180,11 +180,11 @@ func run(pCtx context.Context, cfg config.Config) error {
 					log.Debugf(evt.Command.String())
 				},
 			}
-			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoUrl).SetMonitor(cmdMonitor))
+			client, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.MongoURL).SetMonitor(cmdMonitor))
 			if err != nil {
 				return nil, err
 			}
-			return client.Database(cfg.DbName), nil
+			return client.Database(cfg.DBName), nil
 		}),
 		//k8s env
 		fx_opt.Override(new(*job.TestRunnerDeployer), func() (*job.TestRunnerDeployer, error) {
@@ -215,7 +215,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		//api
 		fx_opt.Override(new(*gin.Engine), e),
 		fx_opt.Override(new(*api.V1RouterGroup), func(e *gin.Engine) *api.V1RouterGroup {
-			return (*api.V1RouterGroup)(e.Group("api/v1"))
+			return e.Group("api/v1")
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterCommonRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDeployRouter),
@@ -227,13 +227,13 @@ func run(pCtx context.Context, cfg config.Config) error {
 
 		//start
 		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, builder *job.ImageBuilderMgr) {
-			go builder.Start(ctx)
+			go builder.Start(ctx) //nolint
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, taskMgr *job.TaskMgr) {
-			go taskMgr.Start(ctx)
+			go taskMgr.Start(ctx) //nolint
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, jobMgr job.IJobManager) {
-			go jobMgr.Start(ctx)
+			go jobMgr.Start(ctx) //nolint
 		}),
 	)
 	if err != nil {
@@ -274,7 +274,6 @@ func corsMiddleWare() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Origin", "*")
 		c.Header("Access-Control-Allow-Methods", "*")
 		c.Header("Access-Control-Allow-Headers", "*")
-		c.Header("Content-Type", "*")
 		if c.Request.Method == "OPTIONS" {
 			c.JSON(http.StatusOK, "ok!")
 			return

@@ -15,6 +15,7 @@ require (
 	github.com/filecoin-project/venus-miner v1.11.0
 	github.com/filecoin-project/venus-wallet v1.11.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
+	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-git/go-git/v5 v5.6.1
 	github.com/go-logr/logr v1.2.3
@@ -125,7 +126,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gbrlsnchs/jwt/v3 v3.0.1 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-contrib/static v0.0.1 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
 	github.com/go-kit/log v0.2.1 // indirect

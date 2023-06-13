@@ -48,9 +48,10 @@ func NewSaveCasesOK() *SaveCasesOK {
 /*
 SaveCasesOK describes a response with status code 200, with default header values.
 
-SaveCasesOK save cases o k
+myString
 */
 type SaveCasesOK struct {
+	Payload models.MyString
 }
 
 // IsSuccess returns true when this save cases o k response has a 2xx status code
@@ -84,14 +85,23 @@ func (o *SaveCasesOK) Code() int {
 }
 
 func (o *SaveCasesOK) Error() string {
-	return fmt.Sprintf("[POST /group][%d] saveCasesOK ", 200)
+	return fmt.Sprintf("[POST /group][%d] saveCasesOK  %+v", 200, o.Payload)
 }
 
 func (o *SaveCasesOK) String() string {
-	return fmt.Sprintf("[POST /group][%d] saveCasesOK ", 200)
+	return fmt.Sprintf("[POST /group][%d] saveCasesOK  %+v", 200, o.Payload)
+}
+
+func (o *SaveCasesOK) GetPayload() models.MyString {
+	return o.Payload
 }
 
 func (o *SaveCasesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	// response payload
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+		return err
+	}
 
 	return nil
 }

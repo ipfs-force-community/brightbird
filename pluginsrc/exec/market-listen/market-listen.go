@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
@@ -62,7 +63,7 @@ func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
 			return "", err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return "", err
 	}

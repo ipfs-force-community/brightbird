@@ -24,61 +24,61 @@ import { addPluginLabel, delPluginLabel } from '@/api/plugin';
 import { defineComponent, ref, getCurrentInstance, computed, PropType } from 'vue';
 
 export default defineComponent({
-    emits: [],
-    props: {
-        name: {
-            type: String,
-            required: true,
-        },
-        labels: {
-            type: Array as PropType<string[]>,
-            require: true,
-        }
+  emits: [],
+  props: {
+    name: {
+      type: String,
+      required: true,
     },
-
-    setup(props, { emit }) {
-        const { proxy } = getCurrentInstance() as any;
-        const newLabel = ref<string>();
-        const enableAddNewLabel = ref<boolean>(false)
-        const onDelete = async (label: string) => {
-            if (!label || label == "") {
-                return
-            }
-
-            enableAddNewLabel.value = true;
-            try {
-                await delPluginLabel({ name: props.name, label: label });
-                props.labels?.splice(props.labels?.indexOf(label), 1);
-            } catch (err) {
-                proxy.$throw(err, proxy);
-            } finally {
-                enableAddNewLabel.value = false;
-            }
-        }
-        const addLabel = async () => {
-            if (!newLabel.value || newLabel.value == "") {
-                return
-            }
-
-            enableAddNewLabel.value = true;
-            try {
-                await addPluginLabel({ name: props.name, label: newLabel.value });
-                props.labels?.push(newLabel.value);
-                newLabel.value = "";
-            } catch (err) {
-                proxy.$throw(err, proxy);
-            } finally {
-                enableAddNewLabel.value = false;
-            }
-        }
-        return {
-            enableAddNewLabel,
-            newLabel,
-            addLabel,
-            onDelete,
-            props,
-        };
+    labels: {
+      type: Array as PropType<string[]>,
+      require: true,
     },
+  },
+
+  setup(props, { emit }) {
+    const { proxy } = getCurrentInstance() as any;
+    const newLabel = ref<string>();
+    const enableAddNewLabel = ref<boolean>(false);
+    const onDelete = async (label: string) => {
+      if (!label || label == '') {
+        return;
+      }
+
+      enableAddNewLabel.value = true;
+      try {
+        await delPluginLabel({ name: props.name, label: label });
+        props.labels?.splice(props.labels?.indexOf(label), 1);
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        enableAddNewLabel.value = false;
+      }
+    };
+    const addLabel = async () => {
+      if (!newLabel.value || newLabel.value == '') {
+        return;
+      }
+
+      enableAddNewLabel.value = true;
+      try {
+        await addPluginLabel({ name: props.name, label: newLabel.value });
+        props.labels?.push(newLabel.value);
+        newLabel.value = '';
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        enableAddNewLabel.value = false;
+      }
+    };
+    return {
+      enableAddNewLabel,
+      newLabel,
+      addLabel,
+      onDelete,
+      props,
+    };
+  },
 });
 </script>
   

@@ -7,8 +7,8 @@ import {
 } from '@/api/dto/testflow-group';
 
 import {
-  IChangeTestflowGroupDto
-} from '@/api/dto/testflow'
+  IChangeTestflowGroupDto,
+} from '@/api/dto/testflow';
 
 const baseUrl = '/group';
 /**
@@ -29,7 +29,7 @@ export function createProjectGroup(
  * 编辑项目组
  */
 export function editProjectGroup(
-    groupId: string,
+  groupId: string,
   dto: IProjectGroupEditingDto,
 ): Promise<void> {
   return restProxy({

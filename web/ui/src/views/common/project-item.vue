@@ -43,12 +43,12 @@ import ProjectPreviewDialog from './project-preview-dialog.vue';
 import WebhookDrawer from './webhook-drawer.vue';
 import CacheDrawer from '@/views/common/cache-drawer.vue';
 import { useRouter } from 'vue-router';
-import JmTextViewer from "@/components/text-viewer/index.vue";
-import {ITestFlowDetail} from "@/api/dto/testflow";
-import {deleteTestFlow} from "@/api/view-no-auth";
+import JmTextViewer from '@/components/text-viewer/index.vue';
+import { ITestFlowDetail } from '@/api/dto/testflow';
+import { deleteTestFlow } from '@/api/view-no-auth';
 
 export default defineComponent({
-  components: {JmTextViewer, ProjectPreviewDialog, WebhookDrawer, CacheDrawer },
+  components: { JmTextViewer, ProjectPreviewDialog, WebhookDrawer, CacheDrawer },
   props: {
     project: {
       type: Object as PropType<ITestFlowDetail>,
@@ -70,7 +70,7 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
     const deleting = ref<boolean>(false);
-    const dslDialogFlag = ref<boolean>(false);  //todo replace with config
+    const dslDialogFlag = ref<boolean>(false);  // todo replace with config
     const cacheDrawerFlag = ref<boolean>(false);
     return {
       deleting,
@@ -90,27 +90,27 @@ export default defineComponent({
         msg += `<div style="margin-top: 5px; font-size: 12px; line-height: normal;">名称：${name}</div>`;
 
         proxy
-            .$confirm(msg, '删除项目', {
-              confirmButtonText: '确定',
-              cancelButtonText: '取消',
-              type: 'warning',
-              dangerouslyUseHTMLString: true,
-            })
-            .then(() => {
-              deleting.value = true;
+          .$confirm(msg, '删除项目', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning',
+            dangerouslyUseHTMLString: true,
+          })
+          .then(() => {
+            deleting.value = true;
 
-              deleteTestFlow(id)
-                  .then(() => {
-                    proxy.$success('删除成功');
-                    deleting.value = false;
+            deleteTestFlow(id)
+              .then(() => {
+                proxy.$success('删除成功');
+                deleting.value = false;
 
-                    emit('deleted', id);
-                  })
-                  .catch((err: Error) => {
-                    proxy.$throw(err, proxy);
-                    deleting.value = false;
-                  });
-            });
+                emit('deleted', id);
+              })
+              .catch((err: Error) => {
+                proxy.$throw(err, proxy);
+                deleting.value = false;
+              });
+          });
       },
     };
   },

@@ -1,4 +1,4 @@
-package fx_opt
+package fx_opt //nolint
 
 import (
 	"context"
@@ -75,8 +75,6 @@ type Settings struct {
 	// invokes are separate from modules as they can't be referenced by return
 	// type, and must be applied in correct order
 	invokes []fx.Option
-
-	annotation map[interface{}]fx.Option
 }
 
 // Option is a functional option which can be used with the New function to
@@ -135,7 +133,6 @@ func Override(typ, constructor interface{}) Option {
 	}
 }
 
-// Annotate
 func Annotate(typ, constructor interface{}) Option {
 	return func(s *Settings) error {
 		s.modules[typ] = fx.Provide(constructor)
@@ -157,7 +154,7 @@ func Unset(typ interface{}) Option {
 	}
 }
 
-// From(*T) -> func(t T) T {return t}
+// From (*T) -> func(t T) T {return t}
 func From(typ interface{}) interface{} {
 	rt := []reflect.Type{reflect.TypeOf(typ).Elem()}
 	ft := reflect.FuncOf(rt, rt, false)

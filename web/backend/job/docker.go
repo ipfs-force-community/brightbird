@@ -35,7 +35,7 @@ func NewDockerRegistry(registriesCfg []config.DockerRegistry) (*DockerRegistry, 
 	var registries []IDockerRegistry
 	for _, regCfg := range registriesCfg {
 		switch regCfg.Type {
-		case "offical":
+		case "official":
 			hub, err := NewOfficialClientWrapper(regCfg.URL, regCfg.UserName, regCfg.Password)
 			if err != nil {
 				dockerLog.Errorf("connect to official registry %s %v", regCfg.URL, err)

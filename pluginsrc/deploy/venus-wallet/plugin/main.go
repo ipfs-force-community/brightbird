@@ -6,19 +6,16 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	venus_wallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
+	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
 	"github.com/hunjixin/brightbird/types"
-	logging "github.com/ipfs/go-log/v2"
 )
 
-var log = logging.Logger("venus-wallet-dep")
-
 func main() {
-	plugin.SetupPluginFromStdin(venus_wallet.PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(venuswallet.PluginInfo, Exec)
 }
 
 type DepParams struct {
-	Params venus_wallet.Config `optional:"true"`
+	Params venuswallet.Config `optional:"true"`
 
 	Gateway     env.IDeployer `optional:"true" svcname:"VenusGateway"`
 	CreateToken env.IExec     `optional:"true" svcname:"Token"`
@@ -49,12 +46,12 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 			return nil, err
 		}
 
-		deployer, err = venus_wallet.DeployerFromConfig(depParams.K8sEnv, venus_wallet.Config{
+		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{
 			GatewayUrl: gatewayEndpoint.ToMultiAddr(),
 			UserToken:  userToken.MustString(),
 		}, depParams.Params)
 	} else {
-		deployer, err = venus_wallet.DeployerFromConfig(depParams.K8sEnv, venus_wallet.Config{}, depParams.Params)
+		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{}, depParams.Params)
 	}
 	if err != nil {
 		return nil, err

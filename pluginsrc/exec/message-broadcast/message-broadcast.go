@@ -73,7 +73,7 @@ func CreateMessage(ctx context.Context, params TestCaseParams, authToken string)
 		}
 	}
 
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHttp(), authToken, nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func readLogForMsgIds() (string, string, string, string, error) {
 	if err != nil {
 		return "", "", "", "", err
 	}
-	defer file.Close()
+	defer file.Close() //nolint
 
 	var msgPrecommitId, msgProcommitId, msgWdpostId, msgFaultId string
 	rePrecommit := regexp.MustCompile(`"stage": "pre-commit", "msg-cid": "(\w+)"`)

@@ -1,4 +1,4 @@
-package venus_wallet_pro
+package venuswalletpro
 
 import (
 	"context"
@@ -50,7 +50,7 @@ var PluginInfo = types.PluginInfo{
 
 var _ env.IDeployer = (*VenusWalletProDeployer)(nil)
 
-type VenusWalletProDeployer struct {
+type VenusWalletProDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

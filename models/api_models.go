@@ -4,7 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// MyString
+// MyString  repretation string
 // swagger:model myString
 type MyString string
 
@@ -180,7 +180,7 @@ type DeletePluginReq struct {
 	// id of plugin
 	//
 	// required: true
-	Id string `form:"id" json:"id" binding:"required"`
+	ID string `form:"id" json:"id" binding:"required"`
 	// specific plugin version
 	//
 	// required: true

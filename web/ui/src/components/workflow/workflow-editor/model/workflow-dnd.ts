@@ -1,13 +1,13 @@
-import {Addon, Graph, Node, Point} from '@antv/x6';
+import { Addon, Graph, Node, Point } from '@antv/x6';
 // @ts-ignore
 import listen from 'good-listener';
-import {IWorkflowNode} from './data/common';
-import {NODE, PORTS} from '../shape/gengral-config';
-import {ClickNodeWarningCallbackFnType, WorkflowValidator} from './workflow-validator';
-import {CustomX6NodeProxy} from './data/custom-x6-node-proxy';
-import {NodeTypeEnum} from './data/enumeration';
-import {AsyncTask} from './data/node/async-task';
-import {uuid} from "@antv/x6/es/util/string/uuid";
+import { IWorkflowNode } from './data/common';
+import { NODE, PORTS } from '../shape/gengral-config';
+import { ClickNodeWarningCallbackFnType, WorkflowValidator } from './workflow-validator';
+import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
+import { NodeTypeEnum } from './data/enumeration';
+import { AsyncTask } from './data/node/async-task';
+import { uuid } from '@antv/x6/es/util/string/uuid';
 
 const { icon: { width, height }, textMaxHeight } = NODE;
 
@@ -24,9 +24,9 @@ export class WorkflowDnd {
   }
 
   constructor(graph: Graph,
-              workflowValidator: WorkflowValidator,
-              nodeContainer: HTMLElement,
-              clickNodeWarningCallback: ClickNodeWarningCallbackFnType) {
+    workflowValidator: WorkflowValidator,
+    nodeContainer: HTMLElement,
+    clickNodeWarningCallback: ClickNodeWarningCallbackFnType) {
     this.graph = graph;
     this.dnd = new Addon.Dnd({
       target: graph,
@@ -46,7 +46,7 @@ export class WorkflowDnd {
         const proxy = new CustomX6NodeProxy(targetNode);
         const _data = proxy.getData();
         const data = _data as AsyncTask;
-        data.setInstanceName(data.name +"-"+ uuid().slice(0, 8))
+        data.setInstanceName(data.name +'-'+ uuid().slice(0, 8));
         proxy.setData(data);
         // 保证不偏移
         setTimeout(() => {
@@ -72,17 +72,17 @@ export class WorkflowDnd {
         const _data = proxy.getData();
         if (_data.getType() !== NodeTypeEnum.ASYNC_TASK) {
           _data
-              .validate()
-              // 校验节点有误时，加警告
-              .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
+            .validate()
+          // 校验节点有误时，加警告
+            .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
           return true;
         }
         const data = _data as AsyncTask;
 
         data
-            .validate()
-            // 校验节点有误时，加警告
-            .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
+          .validate()
+        // 校验节点有误时，加警告
+          .catch(() => workflowValidator.addWarning(droppingNode, clickNodeWarningCallback));
         return true;
       },
     });

@@ -1,4 +1,4 @@
-package market_client
+package marketclient
 
 import (
 	"context"
@@ -54,7 +54,7 @@ type IMarketClientDeployer env.IDeployer
 
 var _ IMarketClientDeployer = (*MarketClientDeployer)(nil)
 
-type MarketClientDeployer struct {
+type MarketClientDeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 

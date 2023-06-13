@@ -19,7 +19,7 @@ func respError(err error) {
 	fmt.Println(err.Error())
 }
 
-func respJson(val interface{}) {
+func respJSON(val interface{}) {
 	data, err := json.Marshal(val)
 	if err != nil {
 		respError(err)

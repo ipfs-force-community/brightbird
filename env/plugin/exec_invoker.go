@@ -59,7 +59,7 @@ func (serve *ExecInvoker) get(path string, item interface{}) error {
 	return nil
 }
 
-func (serve *ExecInvoker) post(path string, body io.Reader) error {
+func (serve *ExecInvoker) post(path string, body io.Reader) error { //nolint
 	resp, err := serve.client.Post("http://unix/"+path, "application/json", nil)
 	if err != nil {
 		return err

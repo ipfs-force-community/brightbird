@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+
 	"go.uber.org/fx"
 
 	"github.com/filecoin-project/go-address"
@@ -13,8 +14,11 @@ import (
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	logging "github.com/ipfs/go-log/v2"
 	"github.com/libp2p/go-libp2p/core/peer"
 )
+
+var log = logging.Logger("storage-deals")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -44,7 +48,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	addr, err := env.UnmarshalJson[address.Address](minerAddr.Raw())
+	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
 	if err != nil {
 		panic(err)
 	}
@@ -54,7 +58,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return nil, err
 	}
-	fmt.Println("miner info: %v", minerInfo)
+	log.Infof("miner info: %v", minerInfo)
 
 	err = StorageAsksQuery(ctx, params, addr)
 	if err != nil {
@@ -80,7 +84,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 
 	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
 	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w\n", err)
+		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
 
 	return string(minerInfo), nil
@@ -107,7 +111,7 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 			return err
 		}
 	}
-	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHttp(), nil)
+	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}
@@ -129,12 +133,12 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 			return err
 		}
 
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
+		_, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
 		if err != nil {
 			return err
 		}
 	}
-	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, venusEndpoint.ToHttp(), nil)
+	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, venusEndpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
 	}

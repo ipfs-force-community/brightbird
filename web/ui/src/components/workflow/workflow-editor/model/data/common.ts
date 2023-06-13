@@ -1,7 +1,7 @@
 import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
-import { Case, Node} from "@/api/dto/testflow";
+import { Case, Node } from '@/api/dto/testflow';
 
 type TriggerValue = 'blur' | 'change';
 
@@ -20,6 +20,8 @@ export interface IWorkflowNode {
   getType(): NodeTypeEnum;
 
   getIcon(): string;
+
+  getLabels(): string[];
 
   buildSelectableParam(nodeId: string): ISelectableParam | undefined;
 

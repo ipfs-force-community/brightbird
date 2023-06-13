@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -13,6 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
 )
+
+var ErrPluginNotFound = errors.New("plugin not found")
 
 // ListPluginParams
 // swagger:parameters listPluginParams
@@ -27,7 +30,7 @@ type ListPluginParams struct {
 // swagger:parameters getPluginParams
 type GetPluginParams struct {
 	// id of plugin
-	Id *string `form:"id" json:"id"`
+	ID *string `form:"id" json:"id"`
 	// name of plugin
 	Name *string `form:"name" json:"name"`
 	// plugin type
@@ -55,7 +58,7 @@ type DeleteLabelParams struct {
 // DeletePluginParams
 type DeletePluginParams struct {
 	// id of plugin
-	Id primitive.ObjectID
+	ID primitive.ObjectID
 	// specific plugin version
 	Version string
 }
@@ -131,11 +134,11 @@ func NewPluginSvc(ctx context.Context, db *mongo.Database) (*PluginSvc, error) {
 func (p *PluginSvc) ListPlugin(ctx context.Context, listPluginParams *ListPluginParams) ([]*models.PluginDetail, error) {
 	filter := bson.D{}
 	if listPluginParams.Name != nil {
-		filter = append(filter, bson.E{"name", listPluginParams.Name})
+		filter = append(filter, bson.E{Key: "name", Value: listPluginParams.Name})
 	}
 
 	if listPluginParams.PluginType != nil {
-		filter = append(filter, bson.E{"plugintype", listPluginParams.PluginType})
+		filter = append(filter, bson.E{Key: "plugintype", Value: listPluginParams.PluginType})
 	}
 
 	cur, err := p.pluginCol.Find(ctx, filter)
@@ -153,20 +156,20 @@ func (p *PluginSvc) ListPlugin(ctx context.Context, listPluginParams *ListPlugin
 
 func (p *PluginSvc) GetPluginDetail(ctx context.Context, getPluginParams *GetPluginParams) (*models.PluginDetail, error) {
 	filter := bson.D{}
-	if getPluginParams.Id != nil {
-		id, err := primitive.ObjectIDFromHex(*getPluginParams.Id)
+	if getPluginParams.ID != nil {
+		id, err := primitive.ObjectIDFromHex(*getPluginParams.ID)
 		if err != nil {
 			return nil, err
 		}
-		filter = append(filter, bson.E{"_id", id})
+		filter = append(filter, bson.E{Key: "_id", Value: id})
 	}
 
 	if getPluginParams.Name != nil {
-		filter = append(filter, bson.E{"name", getPluginParams.Name})
+		filter = append(filter, bson.E{Key: "name", Value: getPluginParams.Name})
 	}
 
 	if getPluginParams.PluginType != nil {
-		filter = append(filter, bson.E{"plugintype", getPluginParams.PluginType})
+		filter = append(filter, bson.E{Key: "plugintype", Value: getPluginParams.PluginType})
 	}
 
 	var plugin models.PluginDetail
@@ -187,19 +190,19 @@ func (p *PluginSvc) DeletePluginByVersion(ctx context.Context, params *DeletePlu
 		},
 	}
 
-	_, err := p.pluginCol.UpdateOne(ctx, bson.D{{"_id", params.Id}}, update)
+	_, err := p.pluginCol.UpdateOne(ctx, bson.D{{Key: "_id", Value: params.ID}}, update)
 	if err != nil {
 		return err
 	}
 
 	var plugin models.PluginDetail
-	err = p.pluginCol.FindOne(ctx, bson.M{"_id": params.Id}).Decode(&plugin)
+	err = p.pluginCol.FindOne(ctx, bson.M{"_id": params.ID}).Decode(&plugin)
 	if err != nil {
 		return err
 	}
 
 	if len(plugin.Plugins) == 0 {
-		_, err = p.pluginCol.DeleteOne(ctx, bson.M{"_id": params.Id})
+		_, err = p.pluginCol.DeleteOne(ctx, bson.M{"_id": params.ID})
 		if err != nil {
 			return err
 		}
@@ -264,6 +267,9 @@ func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*model
 	plugin := &models.PluginDetail{}
 	err := p.pluginCol.FindOne(ctx, bson.M{"name": name}).Decode(plugin)
 	if err != nil {
+		if errors.Is(err, mongo.ErrNoDocuments) {
+			return nil, fmt.Errorf("plugin %s(%s) %w", name, version, ErrPluginNotFound)
+		}
 		return nil, err
 	}
 	for _, p := range plugin.Plugins {
@@ -271,7 +277,7 @@ func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*model
 			return &p, nil
 		}
 	}
-	return nil, fmt.Errorf("plugin %s(%s not found)", name, version)
+	return nil, fmt.Errorf("plugin %s(%s) %w", name, version, ErrPluginNotFound)
 }
 
 func (p *PluginSvc) AddLabel(ctx context.Context, name string, newLabel string) error {

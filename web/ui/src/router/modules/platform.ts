@@ -42,16 +42,16 @@ export default [
           title: '插件详情',
         },
       }, 
-    ]
+    ],
   },
-    // 组件库路由
-    {
-      path: 'component-lib',
-      component: () => import('@/views/component-lib/index.vue'),
-      meta: {
-        title: '组件库',
-      },
+  // 组件库路由
+  {
+    path: 'component-lib',
+    component: () => import('@/views/component-lib/index.vue'),
+    meta: {
+      title: '组件库',
     },
+  },
   // job路由
   {
     name: 'job',
@@ -75,15 +75,15 @@ export default [
         path: 'task/detail',
         component: () => import('@/views/task/detail.vue'),
         props: ({
-                  query: { testId },
-                }: RouteLocationNormalizedLoaded) => ({
+          query: { testId },
+        }: RouteLocationNormalizedLoaded) => ({
           testId,
         }),
         meta: {
           title: 'Task详情',
         },
       },
-    ]
+    ],
   },
   {
     name: 'project-group',

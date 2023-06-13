@@ -35,10 +35,10 @@
 
 <script lang="ts">
 import { defineComponent, getCurrentInstance, PropType, SetupContext } from 'vue';
-import JmTextViewer from "@/components/text-viewer/index.vue";
+import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ITaskVo } from '@/api/dto/tasks';
 import { TaskStateEnum } from '@/api/dto/enumeration';
-import { stopTask } from '@/api/tasks'
+import { stopTask } from '@/api/tasks';
 
 export default defineComponent({
   components: { JmTextViewer },
@@ -57,12 +57,12 @@ export default defineComponent({
       } catch (err) {
         proxy.$throw(err, proxy);
       }
-    }
+    };
 
-    const formatState = (state: TaskStateEnum): String => TaskStateEnum.toString(state);
-    const latestlog = (log: String[]): String[] => {
+    const formatState = (state: TaskStateEnum): string => TaskStateEnum.toString(state);
+    const latestlog = (log: string[]): string[] => {
       return log.slice(log.length-3).reverse();
-    }
+    };
     return {
       cancelTask,
       formatState,

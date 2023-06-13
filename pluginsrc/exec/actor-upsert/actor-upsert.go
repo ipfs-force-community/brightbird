@@ -73,7 +73,7 @@ func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, e
 			return address.Undef, err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return address.Undef, err
 	}
@@ -120,7 +120,7 @@ func actorList(ctx context.Context, params TestCaseParams, mAddr address.Address
 			return "", err
 		}
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHttp(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return "", err
 	}

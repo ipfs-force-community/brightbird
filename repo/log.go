@@ -41,13 +41,13 @@ func NewLogRepo(ctx context.Context, db *mongo.Database) (*LogRepo, error) {
 }
 
 func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]string, error) {
-	matchStage := bson.D{{"$match", bson.D{{"kubernetes.labels.testid", testid}}}}
-	sortStage := bson.D{{"$sort", bson.D{{"time", 1}}}}
+	matchStage := bson.D{{Key: "$match", Value: bson.D{{Key: "kubernetes.labels.testid", Value: testid}}}}
+	sortStage := bson.D{{Key: "$sort", Value: bson.D{{Key: "time", Value: 1}}}}
 	groupStage := bson.D{
-		{"$group",
-			bson.D{
-				{"_id", "$kubernetes.pod_name"},
-				{"time", bson.M{"$first": "$time"}},
+		{Key: "$group",
+			Value: bson.D{
+				{Key: "_id", Value: "$kubernetes.pod_name"},
+				{Key: "time", Value: bson.M{"$first": "$time"}},
 			},
 		},
 	}
@@ -68,7 +68,7 @@ func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]st
 }
 
 func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string) ([]string, error) {
-	logResultCur, err := logRepo.col.Find(ctx, bson.M{"kubernetes.pod_name": podName}, options.Find().SetSort(bson.D{{"time", 1}}).SetProjection(bson.D{{"log", 1}, {"_id", 0}}).SetAllowDiskUse(true))
+	logResultCur, err := logRepo.col.Find(ctx, bson.M{"kubernetes.pod_name": podName}, options.Find().SetSort(bson.D{{Key: "time", Value: 1}}).SetProjection(bson.D{{Key: "log", Value: 1}, {Key: "_id", Value: 0}}).SetAllowDiskUse(true))
 	if err != nil {
 		return nil, err
 	}

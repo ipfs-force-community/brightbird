@@ -84,13 +84,13 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/plugin-library';
 import { Mutable } from '@/utils/lib';
-import { fetchDeployPlugins, fetchExecPlugins, uploadPlugin } from "@/api/plugin";
-import { PluginDetail } from "@/api/dto/testflow.js";
+import { fetchDeployPlugins, fetchExecPlugins, uploadPlugin } from '@/api/plugin';
+import { PluginDetail } from '@/api/dto/testflow.js';
 import { ElButton, ElUpload } from 'element-plus';
-import JmEmpty from "@/components/data/empty/index.vue";
-import JmTextViewer from "@/components/text-viewer/index.vue";
+import JmEmpty from '@/components/data/empty/index.vue';
+import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ElMessageBox } from 'element-plus';
-import { Delete} from '@element-plus/icons-vue'
+import { Delete } from '@element-plus/icons-vue';
 
 import {
   onBeforeRouteUpdate,
@@ -111,8 +111,8 @@ export default defineComponent({
 
     fetchDeployPlugins()
       .then(res => {
-        deployPlugins.value.list = res
-        deployPlugins.value.total = res.length
+        deployPlugins.value.list = res;
+        deployPlugins.value.total = res.length;
       })
       .catch((err: Error) => {
         proxy.$throw(err, proxy);
@@ -121,8 +121,8 @@ export default defineComponent({
 
     fetchExecPlugins()
       .then(res => {
-        execPlugins.value.list = res
-        execPlugins.value.total = res.length
+        execPlugins.value.list = res;
+        execPlugins.value.total = res.length;
       })
       .catch((err: Error) => {
         proxy.$throw(err, proxy);
