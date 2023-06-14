@@ -1,14 +1,9 @@
 <template>
   <div class="task-detail" v-loading="loading">
     <div class="task-list">
-      <div
-          class="task-item"
-          v-for="task in podList"
-          :key="task"
-          @click="selectTask(task)"
-          :class="{ 'selected': selectedPod && selectedPod.id === task }"
-      >
-        {{ task }}
+      <div class="task-item" v-for="pod in podList" :key="pod" @click="selectTask(pod)"
+        :class="{ 'selected': selectedPod && selectedPod === pod }">
+        {{ pod }}
       </div>
     </div>
     <div class="task-logs">
@@ -16,8 +11,23 @@
         Please select a task to view its logs.
       </div>
       <div v-else>
-        <div class="pod-log-header">{{ selectedPod.name }} Logs</div>
-        <textarea class="pod-log" v-model="podLogString"></textarea>
+        <div class="pod-log-header">{{ selectedPod }} Logs</div>
+        <el-collapse v-if="selectedPod.indexOf('test-runner') > -1" class="pod-log  pod-height">
+          <el-collapse-item v-for="step in podLog?.steps" class="step-header">
+            <template #title>
+              <div class="header-title">
+                <el-icon v-if="step.isSuccess" size="20"><CircleCheckFilled /></el-icon> 
+                <el-icon v-else size="20"><CircleCloseFilled /></el-icon>
+                <el-text class="title" size="small" > {{ step.name }} </el-text>
+              </div>
+            </template>
+            <div class="steps">
+              <el-text class="step-item" size="small" tag="p" v-for="log in step.logs"> {{ log }} </el-text>
+            </div>
+          </el-collapse-item>
+        </el-collapse>
+        <el-input v-else class="pod-log pod-height" v-model="podLogString" aria-readonly="true" :autosize="{ minRows: 2 }"
+          type="textarea" />
       </div>
     </div>
   </div>
@@ -25,28 +35,27 @@
 
 <script lang="ts">
 import { defineComponent, getCurrentInstance, onMounted, provide, ref } from 'vue';
-import { listAllPod, getPodLog } from '@/api/view-no-auth';
-import sleep from '@/utils/sleep';
+import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
+import { LogResp } from '@/api/dto/log';
 
 export default defineComponent({
   props: {
     testId: {
       type: String,
       required: true,
-      // default: '39cb76fe',
     },
   },
   computed: {
     podLogString(): string {
-      return this.podLog.join('\n');
+      return this.podLog?.logs.join('\n') ?? "";
     },
   },
   setup(props: any) {
     const { proxy } = getCurrentInstance() as any;
     const podList = ref<string[]>([]);
     const selectedPod = ref<string>('');
-    const podLog = ref<string[]>([]);
+    const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
     console.log(props.testId);
 
@@ -128,75 +137,113 @@ export default defineComponent({
 .task-detail {
   display: flex;
   justify-content: space-between;
-  height: 100%;
-  background-color: #ffffff; /* 设置背景色为白色 */
+  background-color: #ffffff;
+  /* 设置背景色为白色 */
 
-.task-list {
-  width: 30%;
-  border-right: 1px solid #ccc;
-  background-color: #f5f5f5;
-  padding: 10px;
-  overflow: auto;
+  .task-list {
+    width: 30%;
+    border-right: 1px solid #ccc;
+    background-color: #f5f5f5;
+    padding: 10px;
+    overflow: auto;
 
-  &::-webkit-scrollbar {
-     width: 8px;
-     height: 8px;
-     background-color: #f5f5f5;
-   }
+    &::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+      background-color: #f5f5f5;
+    }
 
-  &::-webkit-scrollbar-thumb {
-     background-color: #ccc;
-     border-radius: 4px;
-   }
+    &::-webkit-scrollbar-thumb {
+      background-color: #ccc;
+      border-radius: 4px;
+    }
 
-  &::-webkit-scrollbar-track {
-     background-color: #f5f5f5;
-   }
+    &::-webkit-scrollbar-track {
+      background-color: #f5f5f5;
+    }
   }
 
-.task-item {
-  padding: 10px;
-  cursor: pointer;
-  margin-bottom: 10px;
-  background-color: #fff;
-  border-radius: 4px;
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+  .task-item {
+    padding: 10px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    background-color: #fff;
+    border-radius: 4px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 
-  &:hover {
-     background-color: #f5f5f5;
-   }
+    &:hover {
+      background-color: #f5f5f5;
+    }
 
-  &.selected {
-     background-color: #e1e1e1;
+    &.selected {
+      background-color: #e1e1e1;
 
-  &:hover {
-     background-color: #e1e1e1;
-   }
+      &:hover {
+        background-color: #e1e1e1;
+      }
+    }
   }
-}
 
-.task-logs {
-  flex-grow: 1;
-  padding: 10px;
+  .task-logs {
+    flex-grow: 1;
+    padding: 10px;
 
-.pod-log-header {
-  font-weight: bold;
-  margin-bottom: 10px;
-}
+    .pod-log-header {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
 
-.pod-log {
-  font-family: monospace;
-  white-space: pre-wrap;
-  background-color: #f0f0f0;
-  padding: 10px;
-  overflow: auto;
-  height: 700px;
-  width: 1050px;
-  resize: none;
-  border: none;
-  outline: none;
-  cursor: default;
-}
-}
+    .pod-log {
+      font-family: monospace;
+      white-space: pre-wrap;
+      background-color: #f0f0f0;
+      padding: 10px;
+      overflow: auto;
+      width: 1050px;
+      resize: none;
+      border: none;
+      outline: none;
+      cursor: default;
+      --el-collapse-header-bg-color: rgb(154, 154, 154);
+      --el-collapse-content-bg-color: #e1e1e1;
+      --el-collapse-border-color:rgb(154, 154, 154);
+      --el-collapse-header-height: 30px;
+      .step-header  {
+        margin-left: 8px;
+        margin-bottom: 3px;
+        border-radius: 8px;
+        border:3px solid rgb(154, 154, 154);
+
+        .header-title {
+            display: inline-flex;
+            align-items: center;
+
+            .title {
+              color: rgb(255, 255, 255);
+              padding-left: 10px;
+              font-size: 15px;
+            }
+        }
+      }
+
+      .steps {
+        .step-item {
+          padding-left: 10px;
+        }
+      }
+    }
+
+    @media (max-width: 1800px) {
+      .pod-height {
+        height: 760px;
+      }
+    }
+
+    @media (min-width: 1805px) {
+      .pod-height {
+        height: 1050px;
+      }
+    }
+  }
 }
 </style>

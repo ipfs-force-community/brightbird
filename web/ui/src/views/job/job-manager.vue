@@ -81,7 +81,6 @@ import {
   ref,
   getCurrentInstance,
   onMounted,
-  computed,
   Ref,
 } from 'vue';
 import JobCreator from './job-creator.vue';

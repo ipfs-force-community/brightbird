@@ -99,7 +99,7 @@ import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail, PluginDetail } from '@/api/dto/testflow';
+import { ITestFlowDetail,Plugin, PluginDetail } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
@@ -226,11 +226,14 @@ export default defineComponent({
         const testflow = await fetchTestFlowDetail({ id: createForm.value.testFlowId });
         testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version));
         // fetch plugins
-        const pluginMap = new Map<string, PluginDetail>();
+        const pluginMap = new Map<string, Plugin>();
         (await fetchDeployPlugins()).map(a => {
-          if (nodeInUse.has(a.name + a.version)) {
-            pluginMap.set(a.name, a);
+          a.plugins?.map(p=>{
+            if (nodeInUse.has(p.name + p.version)) {
+            pluginMap.set(p.name, p);
           }
+          })
+         
         });
 
         const repos = new Set<string>();

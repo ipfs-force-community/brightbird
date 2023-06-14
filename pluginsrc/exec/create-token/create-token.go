@@ -30,9 +30,9 @@ type TestCaseParams struct {
 		Extra string `json:"extra" description:"[OPTIONS] permission for API auth (read, write, sign, admin)"`
 	} `optional:"true"`
 
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	CreateUser env.IExec           `json:"-" svcname:"CreateUser" description:"[Exec]create-user"`
-	VenusAuth  env.IDeployer       `json:"-" svcname:"VenusAuth" description:"[Deploy]venus-auth"`
+	K8sEnv    *env.K8sEnvDeployer `json:"-"`
+	UserName  env.IExec           `json:"-" svcname:"UserName" description:"[Exec]create-user"`
+	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth" description:"[Deploy]venus-auth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -65,7 +65,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	userName, err := params.CreateUser.Param("UserName")
+	userName, err := params.UserName.Param("UserName")
 	if err != nil {
 		return nil, err
 	}

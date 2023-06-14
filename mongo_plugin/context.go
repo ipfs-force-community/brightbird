@@ -10,9 +10,10 @@ import (
 )
 
 type Value struct {
-	Logger log.Logger
-	Config interface{}
-	DB     *mongo.Database
+	Logger  log.Logger
+	Config  interface{}
+	DB      *mongo.Database
+	FlushCh chan []interface{}
 }
 
 func Get(ctxPointer unsafe.Pointer) (*Value, error) {

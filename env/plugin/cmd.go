@@ -10,32 +10,37 @@ var ErrNotCmd = fmt.Errorf("not found cmd")
 
 const CMDVALPREFIX = "CMDVAL:"
 const CMDERRORREFIX = "CMDERROR:"
-const CMDSTATEPREFIX = "CMDSTATE:"
+const CMDSTARTPREFIX = "CMDSTART:"
+const CMDSUCCESSPREFIX = "CMDSUCCESS:"
 
-const COMPLETELOG = "COMPLETED"
-
-func respError(err error) {
+func RespError(err error) {
 	fmt.Print(CMDERRORREFIX)
 	fmt.Println(err.Error())
 }
 
-func respJSON(val interface{}) {
+func RespJSON(val interface{}) {
 	data, err := json.Marshal(val)
 	if err != nil {
-		respError(err)
+		RespError(err)
 	}
 	fmt.Print(CMDVALPREFIX)
 	fmt.Println(string(data))
 }
 
-func respState(state string) {
-	fmt.Print(CMDSTATEPREFIX)
-	fmt.Println(state)
+func RespStart(addition string) {
+	fmt.Print(CMDSTARTPREFIX)
+	fmt.Println(addition)
+}
+
+func RespSuccess(addition string) {
+	fmt.Print(CMDSUCCESSPREFIX)
+	fmt.Println(addition)
 }
 
 func isCmd(cmd string) bool {
-	return cmd == CMDVALPREFIX || cmd == CMDERRORREFIX || cmd == CMDSTATEPREFIX
+	return cmd == CMDVALPREFIX || cmd == CMDERRORREFIX || cmd == CMDSTARTPREFIX || cmd == CMDSUCCESSPREFIX
 }
+
 func ReadCMD(line string) (string, string, bool) {
 	line = strings.Trim(line, "\n")
 	cmd := ""

@@ -76,9 +76,9 @@ type CountJobRequest struct {
 // swagger:model listJobResp
 type ListJobResp []Job
 
-// PodListResp
-// swagger:model podListResp
-type PodListResp []string
+// StringArrary
+// swagger:model stringArr
+type StringArrary []string
 
 // LogListResp
 // swagger:model logListResp
@@ -185,4 +185,20 @@ type DeletePluginReq struct {
 	//
 	// required: true
 	Version string `form:"version" json:"version" binding:"required"`
+}
+
+// StepLog
+// swagger:model stepLog
+type StepLog struct {
+	Name      string   `json:"name"`
+	Logs      []string `json:"logs"`
+	IsSuccess bool     `json:"success"`
+}
+
+// LogResp
+// swagger:model logResp
+type LogResp struct {
+	PodName string    `json:"podName"`
+	Steps   []StepLog `json:"steps"`
+	Logs    []string  `json:"logs"`
 }

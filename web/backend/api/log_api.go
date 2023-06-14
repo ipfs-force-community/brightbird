@@ -3,8 +3,11 @@ package api
 import (
 	"context"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/models"
 	"github.com/hunjixin/brightbird/repo"
 )
 
@@ -32,7 +35,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	//         type: string
 	//
 	//     Responses:
-	//       200: podListResp
+	//       200: stringArr
 	//		 503: apiError
 	group.GET("pods/:testid", func(c *gin.Context) {
 		testID := c.Param("testid")
@@ -65,15 +68,57 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	//         type: string
 	//
 	//     Responses:
-	//       200: podListResp
+	//       200: logResp
 	//		 503: apiError
 	group.GET(":podName", func(c *gin.Context) {
 		podName := c.Param("podName")
-		pods, err := logRepo.GetPodLog(c, podName)
+		logs, err := logRepo.GetPodLog(c, podName)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
-		c.JSON(http.StatusOK, pods)
+
+		resp := &models.LogResp{
+			PodName: podName,
+			Logs:    logs,
+		}
+
+		if strings.Contains(podName, "test-runner") {
+			var stepLogs []models.StepLog
+			var lines []string
+			currentSec := "testrunner start"
+			for _, log := range logs {
+				cmd, val, isCmd := plugin.ReadCMD(log)
+				if isCmd {
+					switch cmd {
+					case plugin.CMDSTARTPREFIX:
+						stepLogs = append(stepLogs, models.StepLog{
+							Name:      currentSec,
+							IsSuccess: true,
+							Logs:      lines,
+						})
+						currentSec = val //rotate to next section
+						lines = []string{}
+					case plugin.CMDERRORREFIX:
+						stepLogs = append(stepLogs, models.StepLog{
+							Name:      currentSec,
+							IsSuccess: false,
+							Logs:      lines,
+						})
+						currentSec = ""
+						lines = []string{}
+					}
+				}
+				lines = append(lines, log)
+			}
+
+			stepLogs = append(stepLogs, models.StepLog{
+				Name:      "testrunner end",
+				IsSuccess: true,
+				Logs:      lines,
+			})
+			resp.Steps = stepLogs
+		}
+		c.JSON(http.StatusOK, resp)
 	})
 }

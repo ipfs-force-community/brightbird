@@ -30,6 +30,7 @@ var logDetail = &log.SugaredLogger
 
 type InitParams struct {
 	env.K8sInitParams
+	LogLevel      string
 	BoostrapPeers types.BootstrapPeers
 	CodeVersion   string                      //todo allow config as tag commit id brance
 	InstanceName  string                      //plugin instance name
@@ -39,27 +40,18 @@ type InitParams struct {
 }
 
 func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
-	err := logging.SetLogLevel("*", "DEBUG")
-	if err != nil {
-		fmt.Println("init log fail", err.Error())
-		os.Exit(1)
-		return
-	}
-
-	logDetail = logDetail.With("plugin name", info.Name)
-	logDetail.Infof("start running plugin")
 	fnT := reflect.TypeOf(constructor)
 	depParmasT := fnT.In(1)
 	pluginParams, err := ParseParams(depParmasT)
 	if err != nil {
-		respError(err)
+		RespError(err)
 		os.Exit(1)
 		return
 	}
 	info.PluginParams = pluginParams
 
 	if len(os.Args) > 1 && os.Args[1] == "info" {
-		respJSON(info) //NOTE never remove this print code!!!!!, println for testrunner to read
+		RespJSON(info) //NOTE never remove this print code!!!!!, println for testrunner to read
 		return
 	}
 
@@ -67,7 +59,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	data, err := reader.ReadBytes('\n')
 
 	if err != nil {
-		respError(err)
+		RespError(err)
 		return
 	}
 
@@ -75,18 +67,56 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	incomingParams := &InitParams{}
 	err = json.Unmarshal(data, incomingParams)
 	if err != nil {
-		respError(err)
+		RespError(err)
 		os.Exit(1)
 		return
 	}
 
-	logDetail = logDetail.With("instance name", incomingParams.InstanceName)
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Errorf("%v", r)
+			RespError(err)
+			os.Exit(1)
+		}
+	}()
 
-	callFn, err := ConvertDeployConstructor(incomingParams, info, reflect.ValueOf(constructor), depParmasT)
+	err = runPlugin(info, constructor, incomingParams)
 	if err != nil {
-		respError(err)
+		RespError(err)
 		os.Exit(1)
 		return
+	}
+	os.Exit(0)
+}
+
+func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *InitParams) error {
+	err := logging.SetLogLevel("*", incomingParams.LogLevel)
+	if err != nil {
+		return err
+	}
+
+	logLevel, err := logging.LevelFromString(incomingParams.LogLevel)
+	if err != nil {
+		return err
+	}
+
+	if logLevel > logging.LevelDebug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	//dump params
+	data, err := json.Marshal(incomingParams)
+	if err != nil {
+		return err
+	}
+	logDetail = logDetail.With("plugin name", info.Name)
+	logDetail.Infof("start running plugin params: %s", string(data))
+
+	depParmasT := reflect.TypeOf(constructor).In(1)
+	logDetail = logDetail.With("instance name", incomingParams.InstanceName)
+	callFn, err := ConvertDeployConstructor(incomingParams, info, reflect.ValueOf(constructor), depParmasT)
+	if err != nil {
+		return err
 	}
 
 	ctx := context.Background()
@@ -140,16 +170,8 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 			fx_opt.Override(fx_opt.NextInvoke(), StartExecPlugin),
 		),
 	)
-	if err != nil {
-		logDetail.Infof("run plugin fail")
-		respError(err)
-		os.Exit(1)
-		return
-	}
-	logDetail.Infof("run plugin successfully")
-	os.Exit(0)
+	return err
 }
-
 func GetPluginInfo(path string) (*types.PluginInfo, error) {
 	r, w, err := os.Pipe()
 	if err != nil {
@@ -213,7 +235,10 @@ func ConvertDeployConstructor(incomingParams *InitParams, pluginInfo types.Plugi
 	}
 
 	fnT := ctorFn.Type()
-	newInStruct := convertInjectParams(depParmasT, svcMap)
+	newInStruct, err := convertInjectParams(depParmasT, svcMap)
+	if err != nil {
+		return nil, err
+	}
 
 	var newOutArgs []reflect.Type
 	if pluginInfo.PluginType == types.Deploy {
@@ -366,7 +391,7 @@ func getSvcMap(properties ...*types.DependencyProperty) (map[string]string, erro
 	return svcMap, nil
 }
 
-func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type {
+func convertInjectParams(in reflect.Type, svcMap map[string]string) (reflect.Type, error) {
 	var inDepTypeFields []reflect.StructField
 	offset := uintptr(0)
 	if in != nil {
@@ -374,18 +399,24 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 		for i := 0; i < fieldNum; i++ {
 			field := in.Field(i)
 			if !field.Anonymous {
-				svcNameKey, found := field.Tag.Lookup(SvcName)
+				isOptional := field.Tag.Get("optional") == "true"
+
+				svcNameKey, found := field.Tag.Lookup(SvcName) //default to field name
 				svcName := ""
 				if found {
 					var ok bool
 					svcName, ok = svcMap[svcNameKey]
 					if !ok {
-						svcName = uuid.NewString() //use a non exit name, means set the value to nil
+						if !isOptional {
+							return nil, fmt.Errorf("dependency %s not found", svcNameKey)
+						}
+
+						svcName = uuid.NewString() //use a non exit name, means set the value to nil, random uuid use to avoid conflict with others
 					}
 				}
 
 				tagVal := fmt.Sprintf(`name:"%s"`, svcName)
-				if field.Tag.Get("optional") == "true" {
+				if isOptional {
 					tagVal = fmt.Sprintf(`%s optional:"true"`, tagVal)
 				}
 				newField := reflect.StructField{
@@ -410,7 +441,7 @@ func convertInjectParams(in reflect.Type, svcMap map[string]string) reflect.Type
 		Index:     []int{int(offset)},
 		Anonymous: true,
 	})
-	return reflect.StructOf(inDepTypeFields)
+	return reflect.StructOf(inDepTypeFields), nil
 }
 
 func collectParams(properties []*types.Property, params interface{}) error {
@@ -475,15 +506,6 @@ func StartDeployPlugin(deployer env.IDeployer, intParmas *InitParams) error {
 		ctx.AbortWithStatusJSON(http.StatusOK, svc)
 	})
 
-	e.POST("/deploy", func(ctx *gin.Context) {
-		err := deployer.Deploy(ctx)
-		if err != nil {
-			_ = ctx.Error(err)
-			return
-		}
-		ctx.AbortWithStatus(http.StatusOK)
-	})
-
 	e.GET("/getconfig", func(ctx *gin.Context) {
 		cfg, err := deployer.GetConfig(ctx)
 		if err != nil {
@@ -535,7 +557,7 @@ func StartDeployPlugin(deployer env.IDeployer, intParmas *InitParams) error {
 	}()
 
 	go types.CatchSig(context.Background(), shutdownCh)
-	respState(COMPLETELOG)
+	RespSuccess(intParmas.InstanceName)
 	<-shutdownCh
 	logDetail.Infof("gracefully shutdown")
 	return nil
@@ -570,7 +592,7 @@ func StartExecPlugin(exec env.IExec, intParmas *InitParams) error {
 	}()
 
 	go types.CatchSig(context.Background(), shutdownCh)
-	respState(COMPLETELOG)
+	RespSuccess(intParmas.InstanceName)
 	<-shutdownCh
 	logDetail.Infof("gracefully shutdown")
 	return nil

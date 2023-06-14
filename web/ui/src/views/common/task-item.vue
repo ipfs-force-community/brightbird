@@ -24,7 +24,7 @@
         <span class="podname">{{task.podName}}</span>
         <div v-if="task.state == 2" class="operation">
           <jm-tooltip content="停止运行" placement="bottom">
-            <button class="cancel" @click="cancelTask(task.id)"></button>
+            <button class="cancel" @click="cancelTask(task)"></button>
           </jm-tooltip>
         </div>
       </div>
@@ -51,9 +51,10 @@ export default defineComponent({
   emits: [],
   setup(props: any, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
-    const cancelTask = async (id: string) => {
+    const cancelTask = async (task: ITaskVo) => {
       try {
-        await stopTask(id);
+        await stopTask(task.id);
+        proxy.$success("stop task success");
       } catch (err) {
         proxy.$throw(err, proxy);
       }

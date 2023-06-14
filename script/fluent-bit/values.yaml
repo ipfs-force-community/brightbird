@@ -362,12 +362,11 @@ config:
         multiline.parser docker, cri
         Tag kube.*
         Mem_Buf_Limit 5MB
+        Refresh_Interval 3
+        Rotate_Wait 1
         Skip_Long_Lines On
-    [INPUT]
-        Name systemd
-        Tag host.*
-        Systemd_Filter _SYSTEMD_UNIT=kubelet.service
-        Read_From_Tail On
+        Buffer_Max_Size 1M
+        DB ./file_status.db
   ## https://docs.fluentbit.io/manual/pipeline/filters
   filters: |
     [FILTER]
@@ -383,18 +382,18 @@ config:
         Name mongo
         Match *venus*
         Database lidb
-        Url mongodb://192.168.200.103:27017
+        Url mongodb://192.168.200.175:27017
 
     [OUTPUT]
         Name mongo
         Match *venus*
         Database zsk
-        Url mongodb://192.168.200.103:27017
+        Url mongodb://192.168.200.175:27017
     [OUTPUT]
         Name mongo
         Match *venus*
         Database testplatform
-        Url mongodb://192.168.200.103:27017
+        Url mongodb://192.168.200.175:27017
   ## https://docs.fluentbit.io/manual/administration/configuring-fluent-bit/classic-mode/upstream-servers
   ## This configuration is deprecated, please use `extraFiles` instead.
   upstream: {}

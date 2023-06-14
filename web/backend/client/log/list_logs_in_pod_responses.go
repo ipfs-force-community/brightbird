@@ -48,10 +48,10 @@ func NewListLogsInPodOK() *ListLogsInPodOK {
 /*
 ListLogsInPodOK describes a response with status code 200, with default header values.
 
-podListResp
+logResp
 */
 type ListLogsInPodOK struct {
-	Payload models.PodListResp
+	Payload *models.LogResp
 }
 
 // IsSuccess returns true when this list logs in pod o k response has a 2xx status code
@@ -92,14 +92,16 @@ func (o *ListLogsInPodOK) String() string {
 	return fmt.Sprintf("[GET /logs/{podName}][%d] listLogsInPodOK  %+v", 200, o.Payload)
 }
 
-func (o *ListLogsInPodOK) GetPayload() models.PodListResp {
+func (o *ListLogsInPodOK) GetPayload() *models.LogResp {
 	return o.Payload
 }
 
 func (o *ListLogsInPodOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
+	o.Payload = new(models.LogResp)
+
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && err != io.EOF {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && err != io.EOF {
 		return err
 	}
 

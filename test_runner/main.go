@@ -30,6 +30,9 @@ import (
 	"go.uber.org/fx"
 )
 
+const RunnerStart = "RUNNERSTART"
+const RunnerEnd = "RUNNEREND"
+
 var log = logging.Logger("main")
 
 func main() {
@@ -93,6 +96,9 @@ func main() {
 			},
 		},
 		Action: func(c *cli.Context) error {
+			fmt.Println(RunnerStart)
+			defer fmt.Println(RunnerEnd) //NOTICE do not remove this code, this is labels to split log
+
 			err := logging.SetLogLevel("*", c.String("logLevel"))
 			if err != nil {
 				return err

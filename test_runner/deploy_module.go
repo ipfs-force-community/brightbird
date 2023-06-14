@@ -48,6 +48,7 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, boostrapPeers types.
 			SockPath:      tmpFName,
 			Dependencies:  dep.Dependencies,
 			Properties:    dep.Properties,
+			LogLevel:      "DEBUG",
 		}
 		initedNode[instanceName] = tmpFName
 
@@ -88,6 +89,7 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, boostrapPeers types.Bo
 			SockPath:      tmpFName,
 			Dependencies:  dep.Dependencies,
 			Properties:    dep.Properties,
+			LogLevel:      "DEBUG",
 		}
 		initedNode[instanceName] = tmpFName
 
@@ -340,10 +342,8 @@ func runPluginAndWaitForReady(params *plugin.InitParams, pluginPath string) (*os
 			cmd, val, isCmd := plugin.ReadCMD(data)
 			if isCmd {
 				switch cmd {
-				case plugin.CMDSTATEPREFIX:
-					if val == plugin.COMPLETELOG {
-						readyCh <- struct{}{}
-					}
+				case plugin.CMDSUCCESSPREFIX:
+					readyCh <- struct{}{}
 				case plugin.CMDERRORREFIX:
 					errCh <- fmt.Errorf("get error form plugin %s %s", params.InstanceName, val)
 				case plugin.CMDVALPREFIX:
@@ -352,6 +352,7 @@ func runPluginAndWaitForReady(params *plugin.InitParams, pluginPath string) (*os
 		}
 	}()
 
+	plugin.RespStart(params.InstanceName)
 	process, err := os.StartProcess(pluginPath, []string{pluginPath}, &os.ProcAttr{
 		Env:   os.Environ(),
 		Files: []*os.File{stdInR, stdOutW, os.Stderr},
