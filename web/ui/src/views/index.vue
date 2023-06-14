@@ -75,7 +75,7 @@ export default defineComponent({
     .menu-bar {
       margin-top: 20px;
       background-color: #ffffff;
-      padding: 40px 20px;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
