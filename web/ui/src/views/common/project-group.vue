@@ -91,7 +91,7 @@ export default defineComponent({
     // 根据测试流组在vuex中保存的状态，进行展开、折叠间的切换
     const toggle = computed<boolean>(() => {
       // 只有全等于为undefined说明该测试流组一开始根本没有做折叠操作
-      if (projectGroupFoldingMapping[props.testflowGroup?.id] === undefined) {
+      if (projectGroupFoldingMapping[props.testflowGroup?.id] === false) {
         return true;
       }
       return projectGroupFoldingMapping[props.testflowGroup.id];

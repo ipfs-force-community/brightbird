@@ -11,6 +11,12 @@
           </router-link>
         </div>
         <div class="right-area">
+          <router-link :to="{ name: 'workflow-list' }">
+            <div class="btn-item">
+              <button class="workflow-list"></button>
+              <span class="text">测试流列表</span>
+            </div>
+          </router-link>
           <router-link :to="{ name: 'plugin-library' }">
             <div class="btn-item">
               <button class="plugin-library"></button>
@@ -31,10 +37,6 @@
           </router-link>
         </div>
       </div>
-      <!-- 全部项目 -->
-      <all-project v-if="searchResultFlag" />
-      <!-- 搜索结果 -->
-      <search-project :searchName="searchName" :groupId="groupId" v-else />
     </div>
     <bottom-nav />
   </div>
@@ -129,6 +131,10 @@ export default defineComponent({
 
           &.group {
             background-image: url('@/assets/svgs/index/group-btn.svg');
+          }
+
+          &.workflow-list {
+            background-image: url('@/assets/svgs/process-template/process-template.svg');
           }
         }
 

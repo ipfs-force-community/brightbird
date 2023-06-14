@@ -24,6 +24,21 @@ export default [
       title: '组件库',
     },
   },
+  // 测试流列表路由
+  {
+    name: 'workflow-list',
+    path: 'workflowList',
+    component: () => import('@/views/index/workflow-list.vue'),
+    props: ({
+      query: { searchName, groupId },
+    }: RouteLocationNormalizedLoaded) => ({
+      searchName,
+      groupId,
+    }),
+    meta: {
+      title: '测试流列表',
+    },
+  },
   // 节点库路由
   {
     name: 'plugin-library',
