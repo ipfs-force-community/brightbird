@@ -50,6 +50,7 @@ func New(ctx context.Context, opts ...Option) (StopFunc, error) {
 	}
 
 	app := fx.New(
+		fx.Logger(&Logger{}),
 		fx.Options(ctors...),
 		fx.Options(settings.invokes...),
 	)

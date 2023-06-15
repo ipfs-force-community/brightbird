@@ -84,18 +84,12 @@ func FLBPluginInit(ctxPointer unsafe.Pointer) int {
 
 		return output.FLB_ERROR
 	}
-	db := client.Database(cfg.Database)
-	_, err = db.Collection("logs").Indexes().CreateMany(context.Background(), []mongo.IndexModel{{Keys: "kubernetes.labels.testid"}, {Keys: "kubernetes.pod_name"}, {Keys: "time"}})
-	if err != nil {
-		value.Logger.Error("create index fail", map[string]interface{}{
-			"error": err,
-		})
 
-		return output.FLB_ERROR
-	}
-	value.DB = db
+	value.DB = client.Database(cfg.Database)
+	value.FlushCh = make(chan []interface{}, 50) //arbitary value
 	Set(ctxPointer, value)
 
+	go flush(value)
 	msgpack.RegisterExt(0, &EventTime{})
 	return output.FLB_OK
 }
@@ -121,7 +115,7 @@ func FLBPluginFlushCtx(ctxPointer, data unsafe.Pointer, length C.int, tag *C.cha
 	logger := value.Logger
 	ctx := log.WithLogger(context.TODO(), logger)
 	msgPacks := GetBytes(data, int(length)) // Create Fluent Bit decoder
-	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), value.DB); err != nil {
+	if err := ProcessAll(ctx, msgPacks, C.GoString(tag), value.FlushCh); err != nil {
 		logger.Error("Failed to process logs", map[string]interface{}{
 			"error": err,
 		})
@@ -141,7 +135,7 @@ func FLBPluginFlushCtx(ctxPointer, data unsafe.Pointer, length C.int, tag *C.cha
 	return output.FLB_OK
 }
 
-func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database) error {
+func ProcessAll(ctx context.Context, data []byte, tag string, flushCh chan<- []interface{}) error {
 	// For log purpose
 	startTime := time.Now()
 	total := 0
@@ -149,14 +143,12 @@ func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database
 	if err != nil {
 		return fmt.Errorf("get logger: %w", err)
 	}
-	logger.Info("ProcessAll", map[string]interface{}{})
 
 	dec := msgpack.NewDecoder(bytes.NewReader(data))
 	dec.SetMapDecoder(func(dec *msgpack.Decoder) (interface{}, error) {
 		return dec.DecodeMap()
 	})
 	// Iterate Records
-	logCollector := db.Collection("logs")
 	var documents []interface{}
 	for {
 		// Extract Record
@@ -174,13 +166,43 @@ func ProcessAll(ctx context.Context, data []byte, tag string, db *mongo.Database
 		record["tags"] = tag
 		documents = append(documents, record)
 	}
-	_, err = logCollector.InsertMany(ctx, documents)
-	if err != nil {
-		logger.Error("Failed to save log", map[string]interface{}{
-			"error": err,
-		})
-	}
+	flushCh <- documents
 	return nil
+}
+
+func flush(value *Value) {
+	cfg := value.Config.(*Config)
+	logCollector := value.DB.Collection("logs")
+	ctx := context.Background()
+
+	tm := time.NewTicker(time.Second * 3)
+	defer tm.Stop()
+
+	pendingDocuments := make([]interface{}, 0, 200)
+	saveDocs := func() {
+		_, err := logCollector.InsertMany(ctx, pendingDocuments)
+		if err != nil {
+			value.Logger.Error("Failed to save log", map[string]interface{}{
+				"error": err,
+			})
+		}
+		value.Logger.Info("process logs", map[string]interface{}{"Dest": fmt.Sprintf("%s/%s", cfg.URL, cfg.Database), "logNum": len(pendingDocuments)})
+		pendingDocuments = pendingDocuments[:0] //reuse space
+	}
+
+	for {
+		select {
+		case documents := <-value.FlushCh:
+			pendingDocuments = append(pendingDocuments, documents...)
+			if len(pendingDocuments) > 200 {
+				saveDocs()
+			}
+		case <-tm.C:
+			if len(pendingDocuments) > 0 {
+				saveDocs()
+			}
+		}
+	}
 }
 
 // FLBPluginExit

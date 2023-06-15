@@ -49,6 +49,7 @@ type Task struct {
 	ID              primitive.ObjectID `bson:"_id" json:"id"`
 	Name            string             `json:"name"`
 	PodName         string             `json:"podName"`
+	RetryTime       int                `json:"retryTime"`
 	JobId           primitive.ObjectID `json:"jobId"`
 	TestFlowId      primitive.ObjectID `json:"testFlowId"` //save this field for convience, get from job info is alright
 	TestId          types.TestId       `json:"testId"`

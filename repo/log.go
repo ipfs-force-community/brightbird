@@ -30,6 +30,12 @@ func NewLogRepo(ctx context.Context, db *mongo.Database) (*LogRepo, error) {
 			Keys: bsonx.Doc{{Key: "kubernetes.pod_name", Value: bsonx.Int32(-1)}},
 		},
 		{
+			Keys: bsonx.Doc{
+				{Key: "kubernetes.pod_name", Value: bsonx.Int32(-1)},
+				{Key: "kubernetes.time", Value: bsonx.Int32(-1)},
+			},
+		},
+		{
 			Keys:    bsonx.Doc{{Key: "kubernetes.time", Value: bsonx.Int32(1)}},
 			Options: options.Index().SetExpireAfterSeconds(60 * 60 * 24 * 7), //keep latest one week logs
 		},
@@ -68,7 +74,8 @@ func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]st
 }
 
 func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string) ([]string, error) {
-	logResultCur, err := logRepo.col.Find(ctx, bson.M{"kubernetes.pod_name": podName}, options.Find().SetSort(bson.D{{Key: "time", Value: 1}}).SetProjection(bson.D{{Key: "log", Value: 1}, {Key: "_id", Value: 0}}).SetAllowDiskUse(true))
+	opts := options.Find().SetSort(bson.D{{Key: "time", Value: 1}}).SetProjection(bson.D{{Key: "log", Value: 1}, {Key: "_id", Value: 0}}).SetAllowDiskUse(true)
+	logResultCur, err := logRepo.col.Find(ctx, bson.M{"kubernetes.pod_name": podName}, opts)
 	if err != nil {
 		return nil, err
 	}

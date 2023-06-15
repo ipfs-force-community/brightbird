@@ -565,9 +565,9 @@
         ],
         "responses": {
           "200": {
-            "description": "podListResp",
+            "description": "stringArr",
             "schema": {
-              "$ref": "#/definitions/podListResp"
+              "$ref": "#/definitions/stringArr"
             }
           },
           "503": {
@@ -604,9 +604,9 @@
         ],
         "responses": {
           "200": {
-            "description": "podListResp",
+            "description": "logResp",
             "schema": {
-              "$ref": "#/definitions/podListResp"
+              "$ref": "#/definitions/logResp"
             }
           },
           "503": {
@@ -7255,6 +7255,32 @@
       "x-go-name": "LogListResp",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
+    "logResp": {
+      "description": "LogResp",
+      "type": "object",
+      "properties": {
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "podName": {
+          "type": "string",
+          "x-go-name": "PodName"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stepLog"
+          },
+          "x-go-name": "Steps"
+        }
+      },
+      "x-go-name": "LogResp",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
     "myString": {
       "description": "MyString  repretation string",
       "type": "string",
@@ -7370,15 +7396,6 @@
       "x-go-name": "PluginDetail",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
-    "podListResp": {
-      "description": "PodListResp",
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "x-go-name": "PodListResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
     "property": {
       "description": "Property Property",
       "type": "object",
@@ -7406,6 +7423,38 @@
       },
       "x-go-name": "Property",
       "x-go-package": "github.com/hunjixin/brightbird/types"
+    },
+    "stepLog": {
+      "description": "StepLog",
+      "type": "object",
+      "properties": {
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "success": {
+          "type": "boolean",
+          "x-go-name": "IsSuccess"
+        }
+      },
+      "x-go-name": "StepLog",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
+    "stringArr": {
+      "description": "StringArrary",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-go-name": "StringArrary",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "svcProperty": {
       "description": "Property DependencyProperty",
@@ -7484,6 +7533,11 @@
         "podName": {
           "type": "string",
           "x-go-name": "PodName"
+        },
+        "retryTime": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RetryTime"
         },
         "state": {
           "type": "integer",

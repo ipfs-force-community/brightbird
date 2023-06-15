@@ -25,10 +25,17 @@ func TestReadCMD(t *testing.T) {
 	}
 
 	{
-		cmd, state, isCmd := ReadCMD(CMDSTATEPREFIX + COMPLETELOG)
+		cmd, addition, isCmd := ReadCMD(CMDSTARTPREFIX + "test")
 		assert.True(t, isCmd)
-		assert.Equal(t, CMDSTATEPREFIX, cmd)
-		assert.Equal(t, COMPLETELOG, state)
+		assert.Equal(t, CMDSTARTPREFIX, cmd)
+		assert.Equal(t, "test", addition)
+	}
+
+	{
+		cmd, addition, isCmd := ReadCMD(CMDSUCCESSPREFIX + "test")
+		assert.True(t, isCmd)
+		assert.Equal(t, CMDSUCCESSPREFIX, cmd)
+		assert.Equal(t, "test", addition)
 	}
 
 	{

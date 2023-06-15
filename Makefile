@@ -17,7 +17,7 @@ swagger-srv: gen-swagger
 
 .PHONY: exec-plugin
 exec-plugin:
-	for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
+	@for i in $$(ls pluginsrc/exec|grep $(COMPONENT)); do \
 		rm -f $(DISTPATH)/plugins/exec/$$i;\
    		cmd="go build -o $(DISTPATH)/plugins/exec/$$i $(subst ",\",$(GOFLAGS)) ./pluginsrc/exec/$$i"; \
 		echo $$cmd; \
@@ -55,9 +55,10 @@ ui:
 	rm -f $(DISTPATH)/ui
 	cd web/ui && PUBLICDIR=../../$(DISTPATH)/front yarn run build
 
+.PHONY: build-go
 build-go: exec-plugin deploy-plugin runner backend
 
-build-all: go-build ui 
+build-all: build-go ui 
 
 TAG=latest
 docker-runner:
