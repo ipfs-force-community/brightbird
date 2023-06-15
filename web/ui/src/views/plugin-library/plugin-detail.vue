@@ -94,7 +94,6 @@ import { useStore } from 'vuex';
 import { IRootState } from '@/model';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import PluginLabel from './plugin-label.vue';
-import { version } from 'os';
 
 export default defineComponent({
   props: {

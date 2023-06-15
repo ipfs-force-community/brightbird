@@ -3,7 +3,7 @@
     <template #title>
       <div class="creator-title">新建测试流分组</div>
     </template>
-    <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
+    <jm-form label-width="auto" :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
       <jm-form-item label="分组名称" label-position="top" prop="name">
         <jm-input @blur="checkGroup" v-model="createForm.name" v-bind:class="isDupName ? 'invadateName' : ''"  clearable
           placeholder="请输入分组名称" />

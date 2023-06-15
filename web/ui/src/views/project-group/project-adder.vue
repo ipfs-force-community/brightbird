@@ -8,19 +8,15 @@
         <span>添加测试流</span>
       </div>
     </template>
-    <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
-      <jm-form-item label="选择测试流组" label-position="top" class="project-group" prop="groupId">
+    <jm-form label-width="auto" :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
+      <jm-form-item size="large" label="选择测试流组">
         <jm-select @change="selectChange" v-model="createForm.groupId" placeholder="请选择测试流组">
-          <jm-option
-            v-for="item in projectGroupList"
-            :disabled="id === item.id"
-            :key="item.id"
-            :label="item.name"
-            :value="item.id"
-          >
+          <jm-option v-for="item in projectGroupList" :disabled="id === item.id" :key="item.id" :label="item.name"
+            :value="item.id">
           </jm-option>
         </jm-select>
       </jm-form-item>
+
       <div class="selected-list">
         <div class="title">已选测试流</div>
         <div class="selected-list-wrapper">
@@ -31,26 +27,18 @@
           </div>
         </div>
       </div>
-      <jm-input
-        placeholder="请输入测试流名称或描述"
-        type="text"
-        class="search-input"
-        v-model.trim="keyword"
-        @keyup.enter="search"
-      >
-        <template #prefix>
-          <i class="jm-icon-button-search"></i>
+
+      <jm-input placeholder="请输入测试流名称或描述" type="text" size="large" class="search-input" v-model.trim="keyword"
+        @keyup.enter="search">
+        <template #prepend>
+          <el-button :icon="Search" />
         </template>
       </jm-input>
+
       <div class="card-wrapper">
         <jm-empty v-if="projectList?.list.length === 0" />
-        <div
-          v-else
-          :class="['card-item', compSelectedList.some(item => i.id === item.id) ? 'active' : '']"
-          v-for="i in projectList?.list"
-          :key="i.id"
-          @click="selectProject(i)"
-        >
+        <div v-else :class="['card-item', compSelectedList.some(item => i.id === item.id) ? 'active' : '']"
+          v-for="i in projectList?.list" :key="i.id" @click="selectProject(i)">
           <!--          <div class="project-name">{{ i.name }}</div>-->
           <div class="project-name">
             <jm-text-viewer :value="i.name" />
@@ -62,13 +50,8 @@
         </div>
       </div>
       <div class="page" v-if="projectList && projectList?.list.length !== 0">
-        <jm-pagination
-          small
-          layout="prev, pager, next"
-          :page-count="projectList?.pages"
-          :pager-count="5"
-          @current-change="pageChange"
-        >
+        <jm-pagination small layout="prev, pager, next" :page-count="projectList?.pages" :pager-count="5"
+          @current-change="pageChange">
         </jm-pagination>
       </div>
     </jm-form>
@@ -91,6 +74,7 @@ import { IProjectGroupAddingForm } from '@/model/modules/project-group';
 import { Mutable } from '@/utils/lib';
 import { defineComponent, ref, onMounted, getCurrentInstance, computed } from 'vue';
 import { START_PAGE_NUM } from '@/utils/constants';
+import { Search } from '@element-plus/icons-vue';
 
 export default defineComponent({
   emits: ['completed'],
@@ -191,6 +175,7 @@ export default defineComponent({
       });
     };
     return {
+      Search,
       createFormRef,
       compSelectedList,
       projectList,
@@ -227,6 +212,11 @@ export default defineComponent({
   .el-dialog__body {
     .el-form {
       .selected-list {
+        .title {
+          font-size: var(--el-form-label-font-size);
+          color: var(--el-text-color-regular);
+        }
+
         .selected-list-wrapper {
           margin-top: 10px;
           display: flex;
@@ -267,27 +257,11 @@ export default defineComponent({
 
       ::v-deep(.search-input) {
         margin: 24px 0px 20px;
-        display: flex;
-        align-items: center;
-
-        .el-input__inner {
-          border-top: 1px solid #cad6ee;
-          border-bottom: none;
-          border-left: none;
-          border-right: none;
-          height: 56px;
-          background-color: #f6fafe;
-          padding-left: 55px;
-        }
 
         .el-input__prefix {
           display: flex;
           align-items: center;
           margin-left: 18px;
-
-          .jm-icon-button-search {
-            font-size: 20px;
-          }
         }
       }
 
@@ -382,6 +356,7 @@ export default defineComponent({
       .page {
         display: flex;
         justify-content: flex-end;
+
         // margin-bottom: 40px;
         ::v-deep(.el-pagination) {
           margin-right: -13px;

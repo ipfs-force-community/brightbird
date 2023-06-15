@@ -4,7 +4,7 @@
       <div class="title-container"><i class="jm-icon-workflow-edit"></i>编辑项目信息</div>
     </template>
     <div class="jm-workflow-editor-project-panel">
-      <jm-form ref="editProjectInfoRef" :model="projectInfoForm" :rules="rules" @submit.prevent>
+      <jm-form label-width="auto" ref="editProjectInfoRef" :model="projectInfoForm" :rules="rules" @submit.prevent>
         <jm-form-item label="项目名称" prop="name" class="name-item">
           <jm-input
             v-model="projectInfoForm.name"

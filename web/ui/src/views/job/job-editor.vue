@@ -3,7 +3,7 @@
     <template #title>
       <div class="editor-title">编辑项目分组</div>
     </template>
-    <jm-form :model="editorForm" :rules="editorRule" ref="editorFormRef" @submit.prevent>
+    <jm-form :model="editorForm" :rules="editorRule" ref="editorFormRef" label-width="auto" @submit.prevent>
       <jm-form-item label="Job名称" label-position="top" prop="name">
         <jm-input v-model="editorForm.name" clearable placeholder="请输入Job名称" />
       </jm-form-item>
@@ -20,7 +20,13 @@
         </jm-select>
       </jm-form-item>
 
-      <jm-form-item label="类型:" prop="jobType">
+      <jm-form-item label="描述" prop="description">
+        <jm-input type="textarea" v-model="editorForm.description" clearable maxlength="256" show-word-limit
+          placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
+        <div class="tips">描述信息不超过 256个字符</div>
+      </jm-form-item>
+
+      <jm-form-item class="jobtype" label="类型:" prop="jobType">
         <span>{{jobType}}</span>
       </jm-form-item>
 
@@ -29,8 +35,9 @@
       </jm-form-item>
 
 
-      <jm-form-item v-show="jobType == JobEnum.CronJob" label="版本设置" prop="version">
-        <div class="form-inter"  v-for="(version, component) in editorForm.versions">
+      <div v-show="jobType == JobEnum.CronJob">
+        <el-text >版本设置:</el-text>
+        <div class="form-inter version"  v-for="(version, component) in editorForm.versions">
           <el-row>
             <el-col :span="4">
               {{ component }}
@@ -40,10 +47,11 @@
             </el-col>
           </el-row>
         </div>
-      </jm-form-item>
+      </div>
 
-      <jm-form-item v-show="jobType == JobEnum.TagCreated" label="tag匹配" prop="tagCreateEventMatchs">
-        <div class="form-inter" v-for="match in editorForm.tagCreateEventMatchs">
+      <div v-show="jobType == JobEnum.TagCreated">
+        <el-text >tag匹配:</el-text>
+        <div class="form-inter version" v-for="match in editorForm.tagCreateEventMatchs">
           <el-row>
             <el-col :span="4">
               {{ getRepoName(match.repo) }}
@@ -53,10 +61,12 @@
             </el-col>
           </el-row>
         </div>
-      </jm-form-item>
+      </div>
 
-      <jm-form-ite v-show="jobType == JobEnum.PRMerged" v-for="match in editorForm.prMergedEventMatchs" label="分支匹配" prop="tagCreateEventMatchs">
-        <el-row>
+      <div v-show="jobType == JobEnum.PRMerged">
+        <el-text >分支匹配:</el-text>
+        <div class="form-inter version" v-for="match in editorForm.prMergedEventMatchs">
+          <el-row>
           <el-col :span="4">
             {{ getRepoName(match.repo) }}
           </el-col>
@@ -67,14 +77,8 @@
             <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
           </el-col>
         </el-row>
-      </jm-form-ite>
-
-
-      <jm-form-item label="描述" prop="description">
-        <jm-input type="textarea" v-model="editorForm.description" clearable maxlength="256" show-word-limit
-          placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
-        <div class="tips">描述信息不超过 256个字符</div>
-      </jm-form-item>
+        </div>
+      </div>
 
     </jm-form>
     <template #footer>
@@ -283,6 +287,8 @@ export default defineComponent({
 
 
 .form-inter {
+  font-size: 14px;
+  padding-top: 18px;
   display: inline-block;
   width: 100%;
 }
@@ -291,4 +297,15 @@ export default defineComponent({
   color: #6b7b8d;
   margin-left: 15px;
 }
+
+.jobtype {
+  padding-top: 20px;
+}
+
+
+.version {
+  margin-left: 24px;
+}
+
+
 </style>

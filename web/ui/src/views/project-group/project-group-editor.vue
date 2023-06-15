@@ -3,54 +3,23 @@
     <template #title>
       <div class="editor-title">编辑项目分组</div>
     </template>
-    <jm-form
-      :model="editorForm"
-      :rules="editorRule"
-      ref="editorFormRef"
-      @submit.prevent
-    >
+    <jm-form label-width="auto" :model="editorForm" :rules="editorRule" ref="editorFormRef" @submit.prevent>
       <jm-form-item label="分组名称" label-position="top" prop="name">
-        <jm-input
-          v-model="editorForm.name"
-          clearable
-          placeholder="请输入分组名称"
-        />
+        <jm-input v-model="editorForm.name" clearable placeholder="请输入分组名称" />
       </jm-form-item>
-      <jm-form-item
-        label="首页展示"
-        label-position="top"
-        prop="isShow"
-        class="is-show"
-      >
-        <jm-switch v-model="editorForm.isShow" active-color="#096DD9"/>
+      <jm-form-item label="首页展示" label-position="top" prop="isShow" class="is-show">
+        <jm-switch v-model="editorForm.isShow" active-color="#096DD9" />
       </jm-form-item>
       <jm-form-item label="描述" label-position="top" prop="description">
-        <jm-input
-          type="textarea"
-          v-model="editorForm.description"
-          clearable
-          maxlength="256"
-          show-word-limit
-          placeholder="请输入描述"
-          :autosize="{ minRows: 6, maxRows: 10 }"
-        />
+        <jm-input type="textarea" v-model="editorForm.description" clearable maxlength="256" show-word-limit
+          placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
         <div class="tips">描述信息不超过 256个字符</div>
       </jm-form-item>
     </jm-form>
     <template #footer>
       <span>
-        <jm-button
-          size="small"
-          @click="dialogVisible = false"
-        >取消</jm-button
-        >
-        <jm-button
-          size="small"
-          type="primary"
-          @click="save"
-          :loading="loading"
-        >保存</jm-button
-        >
+        <jm-button size="small" @click="dialogVisible = false">取消</jm-button>
+        <jm-button size="small" type="primary" @click="save" :loading="loading">保存</jm-button>
       </span>
     </template>
   </jm-dialog>
