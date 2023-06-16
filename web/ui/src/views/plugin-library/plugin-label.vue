@@ -21,7 +21,7 @@
   
 <script lang="ts">
 import { addPluginLabel, delPluginLabel } from '@/api/plugin';
-import { defineComponent, ref, getCurrentInstance, computed, PropType } from 'vue';
+import { defineComponent, ref, getCurrentInstance, PropType } from 'vue';
 
 export default defineComponent({
   emits: [],

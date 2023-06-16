@@ -1,6 +1,6 @@
 <template>
   <div class="jm-workflow-editor-async-task-panel">
-    <jm-form :model="form" label-position="top" ref="formRef" @submit.prevent>
+    <jm-form label-width="auto" :model="form" label-position="top" ref="formRef" @submit.prevent>
       <div class="set-padding">
         <jm-form-item label="节点名称" prop="name" class="name-item" :rules="nodeData.getFormRules().name">
           <jm-input v-model="form.name" show-word-limit :maxlength="36" />

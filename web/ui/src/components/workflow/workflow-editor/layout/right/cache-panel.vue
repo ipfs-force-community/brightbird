@@ -12,7 +12,7 @@
           <div class="label-title">唯一标识</div>
           <div class="label-description">以英文字母或下划线开头，支持下划线、数字、英文字母</div>
         </div>
-        <jm-form @submit.prevent ref="cacheFormRef" :model="globalForm.caches" label-position="top">
+        <jm-form label-width="auto" @submit.prevent ref="cacheFormRef" :model="globalForm.caches" label-position="top">
           <cache-editor
             v-for="(item, index) in globalForm.caches"
             :key="item.key"

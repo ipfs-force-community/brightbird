@@ -3,10 +3,11 @@
     <template #title>
       <div class="creator-title">新建Job</div>
     </template>
-    <jm-form :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
+    <jm-form label-width="auto" :model="createForm" :rules="editorRule" ref="createFormRef" @submit.prevent>
 
       <jm-form-item label="Job名称" label-position="top" prop="name">
-        <jm-input v-model="createForm.name" @blur="checkJobName" v-bind:class="isDupName ? 'invadateName' : ''" clearable placeholder="请输入Job名称" />
+        <jm-input v-model="createForm.name" @blur="checkJobName" v-bind:class="isDupName ? 'invadateName' : ''" clearable
+          placeholder="请输入Job名称" />
       </jm-form-item>
 
       <jm-form-item label="测试流" prop="testFlowId">
@@ -22,6 +23,15 @@
       </jm-form-item>
 
 
+
+      <jm-form-item label="描述" prop="description">
+        <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
+          placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
+        <div class="tips">描述信息不超过 256个字符</div>
+      </jm-form-item>
+
+
+
       <jm-form-item label="类型" prop="jobType">
         <jm-select v-loading="jobTypesLoading" :disabled="jobTypesLoading" v-model="createForm.jobType"
           @change="onSelectJobtype" placeholder="请选择Job类型">
@@ -29,55 +39,57 @@
         </jm-select>
       </jm-form-item>
 
+
       <jm-form-item label="cron表达式" v-show="createForm.jobType === JobEnum.CronJob" prop="cronExpression">
         <jm-input v-model="createForm.cronExpression" clearable placeholder="请输入Cron表达式" />
       </jm-form-item>
-
-      <jm-form-item v-show="createForm.jobType == JobEnum.CronJob" label="版本设置" prop="version">
-        <div class="form-inter"  v-for="(version, component) in createForm.versions">
-          <el-row>
-            <el-col :span="4">
-              {{ component }}
-            </el-col>
-            <el-col :span="16">
-              <jm-input :content=version :placeholder="`填写组件${component}的版本`" v-model="createForm.versions[component]" />
-            </el-col>
-          </el-row>
+      <div>
+        <div v-show="createForm.jobType == JobEnum.CronJob">
+          <el-text>版本设置:</el-text>
+          <div class="form-inter version" v-for="(version, component) in createForm.versions">
+            <el-row>
+              <el-col :span="6">
+                {{ component }}
+              </el-col>
+              <el-col :span="14">
+                <jm-input :content=version :placeholder="`填写组件${component}的版本`"
+                  v-model="createForm.versions[component]" />
+              </el-col>
+            </el-row>
+          </div>
         </div>
-      </jm-form-item>
 
-      <jm-form-item v-show="createForm.jobType == JobEnum.TagCreated" label="tag匹配" prop="tagCreateEventMatchs">
-        <div class="form-inter" v-for="match in createForm.tagCreateEventMatchs">
-          <el-row>
-            <el-col :span="4">
-              {{ getRepoName(match.repo) }}
-            </el-col>
-            <el-col :span="16">
-              <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/.`" v-model="match.tagPattern" />
-            </el-col>
-          </el-row>
+        <div v-show="createForm.jobType == JobEnum.TagCreated">
+          <el-text>tag匹配:</el-text>
+          <div class="form-inter version" v-for="match in createForm.tagCreateEventMatchs">
+            <el-row>
+              <el-col :span="6">
+                {{ getRepoName(match.repo) }}
+              </el-col>
+              <el-col :span="14">
+                <jm-input :content=match.tagPattern :placeholder="`匹配模式 例 tag/.`" v-model="match.tagPattern" />
+              </el-col>
+            </el-row>
+          </div>
         </div>
-      </jm-form-item>
 
-      <jm-form-ite v-show="createForm.jobType == JobEnum.PRMerged" v-for="match in createForm.prMergedEventMatchs" label="分支匹配" prop="tagCreateEventMatchs">
-        <el-row>
-          <el-col :span="4">
-            {{ getRepoName(match.repo) }}
-          </el-col>
-          <el-col :span="8">
-            <jm-input :content=match.basePattern v-model="match.basePattern" />
-          </el-col>
-          <el-col :span="8">
-            <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
-          </el-col>
-        </el-row>
-      </jm-form-ite>
-
-      <jm-form-item label="描述" prop="description">
-        <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
-          placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
-        <div class="tips">描述信息不超过 256个字符</div>
-      </jm-form-item>
+        <div v-show="createForm.jobType == JobEnum.PRMerged">
+          <el-text>分支匹配:</el-text>
+          <div class="form-inter version" v-for="match in createForm.prMergedEventMatchs">
+            <el-row>
+              <el-col :span="7">
+                {{ getRepoName(match.repo) }}
+              </el-col>
+              <el-col :span="7">
+                <jm-input :content=match.basePattern v-model="match.basePattern" />
+              </el-col>
+              <el-col :span="7">
+                <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
+              </el-col>
+            </el-row>
+          </div>
+        </div>
+      </div>
     </jm-form>
 
     <template #footer>
@@ -99,7 +111,7 @@ import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail,Plugin, PluginDetail } from '@/api/dto/testflow';
+import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
 
 export default defineComponent({
@@ -224,16 +236,16 @@ export default defineComponent({
         // fetch testflow
         const nodeInUse = new Set<string>();
         const testflow = await fetchTestFlowDetail({ id: createForm.value.testFlowId });
-        testflow.nodes.forEach(a=> nodeInUse.add(a.name+a.version));
+        testflow.nodes.forEach(a => nodeInUse.add(a.name + a.version));
         // fetch plugins
         const pluginMap = new Map<string, Plugin>();
         (await fetchDeployPlugins()).map(a => {
-          a.plugins?.map(p=>{
+          a.plugins?.map(p => {
             if (nodeInUse.has(p.name + p.version)) {
-            pluginMap.set(p.name, p);
-          }
+              pluginMap.set(p.name, p);
+            }
           })
-         
+
         });
 
         const repos = new Set<string>();
@@ -322,7 +334,13 @@ export default defineComponent({
 
 .form-inter {
   display: inline-block;
+  padding-top: 18px;
+  font-size: 14px;
   width: 100%;
+}
+
+.jobtype {
+  padding-top: 20px;
 }
 
 .creator-title {
@@ -336,7 +354,11 @@ export default defineComponent({
   color: #6b7b8d;
   margin-left: 15px;
 }
-.invadateName ::v-deep input{
-    border-color: #f56c6c;
+
+.version {
+  margin-left: 24px;
 }
-</style>
+
+.invadateName ::v-deep input {
+  border-color: #f56c6c;
+}</style>
