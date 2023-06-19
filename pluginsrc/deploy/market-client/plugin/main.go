@@ -15,9 +15,9 @@ func main() {
 type DepParams struct {
 	Params marketclient.Config `optional:"true"`
 
-	VenusDep        env.IDeployer `svcname:"Venus" description:"[Deploy]venus"`
-	WalletDeploy    env.IDeployer `svcname:"VenusWallet" description:"[Deploy]venus-wallet"`
-	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth" description:"[Deploy]venus-auth"`
+	VenusDep        env.IDeployer `svcname:"Venus"`
+	WalletDeploy    env.IDeployer `svcname:"VenusWallet"`
+	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth"`
 
 	K8sEnv *env.K8sEnvDeployer
 }
