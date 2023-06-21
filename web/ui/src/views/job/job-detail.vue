@@ -7,12 +7,14 @@
       <div class="top-title">
         <div class="name">{{ jobDetail?.name }}</div>
       </div>
+
       <div class="count">
         测试流: {{ jobDetail?.testFlowName }}
       </div>
       <div class="description">
         描述:<span v-html="(jobDetail?.description || '无').replace(/\n/g, '<br/>')" />
       </div>
+      
     </div>
     <div class="content">
       <div class="title">

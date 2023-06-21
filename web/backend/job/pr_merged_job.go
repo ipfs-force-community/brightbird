@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hunjixin/brightbird/models"
 
@@ -128,6 +129,10 @@ func (prMerged *PRMergedJob) Run(ctx context.Context) error {
 		}
 	}()
 	return nil
+}
+
+func (prMerged *PRMergedJob) NextNSchedule(_ context.Context, _ int) ([]time.Time, error) {
+	return []time.Time{}, nil
 }
 
 func (prMerged *PRMergedJob) generateTaskFromJob(ctx context.Context, job *models.Job) (primitive.ObjectID, error) {

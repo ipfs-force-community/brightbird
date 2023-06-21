@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/hunjixin/brightbird/models"
 
@@ -19,6 +20,7 @@ type IJobManager interface {
 	Start(ctx context.Context) error
 	InsertOrReplaceJob(ctx context.Context, job *models.Job) error
 	ExecJobImmediately(ctx context.Context, jobId primitive.ObjectID) (primitive.ObjectID, error)
+	NextNSchedule(ctx context.Context, jobId primitive.ObjectID, n int) ([]time.Time, error)
 	StopJob(ctx context.Context, jobId primitive.ObjectID) error
 	Stop(ctx context.Context) error
 }
@@ -27,6 +29,7 @@ type IJob interface {
 	ID() string
 	Run(ctx context.Context) error
 	RunImmediately(ctx context.Context) (primitive.ObjectID, error)
+	NextNSchedule(ctx context.Context, n int) ([]time.Time, error)
 	Stop(ctx context.Context) error
 }
 
@@ -128,6 +131,17 @@ func (j *JobManager) ExecJobImmediately(ctx context.Context, jobId primitive.Obj
 		return job.RunImmediately(ctx)
 	}
 	return primitive.NilObjectID, fmt.Errorf("job %s not running", jobId)
+}
+
+func (j *JobManager) NextNSchedule(ctx context.Context, jobId primitive.ObjectID, n int) ([]time.Time, error) {
+	j.lk.Lock()
+	defer j.lk.Unlock()
+
+	job, ok := j.runningJob[jobId]
+	if !ok {
+		return nil, fmt.Errorf("job %s not found", jobId)
+	}
+	return job.NextNSchedule(ctx, n)
 }
 
 func (j *JobManager) StopJob(ctx context.Context, jobId primitive.ObjectID) error {

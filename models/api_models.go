@@ -63,6 +63,13 @@ type JobDetailResp struct {
 	GroupName    string `json:"groupName"`
 }
 
+// JobNextNReq
+// swagger:parameters jobNextNReq
+type JobNextNReq struct {
+	ID string `form:"id" json:"id"`
+	N  int    `form:"n" json:"n"`
+}
+
 // CountJobRequest
 // swagger:parameters countJobRequest
 type CountJobRequest struct {
@@ -79,6 +86,10 @@ type ListJobResp []Job
 // StringArrary
 // swagger:model stringArr
 type StringArrary []string
+
+// Int64Arrary
+// swagger:model int64Arr
+type Int64Arrary []int64
 
 // LogListResp
 // swagger:model logListResp

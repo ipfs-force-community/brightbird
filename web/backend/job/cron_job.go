@@ -3,6 +3,7 @@ package job
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/hunjixin/brightbird/models"
 
@@ -74,6 +75,21 @@ func (cronJob *CronJob) Run(ctx context.Context) error {
 		thisLog.Infof("add job %s entry %d", cronJob.job.Name, entryId)
 	}
 	return err
+}
+
+func (cronJob *CronJob) NextNSchedule(_ context.Context, n int) ([]time.Time, error) {
+	entry := cronJob.cron.Entry(*cronJob.cronId)
+	nextN := []time.Time{entry.Next}
+	if n < 1 {
+		return nextN, nil
+	}
+
+	nextT := entry.Next
+	for i := 0; i < n-1; i++ {
+		nextT := entry.Schedule.Next(nextT)
+		nextN = append(nextN, nextT)
+	}
+	return nextN, nil
 }
 
 func (cronJob *CronJob) Stop(_ context.Context) error {

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/hunjixin/brightbird/models"
 
@@ -169,6 +170,10 @@ func (tagCreateJob *TagCreateJob) Run(ctx context.Context) error {
 		}
 	}()
 	return nil
+}
+
+func (tagCreateJob *TagCreateJob) NextNSchedule(_ context.Context, _ int) ([]time.Time, error) {
+	return []time.Time{}, nil
 }
 
 func (tagCreateJob *TagCreateJob) generateTaskFromJob(ctx context.Context, job *models.Job) (primitive.ObjectID, error) {
