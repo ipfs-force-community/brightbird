@@ -1,0 +1,68 @@
+<template>
+    <div ref="chartContainer" style="margin-left: -20px; margin-top: 60px; width: 685px; height: 255px;"></div>
+  </template>
+  
+  <script lang="ts">
+  import { defineComponent } from 'vue';
+  import * as echarts from 'echarts';
+  
+  export default defineComponent({
+    mounted() {
+      this.renderChart();
+    },
+    methods: {
+      renderChart() {
+        const chartContainer = this.$refs.chartContainer as HTMLElement;
+        const myChart = echarts.init(chartContainer);
+        const option = {
+          title: {
+            text: '近 30 天Job成功数量走势'
+          },
+          tooltip: {
+            trigger: 'axis'
+          },
+          legend: {
+            show: false
+          },
+          grid: {
+            left: '3%',
+            right: '4%',
+            bottom: '3%',
+            containLabel: true
+          },
+          toolbox: {
+            feature: {
+              saveAsImage: {}
+            }
+          },
+          xAxis: {
+            type: 'category',
+            boundaryGap: false,
+            data: ['Wek1', 'Wek2', 'Wek3', 'Wek4']
+          },
+          yAxis: {
+            type: 'value'
+          },
+          series: [
+            {
+              name: 'Email',
+              type: 'line',
+              stack: 'Total',
+              smooth: true, // 设置为平滑曲线
+              data: [150, 50, 100, 150]
+            },
+            {
+              name: 'Union Ads',
+              type: 'line',
+              stack: 'Total',
+              smooth: true, // 设置为平滑曲线
+              data: [100, 150, 250, 100]
+            },
+          ]
+        };
+        myChart.setOption(option);
+      },
+    },
+  });
+  </script>
+  

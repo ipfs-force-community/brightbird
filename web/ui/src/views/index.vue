@@ -37,6 +37,66 @@
           </router-link>
         </div>
       </div>
+      <div class="charts" style="display: flex;">
+        <div style="display: flex; flex-direction: column;">
+          <div class="icon-container">
+            <div style="position: relative;">
+              <el-icon :size="25" style="margin-left: 23px; margin-top: 66px; width: 37px; height: 37px; border-radius: 10%; background-color: rgb(255, 228, 186);">
+                <EditPen style="color: rgb(255, 130, 10)" />
+              </el-icon>
+              <div style="position: absolute; left: 23px; top: 30px; width: 109px; height: 19px; color: rgba(16, 16, 16, 1); font-size: 15px; text-align: left;">
+                总任务数
+              </div>
+              <div style="position: absolute; left: 69px; top: 66px; width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">
+                1,902
+              </div>
+            </div>
+            <div style="position: relative;">
+              <el-icon :size="25" style="margin-left: 190px; margin-top: 66px; width: 37px; height: 37px; border-radius: 10%; background-color: rgb(232, 255, 251);">
+                <CircleCheck style="color: rgb(16, 198, 194)" />
+              </el-icon>
+              <div style="position: absolute; left: 193px; top: 30px; width: 109px; height: 19px; color: rgba(16, 16, 16, 1); font-size: 15px; text-align: left;">
+                通过任务数
+              </div>
+              <div style="position: absolute; left: 239px; top: 66px; width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">
+                1,601
+              </div>
+            </div>
+            <div style="position: relative;">
+              <el-icon :size="25" style="margin-left: 190px; margin-top: 66px; width: 37px; height: 37px; border-radius: 10%; background-color: rgb(232, 243, 255);">
+                <CircleClose style="color: rgb(34, 101, 255)" />
+              </el-icon>
+              <div style="position: absolute; left: 193px; top: 30px; width: 109px; height: 19px; color: rgba(16, 16, 16, 1); font-size: 15px; text-align: left;">
+                失败任务数
+              </div>
+              <div style="position: absolute; left: 239px; top: 66px; width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">
+                207
+              </div>
+            </div>
+            <div style="position: relative;">
+            <el-icon :size="25" style="margin-left: 190px; margin-top: 66px; width: 37px; height: 37px; border-radius: 10%; background-color: rgb(245, 232, 255);">
+              <PieChart style="color: rgb(129, 67, 214)" />
+            </el-icon>
+              <div style="position: absolute; left: 193px; top: 30px; width: 109px; height: 19px; color: rgba(16, 16, 16, 1); font-size: 15px; text-align: left;">
+                通过率
+              </div>
+              <div style="position: absolute; left: 239px; top: 66px; width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">
+                75%
+              </div>
+            </div>
+          </div>
+          <StackedAreaChart/>
+          <div style="display: flex;">
+            <LineGradient/>
+            <PieSimple/>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column;">
+          <BarChart/>
+          <PieBorderRadius/>
+          <LineStack/>
+        </div>
+      </div>
     </div>
     <bottom-nav />
   </div>
@@ -47,9 +107,17 @@ import { computed, defineComponent } from 'vue';
 import BottomNav from '@/views/nav/bottom2.vue';
 import AllProject from '@/views/index/all-project.vue';
 import SearchProject from '@/views/index/search-project.vue';
+import StackedAreaChart from '@/components/charts/stacked-area.vue';
+import BarChart from '@/components/charts/bar-chart.vue';
+import PieBorderRadius from '@/components/charts/pie-border-radius.vue';
+import LineGradient from '@/components/charts/line-gradient.vue';
+import PieSimple from '@/components/charts/pie-simple.vue';
+import LineStack from '@/components/charts/line-stack.vue';
+import { Edit, EditPen, CircleCheck, CircleClose, PieChart } from '@element-plus/icons-vue';
 
 export default defineComponent({
-  components: { AllProject, SearchProject, BottomNav },
+  components: { AllProject, SearchProject, BottomNav, StackedAreaChart, BarChart, PieBorderRadius, 
+    LineGradient, PieSimple, LineStack, Edit, EditPen, CircleCheck, CircleClose, PieChart },
   props: {
     searchName: {
       type: String,
@@ -79,6 +147,8 @@ export default defineComponent({
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-left: -40px; 
+      margin-right: -40px; 
 
       a {
         margin-right: 60px;
@@ -148,6 +218,21 @@ export default defineComponent({
 
       .left-area,
       .right-area {
+        display: flex;
+      }
+    }
+
+    .charts {
+      margin-top: 19px;
+      background-color: #ffffff;
+      padding: 10px;
+      display: flex;
+      justify-content: flex-start;
+      align-items: flex-start;
+
+      .icon-container {
+        height: 150px;
+        width: 875px;
         display: flex;
       }
     }

@@ -1,10 +1,10 @@
 <template>
   <div class="platform" ref="platFormRef">
-    <div class="header"></div>
+    <!-- <div class="header"></div> -->
     <jm-container class="container">
-      <el-header height="64px">
+      <!-- <el-header height="64px">
         <top-nav/>
-      </el-header>
+      </el-header> -->
       <jm-container>
         <el-header v-if="pathNavsDisplay" class="path-nav">
           <jm-breadcrumb>

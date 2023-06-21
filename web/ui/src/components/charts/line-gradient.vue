@@ -1,0 +1,40 @@
+<template>
+  <div ref="chartContainer" style="margin-left: 50px; margin-top: 45px; width: 325px; height: 300px;"></div>
+</template>
+
+<script lang="ts">
+import { defineComponent } from 'vue';
+import * as echarts from 'echarts';
+
+export default defineComponent({
+  mounted() {
+    this.renderChart();
+  },
+  methods: {
+    renderChart() {
+      const chartContainer = this.$refs.chartContainer as HTMLElement;
+      const myChart = echarts.init(chartContainer);
+      const option = {
+        title: {
+            text: '近 30 天通过率走势'
+          },
+        xAxis: {
+          type: 'category',
+          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            data: [820, 932, 901, 934, 1290, 1330, 1320],
+            type: 'line',
+            smooth: true
+          }
+        ]
+      };
+      myChart.setOption(option);
+    },
+  },
+});
+</script>
