@@ -460,6 +460,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		if err != nil {
 			return err
 		}
+
 		flagF, err := os.Create(builder.repoPath + "/extern/filecoin-ffi/.install-filcrypto")
 		if err != nil {
 			return err
