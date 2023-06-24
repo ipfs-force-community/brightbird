@@ -31,10 +31,9 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 
-	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
-	VenusWallet                env.IDeployer       `json:"-" svcname:"VenusWallet"`
-	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateWallet               env.IExec           `json:"-" svcname:"CreateWallet"`
+	K8sEnv       *env.K8sEnvDeployer `json:"-"`
+	VenusWallet  env.IDeployer       `json:"-" svcname:"VenusWallet"`
+	CreateWallet env.IExec           `json:"-" svcname:"CreateWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {

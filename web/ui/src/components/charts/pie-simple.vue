@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartContainer" style="margin-left: -5px; margin-top: 15px; width: 459px; height: 355px;"></div>
+    <div ref="chartContainer" style="width: 100%; height: 100%"></div>
   </template>
   
   <script lang="ts">
@@ -16,8 +16,7 @@
         const myChart = echarts.init(chartContainer);
         const option = {
           title: {
-            text: '组件统计',
-            top: '30px'
+            text: '组件统计'
           },
           tooltip: {
             trigger: 'item'

@@ -200,17 +200,6 @@ export default defineComponent({
     .main,
     .main2 {
       padding: 0;
-
-      > .el-scrollbar {
-        .main-content {
-          width: 100%;
-          min-width: @main-min-width;
-          max-width: @main-max-width;
-          margin: 0 auto;
-          padding: 0 20px;
-          box-sizing: border-box;
-        }
-      }
     }
   }
 }
