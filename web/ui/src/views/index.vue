@@ -11,6 +11,12 @@
           </router-link>
         </div>
         <div class="right-area">
+          <router-link :to="{ name: 'workflow-list' }">
+            <div class="btn-item">
+              <button class="workflow-list"></button>
+              <span class="text">测试流列表</span>
+            </div>
+          </router-link>
           <router-link :to="{ name: 'plugin-library' }">
             <div class="btn-item">
               <button class="plugin-library"></button>
@@ -31,10 +37,9 @@
           </router-link>
         </div>
       </div>
-      <!-- 全部项目 -->
-      <all-project v-if="searchResultFlag" />
-      <!-- 搜索结果 -->
-      <search-project :searchName="searchName" :groupId="groupId" v-else />
+      <div class="charts">
+        <DashBoard/>
+      </div>
     </div>
     <bottom-nav />
   </div>
@@ -45,9 +50,10 @@ import { computed, defineComponent } from 'vue';
 import BottomNav from '@/views/nav/bottom2.vue';
 import AllProject from '@/views/index/all-project.vue';
 import SearchProject from '@/views/index/search-project.vue';
+import DashBoard from '@/components/charts/dashboard.vue';
 
 export default defineComponent({
-  components: { AllProject, SearchProject, BottomNav },
+  components: { AllProject, SearchProject, BottomNav, DashBoard },
   props: {
     searchName: {
       type: String,
@@ -71,9 +77,8 @@ export default defineComponent({
     min-height: calc(100vh - 130px);
 
     .menu-bar {
-      margin-top: 20px;
       background-color: #ffffff;
-      padding: 40px 20px;
+      padding: 10px 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -130,6 +135,10 @@ export default defineComponent({
           &.group {
             background-image: url('@/assets/svgs/index/group-btn.svg');
           }
+
+          &.workflow-list {
+            background-image: url('@/assets/svgs/process-template/process-template.svg');
+          }
         }
 
         .text {
@@ -144,6 +153,12 @@ export default defineComponent({
       .right-area {
         display: flex;
       }
+    }
+
+    .charts {
+      margin-top: 19px;
+      background-color: #ffffff;
+      padding: 10px;
     }
   }
 }

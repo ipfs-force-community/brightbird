@@ -1,10 +1,10 @@
 <template>
   <div class="platform" ref="platFormRef">
-    <div class="header"></div>
+    <!-- <div class="header"></div> -->
     <jm-container class="container">
-      <el-header height="64px">
+      <!-- <el-header height="64px">
         <top-nav/>
-      </el-header>
+      </el-header> -->
       <jm-container>
         <el-header v-if="pathNavsDisplay" class="path-nav">
           <jm-breadcrumb>
@@ -200,17 +200,6 @@ export default defineComponent({
     .main,
     .main2 {
       padding: 0;
-
-      > .el-scrollbar {
-        .main-content {
-          width: 100%;
-          min-width: @main-min-width;
-          max-width: @main-max-width;
-          margin: 0 auto;
-          padding: 0 20px;
-          box-sizing: border-box;
-        }
-      }
     }
   }
 }

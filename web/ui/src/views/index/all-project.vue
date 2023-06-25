@@ -95,7 +95,7 @@ export default defineComponent({
     });
     // 回车搜索
     const searchProject = () => {
-      router.push({ name: 'index', query: { searchName: projectName.value } });
+      router.push({ name: 'workflow-list', query: { searchName: projectName.value } });
     };
 
     const setScrollbarOffset = inject('setScrollbarOffset') as () => void;
@@ -134,6 +134,8 @@ export default defineComponent({
     padding: 0 20px;
     display: flex;
     justify-content: space-between;
+    align-items: center; 
+    margin-top: 10px;
 
     ::v-deep(.el-input) {
       border-radius: 4px;
@@ -154,6 +156,7 @@ export default defineComponent({
       color: #6b7b8d;
       display: flex;
       align-items: center;
+      margin-top: 10px;
 
       .text {
         margin-right: 30px;
@@ -169,6 +172,7 @@ export default defineComponent({
       align-items: center;
       box-sizing: border-box;
       position: relative;
+      margin-top: 15px;
 
       ::v-deep(.el-input) {
         width: 488px;

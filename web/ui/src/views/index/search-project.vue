@@ -85,7 +85,7 @@ export default defineComponent({
     const selectOption = async () => {
       currentSearchName.value = projectName.value as string;
       await router.push({
-        name: 'index',
+        name: 'workflow-list',
         query: {
           groupId: selectValue.value,
           searchName: currentSearchName.value,
@@ -107,7 +107,7 @@ export default defineComponent({
       searchProject: async () => {
         currentSearchName.value = projectName.value as string;
         await router.push({
-          name: 'index',
+          name: 'workflow-list',
           query: {
             groupId: selectValue.value,
             searchName: currentSearchName.value,

@@ -9,6 +9,8 @@ import { globalErrorHandler } from './utils/global-error-handler';
 import './utils/operation-btn-position.ts';
 // 安装百度统计
 import './utils/baidu-tongji.ts';
+import * as ElementPlusIconsVue from '@element-plus/icons-vue';
+
 
 // 打印环境变量，用于调试
 console.debug(import.meta.env);
@@ -21,6 +23,10 @@ app.use(components);
 app.use(router);
 // 安装vuex
 app.use(store);
+
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
+  app.component(key, component)
+}
 
 // 注册全局异常处理方法
 app.config.errorHandler = (err, instance, info) =>
