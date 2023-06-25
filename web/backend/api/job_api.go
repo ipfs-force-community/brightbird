@@ -460,10 +460,10 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 			c.Error(err) //nolint
 			return
 		}
-		schedulesTs := make([]int64, len(schedules))
+		schedulesTS := make([]int64, len(schedules))
 		for index, sch := range schedules {
-			schedulesTs[index] = sch.Unix()
+			schedulesTS[index] = sch.Unix()
 		}
-		c.JSON(http.StatusOK, schedulesTs)
+		c.JSON(http.StatusOK, schedulesTS)
 	})
 }

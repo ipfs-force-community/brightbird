@@ -2,6 +2,7 @@ package job
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -86,9 +87,10 @@ func (cronJob *CronJob) NextNSchedule(_ context.Context, n int) ([]time.Time, er
 
 	nextT := entry.Next
 	for i := 0; i < n-1; i++ {
-		nextT := entry.Schedule.Next(nextT)
+		nextT = entry.Schedule.Next(nextT)
 		nextN = append(nextN, nextT)
 	}
+	fmt.Println(nextN)
 	return nextN, nil
 }
 

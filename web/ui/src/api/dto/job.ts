@@ -24,6 +24,14 @@ export interface ICountJobParam
     name?: string;
   }> { }
 
+
+export interface IJobNextParam
+extends Readonly<{
+  id: string;
+  n: number;
+}> { }
+
+
 export interface IJobVo extends Readonly<{
     id: string;
     testFlowId: string;
