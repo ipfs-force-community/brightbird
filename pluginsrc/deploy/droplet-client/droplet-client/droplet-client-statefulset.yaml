@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: droplet-client-{{.UniqueId}}
+spec:
+  replicas: 1
+  serviceName: droplet-client-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: droplet-client-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: droplet-client-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.droplet-client/; cp /root/config.tmp /root/.droplet-client/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: droplet-client-pvc
+            - name: droplet-client-cfg-vol
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      containers:
+        - name: droplet-client-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/droplet-client:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: 41231
+              protocol: TCP
+            - containerPort: 34123
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: droplet-client-pvc
+            - name: droplet-client-cfg-vol
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      volumes:
+        - name: droplet-client-cfg-vol
+          configMap:
+            name: droplet-client-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+  volumeClaimTemplates:
+    - metadata:
+        name: droplet-client-pvc # name+podname
+        labels:
+          app: droplet-client-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Gi

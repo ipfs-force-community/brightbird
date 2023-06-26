@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sophon-gateway-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: sophon-gateway-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: sophon-gateway-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: sophon-gateway-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.sophon-gateway; cp /root/config.tmp /root/.sophon-gateway/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-gateway-pvc
+            - name: sophon-gateway-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      containers:
+        - name: venus-gateway-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-gateway:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: 45132
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-gateway-pvc
+            - name: sophon-gateway-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      volumes:
+        - name: sophon-gateway-cfg
+          configMap:
+            name: sophon-gateway-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml  
+  volumeClaimTemplates:
+    - metadata:
+        name: sophon-gateway-pvc # name+podname
+        labels:
+          app: sophon-gateway-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi

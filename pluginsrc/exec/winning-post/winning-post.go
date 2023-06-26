@@ -9,12 +9,12 @@ import (
 
 	"go.uber.org/fx"
 
-	miner "github.com/filecoin-project/venus-miner/api/client"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	miner "github.com/ipfs-force-community/sophon-miner/api/client"
 )
 
 func main() {
@@ -30,11 +30,11 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
-	VenusMiner                 env.IDeployer       `json:"-" svcname:"VenusMiner"`
-	VenusMessage               env.IDeployer       `json:"-" svcname:"VenusMessage"`
-	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
+	K8sEnv          *env.K8sEnvDeployer `json:"-"`
+	SophonMiner     env.IDeployer       `json:"-" svcname:"SophonMiner"`
+	SophonMessager  env.IDeployer       `json:"-" svcname:"SophonMessager"`
+	DamoclesManager env.IDeployer       `json:"-" svcname:"DamoclesManager"`
+	CreateMiner     env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -73,7 +73,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 		"info",
 		minerAddr,
 	}
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	pods, err := params.DamoclesManager.Pods(ctx)
 	if err != nil {
 		return "", err
 	}
@@ -87,17 +87,17 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 }
 
 func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
-	pods, err := params.VenusMiner.Pods(ctx)
+	pods, err := params.SophonMiner.Pods(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	svc, err := params.VenusMiner.Svc(ctx)
+	svc, err := params.SophonMiner.Svc(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	endpoint, err := params.VenusMiner.SvcEndpoint()
+	endpoint, err := params.SophonMiner.SvcEndpoint()
 	if err != nil {
 		return "", err
 	}
@@ -132,18 +132,18 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 }
 
 func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken string) (string, error) {
-	endpoint, err := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.SophonMessager.SvcEndpoint()
 	if err != nil {
 		return "", err
 	}
 
 	if env.Debug {
-		messagePods, err := params.VenusMessage.Pods(ctx)
+		messagePods, err := params.SophonMessager.Pods(ctx)
 		if err != nil {
 			return "", err
 		}
 
-		svc, err := params.VenusMessage.Svc(ctx)
+		svc, err := params.SophonMessager.Svc(ctx)
 		if err != nil {
 			return "", err
 		}

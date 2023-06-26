@@ -29,13 +29,13 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv       *env.K8sEnvDeployer `json:"-"`
-	VenusMessage env.IDeployer       `json:"-" svcname:"VenusMessage"`
-	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	K8sEnv         *env.K8sEnvDeployer `json:"-"`
+	SophonMessager env.IDeployer       `json:"-" svcname:"SophonMessager"`
+	SophonAuth     env.IDeployer       `json:"-" svcname:"SophonAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	adminTokenV, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}
@@ -50,17 +50,17 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func CreateMessage(ctx context.Context, params TestCaseParams, authToken string) error {
-	pods, err := params.VenusMessage.Pods(ctx)
+	pods, err := params.SophonMessager.Pods(ctx)
 	if err != nil {
 		return err
 	}
 
-	svc, err := params.VenusMessage.Svc(ctx)
+	svc, err := params.SophonMessager.Svc(ctx)
 	if err != nil {
 		return err
 	}
 
-	endpoint, err := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.SophonMessager.SvcEndpoint()
 	if err != nil {
 		return err
 	}

@@ -25,14 +25,14 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	AddWallet env.IExec           `json:"-" svcname:"AddWallet"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	AddWallet  env.IExec           `json:"-" svcname:"AddWallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	adminTokenV, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}
@@ -52,18 +52,18 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) error {
-	endpoint, err := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.SophonAuth.SvcEndpoint()
 	if err != nil {
 		return err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
+		pods, err := params.SophonAuth.Pods(ctx)
 		if err != nil {
 			return err
 		}
 
-		svc, err := params.VenusAuth.Svc(ctx)
+		svc, err := params.SophonAuth.Svc(ctx)
 		if err != nil {
 			return err
 		}

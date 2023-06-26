@@ -5,7 +5,7 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	venus "github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 	"github.com/hunjixin/brightbird/types"
 )
 
@@ -16,25 +16,25 @@ func main() {
 type DepParams struct {
 	Params venus.Config `optional:"true"`
 
-	VenusAuthDeploy env.IDeployer `svcname:"VenusAuth"`
+	VenusAuth env.IDeployer `svcname:"SophonAuth"`
 
 	K8sEnv         *env.K8sEnvDeployer
 	BootstrapPeers types.BootstrapPeers
 }
 
 func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.VenusAuthDeploy.Param("AdminToken")
+	adminToken, err := depParams.VenusAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}
 
-	svcEndpoint, err := depParams.VenusAuthDeploy.SvcEndpoint()
+	authEndpoint, err := depParams.VenusAuth.SvcEndpoint()
 	if err != nil {
 		return nil, err
 	}
 
 	deployer, err := venus.DeployerFromConfig(depParams.K8sEnv, venus.Config{
-		AuthUrl:        svcEndpoint.ToHTTP(),
+		AuthUrl:        authEndpoint.ToHTTP(),
 		AdminToken:     adminToken.MustString(),
 		BootstrapPeers: depParams.BootstrapPeers,
 	}, depParams.Params)

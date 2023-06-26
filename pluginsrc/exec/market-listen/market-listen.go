@@ -26,9 +26,9 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv      *env.K8sEnvDeployer `json:"-"`
-	VenusAuth   env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	VenusMarket env.IDeployer       `json:"-" svcname:"VenusMarket"`
+	K8sEnv         *env.K8sEnvDeployer `json:"-"`
+	SophonAuth     env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	DamoclesMarket env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -43,18 +43,18 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint, err := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.DamoclesMarket.SvcEndpoint()
 	if err != nil {
 		return "", err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusMarket.Pods(ctx)
+		pods, err := params.DamoclesMarket.Pods(ctx)
 		if err != nil {
 			return "", err
 		}
 
-		svc, err := params.VenusMarket.Svc(ctx)
+		svc, err := params.DamoclesMarket.Svc(ctx)
 		if err != nil {
 			return "", err
 		}

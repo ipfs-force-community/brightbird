@@ -9,8 +9,6 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-state-types/abi"
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	types2 "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
@@ -18,6 +16,8 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/sophon-auth/auth"
+	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"go.uber.org/fx"
 )
 
@@ -38,24 +38,24 @@ type TestCaseParams struct {
 		Permission string `json:"permission"`
 	} `optional:"true"`
 
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	Venus     env.IDeployer       `json:"-" svcname:"Venus"`
-	Wallet    env.IExec           `json:"-" svcname:"Wallet"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
+	Wallet     env.IExec           `json:"-" svcname:"Wallet"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.SophonAuth.SvcEndpoint()
 	if err != nil {
 		return nil, err
 	}
 	if env.Debug {
-		venusAuthPods, err := params.VenusAuth.Pods(ctx)
+		venusAuthPods, err := params.SophonAuth.Pods(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		svc, err := params.VenusAuth.Svc(ctx)
+		svc, err := params.SophonAuth.Svc(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -65,7 +65,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		}
 	}
 
-	adminToken, err := params.VenusAuth.Param("AdminToken")
+	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}

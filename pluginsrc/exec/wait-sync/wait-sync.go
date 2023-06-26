@@ -25,13 +25,13 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	fx.In
 
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	Venus     env.IDeployer       `json:"-" svcname:"Venus"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	adminToken, err := params.VenusAuth.Param("AdminToken")
+	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}

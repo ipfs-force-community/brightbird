@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: venus-{{.UniqueId}}-statefulset
+spec:
+  replicas: {{.Replicas}}
+  serviceName: venus-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: venus-{{.UniqueId}}-pod
+  template:
+    metadata:
+      name: venus-{{.UniqueId}}-pod
+      labels:
+        app: venus-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.venus; cp /root/config.tmp /root/.venus/config.json"]
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+            - mountPath: /root
+              name: venus-pvc
+            - name: venushacfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.json"
+      containers:
+        - name: venus-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
+          args: [{{join .Args ","}}]
+          ports:
+            - containerPort: 3453
+              protocol: TCP
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
+            - name: IPFS_GATEWAY
+              value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+            - mountPath: /root
+              name: venus-pvc
+            - name: venushacfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.json"
+      volumes:
+        - name: venushacfg
+          configMap:
+            name: venus-cfg-{{.UniqueId}}
+            items:
+              - key: config.json
+                path: config.json
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-pvc # name+podname
+        labels:
+          app: venus-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 10Gi

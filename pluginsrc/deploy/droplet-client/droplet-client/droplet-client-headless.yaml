@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: droplet-client-{{.UniqueId}}-svc
+spec:
+  type: ClusterIP
+  selector:
+    app: droplet-client-{{.UniqueId}}-pod
+  ports:
+    - protocol: TCP
+      port: 41231
+      name: api
+    - protocol: TCP
+      port: 34123
+      name: libp2p
+

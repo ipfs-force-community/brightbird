@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sophon-auth-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: sophon-auth-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: sophon-auth-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: sophon-auth-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.sophon-auth; cp /root/config.tmp /root/.sophon-auth/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-auth-pvc
+            - name: sophon-auth-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      containers:
+        - name: sophon-auth-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-auth:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: 8989
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-auth-pvc
+            - name: sophon-auth-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      volumes:
+        - name: sophon-auth-cfg
+          configMap:
+            name: sophon-auth-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml            
+  volumeClaimTemplates:
+    - metadata:
+        name: sophon-auth-pvc # name+podname
+        labels:
+          app: sophon-auth-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi
+
+
+
+
+

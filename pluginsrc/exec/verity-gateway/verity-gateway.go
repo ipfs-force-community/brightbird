@@ -30,7 +30,7 @@ type TestCaseParams struct {
 	K8sEnv       *env.K8sEnvDeployer `json:"-"`
 	VenusGateway env.IDeployer       `json:"-" svcname:"VenusGateway"`
 	VenusWallet  env.IDeployer       `json:"-" svcname:"VenusWallet"`
-	VenusAuth    env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	SophonAuth   env.IDeployer       `json:"-" svcname:"SophonAuth"`
 	CreateWallet env.IExec           `json:"-" svcname:"CreateWallet"`
 }
 
@@ -41,7 +41,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	adminTokenV, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}

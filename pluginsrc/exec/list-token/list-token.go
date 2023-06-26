@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"go.uber.org/fx"
 )
 
@@ -31,23 +31,23 @@ type TestCaseParams struct {
 		Limit string `json:"limit"`
 	} `optional:"true"`
 
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.SophonAuth.SvcEndpoint()
 	if err != nil {
 		return nil, err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusAuth.Pods(ctx)
+		pods, err := params.SophonAuth.Pods(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		svc, err := params.VenusAuth.Svc(ctx)
+		svc, err := params.SophonAuth.Svc(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +57,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		}
 	}
 
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	adminTokenV, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}
