@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetPluginInfo(t *testing.T) {
-	file := "../../dist/plugins/deploy/chain-co"
+	file := "../../dist/plugins/deploy/sophon-co"
 	info, err := GetPluginInfo(file)
 	assert.NoError(t, err)
 	reg, err := regexp.Compile(`^v[\d]+?.[\d]+?.[\d]+?$`)

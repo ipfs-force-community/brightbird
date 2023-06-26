@@ -1,14 +1,8 @@
 <template>
   <div class="bottom-nav">
-    <a href="https://portal.mulanos.cn" target="_blank" class="mulan"
-    >木兰社区孵化项目</a
-    >
-    <i class="line"></i>
-    <a href="https://jianmu.dev" target="_blank">关于建木</a>
-    <i class="line"></i>
-    <a href="https://v2.jianmu.dev" target="_blank">使用手册</a>
-    <i class="line"></i>
-    <a href="mailto:support@jianmu.dev">联系我们</a>
+    <a href="https://github.com/ipfs-force-community" target="_blank" class="mulan"
+    >IPFS FORCE</a>
+    <a href="https://github.com/ipfs-force-community/brightbird" target="_blank">关于brightbird</a>
   </div>
 </template>
 

@@ -99,11 +99,6 @@ var runCmd = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		err := logging.SetLogLevel("*", c.String("log-level"))
-		if err != nil {
-			return err
-		}
-
 		cfg := config.DefaultConfig()
 		if c.IsSet("config") {
 			configPath := c.String("config")
@@ -123,6 +118,10 @@ var runCmd = &cli.Command{
 
 		if c.IsSet("plugins") {
 			cfg.PluginStore = c.String("plugins")
+		}
+
+		if c.IsSet("log-level") {
+			cfg.LogLevel = c.String("log-level")
 		}
 
 		if c.IsSet("listen") {
@@ -154,6 +153,19 @@ var runCmd = &cli.Command{
 }
 
 func run(pCtx context.Context, cfg config.Config) error {
+	err := logging.SetLogLevel("*", cfg.LogLevel)
+	if err != nil {
+		return err
+	}
+	logLevel, err := logging.LevelFromString(cfg.LogLevel)
+	if err != nil {
+		return err
+	}
+
+	if logLevel > logging.LevelDebug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	e := gin.Default()
 	if len(cfg.StaticRoot) > 0 {
 		e.NoRoute(func(ctx *gin.Context) {

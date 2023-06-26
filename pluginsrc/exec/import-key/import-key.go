@@ -91,5 +91,5 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 	fmt.Println("import key: ", addr)
-	return env.NewSimpleExec(), nil
+	return env.NewSimpleExec().Add("ImportAddr", env.ParamsFromVal(addr)), nil
 }

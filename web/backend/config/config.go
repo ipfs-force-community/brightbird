@@ -11,6 +11,7 @@ type Config struct {
 	MongoURL       string
 	DBName         string
 	Listen         string
+	LogLevel       string
 
 	WebhookURL string
 	Mysql      string
@@ -39,6 +40,7 @@ type DockerRegistry struct {
 func DefaultConfig() Config {
 	return Config{
 		NameSpace: "default",
+		LogLevel:  "INFO",
 		MongoURL:  "mongodb://localhost:27017",
 		Listen:    "0.0.0.0:12356",
 		DockerRegistry: []DockerRegistry{

@@ -1,33 +1,33 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: venus-chain-co-{{.UniqueId}}
+  name: sophon-co-{{.UniqueId}}
 spec:
   replicas: {{.Replicas}}
-  serviceName: venus-chain-co-{{.UniqueId}}-svc
+  serviceName: sophon-co-{{.UniqueId}}-svc
   selector:
     matchLabels:
-      app: venus-chain-co-{{.UniqueId}}-pod
+      app: sophon-co-{{.UniqueId}}-pod
   template:
     metadata:
       labels:
-        app: venus-chain-co-{{.UniqueId}}-pod
+        app: sophon-co-{{.UniqueId}}-pod
     spec:
       containers:
-        - name: venus-chain-co-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/chain-co:{{.CodeVersion}}"
+        - name: sophon-co-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-co:{{.CodeVersion}}"
           args: [run, {{join .Args ","}}]
           ports:
             - containerPort: 1234
               protocol: TCP
           volumeMounts:
             - mountPath: /root
-              name:  venus-chain-co
+              name:  sophon-co-pvc
   volumeClaimTemplates:
     - metadata:
-        name: venus-chain-co-pvc # name+podname
+        name: sophon-co-pvc
         labels:
-          app: venus-chain-co-{{.UniqueId}}-pvc
+          app: sophon-co-{{.UniqueId}}-pvc
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: "nfs-client"

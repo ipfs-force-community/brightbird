@@ -39,7 +39,7 @@ spec:
       volumes:
         - name: sophon-messager-cfg
           configMap:
-            name: sophon-messager-{{.UniqueId}}
+            name: sophon-messager-cfg-{{.UniqueId}}
             items:
               - key: config.toml
                 path: config.toml   

@@ -3,6 +3,7 @@ package types
 import (
 	"fmt"
 	"net"
+	"strconv"
 	"strings"
 )
 
@@ -29,4 +30,16 @@ func (endpoint Endpoint) ToMultiAddr() string {
 
 func (endpoint Endpoint) ToHTTP() string {
 	return fmt.Sprintf("http://%s", string(endpoint))
+}
+
+func (endpoint Endpoint) IP() string {
+	return strings.Split(string(endpoint), ":")[0]
+}
+
+func (endpoint Endpoint) Port() int {
+	port, err := strconv.Atoi(strings.Split(string(endpoint), ":")[1])
+	if err != nil {
+		panic("invalida endpoint " + endpoint)
+	}
+	return port
 }

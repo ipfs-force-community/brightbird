@@ -15,6 +15,7 @@ func main() {
 
 type DepParams struct {
 	Params chainco.Config `optional:"true"`
+
 	K8sEnv *env.K8sEnvDeployer
 
 	VenusDep   env.IDeployer `svcname:"Venus" description:"[Deploy]venus"`
@@ -30,7 +31,11 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	if err != nil {
 		return nil, err
 	}
-	adminToken, err := depParams.AuthDeploy.Param("AdminToken")
+	adminTokenP, err := depParams.AuthDeploy.Param("AdminToken")
+	if err != nil {
+		return nil, err
+	}
+	adminToken, err := env.UnmarshalJSON[string](adminTokenP.Raw())
 	if err != nil {
 		return nil, err
 	}
@@ -38,6 +43,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	podDNS := env.GetPodDNS(svc, pods...)
 	podEndpoints := make([]string, len(podDNS))
 	for index, dns := range podDNS {
+
 		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", adminToken, dns, svc.Spec.Ports[0].Port)
 	}
 
@@ -49,7 +55,7 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	deployer, err := chainco.DeployerFromConfig(depParams.K8sEnv, chainco.Config{
 		Replicas:   1,
 		AuthUrl:    authEndpoint.ToHTTP(),
-		AdminToken: depParams.Params.AdminToken,
+		AdminToken: adminToken,
 		Nodes:      podEndpoints,
 	}, depParams.Params)
 	if err != nil {

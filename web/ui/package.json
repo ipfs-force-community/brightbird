@@ -23,7 +23,7 @@
     "cron-expression-validator": "^1.0.20",
     "dateformat": "^4.5.1",
     "dayjs": "^1.11.5",
-    "echarts": "5.4.1",
+    "echarts": "^5.4.2",
     "element-plus": "^2.3.6",
     "good-listener": "^1.2.2",
     "mockjs": "^1.1.0",

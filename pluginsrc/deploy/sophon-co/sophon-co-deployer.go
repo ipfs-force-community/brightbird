@@ -118,7 +118,7 @@ func (deployer *SophonCoDeployer) Param(key string) (env.Params, error) {
 var f embed.FS
 
 func (deployer *SophonCoDeployer) Deploy(ctx context.Context) (err error) {
-	renderParams := deployer.buildRenderParams(deployer.cfg.Nodes, "")
+	renderParams := deployer.buildRenderParams(deployer.cfg.Nodes, "", "")
 
 	//create deployment
 	deployCfg, err := f.Open("sophon-co/sophon-co-statefulset.yaml")
@@ -167,7 +167,7 @@ func (deployer *SophonCoDeployer) Update(ctx context.Context, updateCfg interfac
 		deployer.cfg.AdminToken = update.AuthToken
 
 		//restart
-		renderParams := deployer.buildRenderParams(update.Nodes, update.AuthUrl)
+		renderParams := deployer.buildRenderParams(update.Nodes, update.AuthUrl, update.AuthToken)
 		// create deployment
 		deployCfg, err := f.Open("sophon-co/sophon-co-statefulset.yaml")
 		if err != nil {
@@ -185,22 +185,25 @@ func (deployer *SophonCoDeployer) Update(ctx context.Context, updateCfg interfac
 	return nil
 }
 
-func (deployer *SophonCoDeployer) buildRenderParams(nodes []string, authUrl string) RenderParams {
+func (deployer *SophonCoDeployer) buildRenderParams(nodes []string, authUrl, adminToken string) RenderParams {
 	var args []string
 	for _, node := range deployer.cfg.Nodes {
 		args = append(args, "--node")
 		args = append(args, node)
 	}
 
-	if len(authUrl) > 0 {
-		args = append(args, "--auth")
-		args = append(args, deployer.cfg.AuthUrl)
-	} else {
-		if len(deployer.cfg.AuthUrl) > 0 {
-			args = append(args, "--auth")
-			args = append(args, deployer.cfg.AuthUrl)
-		}
+	fmt.Println("xxxxxx", deployer.cfg.AdminToken)
+
+	if len(authUrl) == 0 {
+		authUrl = deployer.cfg.AuthUrl
 	}
+
+	if len(adminToken) == 0 {
+		adminToken = deployer.cfg.AdminToken
+	}
+
+	args = append(args, "--auth")
+	args = append(args, adminToken+":"+authUrl)
 
 	return RenderParams{
 		NameSpace:       deployer.env.NameSpace(),

@@ -69,7 +69,7 @@ type SophonAuthHASopDeployer struct { //nolint
 
 func DeployerFromConfig(envV *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
 	defaultCfg := DefaultConfig()
-	defaultCfg.MysqlDSN = envV.FormatMysqlConnection("sophon-auth-ha-" + env.UniqueId(envV.TestID(), cfg.InstanceName))
+	defaultCfg.MysqlDSN = envV.FormatMysqlConnection("sophon-auth-" + env.UniqueId(envV.TestID(), cfg.InstanceName))
 	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
 	if err != nil {
 		return nil, err

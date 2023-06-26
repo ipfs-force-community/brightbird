@@ -41,8 +41,13 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
+	endpoint, err := params.Venus.SvcEndpoint()
+	if err != nil {
+		return nil, err
+	}
+
 	for _, pod := range pods {
-		err := venusutils.SyncWait(ctx, params.K8sEnv, pod, 3453, adminToken.MustString())
+		err := venusutils.SyncWait(ctx, params.K8sEnv, pod, endpoint.Port(), adminToken.MustString())
 		if err != nil {
 			return nil, err
 		}
