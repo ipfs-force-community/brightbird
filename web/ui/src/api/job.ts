@@ -1,4 +1,4 @@
-import { IJobCreateVo, IJobUpdateVo, IJobIdVo, IJobVo, IJobDetailVo, ICountJobParam } from './dto/job';
+import { IJobCreateVo, IJobNextParam, IJobUpdateVo, IJobIdVo, IJobVo, IJobDetailVo, ICountJobParam } from './dto/job';
 import { restProxy } from '@/api';
 import { JobEnum } from './dto/enumeration';
 
@@ -116,6 +116,18 @@ export async function deleteJob(id: string): Promise<IJobVo> {
 export function countJob(params: ICountJobParam): Promise<number> {
   return restProxy({
     url: `${baseUrl.job}/count`,
+    method: 'get',
+    payload: params,
+  });
+}
+
+/**
+ * 获取job下几次执行的事件
+ * @param groupId
+ */
+export function nextNTime(params: IJobNextParam): Promise<number[]> {
+  return restProxy({
+    url: `${baseUrl.job}/next`,
     method: 'get',
     payload: params,
   });

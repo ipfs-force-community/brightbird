@@ -456,6 +456,51 @@
         }
       }
     },
+    "/job/next": {
+      "get": {
+        "description": "Get job schedule",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "jobNextNReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "N",
+            "name": "n",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "int64Arr",
+            "schema": {
+              "$ref": "#/definitions/int64Arr"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/job/{id}": {
       "get": {
         "description": "Update job",
@@ -7018,6 +7063,16 @@
         }
       },
       "x-go-name": "GroupResp",
+      "x-go-package": "github.com/hunjixin/brightbird/models"
+    },
+    "int64Arr": {
+      "description": "Int64Arrary",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "x-go-name": "Int64Arrary",
       "x-go-package": "github.com/hunjixin/brightbird/models"
     },
     "job": {

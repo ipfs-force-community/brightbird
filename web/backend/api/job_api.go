@@ -423,4 +423,47 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 
 		c.String(http.StatusOK, taskID.Hex())
 	})
+
+	// swagger:route Get /job/next job jobNextNReq
+	//
+	// Get job schedule
+	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//
+	//     Responses:
+	//       200: int64Arr
+	//		 503: apiError
+	group.GET("next", func(c *gin.Context) {
+		job := &models.JobNextNReq{}
+		err := c.ShouldBindQuery(job)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		jobID, err := primitive.ObjectIDFromHex(job.ID)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		schedules, err := jobManager.NextNSchedule(ctx, jobID, job.N)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+		schedulesTS := make([]int64, len(schedules))
+		for index, sch := range schedules {
+			schedulesTS[index] = sch.Unix()
+		}
+		c.JSON(http.StatusOK, schedulesTS)
+	})
 }

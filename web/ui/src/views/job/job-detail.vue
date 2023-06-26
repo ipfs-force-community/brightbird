@@ -3,17 +3,16 @@
     <div class="right-top-btn">
       <jm-button type="primary" class="jm-icon-button-cancel" size="small" @click="close">关闭</jm-button>
     </div>
-    <div class="top-card" v-loading="loadingTop">
-      <div class="top-title">
-        <div class="name">{{ jobDetail?.name }}</div>
-      </div>
-      <div class="count">
-        测试流: {{ jobDetail?.testFlowName }}
-      </div>
-      <div class="description">
-        描述:<span v-html="(jobDetail?.description || '无').replace(/\n/g, '<br/>')" />
-      </div>
-    </div>
+
+    <el-descriptions v-loading="loadingTop" border column="1" size="large" :title="jobDetail?.name">
+      <el-descriptions-item label-class-name="label-col" label="测试流">{{ jobDetail?.testFlowName }}</el-descriptions-item>
+      <el-descriptions-item label-class-name="label-col" label="描述">{{ jobDetail?.description || '无'
+      }}</el-descriptions-item>
+      <el-descriptions-item label-class-name="label-col" label="类型">{{ jobDetail?.jobType || '无' }}</el-descriptions-item>
+      <el-descriptions-item label-class-name="label-col" label="执行计划" v-show="jobDetail?.jobType == JobEnum.CronJob"> 
+      <el-text class = "next" v-for="t in next"> {{ t.toLocaleString() }} </el-text>
+      </el-descriptions-item>
+    </el-descriptions>
     <div class="content">
       <div class="title">
         <div>
@@ -33,9 +32,9 @@
 </template>
 
 <script lang="ts">
-import { getJobDetail } from '@/api/job';
+import { getJobDetail , nextNTime} from '@/api/job';
 import { getTaskInJob } from '@/api/tasks';
-import { defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
+import {  defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { IRootState } from '@/model';
@@ -45,7 +44,7 @@ import { ITaskVo } from '@/api/dto/tasks';
 
 import { StateEnum } from '@/components/load-more/enumeration';
 import TaskItem from '@/views/common/task-item.vue';
-import { TaskStateEnum } from '@/api/dto/enumeration';
+import { TaskStateEnum , JobEnum} from '@/api/dto/enumeration';
 import { getTask } from '@/api/tasks';
 
 export default defineComponent({
@@ -65,6 +64,8 @@ export default defineComponent({
     const initialized = ref<boolean>(false);
     const loadingTop = ref<boolean>(false);
     const jobDetail = ref<IJobDetailVo>();
+    const next = ref<Date[]>([]);
+
     const pageData = ref<{
       pageNum: number;
       pageSize: number;
@@ -78,6 +79,7 @@ export default defineComponent({
       total: 0,
       tasks: [],
     });
+
 
     const fetchJobDetail = async () => {
       try {
@@ -93,6 +95,8 @@ export default defineComponent({
         } else {
           loadState.value = StateEnum.MORE;
         }
+        const nextN = await nextNTime({id:props.id,n:3})
+        next.value = nextN.map(a=>new Date(a*1000))
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -131,7 +135,7 @@ export default defineComponent({
         }
       } catch (err) {
         proxy.$throw(err, proxy);
-      } 
+      }
     }, 5000);
 
 
@@ -143,6 +147,8 @@ export default defineComponent({
       pageData,
       loadState,
       btnDown,
+      JobEnum,
+      next,
       loadingTop,
       close: () => {
         if (!['/', '/job'].includes(rootState.fromRoute.path)) {
@@ -159,8 +165,13 @@ export default defineComponent({
 
 <style scoped lang="less">
 .project-group-detail {
+  
   margin-bottom: 20px;
-
+  --el-border-color-lighter:white;
+  --el-fill-color-light:white;
+  .next {
+    display:block;
+  }
   .right-top-btn {
     position: fixed;
     right: 20px;
@@ -171,28 +182,6 @@ export default defineComponent({
     }
   }
 
-  .top-card {
-    min-height: 58px;
-    font-size: 14px;
-    padding: 24px;
-    background-color: #ffffff;
-
-    .top-title {
-      display: flex;
-      align-items: center;
-      color: #082340;
-
-      .name {
-        font-size: 40px;
-        font-weight: 500;
-      }
-    }
-
-    .description {
-      margin-top: 10px;
-      color: #6b7b8d;
-    }
-  }
 
   .content {
     margin-top: 20px;
