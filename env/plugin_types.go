@@ -100,7 +100,7 @@ func (params Params) MustString() string {
 	var val string
 	err := json.Unmarshal(params.v, &val)
 	if err != nil {
-		panic("marshal val fail")
+		panic("expect a string , but not")
 	}
 	return val
 }

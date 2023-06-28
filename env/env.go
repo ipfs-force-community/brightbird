@@ -293,7 +293,8 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 	statefulSet := &appv1.StatefulSet{}
 	err = yaml_k8s.Unmarshal(data, statefulSet)
 	if err != nil {
-		return nil, fmt.Errorf("marshal to statefulset fail %w", err)
+		fmt.Println(string(data))
+		return nil, fmt.Errorf("unmarshal to statefulset fail %w", err)
 	}
 
 	env.setCommonLabels(&statefulSet.ObjectMeta)
@@ -472,6 +473,7 @@ LOOP:
 			if len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0 {
 				if service.Spec.Type == corev1.ServiceTypeClusterIP {
 					if service.Spec.ClusterIP == "None" {
+						fmt.Println("3")
 						endpoint = types.Endpoint(fmt.Sprintf("%s:%d", name, service.Spec.Ports[0].Port))
 						break LOOP
 					} else {
@@ -491,6 +493,8 @@ LOOP:
 		}
 	}
 
+	fmt.Println("1")
+
 	if !Debug {
 		err = env.WaitEndpointReady(ctx, endpoint)
 		if err != nil {
@@ -498,6 +502,7 @@ LOOP:
 		}
 	}
 
+	fmt.Println("2")
 	port := svc.Spec.Ports[0].Port
 	if Debug {
 		pods, err := dep.Pods(ctx)
@@ -721,14 +726,16 @@ func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName st
 }
 
 func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
-	tCtx, cancel := context.WithTimeout(ctx, time.Second*5)
-	defer cancel()
-
 	for {
+		tCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 		_, err := env.dialCtx(tCtx, "tcp", string(endpoint))
 		if err == nil {
+			cancel()
 			return err
 		}
+		cancel()
+		fmt.Println(endpoint)
+		fmt.Println(err)
 	}
 }
 

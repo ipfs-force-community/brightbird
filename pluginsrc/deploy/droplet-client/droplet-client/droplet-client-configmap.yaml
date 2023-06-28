@@ -1,0 +1,32 @@
+apiVersion: v1
+data:
+  config.toml: |
+    # Default config:
+    SimultaneousTransfersForRetrieval = 20
+    SimultaneousTransfersForStorage = 20
+    DefaultMarketAddress = "{{.ClientAddr}}"
+
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/41231/ws"
+      RemoteListenAddress = ""
+      Timeout = "30s"
+      PrivateKey = "25203f9bd774cd21e15a327dff9605b3c7615bbe60866f7def2a01bf96e08ff0"
+
+    [Libp2p]
+      ListenAddresses = ["/ip4/0.0.0.0/tcp/34123", "/ip6/::/tcp/0"]
+      AnnounceAddresses = []
+      NoAnnounceAddresses = []
+      PrivateKey = ""
+
+    [Node]
+      Url = "{{.NodeUrl}}"
+      Token = "{{.NodeToken}}"
+
+    [Signer]
+      Type = "wallet"
+      Url = "{{.WalletUrl}}"
+      Token = "{{.WalletToken}}"
+kind: ConfigMap
+metadata:
+  name: droplet-client-cfg-{{.UniqueId}}
+  namespace: default

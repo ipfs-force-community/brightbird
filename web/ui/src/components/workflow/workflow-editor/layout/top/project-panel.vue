@@ -1,31 +1,32 @@
 <template>
   <jm-dialog width="667px" destroy-on-close @close="cancel">
     <template #title>
-      <div class="title-container"><i class="jm-icon-workflow-edit"></i>编辑项目信息</div>
+      <div class="title-container"><i class="jm-icon-workflow-edit"></i>编辑测试流信息</div>
     </template>
     <div class="jm-workflow-editor-project-panel">
       <jm-form label-width="auto" ref="editProjectInfoRef" :model="projectInfoForm" :rules="rules" @submit.prevent>
-        <jm-form-item label="项目名称" prop="name" class="name-item">
+        <jm-form-item label="名称" prop="name" >
           <jm-input
             v-model="projectInfoForm.name"
             :maxlength="45"
-            placeholder="请输入项目名称"
+            placeholder="请输入测试流名称"
             :show-word-limit="true"
             :class="{ 'has-error': nameError }"
           />
-          <div v-if="nameError" class="error-msg">该项目名已存在，请修改</div>
+          <div v-if="nameError" class="error-msg">该测试流名称已存在，请修改</div>
         </jm-form-item>
-        <jm-form-item label="项目分组" class="group-item" prop="groupId">
-          <jm-select v-model="projectInfoForm.groupId" placeholder="请选择项目分组" v-loading="loading">
+
+        <jm-form-item label="分组" class="group-item" prop="groupId">
+          <jm-select v-model="projectInfoForm.groupId" placeholder="请选择测试流分组" v-loading="loading">
             <jm-option v-for="item in testGroupList" :key="item.id" :label="item.name" :value="item.id" />
           </jm-select>
         </jm-form-item>
-        <jm-form-item label="项目描述" class="description-item">
+        <jm-form-item label="描述" class="description-item">
           <jm-input
             type="textarea"
             v-model="projectInfoForm.description"
             :maxlength="255"
-            placeholder="请输入项目描述"
+            placeholder="请输入测试流描述"
             :show-word-limit="true"
           />
         </jm-form-item>

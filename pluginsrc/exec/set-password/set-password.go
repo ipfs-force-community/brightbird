@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
+
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
@@ -38,7 +40,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	walletToken, err := env.ReadWalletToken(ctx, params.K8sEnv, walletPods[0].GetName())
+	walletToken, err := venusutils.ReadWalletToken(ctx, params.K8sEnv, walletPods[0].GetName())
 	if err != nil {
 		return nil, err
 	}

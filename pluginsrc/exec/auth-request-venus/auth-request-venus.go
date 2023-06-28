@@ -28,14 +28,14 @@ type TestCaseParams struct {
 		//Permission string `json:"permission"`
 	} `optional:"true"`
 
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	Venus     env.IDeployer       `json:"-" svcname:"Venus"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
-	adminToken, err := params.VenusAuth.Param("AdminToken")
+	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}

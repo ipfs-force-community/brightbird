@@ -37,12 +37,12 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
-	VenusAuth                  env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	MarketClient               env.IDeployer       `json:"-" svcname:"MarketClient"`
-	Venus                      env.IDeployer       `json:"-" svcname:"Venus"`
-	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
+	K8sEnv          *env.K8sEnvDeployer `json:"-"`
+	SophonAuth      env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	MarketClient    env.IDeployer       `json:"-" svcname:"MarketClient"`
+	Venus           env.IDeployer       `json:"-" svcname:"Venus"`
+	DamoclesManager env.IDeployer       `json:"-" svcname:"DamoclesManager"`
+	CreateMiner     env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -80,7 +80,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 		minerAddr.String(),
 	}
 
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	pods, err := params.DamoclesManager.Pods(ctx)
 	if err != nil {
 		return "", err
 	}

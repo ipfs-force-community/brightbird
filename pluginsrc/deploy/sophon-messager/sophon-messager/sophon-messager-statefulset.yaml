@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sophon-messager-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: sophon-messager-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: sophon-messager-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: sophon-messager-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "mkdir -p /root/.sophon-messager; cp /root/config.tmp /root/.sophon-messager/config.toml"]
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-messager-pvc
+            - name: sophon-messager-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      containers:
+        - name: sophon-messager-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-messager:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: 39812
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-messager-pvc
+            - name: sophon-messager-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      volumes:
+        - name: sophon-messager-cfg
+          configMap:
+            name: sophon-messager-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml   
+  volumeClaimTemplates:
+    - metadata:
+        name: sophon-messager-pvc # name+podname
+        labels:
+          app: sophon-messager-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Mi

@@ -41,10 +41,10 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
-	VenusMarket                env.IDeployer       `json:"-" svcname:"VenusMarket"`
-	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
+	K8sEnv          *env.K8sEnvDeployer `json:"-"`
+	DamoclesMarket  env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
+	DamoclesManager env.IDeployer       `json:"-" svcname:"DamoclesManager"`
+	CreateMiner     env.IExec           `json:"-" svcname:"CreateMiner"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -82,18 +82,18 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 }
 
 func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint, err := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.DamoclesMarket.SvcEndpoint()
 	if err != nil {
 		return err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusMarket.Pods(ctx)
+		pods, err := params.DamoclesMarket.Pods(ctx)
 		if err != nil {
 			return err
 		}
 
-		svc, err := params.VenusMarket.Svc(ctx)
+		svc, err := params.DamoclesMarket.Svc(ctx)
 		if err != nil {
 			return err
 		}
@@ -181,18 +181,18 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 }
 
 func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint, err := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.DamoclesMarket.SvcEndpoint()
 	if err != nil {
 		return err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusMarket.Pods(ctx)
+		pods, err := params.DamoclesMarket.Pods(ctx)
 		if err != nil {
 			return err
 		}
 
-		svc, err := params.VenusMarket.Svc(ctx)
+		svc, err := params.DamoclesMarket.Svc(ctx)
 		if err != nil {
 			return err
 		}
@@ -235,7 +235,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.
 		minerAddr.String(),
 	}
 
-	pods, err := params.VenusSectorManagerDeployer.Pods(ctx)
+	pods, err := params.DamoclesManager.Pods(ctx)
 	if err != nil {
 		return "", err
 	}

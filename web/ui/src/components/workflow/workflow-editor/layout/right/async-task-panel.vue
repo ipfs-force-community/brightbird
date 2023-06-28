@@ -22,10 +22,7 @@
             输入参数
             <div class="checked-underline" v-if="tabFlag === 1"></div>
           </div>
-          <div :class="{ 'output-tab': true, 'selected-tab': tabFlag === 2 }" @click="tabFlag = 2">
-            输出参数
-            <div class="checked-underline" v-if="tabFlag === 2"></div>
-          </div>
+       
           <div :class="{ 'optional-tab': true, 'selected-tab': tabFlag === 3 }" @click="tabFlag = 3">
             依赖参数
             <div class="checked-underline" v-if="tabFlag === 3"></div>

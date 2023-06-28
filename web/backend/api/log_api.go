@@ -86,38 +86,65 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 		if strings.Contains(podName, "test-runner") {
 			var stepLogs []models.StepLog
 			var lines []string
-			currentSec := "testrunner start"
+			isClose := false
+			currentSec := "testrunner prepare"
 			for _, log := range logs {
 				cmd, val, isCmd := plugin.ReadCMD(log)
 				if isCmd {
 					switch cmd {
 					case plugin.CMDSTARTPREFIX:
+						if isClose {
+							isClose = false
+						} else {
+							stepLogs = append(stepLogs, models.StepLog{
+								Name:      currentSec,
+								IsSuccess: true,
+								Logs:      lines,
+							})
+						}
+						lines = []string{log}
+						currentSec = val
+						continue
+					case plugin.CMDSUCCESSPREFIX:
 						stepLogs = append(stepLogs, models.StepLog{
 							Name:      currentSec,
 							IsSuccess: true,
-							Logs:      lines,
+							Logs:      append(lines, log),
 						})
-						currentSec = val //rotate to next section
 						lines = []string{}
+						isClose = true
+						continue
 					case plugin.CMDERRORREFIX:
 						stepLogs = append(stepLogs, models.StepLog{
 							Name:      currentSec,
 							IsSuccess: false,
-							Logs:      lines,
+							Logs:      append(lines, log),
 						})
-						currentSec = ""
 						lines = []string{}
+						isClose = true
+						continue
 					}
 				}
+
 				lines = append(lines, log)
 			}
 
-			stepLogs = append(stepLogs, models.StepLog{
-				Name:      "testrunner end",
-				IsSuccess: true,
-				Logs:      lines,
-			})
-			resp.Steps = stepLogs
+			if isClose {
+				stepLogs = append(stepLogs, models.StepLog{
+					Name:      "testrunner end",
+					IsSuccess: true,
+					Logs:      lines,
+				})
+				resp.Steps = stepLogs
+			} else {
+				//not complete
+				stepLogs = append(stepLogs, models.StepLog{
+					Name:      currentSec,
+					IsSuccess: true,
+					Logs:      lines,
+				})
+				resp.Steps = stepLogs
+			}
 		}
 		c.JSON(http.StatusOK, resp)
 	})

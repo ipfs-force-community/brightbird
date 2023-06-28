@@ -16,8 +16,8 @@
           <el-collapse-item v-for="step in podLog?.steps" class="step-header">
             <template #title>
               <div class="header-title">
-                <el-icon v-if="step.isSuccess" size="20"><CircleCheckFilled /></el-icon> 
-                <el-icon v-else size="20"><CircleCloseFilled /></el-icon>
+                <el-icon v-if="step.success" size="20"><SuccessFilled color="green" /></el-icon> 
+                <el-icon v-else size="20"><CircleCloseFilled color="rgb(255, 168, 168)"/></el-icon>
                 <el-text class="title" size="small" > {{ step.name }} </el-text>
               </div>
             </template>

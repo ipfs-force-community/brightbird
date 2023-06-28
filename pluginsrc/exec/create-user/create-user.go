@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/filecoin-project/venus-auth/auth"
-	"github.com/filecoin-project/venus-auth/core"
-	"github.com/filecoin-project/venus-auth/jwtclient"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/sophon-auth/auth"
+	"github.com/ipfs-force-community/sophon-auth/core"
+	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"go.uber.org/fx"
 )
 
@@ -32,23 +32,23 @@ type TestCaseParams struct {
 		Comment  string `json:"comment"`
 	} `optional:"true"`
 
-	K8sEnv    *env.K8sEnvDeployer `json:"-"`
-	VenusAuth env.IDeployer       `json:"-" svcname:"VenusAuth"`
+	K8sEnv     *env.K8sEnvDeployer `json:"-"`
+	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.VenusAuth.SvcEndpoint()
+	endpoint, err := params.SophonAuth.SvcEndpoint()
 	if err != nil {
 		return nil, err
 	}
 
 	if env.Debug {
-		venusAuthPods, err := params.VenusAuth.Pods(ctx)
+		venusAuthPods, err := params.SophonAuth.Pods(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		svc, err := params.VenusAuth.Svc(ctx)
+		svc, err := params.SophonAuth.Svc(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -57,7 +57,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 			return nil, err
 		}
 	}
-	adminToken, err := params.VenusAuth.Param("AdminToken")
+	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err
 	}

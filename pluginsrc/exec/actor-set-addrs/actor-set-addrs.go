@@ -36,15 +36,15 @@ var Info = types.PluginInfo{
 
 type TestCaseParams struct {
 	fx.In
-	K8sEnv                     *env.K8sEnvDeployer `json:"-"`
-	VenusAuth                  env.IDeployer       `json:"-" svcname:"VenusAuth"`
-	VenusMarket                env.IDeployer       `json:"-" svcname:"VenusMarket"`
-	VenusMiner                 env.IDeployer       `json:"-" svcname:"VenusMiner"`
-	VenusSectorManagerDeployer env.IDeployer       `json:"-" svcname:"VenusSectorManager"`
-	Venus                      env.IDeployer       `json:"-" svcname:"Venus"`
-	VenusMessage               env.IDeployer       `json:"-" svcname:"VenusMessage"`
-	CreateMiner                env.IExec           `json:"-" svcname:"CreateMiner"`
-	NewAddrsListen             env.IExec           `json:"-" svcname:"NewAddrsListen"`
+	K8sEnv                  *env.K8sEnvDeployer `json:"-"`
+	SophonAuth              env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	DamoclesMarket          env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
+	Miner                   env.IDeployer       `json:"-" svcname:"SophonMiner"`
+	DamoclesManagerDeployer env.IDeployer       `json:"-" svcname:"DamoclesManager"`
+	Venus                   env.IDeployer       `json:"-" svcname:"Venus"`
+	Message                 env.IDeployer       `json:"-" svcname:"SophonMessager"`
+	CreateMiner             env.IExec           `json:"-" svcname:"CreateMiner"`
+	NewAddrsListen          env.IExec           `json:"-" svcname:"NewAddrsListen"`
 }
 
 func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
@@ -72,23 +72,23 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 
 func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId cid.Cid) error {
 
-	adminTokenV, err := params.VenusAuth.Param("AdminToken")
+	adminTokenV, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return err
 	}
 
-	endpoint, err := params.VenusMessage.SvcEndpoint()
+	endpoint, err := params.Message.SvcEndpoint()
 	if err != nil {
 		return err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusMessage.Pods(ctx)
+		pods, err := params.Message.Pods(ctx)
 		if err != nil {
 			return err
 		}
 
-		svc, err := params.VenusMessage.Svc(ctx)
+		svc, err := params.Message.Svc(ctx)
 		if err != nil {
 			return err
 		}
@@ -114,18 +114,18 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 }
 
 func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
-	endpoint, err := params.VenusMarket.SvcEndpoint()
+	endpoint, err := params.DamoclesMarket.SvcEndpoint()
 	if err != nil {
 		return cid.Undef, err
 	}
 
 	if env.Debug {
-		pods, err := params.VenusMarket.Pods(ctx)
+		pods, err := params.DamoclesMarket.Pods(ctx)
 		if err != nil {
 			return cid.Undef, err
 		}
 
-		svc, err := params.VenusMarket.Svc(ctx)
+		svc, err := params.DamoclesMarket.Svc(ctx)
 		if err != nil {
 			return cid.Undef, err
 		}

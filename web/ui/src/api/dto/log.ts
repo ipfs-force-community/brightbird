@@ -3,7 +3,7 @@
 export interface StepLog extends Readonly<{
     name: string;
     logs: string[];
-    isSuccess: boolean;
+    success: boolean;
 }> { }
 
 

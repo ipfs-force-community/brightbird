@@ -22,9 +22,9 @@ type Config struct {
 	AuthUrl        string   `json:"-"`
 	AdminToken     string   `json:"-"`
 	BootstrapPeers []string `json:"-"`
-	Replicas       int      `json:"replicas" description:"number of replicas"`
 
-	NetType string `json:"netType"`
+	NetType  string `json:"netType" description:"network type: mainnet,2k,calibrationnet,force"`
+	Replicas int    `json:"replicas" description:"number of replicas"`
 }
 
 type RenderParams struct {
@@ -33,7 +33,8 @@ type RenderParams struct {
 	NameSpace       string
 	PrivateRegistry string
 	Args            []string
-	UniqueId        string
+
+	UniqueId string
 }
 
 func DefaultConfig() Config {
@@ -44,7 +45,7 @@ func DefaultConfig() Config {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        "venus-daemon-simple",
+	Name:        "venus-daemon",
 	Version:     version.Version(),
 	PluginType:  types.Deploy,
 	Repo:        "https://github.com/filecoin-project/venus.git",
@@ -52,9 +53,9 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*VenusDeployer)(nil)
+var _ env.IDeployer = (*VenusHADeployer)(nil)
 
-type VenusDeployer struct { //nolint
+type VenusHADeployer struct { //nolint
 	env *env.K8sEnvDeployer
 	cfg *Config
 
@@ -65,11 +66,11 @@ type VenusDeployer struct { //nolint
 	svcName         string
 }
 
-func NewVenusDeployer(env *env.K8sEnvDeployer, authUrl string, adminToken string, bootstrapPeers ...string) *VenusDeployer {
-	return &VenusDeployer{
+func NewVenusHADeployer(env *env.K8sEnvDeployer, replicas int, authUrl string, adminToken string, bootstrapPeers ...string) *VenusHADeployer {
+	return &VenusHADeployer{
 		env: env,
 		cfg: &Config{
-			Replicas:       1, //default
+			Replicas:       replicas, //default
 			AuthUrl:        authUrl,
 			AdminToken:     adminToken,
 			BootstrapPeers: bootstrapPeers,
@@ -82,60 +83,62 @@ func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env
 	if err != nil {
 		return nil, err
 	}
-	return &VenusDeployer{
+	return &VenusHADeployer{
 		env: env,
 		cfg: &cfg,
 	}, nil
 }
 
-func (deployer *VenusDeployer) InstanceName() (string, error) {
+func (deployer *VenusHADeployer) InstanceName() (string, error) {
 	return deployer.cfg.InstanceName, nil
 }
 
-func (deployer *VenusDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
+func (deployer *VenusHADeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
 	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
 }
 
-func (deployer *VenusDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
+func (deployer *VenusHADeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
 	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
 }
 
-func (deployer *VenusDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
+func (deployer *VenusHADeployer) Svc(ctx context.Context) (*corev1.Service, error) {
 	return deployer.env.GetSvc(ctx, deployer.svcName)
 }
 
-func (deployer *VenusDeployer) SvcEndpoint() (types.Endpoint, error) {
+func (deployer *VenusHADeployer) SvcEndpoint() (types.Endpoint, error) {
 	return deployer.svcEndpoint, nil
 }
 
-func (deployer *VenusDeployer) Param(key string) (env.Params, error) {
+func (deployer *VenusHADeployer) Param(key string) (env.Params, error) {
 	return env.Params{}, errors.New("no params")
 }
 
 //go:embed venus-node
 var f embed.FS
 
-func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
+func (deployer *VenusHADeployer) Deploy(ctx context.Context) (err error) {
 	renderParams := RenderParams{
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
-		Args:            deployer.buildArgs(),
 		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
+		Args:            deployer.buildArgs(deployer.cfg.BootstrapPeers),
 		Config:          *deployer.cfg,
 	}
+
 	//create configmap
 	configMapCfg, err := f.Open("venus-node/venus-configmap.yaml")
 	if err != nil {
 		return err
 	}
+	fmt.Println(renderParams.BootstrapPeers)
 	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
 		return err
 	}
 	deployer.configMapName = configMap.GetName()
 
-	//create deployment
-	deployCfg, err := f.Open("venus-node/venus-node-statefulset.yaml")
+	//create statefulset
+	deployCfg, err := f.Open("venus-node/venus-node-stateful-deployment.yaml")
 	if err != nil {
 		return err
 	}
@@ -145,7 +148,7 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 	}
 	deployer.statefulSetName = statefulSet.GetName()
 
-	//create service
+	//create headless service
 	svcCfg, err := f.Open("venus-node/venus-node-headless.yaml")
 	if err != nil {
 		return err
@@ -163,7 +166,7 @@ func (deployer *VenusDeployer) Deploy(ctx context.Context) (err error) {
 	return nil
 }
 
-func (deployer *VenusDeployer) GetConfig(ctx context.Context) (env.Params, error) {
+func (deployer *VenusHADeployer) GetConfig(ctx context.Context) (env.Params, error) {
 	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.json")
 	if err != nil {
 		return env.Params{}, err
@@ -174,7 +177,7 @@ func (deployer *VenusDeployer) GetConfig(ctx context.Context) (env.Params, error
 
 // Update
 // todo change this mode to config
-func (deployer *VenusDeployer) Update(ctx context.Context, updateCfg interface{}) error {
+func (deployer *VenusHADeployer) Update(ctx context.Context, updateCfg interface{}) error {
 	if updateCfg != nil {
 		cfgData, err := json.Marshal(updateCfg)
 		if err != nil {
@@ -184,6 +187,7 @@ func (deployer *VenusDeployer) Update(ctx context.Context, updateCfg interface{}
 		if err != nil {
 			return err
 		}
+
 		pods, err := deployer.Pods(ctx)
 		if err != nil {
 			return nil
@@ -203,7 +207,7 @@ func (deployer *VenusDeployer) Update(ctx context.Context, updateCfg interface{}
 	return nil
 }
 
-func (deployer *VenusDeployer) buildArgs() []string {
+func (deployer *VenusHADeployer) buildArgs(bootstrapPeers []string) []string {
 	args := []string{
 		"daemon",
 		"--genesisfile=/shared-dir/devgen.car",

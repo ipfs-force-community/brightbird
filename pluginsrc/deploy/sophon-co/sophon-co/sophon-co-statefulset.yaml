@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sophon-co-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: sophon-co-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: sophon-co-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: sophon-co-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: sophon-co-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-co:{{.CodeVersion}}"
+          args: [run, {{join .Args ","}}]
+          ports:
+            - containerPort: 1234
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name:  sophon-co-pvc
+  volumeClaimTemplates:
+    - metadata:
+        name: sophon-co-pvc
+        labels:
+          app: sophon-co-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100M
