@@ -138,15 +138,16 @@ export default defineComponent({
                 if (jsonObject.pluginType === 'Exec') {
                   const CaseObj: Case = {
                     name: jsonObject.name,
+                    instanceName: jsonObject.instanceName,
                     version: jsonObject.version,
                     properties: jsonObject.inputs,
                     dependencies: jsonObject.dependencies,
-                    instance: jsonObject.instance,
                   };
                   caseList.push(CaseObj);
                 } else if (jsonObject.pluginType === 'Deployer') {
                   const NodeObj: Node = {
                     name: jsonObject.name,
+                    instanceName: jsonObject.instanceName,
                     properties: jsonObject.inputs,
                     dependencies: jsonObject.dependencies,
                     version: jsonObject.version,
@@ -194,19 +195,19 @@ export default defineComponent({
             if (jsonObject.pluginType === 'Exec') {
               const CaseObj: Case = {
                 name: jsonObject.name,
+                instanceName: jsonObject.instanceName,
                 version: jsonObject.version,
                 properties: jsonObject.inputs,
                 dependencies: jsonObject.dependencies,
-                instance: jsonObject.instance,
               };
               caseList.push(CaseObj);
             } else if (jsonObject.pluginType === 'Deployer') {
               const NodeObj: Node = {
                 name: jsonObject.name,
+                instanceName: jsonObject.instanceName,
                 version: jsonObject.version,
                 properties: jsonObject.inputs,
                 dependencies: jsonObject.dependencies,
-                instance: jsonObject.instance,
               };
               nodeList.push(NodeObj);
             }

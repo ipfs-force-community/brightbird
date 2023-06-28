@@ -15,8 +15,10 @@ export type CustomRule = CustomRuleItem | CustomRuleItem[];
  * 节点数据
  */
 export interface IWorkflowNode {
-  getDisplayName(): string;
+  getInstanceName(): string;
 
+  getName(): string;
+  
   getType(): NodeTypeEnum;
 
   getIcon(): string;

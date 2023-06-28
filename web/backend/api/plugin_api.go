@@ -311,14 +311,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			plugin := &models.Plugin{
 				PluginInfo: *pluginInfo,
 				Path:       fname,
-				Instance: types.DependencyProperty{
-					Name:        plugin.InstancePropertyName,
-					Value:       "default",
-					Type:        pluginInfo.PluginType,
-					SockPath:    "",
-					Description: "named a plugin instance",
-					Require:     true,
-				},
 			}
 
 			err = service.SavePlugins(c, plugin)
@@ -402,14 +394,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			plugin := &models.Plugin{
 				PluginInfo: *pluginInfo,
 				Path:       fname,
-				Instance: types.DependencyProperty{
-					Name:        plugin.InstancePropertyName,
-					Value:       "default",
-					Type:        pluginInfo.PluginType,
-					SockPath:    "",
-					Description: "named a plugin instance",
-					Require:     true,
-				},
 			}
 
 			err = service.SavePlugins(c, plugin)

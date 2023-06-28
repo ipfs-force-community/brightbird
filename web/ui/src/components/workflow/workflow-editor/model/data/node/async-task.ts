@@ -39,12 +39,12 @@ export class AsyncTask extends BaseNode {
   pluginType: string;
   inputs: Property[];
   dependencies: DependencyProperty[];
-  instance: DependencyProperty;
   createTime: number;
   modifiedTime: number;
 
   constructor(
       name: string,
+      instanceName: string,
       type: NodeTypeEnum,
       icon = '',
       labels: string[] = [],
@@ -55,10 +55,10 @@ export class AsyncTask extends BaseNode {
       dependencies: DependencyProperty[],
       createTime = 0,
       modifiedTime = 0,
-      instance: DependencyProperty,
   ) {
     super(
         name,
+        instanceName,
         NodeTypeEnum.ASYNC_TASK,
         checkDefaultIcon(icon) ? defaultIcon : icon,labels
     );
@@ -69,19 +69,18 @@ export class AsyncTask extends BaseNode {
     this.dependencies = dependencies;
     this.createTime = createTime;
     this.modifiedTime = modifiedTime;
-    this.instance = instance;
   }
 
 
   static build(
-      { name, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance}: any,
+      { name, instanceName, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime}: any,
   ): AsyncTask {
-    return new AsyncTask(name, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime, instance);
+    return new AsyncTask(name, instanceName, type, icon, labels, groupType, version, pluginType, inputs, dependencies, createTime, modifiedTime);
   }
 
   // eslint-disable-next-line @typescript-eslint/ban-types
   toDsl(): object {
-    const { name, version, inputs, dependencies, instance } = this;
+    const { name, version, inputs, dependencies, instanceName } = this;
     const param: {
       [key: string]: string | number | boolean;
     } = {};
@@ -134,38 +133,19 @@ export class AsyncTask extends BaseNode {
       });
     }
 
-    const output: {
-      [key: string]: string | number | boolean;
-    } = {};
-    if (instance) {
-      if (!output[instance.name]) {
-        output[instance.name] = instance.value;
-      }
-
-      if (!instance.require && !instance.value) {
-        delete output[instance.name];
-      }
-    }
-
-
     return {
       type: `${this.name}:${version}`,
       param: inputs && inputs.length === 0 ? undefined : param,
       dependencies: dependencies && dependencies.length == 0 ? undefined: svc,
-      instance: !instance ? undefined: output,
     };
   }
 
   setInstanceName(name: string) {
-    this.instance.value = name;
+    this.instanceName = name;
   }
-
-  getDisplayName(): string {
-    if (this.instance.value) {
-      return this.instance.value;
-    } else {
-      return this.name;
-    }
+  
+  getInstanceName(): string {
+    return this.instanceName;
   }
 
 }

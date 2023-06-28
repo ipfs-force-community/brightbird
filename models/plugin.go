@@ -9,8 +9,7 @@ import (
 // swagger:model plugin
 type Plugin struct {
 	types.PluginInfo `bson:",inline"`
-	Path             string                   `json:"path"`
-	Instance         types.DependencyProperty `json:"instance"`
+	Path             string `json:"path"`
 }
 
 // PluginDetail

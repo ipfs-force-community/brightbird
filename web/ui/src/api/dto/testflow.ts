@@ -37,6 +37,7 @@ export interface ICountTestFlowParam
 export interface Node
   extends Readonly<{
     name: string;
+    instanceName: string;
     version: string;
     properties: Property[];
     dependencies: DependencyProperty[];
@@ -46,6 +47,7 @@ export interface Node
 export interface Case
   extends Readonly<{
     name: string;
+    instanceName: string;
     version: string;
     properties: Property[];
     dependencies: DependencyProperty[];
@@ -255,6 +257,7 @@ export interface DependencyProperty {
 
 export interface Plugin extends Readonly<{
     name: string;
+    instanceName: string;
     version: string;
     pluginType: PluginTypeEnum;
     description: string,
@@ -263,7 +266,6 @@ export interface Plugin extends Readonly<{
     path: string;
     dependencies: DependencyProperty[];
     properties: Property[];
-    instance: DependencyProperty;
 }> {
 }
 

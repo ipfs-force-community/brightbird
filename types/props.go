@@ -28,7 +28,7 @@ type SharedPropertyInNode interface {
 	GetVersion() string
 	GetProperties() []*Property
 	GetDependencies() []*DependencyProperty
-	GetInstance() *DependencyProperty
+	GetInstanceName() string
 }
 
 type DeployNode struct {
@@ -36,37 +36,43 @@ type DeployNode struct {
 	// required: true
 	// min length: 3
 	Name string `json:"name"`
+	// the name for this test flow
+	// required: true
+	// min length: 3
+	InstanceName string `json:"instanceName"`
 	// the version for this test flow
 	// required: true
 	// min length: 3
 	Version      string                `json:"version"`
 	Properties   []*Property           `json:"properties"`
 	Dependencies []*DependencyProperty `json:"dependencies"`
-	Instance     *DependencyProperty   `json:"instance"`
 }
 
 func (n DeployNode) GetName() string                        { return n.Name }
 func (n DeployNode) GetVersion() string                     { return n.Version }
 func (n DeployNode) GetProperties() []*Property             { return n.Properties }
 func (n DeployNode) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n DeployNode) GetInstance() *DependencyProperty       { return n.Instance }
+func (n DeployNode) GetInstanceName() string                { return n.InstanceName }
 
 type TestItem struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
 	Name string `json:"name"`
+	// the name for this test flow
+	// required: true
+	// min length: 3
+	InstanceName string `json:"instanceName"`
 	// the version for this test flow
 	// required: true
 	// min length: 3
 	Version      string                `json:"version"`
 	Properties   []*Property           `json:"properties"`
 	Dependencies []*DependencyProperty `json:"dependencies"`
-	Instance     *DependencyProperty   `json:"Instance"`
 }
 
 func (n TestItem) GetName() string                        { return n.Name }
 func (n TestItem) GetVersion() string                     { return n.Version }
 func (n TestItem) GetProperties() []*Property             { return n.Properties }
 func (n TestItem) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n TestItem) GetInstance() *DependencyProperty       { return n.Instance }
+func (n TestItem) GetInstanceName() string                { return n.InstanceName }

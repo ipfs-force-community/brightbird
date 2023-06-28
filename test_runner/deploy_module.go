@@ -38,21 +38,20 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, boostrapPeers types.
 		}
 
 		codeVersionProp := plugin.FindCodeVersionProperties(dep.Properties)
-		instanceName := dep.Instance.Value
-		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
+		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, dep.InstanceName, uuid.New().String()))
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
 			BoostrapPeers: boostrapPeers,
 			CodeVersion:   codeVersionProp.Value,
-			InstanceName:  instanceName,
+			InstanceName:  dep.InstanceName,
 			SockPath:      tmpFName,
 			Dependencies:  dep.Dependencies,
 			Properties:    dep.Properties,
 			LogLevel:      "DEBUG",
 		}
-		initedNode[instanceName] = tmpFName
+		initedNode[dep.InstanceName] = tmpFName
 
-		newFn, err := makeDeployPluginSetupFunc(params, initedNode, path.Join(pluginStore, deployPlugin.Path), instanceName)
+		newFn, err := makeDeployPluginSetupFunc(params, initedNode, path.Join(pluginStore, deployPlugin.Path), dep.InstanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -63,7 +62,7 @@ func DeployFLow(ctx context.Context, initedNode InitedNode, boostrapPeers types.
 			tag string
 		}{
 			ty:  MasterDeployInvokerT,
-			tag: instanceName,
+			tag: dep.InstanceName,
 		}, newFn))
 	}
 	return fx_opt.Options(opts...)
@@ -79,21 +78,20 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, boostrapPeers types.Bo
 			break
 		}
 
-		instanceName := dep.Instance.Value
-		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, instanceName, uuid.New().String()))
+		tmpFName := path.Join(os.TempDir(), fmt.Sprintf("%s_%s_%s.sock", testId, dep.InstanceName, uuid.New().String()))
 		params := &plugin.InitParams{
 			K8sInitParams: *k8sEnvParams,
 			BoostrapPeers: boostrapPeers,
 			CodeVersion:   "", //exec have no code version
-			InstanceName:  instanceName,
+			InstanceName:  dep.InstanceName,
 			SockPath:      tmpFName,
 			Dependencies:  dep.Dependencies,
 			Properties:    dep.Properties,
 			LogLevel:      "DEBUG",
 		}
-		initedNode[instanceName] = tmpFName
+		initedNode[dep.InstanceName] = tmpFName
 
-		newFn, err := makeExecPluginSetupFunc(params, initedNode, path.Join(pluginStore, execPlugin.Path), instanceName)
+		newFn, err := makeExecPluginSetupFunc(params, initedNode, path.Join(pluginStore, execPlugin.Path), dep.InstanceName)
 		if err != nil {
 			opts = append(opts, fx_opt.Error(err))
 			break
@@ -104,13 +102,13 @@ func ExecFlow(ctx context.Context, initedNode InitedNode, boostrapPeers types.Bo
 			tag string
 		}{
 			ty:  MasterExecInvokerT,
-			tag: instanceName,
+			tag: dep.InstanceName,
 		}, newFn))
 
 		invokeFields = append(invokeFields, reflect.StructField{
 			Name:      "N" + strconv.Itoa(index), //just placeorder
 			Type:      MasterExecInvokerT,
-			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, instanceName)),
+			Tag:       reflect.StructTag(fmt.Sprintf(`name:"%s"`, dep.InstanceName)),
 			Offset:    0,
 			Index:     []int{index},
 			Anonymous: false,

@@ -4,8 +4,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 )
 
-const InstancePropertyName = "instance"
-
 const Optional = "optional"
 
 const SvcName = "svcname"

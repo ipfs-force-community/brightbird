@@ -19,7 +19,7 @@ type PluginInfo struct {
 	Repo        string     `json:"repo"`
 	ImageTarget string     `json:"imageTarget"`
 
-	PluginParams
+	PluginParams `bson:",inline"`
 }
 
 type PluginParams struct {

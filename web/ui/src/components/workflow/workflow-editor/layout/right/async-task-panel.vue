@@ -2,8 +2,12 @@
   <div class="jm-workflow-editor-async-task-panel">
     <jm-form label-width="auto" :model="form" label-position="top" ref="formRef" @submit.prevent>
       <div class="set-padding">
-        <jm-form-item label="节点名称" prop="name" class="name-item" :rules="nodeData.getFormRules().name">
-          <jm-input v-model="form.name" show-word-limit :maxlength="36" />
+        <div class="name-item" >
+         <el-text size="large" tag="b">{{ form.name }}</el-text>
+        </div>
+
+        <jm-form-item label="实例名称" prop="instanceName" class="name-item" :rules="nodeData.getFormRules().instanceName">
+          <jm-input v-model="form.instanceName" show-word-limit :maxlength="36" />
         </jm-form-item>
         <jm-form-item label="节点版本" prop="version" :rules="nodeData.getFormRules().version" class="node-item">
           <jm-select v-loading="versionLoading" :disabled="versionLoading" v-model="form.version" placeholder="请选择节点版本"
@@ -22,7 +26,7 @@
             输入参数
             <div class="checked-underline" v-if="tabFlag === 1"></div>
           </div>
-       
+
           <div :class="{ 'optional-tab': true, 'selected-tab': tabFlag === 3 }" @click="tabFlag = 3">
             依赖参数
             <div class="checked-underline" v-if="tabFlag === 3"></div>
@@ -32,7 +36,7 @@
           <div v-if="!form.inputs.toString()">
             <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
-            <div v-else>
+          <div v-else>
             <jm-form-item v-for="(item, index) in form.inputs" :key="item.name" :prop="`inputs.${index}.value`"
               :rules="nodeData.getFormRules().version" class="node-name">
               <template #label>
@@ -46,27 +50,9 @@
             </jm-form-item>
           </div>
         </div>
-        <div class="outputs-container set-padding" v-else-if="tabFlag === 2">
-          <div v-if="!form.instance.toString()">
-              <jm-empty description="无输出参数" :image="noParamImage"></jm-empty>
-          </div>
-          <div v-else>
-            <div class="label">
-              <i class="required-icon" v-if="form.instance.require"></i>
-              组件实例名称
-              <jm-tooltip placement="top" v-if="form.instance.description" :append-to-body="false"
-                :content="form.instance.description">
-                <i class="jm-icon-button-help"></i>
-              </jm-tooltip>
-            </div>
-            <jm-input v-model="form.instance.value" :node-id="nodeId"
-              :placeholder="form.instance.description ? form.instance.description : '请输入' + form.instance.type"
-              show-word-limit :maxlength="36" />
-          </div>
-        </div>
         <div class="optional-container set-padding" v-else-if="tabFlag === 3">
           <div v-if="!form.dependencies.toString()">
-              <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
+            <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
           </div>
           <div v-else>
             <jm-form-item v-for="(item, index) in form.dependencies" :key="item.name"
@@ -77,13 +63,8 @@
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <jm-select
-                v-model="item.value"
-                :node-id="nodeId"
-                :placeholder="item.description ? item.description : '请输入' + item.name"
-                show-word-limit
-                :maxlength="36"
-              >
+              <jm-select v-model="item.value" :node-id="nodeId"
+                :placeholder="item.description ? item.description : '请输入' + item.name" show-word-limit :maxlength="36">
                 <jm-option v-for="nodeName in nodeNames" :key="nodeName" :label="nodeName" :value="nodeName" />
               </jm-select>
             </jm-form-item>
@@ -131,14 +112,14 @@ export default defineComponent({
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();
 
-    const instanceName = props.nodeData.getDisplayName();
+    const instanceName = props.nodeData.getInstanceName();
     const nodeNames: string[] = [];
-    graph.getNodes().forEach(node=>{
+    graph.getNodes().forEach(node => {
       const proxy = new CustomX6NodeProxy(node);
       // 不能为ref，否则，表单内容的变化影响数据绑定
       const nodeData = proxy.getData(graph);
-      const  displayName = nodeData.getDisplayName();
-      if (displayName&&displayName!=instanceName) {
+      const displayName = nodeData.getInstanceName();
+      if (displayName && displayName != instanceName) {
         nodeNames.push(displayName);
       }
     });
@@ -172,11 +153,6 @@ export default defineComponent({
       }
     };
 
-    const generateRandomNumber = () => {
-      const randomNumber = Math.floor(1000 + Math.random() * 9000);
-      return randomNumber.toString();
-    };
-
     onMounted(async () => {
       if (form.value.version) {
         failureVisible.value = true;
@@ -194,19 +170,6 @@ export default defineComponent({
             form.value.dependencies = pluginDetail.plugins[0]?.dependencies ?? [];
           }
         }
-
-        if (!form.value.instance || !form.value.instance.value) {
-          const defaultInstanceName = `${form.value.name}-${generateRandomNumber()}`;
-          form.value.instance = {
-            name: '组件实例名称',
-            value: defaultInstanceName,
-            type: form.value.instance.type,
-            sockPath: '',
-            require: true,
-            description: '',
-          };
-        }
-
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
