@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/hunjixin/brightbird/types"
-	"github.com/imdario/mergo"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/utils"
@@ -42,7 +41,8 @@ type RenderParams struct {
 }
 
 type SophonAuthDeployReturn struct {
-	Cfg        Config
+	MysqlDSN   string `json:"mysqlDSN"`
+	Replicas   int    `json:"replicas" description:"number of replicas"`
 	AdminToken string `json:"adminToken"`
 	env.CommonDeployParams
 }
@@ -59,15 +59,8 @@ var PluginInfo = types.PluginInfo{
 //go:embed sophon-auth
 var f embed.FS
 
-func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineCfg Config) (*SophonAuthDeployReturn, error) {
-	cfg := DefaultConfig()
-	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName))
-
-	err := mergo.Merge(&cfg, incomineCfg, mergo.WithOverride)
-	if err != nil {
-		return nil, err
-	}
-
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonAuthDeployReturn, error) {
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
 		NameSpace:       k8sEnv.NameSpace(),
 		PrivateRegistry: k8sEnv.PrivateRegistry(),
@@ -77,7 +70,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	}
 
 	//create database
-	err = k8sEnv.ResourceMgr().EnsureDatabase(cfg.MysqlDSN)
+	err := k8sEnv.ResourceMgr().EnsureDatabase(cfg.MysqlDSN)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +83,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	if err != nil {
 		return nil, err
 	}
-	configMapName := configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("sophon-auth/sophon-auth-statefulset.yaml")
@@ -101,7 +93,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	if err != nil {
 		return nil, err
 	}
-	statefulSetName := statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("sophon-auth/sophon-auth-headless.yaml")
@@ -112,7 +103,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	if err != nil {
 		return nil, err
 	}
-	svcName := svc.GetName()
 
 	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
 	if err != nil {
@@ -125,12 +115,15 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	}
 
 	return &SophonAuthDeployReturn{
-		Cfg:        cfg,
+		MysqlDSN:   cfg.MysqlDSN,
+		Replicas:   cfg.Replicas,
 		AdminToken: adminToken,
 		CommonDeployParams: env.CommonDeployParams{
-			StatefulSetName: statefulSetName,
-			ConfigMapName:   configMapName,
-			SVCName:         svcName,
+			BaseConfig:      cfg.BaseConfig,
+			DeployName:      PluginInfo.Name,
+			StatefulSetName: statefulSet.GetName(),
+			ConfigMapName:   configMap.GetName(),
+			SVCName:         svc.GetName(),
 			SvcEndpoint:     svcEndpoint,
 		},
 	}, nil
@@ -185,7 +178,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams Sophon
 			return err
 		}
 
-		pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), deployParams.Cfg.InstanceName)))
+		pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), deployParams.InstanceName)))
 		if err != nil {
 			return err
 		}

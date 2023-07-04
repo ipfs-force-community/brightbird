@@ -3,23 +3,24 @@ package sophongateway
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/sophon-gateway/config"
 	"github.com/naoina/toml"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
+	VConfig
+}
 
-	AuthUrl    string `json:"-"`
-	AdminToken string `json:"-"`
+type VConfig struct {
+	AuthUrl    string `ignore:"-" json:"authUrl"`
+	AdminToken string `ignore:"-" json:"adminToken"`
 
 	Replicas int `json:"replicas" description:"number of replicas"`
 }
@@ -33,10 +34,9 @@ type RenderParams struct {
 	UniqueId        string
 }
 
-func DefaultConfig() Config {
-	return Config{
-		Replicas: 1,
-	}
+type SophonGatewayReturn struct {
+	VConfig
+	env.CommonDeployParams
 }
 
 var PluginInfo = types.PluginInfo{
@@ -48,149 +48,103 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*SophonGatewayDeployer)(nil)
-
-type SophonGatewayDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-}
-
-func NewSophonGatewayDeployer(env *env.K8sEnvDeployer, replicas int, authUrl string) *SophonGatewayDeployer {
-	return &SophonGatewayDeployer{
-		env: env,
-		cfg: &Config{
-			Replicas: replicas, //default
-			AuthUrl:  authUrl,
-		},
-	}
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
-	if err != nil {
-		return nil, err
-	}
-	return &SophonGatewayDeployer{
-		env: env,
-		cfg: &cfg,
-	}, nil
-}
-
-func (deployer *SophonGatewayDeployer) InstanceName() (string, error) {
-	return deployer.cfg.InstanceName, nil
-}
-
-func (deployer *SophonGatewayDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("sophon-gateway-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *SophonGatewayDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *SophonGatewayDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *SophonGatewayDeployer) SvcEndpoint() (types.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *SophonGatewayDeployer) Param(key string) (env.Params, error) {
-	return env.Params{}, errors.New("no params")
-}
-
 //go:embed sophon-gateway
 var f embed.FS
 
-func (deployer *SophonGatewayDeployer) Deploy(ctx context.Context) error {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonGatewayReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       deployer.env.NameSpace(),
-		PrivateRegistry: deployer.env.PrivateRegistry(),
+		NameSpace:       k8sEnv.NameSpace(),
+		PrivateRegistry: k8sEnv.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
-		Config:          *deployer.cfg,
+		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:          cfg,
 	}
 	//create configmap
 	configMapCfg, err := f.Open("sophon-gateway/sophon-gateway-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
+	configMap, err := k8sEnv.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.configMapName = configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("sophon-gateway/sophon-gateway-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.statefulSetName = statefulSet.GetName()
+
 	//create service
 	svcCfg, err := f.Open("sophon-gateway/sophon-gateway-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := k8sEnv.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.svcName = svc.GetName()
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &SophonGatewayReturn{
+		VConfig: cfg.VConfig,
+		CommonDeployParams: env.CommonDeployParams{
+			BaseConfig:      cfg.BaseConfig,
+			DeployName:      PluginInfo.Name,
+			StatefulSetName: statefulSet.GetName(),
+			ConfigMapName:   configMap.GetName(),
+			SVCName:         svc.GetName(),
+			SvcEndpoint:     svcEndpoint,
+		},
+	}, nil
 }
 
-func (deployer *SophonGatewayDeployer) GetConfig(ctx context.Context) (env.Params, error) {
-	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
+	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
-		return env.Params{}, err
+		return config.Config{}, err
 	}
 
-	return env.ParamsFromVal(cfgData), nil
+	var cfg config.Config
+	err = toml.Unmarshal(cfgData, &cfg)
+	if err != nil {
+		return config.Config{}, err
+	}
+	return cfg, nil
 }
 
-func (deployer *SophonGatewayDeployer) Update(ctx context.Context, updateCfg interface{}) error {
-	if updateCfg != nil {
-		cfgData, err := toml.Marshal(updateCfg)
+func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonGatewayReturn, updateCfg config.Config) error {
+	cfgData, err := toml.Marshal(updateCfg)
+	if err != nil {
+		return err
+	}
+	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	if err != nil {
+		return err
+	}
+
+	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	if err != nil {
+		return nil
+	}
+
+	for _, pod := range pods {
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-gateway/config.toml")
 		if err != nil {
 			return err
 		}
-		err = deployer.env.SetConfigMap(ctx, deployer.configMapName, "config.toml", cfgData)
-		if err != nil {
-			return err
-		}
-
-		pods, err := deployer.Pods(ctx)
-		if err != nil {
-			return nil
-		}
-		for _, pod := range pods {
-			_, err = deployer.env.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-gateway/config.toml")
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-gateway-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

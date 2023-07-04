@@ -29,9 +29,10 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
-	github.com/ipfs-force-community/sophon-auth v1.12.0-rc2
-	github.com/ipfs-force-community/sophon-messager v1.12.0-rc2
-	github.com/ipfs-force-community/sophon-miner v1.12.0-rc2
+	github.com/ipfs-force-community/sophon-auth v1.12.0
+	github.com/ipfs-force-community/sophon-messager v1.12.0
+	github.com/ipfs-force-community/sophon-miner v1.12.0
+	github.com/ipfs-force-community/sophon-gateway v1.12.0
 	github.com/ipfs/go-cid v0.3.2
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/libp2p/go-libp2p v0.23.4

@@ -1,6 +1,6 @@
 <template>
     <el-input v-model="inputValue" :placeholder="property.description ? property.description : '请输入' + property.name"
-        show-word-limit :maxlength="50" @focus="inputFocus" @input="showTree = false" @blur="inputBlur" />
+        show-word-limit :maxlength="50" @focus="inputFocus" @input="showTree = false" @blur="setPropValue" />
     <el-tree v-show="showTree" :data="treeData" :props="defaultProps" expand-on-click-node accordion
         @node-click="handleNodeClick" />
 </template>
@@ -45,17 +45,16 @@ export default defineComponent({
         }
 
         const handleNodeClick = function (data: TreeProp, obj: any) {
+            var pathSeq = [data.name];
             var parent = obj;
             while (parent.parent && parent.level > 1) {
                 parent = parent.parent;
+                pathSeq.push(parent.data.name)
             }
-
-            const valuePath = data.name?.length > 0 ? parent.data.name + "." + data.name : parent.data.name;
-            const expressValue = "{{" + valuePath + "}}"
-
-            props.input[props.property.name] == expressValue;
+            const expressValue = "{{" + pathSeq.reverse().join(".") + "}}";
             inputValue.value = expressValue;
             showTree.value = false;
+            setPropValue()
         }
 
         const inputFocus = () => {
@@ -64,7 +63,7 @@ export default defineComponent({
             }
         }
 
-        const inputBlur = () => {
+        const setPropValue = () => {
             props.input[props.property.name] = inputValue.value;
         }
 
@@ -74,7 +73,7 @@ export default defineComponent({
             showTree,
             handleNodeClick,
             inputFocus,
-            inputBlur,
+            setPropValue,
         };
     },
 });

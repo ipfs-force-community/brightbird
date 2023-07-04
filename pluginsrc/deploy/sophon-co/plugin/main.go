@@ -6,7 +6,10 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	chainco "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-co"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	corev1 "k8s.io/api/core/v1"
 )
 
 func main() {
@@ -14,28 +17,25 @@ func main() {
 }
 
 type DepParams struct {
-	Params chainco.Config `optional:"true"`
+	chainco.Config
 
-	K8sEnv *env.K8sEnvDeployer
-
-	VenusDep   env.IDeployer `svcname:"Venus" description:"[Deploy]venus"`
-	AuthDeploy env.IDeployer `svcname:"SophonAuth" description:"[Deploy]sophon-auth"`
+	Daemon     env.CommonDeployParams            `json:"Daemon" description:"[Deploy]venus/lotus/sophonco daemon"`
+	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	pods, err := depParams.VenusDep.Pods(ctx)
-	if err != nil {
-		return nil, err
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*chainco.SophonCoDeployReturn, error) {
+
+	var pods []corev1.Pod
+	var err error
+	switch depParams.Daemon.DeployName {
+	case venus.PluginInfo.Name:
+		pods, err = venus.GetPods(ctx, k8sEnv, depParams.Daemon.InstanceName)
+		if err != nil {
+			return nil, err
+		}
 	}
-	svc, err := depParams.VenusDep.Svc(ctx)
-	if err != nil {
-		return nil, err
-	}
-	adminTokenP, err := depParams.AuthDeploy.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-	adminToken, err := env.UnmarshalJSON[string](adminTokenP.Raw())
+
+	svc, err := k8sEnv.GetSvc(ctx, depParams.Daemon.SVCName)
 	if err != nil {
 		return nil, err
 	}
@@ -44,27 +44,16 @@ func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
 	podEndpoints := make([]string, len(podDNS))
 	for index, dns := range podDNS {
 
-		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", adminToken, dns, svc.Spec.Ports[0].Port)
+		podEndpoints[index] = fmt.Sprintf("%s:/dns/%s/tcp/%d", depParams.AdminToken, dns, svc.Spec.Ports[0].Port)
 	}
 
-	authEndpoint, err := depParams.AuthDeploy.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := chainco.DeployerFromConfig(depParams.K8sEnv, chainco.Config{
-		Replicas:   1,
-		AuthUrl:    authEndpoint.ToHTTP(),
-		AdminToken: adminToken,
-		Nodes:      podEndpoints,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+	return chainco.DeployFromConfig(ctx, k8sEnv, chainco.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: chainco.VConfig{
+			Replicas:   1,
+			AuthUrl:    depParams.SophonAuth.SvcEndpoint.ToHTTP(),
+			AdminToken: depParams.SophonAuth.AdminToken,
+			Nodes:      podEndpoints,
+		},
+	})
 }

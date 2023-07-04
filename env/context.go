@@ -8,8 +8,9 @@ import (
 )
 
 type GlobalParams struct {
-	LogLevel         string
-	CustomProperties json.RawMessage
+	LogLevel         string          `json:"logLevel"`
+	BootrapPeers     []string        `json:"bootrapPeers"`
+	CustomProperties json.RawMessage `json:"customProperties"`
 }
 
 type NodeContext struct {
@@ -36,6 +37,8 @@ func (envCtx EnvContext) GetNode(name string) (*NodeContext, error) {
 }
 
 type CommonDeployParams struct {
+	BaseConfig
+	DeployName      string         `json:"deployName"`
 	StatefulSetName string         `json:"statefulSetName"`
 	ConfigMapName   string         `json:"configMapName"`
 	SVCName         string         `json:"svcName"`

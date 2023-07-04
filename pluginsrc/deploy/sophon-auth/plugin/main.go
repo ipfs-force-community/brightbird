@@ -13,7 +13,7 @@ func main() {
 }
 
 type DepParams struct {
-	sophonauth.Config `description:""`
+	sophonauth.Config
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonauth.SophonAuthDeployReturn, error) {

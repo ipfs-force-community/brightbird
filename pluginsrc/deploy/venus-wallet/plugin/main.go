@@ -6,8 +6,8 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
 	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
-	"github.com/hunjixin/brightbird/types"
 )
 
 func main() {
@@ -16,32 +16,28 @@ func main() {
 
 type DepParams struct {
 	venuswallet.Config
-	K8sEnv *env.K8sEnvDeployer
+	Gateway *sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (*venuswallet.VenusWalletDeployParams, error) {
-	if len(depParams.GatewayUrl) != 0 && len(depParams.UserToken) == 0 {
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venuswallet.VenusWalletReturn, error) {
+	if depParams.Gateway != nil && len(depParams.UserToken) == 0 {
 		return nil, errors.New("gateway have value but not set token value")
 	}
 
-	if len(depParams.GatewayUrl) == 0 && len(depParams.UserToken) == 0 {
+	if depParams.Gateway == nil && len(depParams.UserToken) == 0 {
 		return nil, errors.New("token have value but not set gateway url")
 	}
-	var deployer *venuswallet.VenusWalletDeployer
-	var err error
-	if len(depParams.UserToken) == 0 {
-		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{
+
+	if len(depParams.UserToken) > 0 {
+		return venuswallet.DeployFromConfig(ctx, k8sEnv, venuswallet.Config{
 			BaseConfig: depParams.BaseConfig,
-			GatewayUrl: types.Endpoint(depParams.GatewayUrl).ToMultiAddr(),
-			UserToken:  depParams.UserToken,
-		})
-	} else {
-		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{
-			BaseConfig: depParams.BaseConfig,
+			VConfig: venuswallet.VConfig{
+				GatewayUrl: depParams.Gateway.SvcEndpoint.ToMultiAddr(),
+				UserToken:  depParams.UserToken,
+			},
 		})
 	}
-	if err != nil {
-		return nil, err
-	}
-	return deployer.Deploy(ctx)
+	return venuswallet.DeployFromConfig(ctx, k8sEnv, venuswallet.Config{
+		BaseConfig: depParams.BaseConfig,
+	})
 }
