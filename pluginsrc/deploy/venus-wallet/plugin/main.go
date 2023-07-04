@@ -15,50 +15,33 @@ func main() {
 }
 
 type DepParams struct {
-	Params venuswallet.Config `optional:"true"`
-
-	Gateway     env.IDeployer `optional:"true" svcname:"VenusGateway"`
-	CreateToken env.IExec     `optional:"true" svcname:"Token"`
-
+	venuswallet.Config
 	K8sEnv *env.K8sEnvDeployer
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	if depParams.Gateway != nil && depParams.CreateToken == nil {
+func Exec(ctx context.Context, depParams DepParams) (*venuswallet.VenusWalletDeployParams, error) {
+	if len(depParams.GatewayUrl) != 0 && len(depParams.UserToken) == 0 {
 		return nil, errors.New("gateway have value but not set token value")
 	}
 
-	if depParams.Gateway == nil && depParams.CreateToken != nil {
+	if len(depParams.GatewayUrl) == 0 && len(depParams.UserToken) == 0 {
 		return nil, errors.New("token have value but not set gateway url")
 	}
-	var deployer env.IDeployer
+	var deployer *venuswallet.VenusWalletDeployer
 	var err error
-	if depParams.CreateToken != nil {
-		var userToken env.Params
-		userToken, err = depParams.CreateToken.Param("Token")
-		if err != nil && err != env.ErrParamsNotFound {
-			return nil, err
-		}
-
-		var gatewayEndpoint types.Endpoint
-		gatewayEndpoint, err = depParams.Gateway.SvcEndpoint()
-		if err != nil {
-			return nil, err
-		}
-
+	if len(depParams.UserToken) == 0 {
 		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{
-			GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-			UserToken:  userToken.MustString(),
-		}, depParams.Params)
+			BaseConfig: depParams.BaseConfig,
+			GatewayUrl: types.Endpoint(depParams.GatewayUrl).ToMultiAddr(),
+			UserToken:  depParams.UserToken,
+		})
 	} else {
-		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{}, depParams.Params)
+		deployer, err = venuswallet.DeployerFromConfig(depParams.K8sEnv, venuswallet.Config{
+			BaseConfig: depParams.BaseConfig,
+		})
 	}
 	if err != nil {
 		return nil, err
 	}
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+	return deployer.Deploy(ctx)
 }

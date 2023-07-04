@@ -78,21 +78,6 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 	if err != nil {
 		return err
 	}
-	if env.Debug {
-		pods, err := params.SophonMessager.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.SophonMessager.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
 
 	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), adminTokenV.MustString(), nil)
 	if err != nil {
@@ -113,22 +98,6 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 	endpoint, err := params.DamoclesMarket.SvcEndpoint()
 	if err != nil {
 		return cid.Undef, err
-	}
-	if env.Debug {
-		pods, err := params.DamoclesMarket.Pods(ctx)
-		if err != nil {
-			return cid.Undef, err
-		}
-
-		svc, err := params.DamoclesMarket.Svc(ctx)
-		if err != nil {
-			return cid.Undef, err
-		}
-
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return cid.Undef, err
-		}
 	}
 	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
@@ -189,22 +158,7 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Addr
 	if err != nil {
 		return vtypes.MinerInfo{}, err
 	}
-	if env.Debug {
-		pods, err := params.Venus.Pods(ctx)
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
 
-		svc, err := params.Venus.Svc(ctx)
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
-
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
-	}
 	client, closer, err := v1api.NewFullNodeRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return vtypes.MinerInfo{}, err

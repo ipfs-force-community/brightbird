@@ -58,7 +58,6 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/appengine v1.6.7
-	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.2
 	k8s.io/client-go v0.26.1
@@ -270,6 +269,10 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tidwall/sjson v1.2.5 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect

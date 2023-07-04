@@ -52,21 +52,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) e
 	if err != nil {
 		return err
 	}
-	if env.Debug {
-		venusPods, err := params.Venus.Pods(ctx)
-		if err != nil {
-			return err
-		}
 
-		svc, err := params.Venus.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
 	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
 		return err

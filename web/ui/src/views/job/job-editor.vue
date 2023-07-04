@@ -108,6 +108,7 @@ import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { JobEnum } from '@/api/dto/enumeration';
 import { ElCol, ElRow } from 'element-plus';
+import yaml from 'yaml'
 
 export default defineComponent({
   emits: ['completed'],
@@ -172,7 +173,8 @@ export default defineComponent({
     const refreshSelect = (testflow: ITestFlowDetail) => {
       editorForm.value.testFlowId = testflow.id ?? '';
       let versions: any = {};
-      testflow?.nodes?.forEach(f => {
+      const { pipeline } = yaml.parse(testflow.graph);
+      Object.values(pipeline).forEach((f: any) => {
         versions[f.name] = '';
       });
       editorForm.value.versions = versions;

@@ -1,9 +1,17 @@
 import { IPageDto } from '@/api/dto/common';
 import {
   DslTypeEnum,
-  ProjectImporterTypeEnum,
   PluginTypeEnum,
 } from '@/api/dto/enumeration';
+
+export interface Node
+  extends Readonly<{
+    name: string;
+    instanceName: string;
+    version: string;
+    input: string;
+    output: string;
+  }> { }
 
 /**
  * 保存项目dto
@@ -14,8 +22,6 @@ export interface ITestFlowDetail
     name: string;
     createTime: string;
     modifiedTime: string;
-    cases: Case[];
-    nodes: Node[];
     groupId: string;
     graph: string;
     description: string;
@@ -34,63 +40,6 @@ export interface ICountTestFlowParam
   }> { }
 
 
-export interface Node
-  extends Readonly<{
-    name: string;
-    instanceName: string;
-    version: string;
-    properties: Property[];
-    dependencies: DependencyProperty[];
-    instance: DependencyProperty;
-  }> { }
-
-export interface Case
-  extends Readonly<{
-    name: string;
-    instanceName: string;
-    version: string;
-    properties: Property[];
-    dependencies: DependencyProperty[];
-    instance: DependencyProperty;
-  }> { }
-
-/**
- * 克隆Git库dto
- */
-export interface IGitCloningDto
-  extends Readonly<{
-    uri: string;
-    groupId: string;
-    credential: {
-      type?: ProjectImporterTypeEnum;
-      namespace?: string;
-      userKey?: string;
-      passKey?: string;
-      privateKey?: string;
-    };
-    branch: string;
-  }> { }
-
-/**
- * git值对象
- */
-export interface IGitVo
-  extends Readonly<{
-    id: string;
-    uri: string;
-    branch: string;
-  }> { }
-
-/**
- * 导入项目dto
- */
-export interface IProjectImportingDto
-  extends Readonly<
-    IGitCloningDto & {
-      id: string;
-      dslPath: string;
-    }
-  > { }
 
 /**
  * 查询项目dto
@@ -216,8 +165,8 @@ export interface Property  {
     name: string;
     type: string;
     description: string;
-    value: any;
     require: true;
+    children: Property[]
 }
 
 export interface GetPluginReq extends Readonly<{
@@ -245,17 +194,7 @@ export interface DeleteLabelReq extends Readonly<{
 }> {
 }
 
-
-export interface DependencyProperty {
-    name: string;
-    value: string;
-    type: PluginTypeEnum;
-    sockPath: string;
-    require: true;
-    description: string;
-}
-
-export interface Plugin extends Readonly<{
+export interface PluginDef extends Readonly<{
     name: string;
     instanceName: string;
     version: string;
@@ -264,8 +203,8 @@ export interface Plugin extends Readonly<{
     repo: string,
     imageTarget: string,
     path: string;
-    dependencies: DependencyProperty[];
-    properties: Property[];
+    inputProperties: Property[];
+    outputProperties: Property[];
 }> {
 }
 
@@ -275,7 +214,7 @@ export interface PluginDetail {
   pluginType: PluginTypeEnum;
   description: string,
   labels:string[];
-  plugins: Plugin[]|undefined;
+  pluginDefs: PluginDef[]|undefined;
   createTime: number;
   modifiedTime: number;
   icon: string;

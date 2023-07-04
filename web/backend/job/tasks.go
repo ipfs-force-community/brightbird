@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/hunjixin/brightbird/models"
+	"gopkg.in/yaml.v3"
 
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 
@@ -183,9 +184,14 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
+	graph := &models.Graph{}
+	err = yaml.Unmarshal([]byte(testFlow.Graph), graph)
+	if err != nil {
+		return nil, err
+	}
 	//confirm version and build image.
 	taskLog.Infof("start to build image for testflow %s job %s", testFlow.Name, job.Name)
-	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, task.InheritVersions) //todo maybe move this code to previous step
+	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
 	if err != nil {
 		return nil, err
 	}

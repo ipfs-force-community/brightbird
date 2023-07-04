@@ -1,67 +1,27 @@
 package plugin
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/utils"
-
 	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/utils"
 )
 
-func ParseParams(params reflect.Type) (types.PluginParams, error) {
-	pluginParams := types.PluginParams{}
+func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property, error) {
+	if params.Kind() == reflect.Ptr {
+		params = params.Elem()
+	}
+
 	numFields := params.NumField()
-	var svcProperties []types.DependencyProperty
+	properties := []types.Property{}
 	for i := 0; i < numFields; i++ {
 		field := params.Field(i)
-		if field.Name == "Params" {
-			configProperties, err := ParserProperties(field.Type)
-			if err != nil {
-				return types.PluginParams{}, err
-			}
-			pluginParams.Properties = configProperties
-		} else {
-			optional := field.Tag.Get(Optional)
-			svcName := field.Tag.Get(SvcName)
-			if len(svcName) == 0 {
-				continue
-			}
-			description := field.Tag.Get("description")
-			if field.Type == env.IDeployerT {
-				svcProperties = append(svcProperties, types.DependencyProperty{
-					Name:        svcName,
-					Type:        types.Deploy,
-					Description: description,
-					Require:     optional != "true",
-				})
-			} else if field.Type == env.IExecT {
-				svcProperties = append(svcProperties, types.DependencyProperty{
-					Name:        svcName,
-					Type:        types.TestExec,
-					Description: description,
-					Require:     optional != "true",
-				})
-			} else {
-				return types.PluginParams{}, errors.New("unsupport plugin type")
-			}
-		}
-	}
-	pluginParams.Dependencies = svcProperties
-	return pluginParams, nil
-}
-
-func ParserProperties(configT reflect.Type) ([]types.Property, error) {
-	configFieldsNum := configT.NumField()
-	var properties []types.Property
-	for j := 0; j < configFieldsNum; j++ {
-		field := configT.Field(j)
 		if field.Anonymous {
-			embedProperties, err := ParserProperties(field.Type)
+			embedProperties, err := ParserProperties(pathPrefix, field.Type)
 			if err != nil {
 				return nil, err
 			}
@@ -69,24 +29,55 @@ func ParserProperties(configT reflect.Type) ([]types.Property, error) {
 			continue
 		}
 
+		if ignoreProperty(field) {
+			continue
+		}
+
 		fieldName := getFieldJSONName(field)
 		if fieldName == "-" || fieldName == "" {
 			continue
 		}
+
+		description := field.Tag.Get("description")
+		if field.Type.Kind() == reflect.Struct {
+			//json
+			childProperties, err := ParserProperties(joinPath(pathPrefix, fieldName), field.Type)
+			if err != nil {
+				return nil, err
+			}
+			properties = append(properties, types.Property{
+				Name:        joinPath(pathPrefix, fieldName),
+				Type:        "object",
+				Description: description,
+				Chindren:    childProperties,
+			})
+			continue
+		}
+
 		typeName, err := mapType(field.Type.Kind())
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
 
-		description := field.Tag.Get("description")
-
 		properties = append(properties, types.Property{
-			Name:        fieldName,
+			Name:        joinPath(pathPrefix, fieldName),
 			Type:        typeName,
 			Description: description,
 		})
+
 	}
 	return properties, nil
+}
+
+func joinPath(path, next string) string {
+	if len(path) == 0 {
+		return next
+	}
+	return path + "." + next
+}
+
+func ignoreProperty(field reflect.StructField) bool {
+	return len(field.Tag.Get("ignore")) > 0
 }
 
 func getFieldJSONName(field reflect.StructField) string {
@@ -131,27 +122,35 @@ func mapType(val reflect.Kind) (string, error) {
 	return "", fmt.Errorf("types %s not support", val.String())
 }
 
-func GetPropertyValue(property *types.Property) (interface{}, error) {
+func GetPropertyValue(property *types.Property, value string) (interface{}, error) {
 	switch property.Type {
 	case "bool":
-		return property.Value == "true", nil
-	case "number":
-		val, err := strconv.ParseInt(property.Value, 10, 64)
+		return value == "true", nil
+	case "number": //todo consider big number
+		val, err := strconv.ParseInt(value, 10, 64)
 		if err != nil {
 			return nil, err
 		}
 		return val, nil
 	case "decimical":
-		val, err := strconv.ParseFloat(property.Value, 64)
+		val, err := strconv.ParseFloat(value, 64)
 		if err != nil {
 			return nil, err
 		}
 		return val, nil
 	case "string":
-		return property.Value, nil
+		return value, nil
+	case "object":
+		var jsonRaw json.RawMessage
+		err := json.Unmarshal([]byte(value), &jsonRaw)
+		if err != nil {
+			return nil, err
+		}
+		return jsonRaw, nil
 	}
 	return nil, fmt.Errorf("unsupport property type %s", property.Type)
 }
+
 func ConvertValue[T any](value string) (T, error) {
 	dstValue := new(T)
 	valR := reflect.ValueOf(dstValue).Elem()

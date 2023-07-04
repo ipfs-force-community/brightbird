@@ -2,9 +2,9 @@ package env
 
 type BaseConfig struct {
 	// CodeVersion deploy image commit
-	CodeVersion string `json:"-"` //
+	CodeVersion string `ignore:"-" json:"codeVersion"` //
 	// InstanceName plugin instance name
-	InstanceName string `json:"-"`
+	InstanceName string `ignore:"-" json:"instanceName"`
 }
 
 func NewBaseConfig(codeVersion, instance string) BaseConfig {

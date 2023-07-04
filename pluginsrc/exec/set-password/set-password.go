@@ -50,17 +50,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	if env.Debug {
-		svc, err := params.VenusWallet.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, walletPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	walletRPC, closer, err := wallet.DialIFullAPIRPC(ctx, endpoint.ToMultiAddr(), walletToken, nil)
 	if err != nil {
 		return nil, err

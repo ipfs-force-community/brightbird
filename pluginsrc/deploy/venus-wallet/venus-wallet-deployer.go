@@ -3,23 +3,19 @@ package venuswallet
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/pelletier/go-toml"
-	appv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
 
-	GatewayUrl string `json:"-"`
-	UserToken  string `json:"-"`
+	GatewayUrl string `json:"gatewayUrl"`
+	UserToken  string `json:"userToekn"`
 }
 
 type RenderParams struct {
@@ -45,7 +41,13 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*VenusWalletDeployer)(nil)
+type VenusWalletDeployParams struct {
+	Cfg             *Config
+	StatefulSetName string
+	ConfigMapName   string
+	SVCName         string
+	SvcEndpoint     types.Endpoint
+}
 
 type VenusWalletDeployer struct { //nolint
 	env *env.K8sEnvDeployer
@@ -58,55 +60,17 @@ type VenusWalletDeployer struct { //nolint
 	svcName         string
 }
 
-func NewVenusWalletDeployer(env *env.K8sEnvDeployer, gatewayUrl, userToken string, supportAccounts ...string) *VenusWalletDeployer {
-	return &VenusWalletDeployer{
-		env: env,
-		cfg: &Config{
-			GatewayUrl: gatewayUrl,
-			UserToken:  userToken,
-		},
-	}
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
-	if err != nil {
-		return nil, err
-	}
+func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config) (*VenusWalletDeployer, error) {
 	return &VenusWalletDeployer{
 		env: env,
 		cfg: &cfg,
 	}, nil
 }
 
-func (deployer *VenusWalletDeployer) InstanceName() (string, error) {
-	return deployer.cfg.InstanceName, nil
-}
-
-func (deployer *VenusWalletDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *VenusWalletDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *VenusWalletDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *VenusWalletDeployer) SvcEndpoint() (types.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *VenusWalletDeployer) Param(key string) (env.Params, error) {
-	return env.Params{}, errors.New("no params")
-}
-
 //go:embed venus-wallet
 var f embed.FS
 
-func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
+func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (*VenusWalletDeployParams, error) {
 	renderParams := RenderParams{
 		NameSpace:       deployer.env.NameSpace(),
 		PrivateRegistry: deployer.env.PrivateRegistry(),
@@ -116,41 +80,51 @@ func (deployer *VenusWalletDeployer) Deploy(ctx context.Context) (err error) {
 	//create configmap
 	configMapCfg, err := f.Open("venus-wallet/venus-wallet-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	deployer.configMapName = configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("venus-wallet/venus-wallet-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	deployer.statefulSetName = statefulSet.GetName()
 
+	pods, err := deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
+	if err != nil {
+		return nil, err
+	}
 	//create service
 	svcCfg, err := f.Open("venus-wallet/venus-wallet-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	deployer.svcName = svc.GetName()
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, svc, pods)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &VenusWalletDeployParams{
+		Cfg:             deployer.cfg,
+		StatefulSetName: deployer.statefulSetName,
+		ConfigMapName:   deployer.configMapName,
+		SVCName:         deployer.svcName,
+		SvcEndpoint:     deployer.svcEndpoint,
+	}, nil
 }
 
 func (deployer *VenusWalletDeployer) GetConfig(ctx context.Context) (env.Params, error) {

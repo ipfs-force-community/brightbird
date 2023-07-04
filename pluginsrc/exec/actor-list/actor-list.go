@@ -49,21 +49,7 @@ func actorList(ctx context.Context, params TestCaseParams) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if env.Debug {
-		pods, err := params.DamoclesMarket.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
 
-		svc, err := params.DamoclesMarket.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
 	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return "", err

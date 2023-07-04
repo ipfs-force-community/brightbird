@@ -113,6 +113,7 @@ import { JobEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
+import yaml from 'yaml';
 
 export default defineComponent({
   emits: ['completed'],
@@ -204,7 +205,8 @@ export default defineComponent({
     const refreshSelect = async (testflow: ITestFlowDetail) => {
       createForm.value.testFlowId = testflow.id ?? '';
       let versions: any = {};
-      testflow?.nodes?.forEach(f => {
+      const { pipeline } = yaml.parse(testflow.graph);
+      Object.values(pipeline).forEach((f: any) => {
         versions[f.name] = '';
       });
       // use for cron
@@ -236,11 +238,12 @@ export default defineComponent({
         // fetch testflow
         const nodeInUse = new Set<string>();
         const testflow = await fetchTestFlowDetail({ id: createForm.value.testFlowId });
-        testflow.nodes.forEach(a => nodeInUse.add(a.name + a.version));
+        const { pipeline } = yaml.parse(testflow.graph);
+        Object.values(pipeline).forEach((a:any) => nodeInUse.add(a.name + a.version));
         // fetch plugins
         const pluginMap = new Map<string, Plugin>();
         (await fetchDeployPlugins()).map(a => {
-          a.plugins?.map(p => {
+          a.pluginDefs?.map(p => {
             if (nodeInUse.has(p.name + p.version)) {
               pluginMap.set(p.name, p);
             }

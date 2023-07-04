@@ -42,25 +42,22 @@ func TestConvertValue(t *testing.T) {
 func TestGetPropertyValue(t *testing.T) {
 	{
 		val, err := GetPropertyValue(&types.Property{
-			Type:  "string",
-			Value: "string val",
-		})
+			Type: "string",
+		}, "string val")
 		assert.Nil(t, err)
 		assert.Equal(t, "string val", val)
 	}
 	{
 		val, err := GetPropertyValue(&types.Property{
-			Type:  "number",
-			Value: "123123123123",
-		})
+			Type: "number",
+		}, "123123123123")
 		assert.Nil(t, err)
 		assert.Equal(t, int64(123123123123), val)
 	}
 	{
 		val, err := GetPropertyValue(&types.Property{
-			Type:  "decimical",
-			Value: "12312.3123123",
-		})
+			Type: "decimical",
+		}, "12312.3123123")
 		assert.Nil(t, err)
 		assert.Equal(t, float64(12312.3123123), val)
 	}

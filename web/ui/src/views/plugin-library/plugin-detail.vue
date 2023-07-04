@@ -32,7 +32,7 @@
         </el-col>
         <el-col :span="22">
           <div class="version">
-            <div v-for="p in pluginDetail?.plugins">
+            <div v-for="p in pluginDetail?.pluginDefs">
               <el-text class="v-item">{{ p.version }}
                 <el-icon color="red" @click="deleteVersion(pluginDetail?.id, p.version)">
                   <Delete />
@@ -52,26 +52,27 @@
         </el-col>
       </el-row>
 
-      <el-row class="row-t" v-for="p in pluginDetail?.plugins" >
+      <el-row class="row-t" v-for="p in pluginDetail?.pluginDefs" >
         <el-col :span="2">
           <el-text class="mx-1">{{ p.version }} 详情:</el-text>
         </el-col>
         <el-col :span="22">
           <el-collapse>
-            <el-text v-if="!p.properties">无输入参数</el-text>
+            <el-text v-if="!p.inputProperties">无输入参数</el-text>
             <el-collapse-item v-else title="输入参数">
-              <el-table :data="p.properties" stripe size="small">
+              <el-table :data="p.inputProperties" stripe size="small">
                 <el-table-column prop="name" label="名称" width="180" />
+                <el-table-column prop="valuePath" label="路径" width="180" />
                 <el-table-column prop="type" label="类型" width="180" />
                 <el-table-column prop="require" label="必须？" width="180" />
                 <el-table-column prop="description" label="描述" />
               </el-table>
             </el-collapse-item>
 
-            <el-text v-if="!p.dependencies">无组件依赖</el-text>
+            <el-text v-if="!p.outputProperties">无组件依赖</el-text>
             <el-collapse-item v-else title="依赖组件">
-              <el-table :data="p.dependencies" stripe size="small">
-                <el-table-column prop="name" label="名称" width="180" />
+              <el-table :data="p.outputProperties" stripe size="small">
+                <el-table-column prop="x" label="名称" width="180" />
                 <el-table-column prop="type" label="类型" width="180" />
                 <el-table-column prop="require" label="必须？" width="180" />
                 <el-table-column prop="description" label="描述" />
@@ -128,7 +129,7 @@ export default defineComponent({
       try {
         if (pluginDetail.value) {
           await deletePlugin(id ?? '', version);
-          pluginDetail.value.plugins = pluginDetail.value?.plugins?.filter(a => a.version != version);
+          pluginDetail.value.pluginDefs = pluginDetail.value?.pluginDefs?.filter(a => a.version != version);
         }
       } catch (err) {
         proxy.$throw(err, proxy);

@@ -122,21 +122,6 @@ func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string,
 	if err != nil {
 		return err
 	}
-	if env.Debug {
-		pods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
 
 	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {

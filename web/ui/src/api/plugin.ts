@@ -1,4 +1,4 @@
-import { AddLabelReq, DeleteLabelReq, PluginDetail } from '@/api/dto/testflow';
+import { AddLabelReq, DeleteLabelReq, PluginDef, PluginDetail } from '@/api/dto/testflow';
 import { restProxy } from '@/api/index';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { baseUrl } from '@/api/view-no-auth';
@@ -40,6 +40,22 @@ export function getPluginByName(name: string): Promise<PluginDetail> {
     method: 'get',
     payload: {
       'name': name,
+    },
+  });
+}
+
+
+/**
+ * 根据name和version获取插件定义
+ * @param name
+ */
+export function getPluginDef(name: string, version: string): Promise<PluginDef> {
+  return restProxy<PluginDef>({
+    url: `${baseUrl.plugin}/def`,
+    method: 'get',
+    payload: {
+      'name': name,
+      'version':version,
     },
   });
 }

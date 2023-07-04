@@ -61,6 +61,39 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.JSON(http.StatusOK, output)
 	})
 
+	// swagger:route GET /plugin/def plugin getPluginDef
+	//
+	// Get plugin by name and version.
+	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Responses:
+	//       200: pluginDetail
+	//		 503: apiError
+	group.GET("def", func(c *gin.Context) {
+		req := &repo.GetPluginDefParams{}
+		err := c.ShouldBindQuery(req)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		pluginDef, err := service.GetPlugin(c, req.Name, req.Version)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		c.JSON(http.StatusOK, pluginDef)
+	})
+
 	// swagger:route GET /plugin/list plugin listPluginParams
 	//
 	// List plugin by name and version.
@@ -308,7 +341,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				return
 			}
 
-			plugin := &models.Plugin{
+			plugin := &models.PluginDef{
 				PluginInfo: *pluginInfo,
 				Path:       fname,
 			}
@@ -391,7 +424,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				return
 			}
 
-			plugin := &models.Plugin{
+			plugin := &models.PluginDef{
 				PluginInfo: *pluginInfo,
 				Path:       fname,
 			}

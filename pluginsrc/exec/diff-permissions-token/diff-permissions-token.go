@@ -49,21 +49,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	if env.Debug {
-		venusAuthPods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
@@ -107,21 +92,7 @@ func checkPermission(ctx context.Context, token string, params TestCaseParams) (
 	if err != nil {
 		return "", err
 	}
-	if env.Debug {
-		venusPods, err := params.Venus.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
 
-		svc, err := params.Venus.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
-	}
 	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), token, nil)
 	if err != nil {
 		return "", err

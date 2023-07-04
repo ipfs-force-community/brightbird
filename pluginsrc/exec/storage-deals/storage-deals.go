@@ -95,22 +95,6 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 	if err != nil {
 		return err
 	}
-	if env.Debug {
-		pods, err := params.MarketClient.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.MarketClient.Svc(ctx)
-		if err != nil {
-			return err
-		}
-
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
 	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHTTP(), nil)
 	if err != nil {
 		return err
@@ -122,22 +106,6 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 		return err
 	}
 
-	if env.Debug {
-		pods, err := params.Venus.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.Venus.Svc(ctx)
-		if err != nil {
-			return err
-		}
-
-		_, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
 	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, venusEndpoint.ToHTTP(), nil)
 	if err != nil {
 		return err

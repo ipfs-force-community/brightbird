@@ -3,11 +3,11 @@ package sophonauth
 import (
 	"context"
 	"embed"
-	"encoding/json"
 	"fmt"
 	"strings"
 
 	"github.com/hunjixin/brightbird/types"
+	"github.com/imdario/mergo"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/utils"
@@ -15,16 +15,21 @@ import (
 	"github.com/ipfs-force-community/sophon-auth/auth"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"github.com/pelletier/go-toml"
-	appv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
 
-	MysqlDSN string `json:"-"`
+	MysqlDSN string `ignore:"-" json:"mysqlDSN"`
 
 	Replicas int `json:"replicas" description:"number of replicas"`
+}
+
+func DefaultConfig() Config {
+	return Config{
+		Replicas: 1,
+		MysqlDSN: "",
+	}
 }
 
 type RenderParams struct {
@@ -36,11 +41,10 @@ type RenderParams struct {
 	UniqueId        string
 }
 
-func DefaultConfig() Config {
-	return Config{
-		Replicas: 1,
-		MysqlDSN: "",
-	}
+type SophonAuthDeployReturn struct {
+	Cfg        Config
+	AdminToken string `json:"adminToken"`
+	env.CommonDeployParams
 }
 
 var PluginInfo = types.PluginInfo{
@@ -52,162 +56,96 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*SophonAuthHASopDeployer)(nil)
-
-type SophonAuthHASopDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-
-	params map[string]string
-}
-
-func DeployerFromConfig(envV *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
-	defaultCfg := DefaultConfig()
-	defaultCfg.MysqlDSN = envV.FormatMysqlConnection("sophon-auth-" + env.UniqueId(envV.TestID(), cfg.InstanceName))
-	cfg, err := utils.MergeStructAndInterface(defaultCfg, cfg, params)
-	if err != nil {
-		return nil, err
-	}
-	return &SophonAuthHASopDeployer{
-		env:    envV,
-		cfg:    &cfg,
-		params: make(map[string]string),
-	}, nil
-}
-
-func DeployerFromBytes(env *env.K8sEnvDeployer, data json.RawMessage) (env.IDeployer, error) {
-	cfg := &Config{}
-	err := json.Unmarshal(data, cfg)
-	if err != nil {
-		return nil, err
-	}
-	return &SophonAuthHASopDeployer{
-		env:    env,
-		cfg:    cfg,
-		params: make(map[string]string),
-	}, nil
-}
-
-func (deployer *SophonAuthHASopDeployer) InstanceName() (string, error) {
-	return deployer.cfg.InstanceName, nil
-}
-
-func (deployer *SophonAuthHASopDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *SophonAuthHASopDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *SophonAuthHASopDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *SophonAuthHASopDeployer) SvcEndpoint() (types.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *SophonAuthHASopDeployer) Param(key string) (env.Params, error) {
-	return env.ParamsFromVal(deployer.params[key]), nil
-}
-
 //go:embed sophon-auth
 var f embed.FS
 
-func (deployer *SophonAuthHASopDeployer) Deploy(ctx context.Context) (err error) {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineCfg Config) (*SophonAuthDeployReturn, error) {
+	cfg := DefaultConfig()
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName))
+
+	err := mergo.Merge(&cfg, incomineCfg, mergo.WithOverride)
+	if err != nil {
+		return nil, err
+	}
+
 	renderParams := RenderParams{
-		NameSpace:       deployer.env.NameSpace(),
-		PrivateRegistry: deployer.env.PrivateRegistry(),
+		NameSpace:       k8sEnv.NameSpace(),
+		PrivateRegistry: k8sEnv.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
-		Config:          *deployer.cfg,
+		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:          cfg,
 	}
 
 	//create database
-	err = deployer.env.ResourceMgr().EnsureDatabase(deployer.cfg.MysqlDSN)
+	err = k8sEnv.ResourceMgr().EnsureDatabase(cfg.MysqlDSN)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	//create configmap
 	configMapCfg, err := f.Open("sophon-auth/sophon-auth-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
+	configMap, err := k8sEnv.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.configMapName = configMap.GetName()
+	configMapName := configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("sophon-auth/sophon-auth-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.statefulSetName = statefulSet.GetName()
+	statefulSetName := statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("sophon-auth/sophon-auth-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := k8sEnv.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
-		fmt.Println("service fail", err)
-		return err
+		return nil, err
 	}
-	deployer.svcName = svc.GetName()
+	svcName := svc.GetName()
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
 	if err != nil {
-
-		fmt.Println("wait ready fail")
-		return err
+		return nil, err
 	}
 
-	return deployer.prepareParams(ctx)
+	adminToken, err := GenerateAdminToken(ctx, k8sEnv, cfg.InstanceName, svcEndpoint)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SophonAuthDeployReturn{
+		Cfg:        cfg,
+		AdminToken: adminToken,
+		CommonDeployParams: env.CommonDeployParams{
+			StatefulSetName: statefulSetName,
+			ConfigMapName:   configMapName,
+			SVCName:         svcName,
+			SvcEndpoint:     svcEndpoint,
+		},
+	}, nil
 }
 
-func (deployer *SophonAuthHASopDeployer) prepareParams(ctx context.Context) error {
-	endpoint, err := deployer.SvcEndpoint()
+func GenerateAdminToken(ctx context.Context, k8sEnv *env.K8sEnvDeployer, isntanceName string, endpoint types.Endpoint) (string, error) {
+	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), isntanceName)))
+	localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, pods[0].GetName(), "/root/.sophon-auth/token")
 	if err != nil {
-		return err
-	}
-	sophonAuthPods, err := deployer.Pods(ctx)
-	if err != nil {
-		return err
-	}
-
-	svc, err := deployer.Svc(ctx)
-	if err != nil {
-		return err
-	}
-	if env.Debug {
-		endpoint, err = deployer.env.PortForwardPod(ctx, sophonAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-
-	localToken, err := deployer.env.ReadSmallFilelInPod(ctx, sophonAuthPods[0].GetName(), "/root/.sophon-auth/token")
-	if err != nil {
-		return err
+		return "", err
 	}
 
 	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), string(localToken))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	_, err = authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
@@ -216,19 +154,18 @@ func (deployer *SophonAuthHASopDeployer) prepareParams(ctx context.Context) erro
 		State:   0,
 	})
 	if err != nil && !strings.Contains(err.Error(), "user already exists") {
-		return err
+		return "", err
 	}
 	adminToken, err := authAPIClient.GenerateToken(ctx, "admin", "admin", "")
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	deployer.params["AdminToken"] = adminToken
-	return nil
+	return adminToken, nil
 }
 
-func (deployer *SophonAuthHASopDeployer) GetConfig(ctx context.Context) (env.Params, error) {
-	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
+func GetConfig(ctx context.Context, envCtx *env.K8sEnvDeployer, configMapName string) (env.Params, error) {
+	cfgData, err := envCtx.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
 		return env.Params{}, err
 	}
@@ -236,30 +173,32 @@ func (deployer *SophonAuthHASopDeployer) GetConfig(ctx context.Context) (env.Par
 	return env.ParamsFromVal(cfgData), nil
 }
 
-func (deployer *SophonAuthHASopDeployer) Update(ctx context.Context, updateCfg interface{}) error {
+func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams SophonAuthDeployReturn, updateCfg interface{}) error {
 	if updateCfg != nil {
 		cfgData, err := toml.Marshal(updateCfg)
 		if err != nil {
 			return err
 		}
-		err = deployer.env.SetConfigMap(ctx, deployer.configMapName, "config.toml", cfgData)
+
+		err = k8sEnv.SetConfigMap(ctx, deployParams.ConfigMapName, "config.toml", cfgData)
 		if err != nil {
 			return err
 		}
 
-		pods, err := deployer.Pods(ctx)
+		pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), deployParams.Cfg.InstanceName)))
 		if err != nil {
-			return nil
+			return err
 		}
+
 		for _, pod := range pods {
-			_, err = deployer.env.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-auth/config.toml")
+			_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-auth/config.toml")
 			if err != nil {
 				return err
 			}
 		}
 	}
 
-	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
+	err := k8sEnv.UpdateStatefulSets(ctx, deployParams.StatefulSetName)
 	if err != nil {
 		return err
 	}

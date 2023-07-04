@@ -1,7 +1,6 @@
 import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
-import { Case, Node } from '@/api/dto/testflow';
 
 type TriggerValue = 'blur' | 'change';
 
@@ -51,9 +50,13 @@ export interface IWorkflow {
   groupId: string;
   createTime: string;
   modifiedTime: string;
-  cases?: Case[];
-  nodes?: Node[];
   graph?: string;
   description?: string;
   data: string;
+}
+
+
+export interface TreeProp {
+  name: string;
+  children: TreeProp[]
 }

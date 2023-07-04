@@ -16,4 +16,7 @@ type Config struct {
 
 	TaskId          string
 	PrivateRegistry string
+
+	LogLevel         string
+	CustomProperties string
 }

@@ -8,6 +8,8 @@ const Optional = "optional"
 
 const SvcName = "svcname"
 
+const ignoreByFront = "ignore"
+
 const CodeVersionPropName = "codeVersion"
 
 func FindCodeVersionProperties(properties []*types.Property) *types.Property {

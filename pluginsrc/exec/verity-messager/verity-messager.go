@@ -53,22 +53,6 @@ func CreateMessage(ctx context.Context, params TestCaseParams, authToken string)
 		return err
 	}
 
-	if env.Debug {
-		pods, err := params.SophonMessager.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.SophonMessager.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-
 	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err

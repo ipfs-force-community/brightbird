@@ -23,6 +23,6 @@ type PluginInfo struct {
 }
 
 type PluginParams struct {
-	Dependencies []DependencyProperty `json:"dependencies"`
-	Properties   []Property           `json:"properties"`
+	InputProperties  []Property `json:"inputProperties"`
+	OutputProperties []Property `json:"outputProperties"`
 }

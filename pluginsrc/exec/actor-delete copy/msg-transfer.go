@@ -48,22 +48,6 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 		return nil, err
 	}
 
-	if env.Debug {
-		pods, err := params.SophonMessage.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		svc, err := params.SophonMessage.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	tokenP, err := params.FromToken.Param("Token")
 	if err != nil {
 		return nil, err

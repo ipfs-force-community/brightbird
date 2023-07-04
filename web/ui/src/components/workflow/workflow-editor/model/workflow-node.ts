@@ -16,8 +16,7 @@ export class WorkflowNode {
   async loadDeployPlugins(keyword?: string): Promise<IPageInfo> {
     const nodes = await fetchDeployPlugins();
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, item.name , NodeTypeEnum.ASYNC_TASK, item.icon, item.labels,
-      item.pluginType, "", item.pluginType, [], [], 0,
-      0));
+      item.pluginType, "", item.pluginType, {}, 0, 0));
 
     return {
       content: keyword ? arr.filter(item => item.getInstanceName().includes(keyword) || item.getLabels().filter(a => a.includes(keyword)).length > 0) : arr,
@@ -27,7 +26,7 @@ export class WorkflowNode {
   async loadExecPlugins(keyword?: string): Promise<IPageInfo> {
     const nodes = await fetchExecPlugins();
     const arr: IWorkflowNode[] = nodes.map(item => new AsyncTask(item.name, item.name, NodeTypeEnum.ASYNC_TASK, item.icon, item.labels,
-      item.pluginType, "", item.pluginType, [], [], 0,
+      item.pluginType, "", item.pluginType, {}, 0,
       0));
     return {
       content: keyword ? arr.filter(item => item.getInstanceName().includes(keyword) || item.getLabels().filter(a => a.includes(keyword)).length > 0) : arr,

@@ -67,22 +67,6 @@ func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string,
 		return err
 	}
 
-	if env.Debug {
-		pods, err := params.VenusWallet.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.VenusWallet.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-
 	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err

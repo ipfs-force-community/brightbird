@@ -40,21 +40,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	if err != nil {
 		return nil, err
 	}
-	if env.Debug {
-		venusAuthPods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
 
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
 	adminToken, err := params.SophonAuth.Param("AdminToken")
 	if err != nil {
 		return nil, err

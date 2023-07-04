@@ -87,27 +87,9 @@ func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr string) 
 }
 
 func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
-	pods, err := params.SophonMiner.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	svc, err := params.SophonMiner.Svc(ctx)
-	if err != nil {
-		return "", err
-	}
-
 	endpoint, err := params.SophonMiner.SvcEndpoint()
 	if err != nil {
 		return "", err
-	}
-
-	if env.Debug {
-		var err error
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
 	}
 
 	client, closer, err := miner.NewMinerRPC(ctx, endpoint.ToHTTP(), nil)
@@ -135,23 +117,6 @@ func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken str
 	endpoint, err := params.SophonMessager.SvcEndpoint()
 	if err != nil {
 		return "", err
-	}
-
-	if env.Debug {
-		messagePods, err := params.SophonMessager.Pods(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		svc, err := params.SophonMessager.Svc(ctx)
-		if err != nil {
-			return "", err
-		}
-
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, messagePods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return "", err
-		}
 	}
 
 	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), authToken, nil)

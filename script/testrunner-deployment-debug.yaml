@@ -6,7 +6,7 @@ metadata:
     app: ubuntu
 spec:
   containers:
-  - image: "ubuntu:22.04"
+  - image: "192.168.200.175/filvenus/venus-buildenv:latest"
     command: 
       - "sleep"
       - "604800"
@@ -15,7 +15,7 @@ spec:
     volumeMounts:
       - mountPath: /shared-dir
         name: shared-dir-v
-        subPath: default
+        subPath: li
   restartPolicy: Always
   volumes:
   - name: shared-dir-v
