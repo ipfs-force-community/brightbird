@@ -141,7 +141,7 @@ func GetPropertyValue(property *types.Property, value string) (interface{}, erro
 	case "string":
 		return value, nil
 	case "object":
-		var jsonRaw json.RawMessage
+		var jsonRaw interface{}
 		err := json.Unmarshal([]byte(value), &jsonRaw)
 		if err != nil {
 			return nil, err

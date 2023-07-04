@@ -192,8 +192,6 @@ func (deployer *SophonCoDeployer) buildRenderParams(nodes []string, authUrl, adm
 		args = append(args, node)
 	}
 
-	fmt.Println("xxxxxx", deployer.cfg.AdminToken)
-
 	if len(authUrl) == 0 {
 		authUrl = deployer.cfg.AuthUrl
 	}

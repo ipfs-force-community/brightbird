@@ -18,7 +18,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 	"gopkg.in/yaml.v3"
 )
 
@@ -40,9 +39,14 @@ func runGraph(ctx context.Context, cfg *Config, pluginRepo repo.IPluginService, 
 		if err != nil {
 			return err
 		}
-		codeVersion, ok := task.CommitMap[pip.Value.Name]
-		if !ok {
-			return fmt.Errorf("not found version for deploy %s", pip.Value.Name)
+
+		var codeVersion string
+		if deployPlugin.PluginType == types.Deploy {
+			var ok bool
+			codeVersion, ok = task.CommitMap[pip.Value.Name]
+			if !ok {
+				return fmt.Errorf("not found version for deploy %s", pip.Value.Name)
+			}
 		}
 
 		err = runNode(k8sEnvParams, envCtx, path.Join(cfg.PluginStore, deployPlugin.Path), deployPlugin, pip.Value, codeVersion)
@@ -82,8 +86,8 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 					}
 					propValue = string(node.OutPut) //do convert in front page
 				} else {
-					depNode = depNode[:index]
-					valuePath = depNode[index+1:]
+					depNode = valuePath[:index]
+					valuePath = valuePath[index+1:]
 					node, err := envCtx.GetNode(depNode)
 					if err != nil {
 						return nil, err
@@ -111,12 +115,16 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	if err != nil {
 		return err
 	}
-	currentCtx.Input = w.Bytes()
-	currentCtx.Input, err = sjson.SetBytes(currentCtx.Input, "instanceName", pip.InstanceName)
+
+	resultInput := make(map[string]interface{})
+	err = json.Unmarshal(w.Bytes(), &resultInput)
 	if err != nil {
 		return err
 	}
-	currentCtx.Input, err = sjson.SetBytes(currentCtx.Input, "codeVersion", codeVersion)
+
+	resultInput["instanceName"] = pip.InstanceName
+	resultInput["codeVersion"] = codeVersion
+	currentCtx.Input, err = json.Marshal(resultInput)
 	if err != nil {
 		return err
 	}
@@ -138,7 +146,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	}
 
 	outR := bufio.NewReader(io.TeeReader(stdOutR, os.Stdout))
-	var readLastLine chan (string)
+	readLastLine := make(chan string)
 	go func() {
 		var lastLine string
 		for {
@@ -152,7 +160,6 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 				return
 			}
 			lastLine = thisLine
-			fmt.Println("xxx: " + lastLine)
 		}
 	}()
 
@@ -195,7 +202,6 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	stdInW.Close()  //nolint
 	stdErrW.Close() //nolint
 
-	fmt.Println("3")
 	if !st.Success() {
 		r := bufio.NewReader(io.TeeReader(stdErrR, os.Stderr))
 		var lastErr string
@@ -211,7 +217,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		}
 		return fmt.Errorf("node exit with status %d  %s", st.ExitCode(), string(lastErr))
 	}
-	fmt.Println("2")
+
 	lastline := <-readLastLine
 	newCtx := &env.EnvContext{}
 	err = json.Unmarshal([]byte(lastline), newCtx)
@@ -219,7 +225,6 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		return err
 	}
 
-	fmt.Println("1")
 	plugin.RespSuccess("")
 	*envCtx = *newCtx //override value
 	return nil

@@ -26,6 +26,8 @@ func IterJSON(iter *jsoniter.Iterator, encoder *jsoniter.Stream, fieldPath strin
 		encoder.WriteVal(number)
 	case jsoniter.ObjectValue:
 		encoder.WriteObjectStart()
+
+		hasWrite := false
 		iter.ReadObjectCB(func(objIter *jsoniter.Iterator, s string) bool {
 			encoder.WriteObjectField(s)
 			err := IterJSON(objIter, encoder, fieldPath+"."+s, valResolve)
@@ -33,8 +35,14 @@ func IterJSON(iter *jsoniter.Iterator, encoder *jsoniter.Stream, fieldPath strin
 				objIter.ReportError("iter", "resolve object fail")
 				return false
 			}
+			encoder.WriteMore()
+			hasWrite = true
 			return true
 		})
+		if hasWrite {
+			buf := encoder.Buffer()
+			encoder.SetBuffer(buf[:len(buf)-1])
+		}
 		encoder.WriteObjectEnd()
 	case jsoniter.ArrayValue:
 		return errors.New("arrary not support")
