@@ -14,22 +14,36 @@ type PluginDef struct {
 	Path             string `json:"path"`
 }
 
-func (p PluginDef) GetInputProperty(byName string) (*types.Property, error) {
-	for _, prop := range p.InputProperties {
-		if prop.Name == byName {
-			return &prop, nil
-		}
+func (p PluginDef) GetInputProperty(namePath string) (*types.Property, error) {
+	var prop, found = findProperty(p.InputProperties, namePath)
+	if !found {
+		fmt.Errorf("property %s not found", namePath)
 	}
-	return nil, fmt.Errorf("property %s not found", byName)
+	return prop, nil
 }
 
-func (p PluginDef) GetOutputProperty(byName string) (*types.Property, error) {
-	for _, prop := range p.OutputProperties {
-		if prop.Name == byName {
-			return &prop, nil
+func (p PluginDef) GetOutputProperty(namePath string) (*types.Property, error) {
+	var prop, found = findProperty(p.OutputProperties, namePath)
+	if !found {
+		fmt.Errorf("property %s not found", namePath)
+	}
+	return prop, nil
+}
+
+func findProperty(props []types.Property, namePath string) (*types.Property, bool) {
+	for _, prop := range props {
+		if prop.NamePath == namePath {
+			return &prop, true
+		}
+
+		if len(prop.Chindren) > 0 {
+			findP, found := findProperty(prop.Chindren, namePath)
+			if found {
+				return findP, found
+			}
 		}
 	}
-	return nil, fmt.Errorf("property %s not found", byName)
+	return nil, false
 }
 
 // PluginDetail

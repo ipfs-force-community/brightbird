@@ -55,7 +55,8 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 					return nil, err
 				}
 				properties = append(properties, types.Property{
-					Name:        joinPath(pathPrefix, fieldName),
+					Name:        fieldName,
+					NamePath:    joinPath(pathPrefix, fieldName),
 					Type:        "object",
 					Description: description,
 					Chindren:    childProperties,
@@ -66,7 +67,8 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 
 		default:
 			properties = append(properties, types.Property{
-				Name:        joinPath(pathPrefix, fieldName),
+				Name:        fieldName,
+				NamePath:    joinPath(pathPrefix, fieldName),
 				Type:        typeName,
 				Description: description,
 			})

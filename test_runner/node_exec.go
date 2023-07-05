@@ -69,8 +69,8 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	var err error
 	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes([]byte(currentCtx.Input))
 	valueResolve := func() func(string, string) (interface{}, error) {
-		return func(key string, value string) (interface{}, error) {
-			property, err := pluginDef.GetInputProperty(key)
+		return func(keyPath string, value string) (interface{}, error) {
+			property, err := pluginDef.GetInputProperty(keyPath)
 			if err != nil {
 				return nil, err
 			}

@@ -163,6 +163,7 @@ export interface INodeDefVo
 
 export interface Property  {
     name: string;
+    namePath: string;
     type: string;
     description: string;
     require: true;

@@ -64,7 +64,7 @@ export default defineComponent({
         }
 
         const setPropValue = () => {
-            props.input[props.property.name] = inputValue.value;
+            props.input[props.property.namePath] = inputValue.value;
         }
 
         return {
