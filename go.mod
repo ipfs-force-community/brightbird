@@ -9,7 +9,7 @@ require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-fil-markets v1.25.2
 	github.com/filecoin-project/go-state-types v0.11.1
-	github.com/filecoin-project/venus v1.12.0-rc1
+	github.com/filecoin-project/venus v1.12.0
 	github.com/filecoin-project/venus-wallet v1.11.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
 	github.com/gin-contrib/static v0.0.1
@@ -30,9 +30,9 @@ require (
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
 	github.com/ipfs-force-community/sophon-auth v1.12.0
+	github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183
 	github.com/ipfs-force-community/sophon-messager v1.12.0
 	github.com/ipfs-force-community/sophon-miner v1.12.0
-	github.com/ipfs-force-community/sophon-gateway v1.12.0
 	github.com/ipfs/go-cid v0.3.2
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/libp2p/go-libp2p v0.23.4
@@ -169,6 +169,7 @@ require (
 	github.com/icza/backscanner v0.0.0-20210726202459-ac2ffc679f94 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.2.2 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+	github.com/ipfs-force-community/droplet/v2 v2.8.1 // indirect
 	github.com/ipfs-force-community/metrics v1.0.1-0.20230208073319-4c0e29b038e1 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.1.1 // indirect

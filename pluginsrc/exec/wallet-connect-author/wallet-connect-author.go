@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/fx"
-
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -29,36 +28,32 @@ var Info = types.PluginInfo{
 
 // TestCaseParams
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		AuthorizerURL string `json:"authorizer_url"`
-	} `optional:"true"`
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
+	AuthorizerURL  string                                    `json:"authorizer_url"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"WalletPro"`
 }
 
 // Exec
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	walletAddrs, err := ImportFbls(ctx, params)
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	walletAddrs, err := ImportFbls(ctx, k8sEnv, params)
 	if err != nil {
 		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
+		return err
 	}
 	for id, addr := range walletAddrs {
 		log.Infof("wallet %v is: %v", id, addr)
 	}
 
-	err = ConnectAuthor(ctx, params)
+	err = ConnectAuthor(ctx, k8sEnv, params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 // ImportFbls
-func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
-	venusWalletProPods, err := params.VenusWalletPro.Pods(ctx)
+func ImportFbls(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) ([]string, error) {
+	venusWalletProPods, err := venuswalletpro.GetPods(ctx, k8sEnv, params.VenusWalletPro.InstanceName)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +67,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	var addrs []string
 
-	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
+	walletAaddrs, err := k8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
 		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
@@ -85,8 +80,8 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 }
 
 // ImportFbls
-func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
-	venusWalletProPods, err := params.VenusWalletPro.Pods(ctx)
+func ConnectAuthor(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	venusWalletProPods, err := venuswalletpro.GetPods(ctx, k8sEnv, params.VenusWalletPro.InstanceName)
 	if err != nil {
 		return err
 	}
@@ -95,10 +90,10 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 		"wallet",
 		"connect_author",
 		"--authorizer",
-		params.Params.AuthorizerURL,
+		params.AuthorizerURL,
 	}
 
-	_, err = params.K8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
+	_, err = k8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
 		return fmt.Errorf("exec remote cmd failed: %w", err)
 	}

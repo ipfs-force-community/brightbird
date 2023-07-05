@@ -2,12 +2,15 @@ package main
 
 import (
 	"context"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
 
 	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
 	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
 
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
+	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/types"
@@ -19,21 +22,23 @@ func main() {
 }
 
 var Info = types.PluginInfo{
-	Name:        "set_password",
+	Name:        "create_keypair",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "import private key to venus wallet",
+	Description: "create key pair",
 }
 
 type TestCaseParams struct {
-	Password    string                        `json:"password"`
 	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet"`
-}
-type SetPasswordReturn struct {
-	Password string
+	KeyType     string                        `json:"keyType" description:"private key type bls/secp256k1/delegated"`
 }
 
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*SetPasswordReturn, error) {
+type CreateKeyPair struct {
+	Address    string
+	PrivateKey string
+}
+
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateKeyPair, error) {
 	walletPods, err := venuswallet.GetPods(ctx, k8sEnv, params.VenusWallet.InstanceName)
 	if err != nil {
 		return nil, err
@@ -50,17 +55,23 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	version, err := walletRPC.Version(ctx)
+	walletAddr, err := walletRPC.WalletNew(ctx, vTypes.KeyType(params.KeyType))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("create wallet failed: %w", err)
 	}
-	fmt.Println("wallet:", version)
 
-	err = walletRPC.SetPassword(ctx, params.Password)
+	keyInfo, err := walletRPC.WalletExport(ctx, walletAddr)
+	if err != nil {
+		return nil, fmt.Errorf("create wallet failed: %w", err)
+	}
+
+	kiBytes, err := json.Marshal(keyInfo)
 	if err != nil {
 		return nil, err
 	}
-	return &SetPasswordReturn{
-		Password: params.Password,
+
+	return &CreateKeyPair{
+		Address:    walletAddr.String(),
+		PrivateKey: hex.EncodeToString(kiBytes),
 	}, nil
 }

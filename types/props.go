@@ -10,6 +10,7 @@ import (
 // swagger:model property
 type Property struct {
 	Name        string     `json:"name" yaml:"name"`
+	NamePath    string     `json:"namePath" yaml:"namePath"`
 	Type        string     `json:"type" yaml:"type"`
 	Description string     `json:"description" yaml:"description"`
 	Require     bool       `json:"require" yaml:"require"`

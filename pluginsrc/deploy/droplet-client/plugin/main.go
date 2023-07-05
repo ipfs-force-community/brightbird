@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 
-	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
-
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	dropletclient "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-client"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
 )
 
 func main() {
@@ -15,54 +16,21 @@ func main() {
 }
 
 type DepParams struct {
-	Params dropletclient.Config `optional:"true"`
+	dropletclient.Config
 
-	VenusDep     env.IDeployer `svcname:"Venus" description:"[Deploy]venus"`
-	WalletDeploy env.IDeployer `svcname:"VenusWallet" description:"[Deploy]venus-wallet"`
-	AuthDeploy   env.IDeployer `svcname:"SophonAuth" description:"[Deploy]sophon-auth"`
-
-	K8sEnv *env.K8sEnvDeployer
+	Auth        sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
+	Venus       venus.VenusDeployReturn           `json:"Venus" description:"venus return"`
+	VenusWallet venuswallet.VenusWalletReturn     `json:"VenusWallet" description:"wallet return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.AuthDeploy.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	pods, err := depParams.WalletDeploy.Pods(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	walletToken, err := venusutils.ReadWalletToken(ctx, depParams.K8sEnv, pods[0].GetName())
-	if err != nil {
-		return nil, err
-	}
-
-	venusEndpoin, err := depParams.VenusDep.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	walletPoint, err := depParams.WalletDeploy.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := dropletclient.DeployerFromConfig(depParams.K8sEnv, dropletclient.Config{
-		NodeUrl:     venusEndpoin.ToMultiAddr(),
-		NodeToken:   adminToken.MustString(),
-		WalletUrl:   walletPoint.ToMultiAddr(),
-		WalletToken: walletToken,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*dropletclient.DropletClientDeployReturn, error) {
+	return dropletclient.DeployFromConfig(ctx, k8sEnv, dropletclient.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: dropletclient.VConfig{
+			NodeUrl:     depParams.Venus.SvcEndpoint.ToMultiAddr(),
+			UserToken:   depParams.UserToken,
+			WalletUrl:   depParams.VenusWallet.SvcEndpoint.ToMultiAddr(),
+			WalletToken: depParams.WalletToken,
+		},
+	})
 }

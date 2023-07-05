@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/fx"
-
 	"github.com/filecoin-project/go-address"
 	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
+	venusAPI "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
+	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -32,81 +36,43 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv          *env.K8sEnvDeployer `json:"-"`
-	SophonAuth      env.IDeployer       `json:"-" svcname:"SophonAuth"`
-	MarketClient    env.IDeployer       `json:"-" svcname:"MarketClient"`
-	Venus           env.IDeployer       `json:"-" svcname:"Venus"`
-	DamoclesManager env.IDeployer       `json:"-" svcname:"DamoclesManager"`
-	CreateMiner     env.IExec           `json:"-" svcname:"CreateMiner"`
+	SophonAuth      sophonauth.SophonAuthDeployReturn       `json:"SophonAuth"`
+	Venus           venus.VenusDeployReturn                 `json:"Venus" description:"venus return"`
+	DropletMarket   dropletmarket.DropletMarketDeployReturn `json:"DropletMarket"`
+	DamoclesManager damoclesmanager.DamoclesManagerReturn   `json:"DamoclesManager"`
+	MinerAddress    address.Address                         `json:"minerAddress" type:"string"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
-	minerAddr, err := params.CreateMiner.Param("Miner")
-	if err != nil {
-		return nil, err
-	}
-
-	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
-	if err != nil {
-		panic(err)
-	}
-
-	minerInfo, err := GetMinerInfo(ctx, params, addr)
-	if err != nil {
-		fmt.Printf("get miner info failed: %v\n", err)
-		return nil, err
-	}
-	log.Infof("miner info: %v", minerInfo)
-
-	err = StorageAsksQuery(ctx, params, addr)
-	if err != nil {
-		fmt.Printf("storage asks query failed: %v\n", err)
-		return nil, err
-	}
-	return env.NewSimpleExec(), nil
-}
-
-func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.Address) (string, error) {
-	getMinerCmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"info",
-		minerAddr.String(),
-	}
-
-	pods, err := params.DamoclesManager.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
-	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w", err)
-	}
-
-	return string(minerInfo), nil
-}
-
-func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.Address) error {
-	endpoint, err := params.MarketClient.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-	api, closer, err := clientapi.NewIMarketClientRPC(ctx, endpoint.ToHTTP(), nil)
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	fullNode, closer, err := venusAPI.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
 	if err != nil {
 		return err
 	}
 	defer closer()
 
-	venusEndpoint, err := params.Venus.SvcEndpoint()
+	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vTypes.EmptyTSK)
+	if err != nil {
+		fmt.Printf("get miner info failed: %v\n", err)
+		return err
+	}
+	log.Infof("miner info: %v", minerInfo)
+
+	err = StorageAsksQuery(ctx, params, params.MinerAddress)
+	if err != nil {
+		fmt.Printf("storage asks query failed: %v\n", err)
+		return err
+	}
+	return nil
+}
+
+func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.Address) error {
+	api, closer, err := clientapi.NewIMarketClientRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}
+	defer closer()
 
-	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, venusEndpoint.ToHTTP(), nil)
+	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}

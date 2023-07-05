@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -24,36 +23,20 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		UserName string `json:"userName"`
-	} `optional:"true"`
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	UserName   string                            `json:"userName"`
+	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	adminToken, err := params.SophonAuth.Param("AdminToken")
+	_, err = authAPIClient.GetUser(ctx, params.UserName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminToken.MustString())
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := authAPIClient.GetUser(ctx, params.Params.UserName)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(user.Name)
-	return env.NewSimpleExec(), nil
+	return nil
 }

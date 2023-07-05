@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -23,46 +22,30 @@ var Info = types.PluginInfo{
 	Description: "create token",
 }
 
-type TestCaseParams struct {
-	fx.In
-	Params struct {
-		Perm  string `json:"perm" description:"[OPTIONS] custom string in JWT payload"`
-		Extra string `json:"extra" description:"[OPTIONS] permission for API auth (read, write, sign, admin)"`
-	} `optional:"true"`
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	UserName   env.IExec           `json:"-" svcname:"UserName" description:"[Exec]create-user"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth" description:"[Deploy]venus-auth"`
+type CreateTokenReturn struct {
+	Token string `json:"token" description:"generated token"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
+type TestCaseParams struct {
+	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"[Deploy]sophon-auth"`
+
+	UserName string `json:"UserName" description:"token user name"`
+	Perm     string `json:"perm" description:"[OPTIONS] custom string in JWT payload"`
+	Extra    string `json:"extra" description:"[OPTIONS] permission for API auth (read, write, sign, admin)"`
+}
+
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateTokenReturn, error) {
+	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
 	if err != nil {
 		return nil, err
 	}
 
-	adminToken, err := params.SophonAuth.Param("AdminToken")
+	token, err := authAPIClient.GenerateToken(ctx, params.UserName, params.Perm, params.Extra)
 	if err != nil {
 		return nil, err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminToken.MustString())
-	if err != nil {
-		return nil, err
-	}
-
-	userName, err := params.UserName.Param("UserName")
-	if err != nil {
-		return nil, err
-	}
-	if len(userName.MustString()) == 0 {
-		return nil, fmt.Errorf("specific user name")
-	}
-
-	token, err := authAPIClient.GenerateToken(ctx, userName.MustString(), params.Params.Perm, params.Params.Extra)
-	if err != nil {
-		return nil, err
-	}
-
-	return env.NewSimpleExec().Add("Token", env.ParamsFromVal(token)), nil
+	return &CreateTokenReturn{
+		Token: token,
+	}, nil
 }

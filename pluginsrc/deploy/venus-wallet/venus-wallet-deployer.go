@@ -47,17 +47,6 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-type VenusWalletDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-}
-
 //go:embed venus-wallet
 var f embed.FS
 

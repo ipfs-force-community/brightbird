@@ -5,6 +5,7 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
 	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 )
 
@@ -13,20 +14,17 @@ func main() {
 }
 
 type DepParams struct {
-	Params venuswalletpro.Config `optional:"true"`
-	K8sEnv *env.K8sEnvDeployer
+	venuswalletpro.Config
+	Gateway *sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	deployer, err := venuswalletpro.DeployerFromConfig(depParams.K8sEnv, venuswalletpro.Config{
-		Replicas: 1,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venuswalletpro.VenusWalletProDeployReturn, error) {
+	return venuswalletpro.DeployFromConfig(ctx, k8sEnv, venuswalletpro.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: venuswalletpro.VConfig{
+			GatewayUrl: depParams.Gateway.SvcEndpoint.ToMultiAddr(),
+			UserToken:  depParams.UserToken,
+			Replicas:   1,
+		},
+	})
 }

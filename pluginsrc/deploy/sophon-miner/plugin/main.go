@@ -5,7 +5,10 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
 	sophonminer "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-miner"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {
@@ -13,49 +16,22 @@ func main() {
 }
 
 type DepParams struct {
-	Params sophonminer.Config `optional:"true"`
+	sophonminer.Config
 
-	SophonAuth env.IDeployer `svcname:"SophonAuth"`
-	Venus      env.IDeployer `svcname:"Venus"`
-	Gateway    env.IDeployer `svcname:"SophonGateway"`
-
-	K8sEnv *env.K8sEnvDeployer
+	Auth    sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
+	Venus   venus.VenusDeployReturn           `json:"Venus" description:"venus return"`
+	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.SophonAuth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	venusEndpoint, err := depParams.Venus.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	authEndpoint, err := depParams.SophonAuth.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := sophonminer.DeployerFromConfig(depParams.K8sEnv, sophonminer.Config{
-		NodeUrl:    venusEndpoint.ToMultiAddr(),
-		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-		AuthUrl:    authEndpoint.ToHTTP(),
-		AuthToken:  adminToken.MustString(),
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonminer.SophonMinerDeployReturn, error) {
+	return sophonminer.DeployFromConfig(ctx, k8sEnv, sophonminer.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: sophonminer.VConfig{
+			NodeUrl:    depParams.Venus.SvcEndpoint.ToMultiAddr(),
+			GatewayUrl: depParams.Gateway.SvcEndpoint.ToMultiAddr(),
+			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
+			AuthToken:  depParams.Auth.AdminToken,
+			UseMysql:   depParams.UseMysql,
+		},
+	})
 }

@@ -7,11 +7,11 @@ import (
 	"os"
 	"regexp"
 
-	"go.uber.org/fx"
-
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 )
@@ -28,44 +28,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	SophonMessager env.IDeployer       `json:"-" svcname:"SophonMessager"`
-	SophonAuth     env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	SophonAuth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth"`
+	SophonMessager sophonmessager.SophonMessagerReturn `json:"SophonMessager"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	adminTokenV, err := params.SophonAuth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	err = CreateMessage(ctx, params, adminTokenV.MustString())
-	if err != nil {
-		fmt.Printf("get message failed: %v\n", err)
-		return nil, err
-	}
-
-	return env.NewSimpleExec(), nil
-}
-
-func CreateMessage(ctx context.Context, params TestCaseParams, authToken string) error {
-	pods, err := params.SophonMessager.Pods(ctx)
-	if err != nil {
-		return err
-	}
-
-	svc, err := params.SophonMessager.Svc(ctx)
-	if err != nil {
-		return err
-	}
-
-	endpoint, err := params.SophonMessager.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), authToken, nil)
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	client, closer, err := messager.DialIMessagerRPC(ctx, params.SophonMessager.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
 	if err != nil {
 		return err
 	}

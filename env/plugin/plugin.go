@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -39,32 +40,37 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 		}
 
 		description := field.Tag.Get("description")
-		if field.Type.Kind() == reflect.Struct {
-			//json
-			childProperties, err := ParserProperties(joinPath(pathPrefix, fieldName), field.Type)
-			if err != nil {
-				return nil, err
-			}
-			properties = append(properties, types.Property{
-				Name:        joinPath(pathPrefix, fieldName),
-				Type:        "object",
-				Description: description,
-				Chindren:    childProperties,
-			})
-			continue
-		}
 
-		typeName, err := mapType(field.Type.Kind())
+		typeName, err := mapType(field)
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
 
-		properties = append(properties, types.Property{
-			Name:        joinPath(pathPrefix, fieldName),
-			Type:        typeName,
-			Description: description,
-		})
+		switch typeName {
+		case "object":
+			if field.Type.Kind() == reflect.Struct {
+				//json
+				childProperties, err := ParserProperties(joinPath(pathPrefix, fieldName), field.Type)
+				if err != nil {
+					return nil, err
+				}
+				properties = append(properties, types.Property{
+					Name:        joinPath(pathPrefix, fieldName),
+					Type:        "object",
+					Description: description,
+					Chindren:    childProperties,
+				})
+				continue
+			}
+			return nil, errors.New("wrong error definition")
 
+		default:
+			properties = append(properties, types.Property{
+				Name:        joinPath(pathPrefix, fieldName),
+				Type:        typeName,
+				Description: description,
+			})
+		}
 	}
 	return properties, nil
 }
@@ -90,8 +96,13 @@ func getFieldJSONName(field reflect.StructField) string {
 	return fieldName
 }
 
-func mapType(val reflect.Kind) (string, error) {
-	switch val {
+func mapType(val reflect.StructField) (string, error) {
+	jsonType := val.Tag.Get("type")
+	if len(jsonType) > 0 {
+		return jsonType, nil
+	}
+
+	switch val.Type.Kind() {
 	case reflect.Bool:
 		return "bool", nil
 	case reflect.Int:
@@ -118,8 +129,10 @@ func mapType(val reflect.Kind) (string, error) {
 		return "decimical", nil
 	case reflect.String:
 		return "string", nil
+	case reflect.Struct:
+		return "object", nil
 	}
-	return "", fmt.Errorf("types %s not support", val.String())
+	return "", fmt.Errorf("types %s not support", val.Type.String())
 }
 
 func GetPropertyValue(property *types.Property, value string) (interface{}, error) {

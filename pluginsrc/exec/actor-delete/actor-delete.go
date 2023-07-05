@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"text/tabwriter"
 
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
 	"github.com/hunjixin/brightbird/types"
 
 	"github.com/filecoin-project/go-address"
@@ -14,7 +15,6 @@ import (
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -29,39 +29,29 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	DamoclesMarket env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" description:"droplet market return "`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
 	mAddr, err := actorUpsert(ctx, params)
 	if err != nil {
-		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
+		return fmt.Errorf("market net listen err: %w", err)
 	}
 
 	err = actorDelete(ctx, params, mAddr)
 	if err != nil {
-		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
+		return fmt.Errorf("delete actor err: %w", err)
 	}
 
 	id, err := actorList(ctx, params, mAddr)
 	if id == "" {
-		fmt.Printf("actor delete err: %v\n", err)
-		return nil, err
+		return fmt.Errorf("delete list err: %w", err)
 	}
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, error) {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return address.Undef, err
-	}
-
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return address.Undef, err
 	}
@@ -89,12 +79,7 @@ func actorUpsert(ctx context.Context, params TestCaseParams) (address.Address, e
 }
 
 func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}
@@ -111,11 +96,7 @@ func actorDelete(ctx context.Context, params TestCaseParams, mAddr address.Addre
 }
 
 func actorList(ctx context.Context, params TestCaseParams, mAddr address.Address) (string, error) {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return "", err
-	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return "", err
 	}

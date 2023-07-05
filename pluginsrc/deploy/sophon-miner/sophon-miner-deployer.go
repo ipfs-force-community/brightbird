@@ -3,27 +3,33 @@ package sophonminer
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/sophon-miner/node/config"
 	"github.com/pelletier/go-toml"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
+	VConfig
+}
 
-	NodeUrl    string `json:"-"`
-	AuthUrl    string `json:"-"`
-	GatewayUrl string `json:"-"`
-	AuthToken  string `json:"-"`
+type VConfig struct {
+	NodeUrl    string `ignore:"-" json:"nodeUrl"`
+	AuthUrl    string `ignore:"-" json:"authUrl"`
+	GatewayUrl string `ignore:"-" json:"gatewayUrl"`
+	AuthToken  string `ignore:"-" json:"authToken"`
 
 	UseMysql bool `json:"useMysql" description:"true or false"`
+}
+
+type SophonMinerDeployReturn struct {
+	VConfig
+	env.CommonDeployParams
 }
 
 type RenderParams struct {
@@ -37,10 +43,6 @@ type RenderParams struct {
 	MysqlDSN string
 }
 
-func DefaultConfig() Config {
-	return Config{}
-}
-
 var PluginInfo = types.PluginInfo{
 	Name:        "sophon-miner",
 	Version:     version.Version(),
@@ -50,148 +52,116 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*SophonMinerDeployer)(nil)
-
-type SophonMinerDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
-	if err != nil {
-		return nil, err
-	}
-	return &SophonMinerDeployer{
-		env: env,
-		cfg: &cfg,
-	}, nil
-}
-
-func (deployer *SophonMinerDeployer) InstanceName() (string, error) {
-	return deployer.cfg.InstanceName, nil
-}
-
-func (deployer *SophonMinerDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("sophon-miner-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *SophonMinerDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *SophonMinerDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *SophonMinerDeployer) SvcEndpoint() (types.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *SophonMinerDeployer) Param(key string) (env.Params, error) {
-	return env.Params{}, errors.New("no params")
-}
-
 //go:embed sophon-miner
 var f embed.FS
 
-func (deployer *SophonMinerDeployer) Deploy(ctx context.Context) (err error) {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonMinerDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       deployer.env.NameSpace(),
-		PrivateRegistry: deployer.env.PrivateRegistry(),
-		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
-		Config:          *deployer.cfg,
+		NameSpace:       k8sEnv.NameSpace(),
+		PrivateRegistry: k8sEnv.PrivateRegistry(),
+		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:          cfg,
 	}
-	if deployer.cfg.UseMysql {
-		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("sophon-miner-" + renderParams.UniqueId)
+	if cfg.UseMysql {
+		renderParams.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-miner-" + renderParams.UniqueId)
 	}
 	if len(renderParams.MysqlDSN) > 0 {
-		err = deployer.env.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
+		err := k8sEnv.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 	//create configmap
 	configMapCfg, err := f.Open("sophon-miner/sophon-miner-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	cfgMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
+	configMap, err := k8sEnv.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.configMapName = cfgMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("sophon-miner/sophon-miner-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.statefulSetName = statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("sophon-miner/sophon-miner-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := k8sEnv.RunService(ctx, svcCfg, renderParams)
+	if err != nil {
+		return nil, err
+	}
+
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SophonMinerDeployReturn{
+		VConfig: cfg.VConfig,
+		CommonDeployParams: env.CommonDeployParams{
+			BaseConfig:      cfg.BaseConfig,
+			DeployName:      PluginInfo.Name,
+			StatefulSetName: statefulSet.GetName(),
+			ConfigMapName:   configMap.GetName(),
+			SVCName:         svc.GetName(),
+			SvcEndpoint:     svcEndpoint,
+		},
+	}, nil
+}
+
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MinerConfig, error) {
+	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
+	if err != nil {
+		return config.MinerConfig{}, err
+	}
+
+	var cfg config.MinerConfig
+	err = toml.Unmarshal(cfgData, &cfg)
+	if err != nil {
+		return config.MinerConfig{}, err
+	}
+	return cfg, nil
+}
+
+// Update
+// todo change this mode to config
+func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMinerDeployReturn, updateCfg config.MinerConfig) error {
+	cfgData, err := toml.Marshal(updateCfg)
 	if err != nil {
 		return err
 	}
-	deployer.svcName = svc.GetName()
+	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	if err != nil {
+		return err
+	}
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	if err != nil {
+		return nil
+	}
+	for _, pod := range pods {
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-miner/config.toml")
+		if err != nil {
+			return err
+		}
+	}
+	err = k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (deployer *SophonMinerDeployer) GetConfig(ctx context.Context) (env.Params, error) {
-	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
-	if err != nil {
-		return env.Params{}, err
-	}
-
-	return env.ParamsFromVal(cfgData), nil
-}
-
-func (deployer *SophonMinerDeployer) Update(ctx context.Context, updateCfg interface{}) error {
-	if updateCfg != nil {
-		cfgData, err := toml.Marshal(updateCfg)
-		if err != nil {
-			return err
-		}
-		err = deployer.env.SetConfigMap(ctx, deployer.configMapName, "config.toml", cfgData)
-		if err != nil {
-			return err
-		}
-
-		pods, err := deployer.Pods(ctx)
-		if err != nil {
-			return nil
-		}
-		for _, pod := range pods {
-			_, err = deployer.env.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-miner/config.toml")
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
-	if err != nil {
-		return err
-	}
-	return nil
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-miner-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

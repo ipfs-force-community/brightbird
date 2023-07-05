@@ -44,3 +44,5 @@ type CommonDeployParams struct {
 	SVCName         string         `json:"svcName"`
 	SvcEndpoint     types.Endpoint `json:"svcEndpoint"`
 }
+
+type EmptyReturn struct{}

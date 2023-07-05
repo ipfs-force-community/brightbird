@@ -123,7 +123,6 @@ github.com/filecoin-project/venus v1.11.0-rc1 h1:qJmvXFJGhf6Rdke4FCkXI3+bWYw89aH
 github.com/filecoin-project/venus v1.11.0-rc1/go.mod h1:g0C7MZJgZLpL4ZIv6TiPLXUXtDOrYsF6A/xMAbO3RxE=
 github.com/filecoin-project/venus v1.11.1/go.mod h1:H8A3djsrHKRWuKnJI/8Y6xZRudbV9V2x5NIP8/PVPfQ=
 github.com/filecoin-project/venus v1.12.0 h1:ukMOqu/Zx25a8v1mKQ2gcA9Eb54/wKp/Sv3okGnuPJU=
-github.com/filecoin-project/venus v1.12.0/go.mod h1:kSdkZVJp4DLktMrKKaXFQxDGhBmJwVNWMSwPyWASd7o=
 github.com/filecoin-project/venus-auth v1.11.0 h1:9PBswWxc113vqaHABMcRyMm+1BtlJCwOFTPQJg/OVtQ=
 github.com/filecoin-project/venus-wallet v1.9.0 h1:q0Mg9QXPDGbz7vDEM/Vyc45w/PGWECodphs6OiG3Zm0=
 github.com/filecoin-project/venus-wallet v1.9.0/go.mod h1:3pYH414hJ3SDWnA9fDxbZ/PTZuiEPXCCjCznjNv3ZYk=
@@ -175,15 +174,14 @@ github.com/ipfs-force-community/sophon-auth v1.10.2-0.20230322095644-02a0689eea6
 github.com/ipfs-force-community/sophon-auth v1.10.2-0.20230322095644-02a0689eea6c/go.mod h1:aBfIfNxQkdcY8Rk5wrQn9qRtJpH4RTDdc10Ac+ferzs=
 github.com/ipfs-force-community/sophon-auth v1.12.0-rc1/go.mod h1:cGYCfjA/BDB/Km9P7Za6t1hmwpFlPKf8ho/CHmLG81Y=
 github.com/ipfs-force-community/sophon-auth v1.12.0 h1:nqjsA6bIv9Rd9+7lHxGDvNJ7gvt/M2yGSxymA6AoxXI=
-github.com/ipfs-force-community/sophon-auth v1.12.0/go.mod h1:cGYCfjA/BDB/Km9P7Za6t1hmwpFlPKf8ho/CHmLG81Y=
 github.com/ipfs-force-community/sophon-gateway v1.12.0-rc2 h1:VtbOxpKTqhl7+WoTJ+BdJGKxczMSAjdNWYlQCNWoNns=
 github.com/ipfs-force-community/sophon-gateway v1.12.0-rc2/go.mod h1:F+f4qzx+uVMPftk/sv2JnNOFgxpl83l5zrb9UFtzcCM=
 github.com/ipfs-force-community/sophon-gateway v1.12.0 h1:5bT5Kh4Os8TQ9VFxR2fVAVUs2clcyq+ADCLcxe3bZF8=
 github.com/ipfs-force-community/sophon-gateway v1.12.0/go.mod h1:BEyAgworAAv1JVNKI1BA9NCcAy0OA1GrvxrtcBmn1sw=
+github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183 h1:kzF0IceJswwz5wGDRGgbt2hiNrZsEOurw/F1/67Nu/I=
 github.com/ipfs-force-community/sophon-messager v1.12.0 h1:bkNERt31g4Ff8Kaiuof2txkFJ3aNw/vFwxdHGIAbPXQ=
-github.com/ipfs-force-community/sophon-messager v1.12.0/go.mod h1:S8TdKPrnbxOtCB8rsA8n7izi9u1tINE4KtGoiZarhX4=
 github.com/ipfs-force-community/sophon-miner v1.12.0 h1:qTbaGu42yIflP6Z4XtWRLF1Xl7jQstrDWVRGFrOuovI=
-github.com/ipfs-force-community/sophon-miner v1.12.0/go.mod h1:4VUzN+b0sT7Zq2sThDSj58SIdm01lNysr2EIjHnrFU4=
+github.com/ipfs-force-community/venus-common-utils v0.0.0-20220217030526-e5e4c6bc14f7 h1:v/1/INcqm3kHLauWQYB63MwWJRWGz+3WEuUPp0jzIl8=
 github.com/ipfs-force-community/venus-gateway v1.11.0 h1:wcnmOtaYC39lz4Q02mDioFmWV9K2k8wRgNx7trIcHTY=
 github.com/ipfs/go-bitfield v1.1.0/go.mod h1:paqf1wjq/D2BBmzfTVFlJQ9IlFOZpg422HL0HqsGWHU=
 github.com/ipfs/go-bitswap v0.10.2/go.mod h1:+fZEvycxviZ7c+5KlKwTzLm0M28g2ukCPqiuLfJk4KA=

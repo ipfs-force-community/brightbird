@@ -4,8 +4,6 @@ import (
 	"github.com/hunjixin/brightbird/types"
 )
 
-const Optional = "optional"
-
 const SvcName = "svcname"
 
 const ignoreByFront = "ignore"

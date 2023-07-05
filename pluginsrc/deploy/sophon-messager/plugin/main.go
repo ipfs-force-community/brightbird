@@ -21,12 +21,10 @@ type DepParams struct {
 	Auth    sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
 	Venus   venus.VenusDeployReturn           `json:"Venus" description:"venus return"`
 	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
-
-	K8sEnv *env.K8sEnvDeployer
 }
 
-func Exec(ctx context.Context, depParams DepParams) (*sophonmessager.SophonMessagerReturn, error) {
-	return sophonmessager.DeployFromConfig(ctx, depParams.K8sEnv, sophonmessager.Config{
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonmessager.SophonMessagerReturn, error) {
+	return sophonmessager.DeployFromConfig(ctx, k8sEnv, sophonmessager.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: sophonmessager.VConfig{
 			NodeUrl:    depParams.Venus.SvcEndpoint.ToMultiAddr(),

@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/fx"
-
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 )
@@ -25,30 +25,22 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	SophonAuth     env.IDeployer       `json:"-" svcname:"SophonAuth"`
-	DamoclesMarket env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
+	SophonAuth    sophonauth.SophonAuthDeployReturn       `json:"SophonAuth"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" description:"droplet market return "`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
 	listenAddress, err := marketListen(ctx, params)
 	if err != nil {
 		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
+		return err
 	}
 	fmt.Printf("market net listen is: %v\n", listenAddress)
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 func marketListen(ctx context.Context, params TestCaseParams) (string, error) {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return "", err
-	}
-
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return "", err
 	}

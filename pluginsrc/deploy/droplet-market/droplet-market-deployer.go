@@ -3,29 +3,34 @@ package dropletmarket
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
-	types2 "github.com/hunjixin/brightbird/types"
-
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/utils"
+	types2 "github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/droplet/v2/config"
 	"github.com/pelletier/go-toml"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
+	VConfig
+}
 
-	NodeUrl     string `json:"-"`
-	GatewayUrl  string `json:"-"`
-	MessagerUrl string `json:"-"`
-	AuthUrl     string `json:"-"`
-	AuthToken   string `json:"-"`
+type VConfig struct {
+	UserToken string `json:"userToken"`
+	UseMysql  bool   `json:"useMysql" description:"true or false"`
 
-	UseMysql bool `json:"useMysql" description:"true or false"`
+	NodeUrl     string `ignore:"-"`
+	GatewayUrl  string `ignore:"-"`
+	MessagerUrl string `ignore:"-"`
+	AuthUrl     string `ignore:"-"`
+}
+
+type DropletMarketDeployReturn struct {
+	VConfig
+	env.CommonDeployParams
 }
 
 type RenderParams struct {
@@ -52,142 +57,105 @@ var PluginInfo = types2.PluginInfo{
 	Description: "",
 }
 
-var _ env.IDeployer = (*DropletMarketDeployer)(nil)
-
-type DropletMarketDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types2.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, cfg Config, params Config) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), cfg, params)
-	if err != nil {
-		return nil, err
-	}
-	return &DropletMarketDeployer{
-		env: env,
-		cfg: &cfg,
-	}, nil
-}
-
-func (deployer *DropletMarketDeployer) InstanceName() (string, error) {
-	return PluginInfo.Name, nil
-}
-
-func (deployer *DropletMarketDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *DropletMarketDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *DropletMarketDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *DropletMarketDeployer) SvcEndpoint() (types2.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *DropletMarketDeployer) Param(key string) (env.Params, error) {
-	return env.Params{}, errors.New("no params")
-}
-
 //go:embed droplet-market
 var f embed.FS
 
-func (deployer *DropletMarketDeployer) Deploy(ctx context.Context) (err error) {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletMarketDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       deployer.env.NameSpace(),
-		PrivateRegistry: deployer.env.PrivateRegistry(),
-		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
-		Config:          *deployer.cfg,
+		NameSpace:       k8sEnv.NameSpace(),
+		PrivateRegistry: k8sEnv.PrivateRegistry(),
+		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:          cfg,
 	}
-	if deployer.cfg.UseMysql {
-		renderParams.MysqlDSN = deployer.env.FormatMysqlConnection("droplet-market-" + renderParams.UniqueId)
+	if cfg.UseMysql {
+		renderParams.MysqlDSN = k8sEnv.FormatMysqlConnection("droplet-market-" + renderParams.UniqueId)
 	}
 	//create configmap
 	configMapCfg, err := f.Open("droplet-market/droplet-market-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
+	configMap, err := k8sEnv.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.configMapName = configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("droplet-market/droplet-market-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.statefulSetName = statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("droplet-market/droplet-market-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := k8sEnv.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.svcName = svc.Name
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &DropletMarketDeployReturn{
+		VConfig: cfg.VConfig,
+		CommonDeployParams: env.CommonDeployParams{
+			BaseConfig:      cfg.BaseConfig,
+			DeployName:      PluginInfo.Name,
+			StatefulSetName: statefulSet.GetName(),
+			ConfigMapName:   configMap.GetName(),
+			SVCName:         svc.GetName(),
+			SvcEndpoint:     svcEndpoint,
+		},
+	}, nil
 }
 
-func (deployer *DropletMarketDeployer) GetConfig(ctx context.Context) (env.Params, error) {
-	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketConfig, error) {
+	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
-		return env.Params{}, err
+		return config.MarketConfig{}, err
 	}
 
-	return env.ParamsFromVal(cfgData), nil
+	var cfg config.MarketConfig
+	err = toml.Unmarshal(cfgData, &cfg)
+	if err != nil {
+		return config.MarketConfig{}, err
+	}
+
+	return cfg, nil
 }
 
-func (deployer *DropletMarketDeployer) Update(ctx context.Context, updateCfg interface{}) error {
-	if updateCfg != nil {
-		cfgData, err := toml.Marshal(updateCfg)
+func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DropletMarketDeployReturn, updateCfg config.MarketConfig) error {
+	cfgData, err := toml.Marshal(updateCfg)
+	if err != nil {
+		return err
+	}
+	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	if err != nil {
+		return err
+	}
+
+	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	if err != nil {
+		return nil
+	}
+	for _, pod := range pods {
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-market/config.toml")
 		if err != nil {
 			return err
 		}
-		err = deployer.env.SetConfigMap(ctx, deployer.configMapName, "config.toml", cfgData)
-		if err != nil {
-			return err
-		}
-
-		pods, err := deployer.Pods(ctx)
-		if err != nil {
-			return nil
-		}
-		for _, pod := range pods {
-			_, err = deployer.env.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-market/config.toml")
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }
