@@ -30,14 +30,16 @@ type TestCaseParams struct {
 	UserName   string                            `json:"userName"`
 }
 
+// todo support arrary
 type ListWalletInGatewayReturn = gateway.WalletDetail
 
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*ListWalletInGatewayReturn, error) {
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
 	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Gateway.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer closer()
 
-	return api.ListWalletInfoByWallet(ctx, params.UserName)
+	_, err = api.ListWalletInfoByWallet(ctx, params.UserName)
+	return err
 }

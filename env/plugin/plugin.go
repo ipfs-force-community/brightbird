@@ -21,8 +21,12 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 	properties := []types.Property{}
 	for i := 0; i < numFields; i++ {
 		field := params.Field(i)
+		fieldType := field.Type
+		if fieldType.Kind() == reflect.Ptr {
+			fieldType = fieldType.Elem()
+		}
 		if field.Anonymous {
-			embedProperties, err := ParserProperties(pathPrefix, field.Type)
+			embedProperties, err := ParserProperties(pathPrefix, fieldType)
 			if err != nil {
 				return nil, err
 			}
@@ -41,16 +45,45 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 
 		description := field.Tag.Get("description")
 
-		typeName, err := mapType(field)
+		typeName, err := mapField(field)
 		if err != nil {
 			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
 		}
 
 		switch typeName {
+		case "arrary":
+			elemT := fieldType.Elem()
+			fmt.Println(elemT.String())
+			arrT, err := mapType(elemT)
+			if err != nil {
+				return nil, err
+			}
+
+			if arrT == "arrary" || arrT == "object" {
+				//todo support complex type in arrary
+				return nil, fmt.Errorf("arrary not support object or arrary")
+			}
+
+			fieldPath := joinPath(pathPrefix, fieldName)
+			properties = append(properties, types.Property{
+				Name:        fieldName,
+				NamePath:    fieldPath,
+				Type:        "arrary",
+				Description: description,
+				Chindren: []types.Property{
+					{
+						Name:        "[]", //todo index value in arrary
+						NamePath:    fieldPath + "[]",
+						Type:        arrT,
+						Description: description,
+					},
+				},
+			})
+			continue
 		case "object":
-			if field.Type.Kind() == reflect.Struct {
+			if fieldType.Kind() == reflect.Struct {
 				//json
-				childProperties, err := ParserProperties(joinPath(pathPrefix, fieldName), field.Type)
+				childProperties, err := ParserProperties(joinPath(pathPrefix, fieldName), fieldType)
 				if err != nil {
 					return nil, err
 				}
@@ -64,7 +97,6 @@ func ParserProperties(pathPrefix string, params reflect.Type) ([]types.Property,
 				continue
 			}
 			return nil, errors.New("wrong error definition")
-
 		default:
 			properties = append(properties, types.Property{
 				Name:        fieldName,
@@ -98,13 +130,22 @@ func getFieldJSONName(field reflect.StructField) string {
 	return fieldName
 }
 
-func mapType(val reflect.StructField) (string, error) {
+func mapField(val reflect.StructField) (string, error) {
 	jsonType := val.Tag.Get("type")
 	if len(jsonType) > 0 {
 		return jsonType, nil
 	}
 
-	switch val.Type.Kind() {
+	fieldType := val.Type
+	if fieldType.Kind() == reflect.Ptr {
+		fieldType = val.Type.Elem()
+	}
+
+	return mapType(fieldType)
+}
+
+func mapType(t reflect.Type) (string, error) {
+	switch t.Kind() {
 	case reflect.Bool:
 		return "bool", nil
 	case reflect.Int:
@@ -133,10 +174,13 @@ func mapType(val reflect.StructField) (string, error) {
 		return "string", nil
 	case reflect.Struct:
 		return "object", nil
+	case reflect.Slice:
+		fallthrough
+	case reflect.Array:
+		return "arrary", nil
 	}
-	return "", fmt.Errorf("types %s not support", val.Type.String())
+	return "", fmt.Errorf("types %s not support %s", t.String(), t.Kind())
 }
-
 func GetPropertyValue(property *types.Property, value string) (interface{}, error) {
 	switch property.Type {
 	case "bool":

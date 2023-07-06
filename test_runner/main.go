@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -161,7 +162,13 @@ func main() {
 			}
 
 			if c.IsSet("customProperties") {
-				cfg.CustomProperties = c.String("customProperties")
+				var val map[string]interface{}
+				err := json.Unmarshal([]byte(c.String("customProperties")), &val)
+				if err != nil {
+					return err
+				}
+
+				cfg.CustomProperties = val
 			}
 
 			if len(cfg.TaskId) == 0 {

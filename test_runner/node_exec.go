@@ -30,7 +30,8 @@ func runGraph(ctx context.Context, cfg *Config, pluginRepo repo.IPluginService, 
 
 	envCtx := &env.EnvContext{
 		Global: env.GlobalParams{
-			LogLevel: cfg.LogLevel,
+			LogLevel:         cfg.LogLevel,
+			CustomProperties: cfg.CustomProperties,
 		},
 		Nodes: make(map[string]*env.NodeContext),
 	}

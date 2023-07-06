@@ -8,9 +8,8 @@ import (
 )
 
 type GlobalParams struct {
-	LogLevel         string          `json:"logLevel"`
-	BootrapPeers     []string        `json:"bootrapPeers"`
-	CustomProperties json.RawMessage `json:"customProperties"`
+	LogLevel         string                 `json:"logLevel"`
+	CustomProperties map[string]interface{} `json:"customProperties"`
 }
 
 type NodeContext struct {

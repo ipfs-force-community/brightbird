@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -105,7 +104,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 }
 
 func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *InitParams) error {
-	err := logging.SetLogLevel("*", incomingParams.Global.LogLevel)
+	err := logging.SetLogLevel("*", incomingParams.Global.CustomProperties["LogLevel"].(string))
 	if err != nil {
 		return err
 	}
@@ -144,22 +143,26 @@ func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *I
 		return results[0].Interface().(error)
 	}
 
-	if len(results) != 2 {
-		return errors.New("exec result not expect")
+	if len(results) == 1 {
+		if !results[0].IsNil() {
+			return results[0].Interface().(error)
+		}
 	}
 
-	if !results[1].IsNil() {
-		return results[1].Interface().(error)
+	if len(results) == 2 {
+		if !results[1].IsNil() {
+			return results[1].Interface().(error)
+		}
+
+		jsonBytes, err := json.Marshal(results[0].Interface())
+		if err != nil {
+			return err
+		}
+
+		nodeCtx.OutPut = jsonBytes
 	}
 
-	jsonBytes, err := json.Marshal(results[0].Interface())
-	if err != nil {
-		return err
-	}
-
-	nodeCtx.OutPut = jsonBytes
-
-	jsonBytes, err = json.Marshal(incomingParams)
+	jsonBytes, err := json.Marshal(incomingParams)
 	if err != nil {
 		return err
 	}

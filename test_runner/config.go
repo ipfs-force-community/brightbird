@@ -18,5 +18,5 @@ type Config struct {
 	PrivateRegistry string
 
 	LogLevel         string
-	CustomProperties string
+	CustomProperties map[string]interface{}
 }
