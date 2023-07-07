@@ -51,7 +51,7 @@ JobNextNReqOK describes a response with status code 200, with default header val
 int64Arr
 */
 type JobNextNReqOK struct {
-	Payload models.Int64Arrary
+	Payload models.Int64Array
 }
 
 // IsSuccess returns true when this job next n req o k response has a 2xx status code
@@ -92,7 +92,7 @@ func (o *JobNextNReqOK) String() string {
 	return fmt.Sprintf("[GET /job/next][%d] jobNextNReqOK  %+v", 200, o.Payload)
 }
 
-func (o *JobNextNReqOK) GetPayload() models.Int64Arrary {
+func (o *JobNextNReqOK) GetPayload() models.Int64Array {
 	return o.Payload
 }
 

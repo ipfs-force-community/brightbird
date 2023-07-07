@@ -51,7 +51,7 @@ ListPodsInTestOK describes a response with status code 200, with default header 
 stringArr
 */
 type ListPodsInTestOK struct {
-	Payload models.StringArrary
+	Payload models.StringArray
 }
 
 // IsSuccess returns true when this list pods in test o k response has a 2xx status code
@@ -92,7 +92,7 @@ func (o *ListPodsInTestOK) String() string {
 	return fmt.Sprintf("[GET /logs/pods/{testid}][%d] listPodsInTestOK  %+v", 200, o.Payload)
 }
 
-func (o *ListPodsInTestOK) GetPayload() models.StringArrary {
+func (o *ListPodsInTestOK) GetPayload() models.StringArray {
 	return o.Payload
 }
 

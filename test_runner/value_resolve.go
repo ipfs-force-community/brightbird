@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	jsoniter "github.com/json-iterator/go"
@@ -45,7 +46,23 @@ func IterJSON(iter *jsoniter.Iterator, encoder *jsoniter.Stream, fieldPath strin
 		}
 		encoder.WriteObjectEnd()
 	case jsoniter.ArrayValue:
-		return errors.New("arrary not support")
+		encoder.WriteArrayStart()
+		index := 0
+		iter.ReadArrayCB(func(objIter *jsoniter.Iterator) bool {
+			err := IterJSON(objIter, encoder, fmt.Sprintf("%s.%d", fieldPath, index), valResolve)
+			if err != nil {
+				objIter.ReportError("iter", "resolve array fail")
+				return false
+			}
+			encoder.WriteMore()
+			index++
+			return true
+		})
+		if index == 0 {
+			buf := encoder.Buffer()
+			encoder.SetBuffer(buf[:len(buf)-1])
+		}
+		encoder.WriteArrayEnd()
 	default:
 		return errors.New("not support type")
 	}

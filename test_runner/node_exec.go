@@ -9,7 +9,10 @@ import (
 	"io"
 	"os"
 	"path"
+	"strconv"
 	"strings"
+
+	"github.com/swaggest/jsonschema-go"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
@@ -68,64 +71,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	envCtx.Nodes[pip.InstanceName] = currentCtx
 
 	var err error
-	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes([]byte(currentCtx.Input))
-	valueResolve := func() func(string, string) (interface{}, error) {
-		return func(keyPath string, value string) (interface{}, error) {
-			property, err := pluginDef.GetInputProperty(keyPath)
-			if err != nil {
-				return nil, err
-			}
-			propValue := value
-			if strings.HasPrefix(string(value), "{{") || strings.HasSuffix(string(value), "}}") {
-				valuePath := string(value[2 : len(value)-2])
-				depNode := valuePath
-				index := strings.Index(valuePath, ".")
-				if index == -1 {
-					node, err := envCtx.GetNode(depNode)
-					if err != nil {
-						return nil, err
-					}
-					propValue = string(node.OutPut) //do convert in front page
-				} else {
-					depNode = valuePath[:index]
-					valuePath = valuePath[index+1:]
-					node, err := envCtx.GetNode(depNode)
-					if err != nil {
-						return nil, err
-					}
-
-					propValue = string(gjson.Get(string(node.OutPut), valuePath).Raw)
-					if err != nil {
-						return nil, err
-					}
-				}
-				//get value from output value and than parser it
-			}
-			//convert to value
-			return plugin.GetPropertyValue(property, propValue)
-		}
-	}
-	iter.ResetBytes(pip.Input)
-	w := bytes.NewBufferString("")
-	encoder := jsoniter.NewStream(jsoniter.ConfigDefault, w, 512)
-	err = IterJSON(iter, encoder, "", valueResolve())
-	if err != nil {
-		return err
-	}
-	err = encoder.Flush()
-	if err != nil {
-		return err
-	}
-
-	resultInput := make(map[string]interface{})
-	err = json.Unmarshal(w.Bytes(), &resultInput)
-	if err != nil {
-		return err
-	}
-
-	resultInput["instanceName"] = pip.InstanceName
-	resultInput["codeVersion"] = codeVersion
-	currentCtx.Input, err = json.Marshal(resultInput)
+	currentCtx.Input, err = resolveInputValue(envCtx, jsonschema.Schema(pluginDef.InputSchema), pip.Input, codeVersion, pip.InstanceName)
 	if err != nil {
 		return err
 	}
@@ -229,4 +175,85 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	plugin.RespSuccess("")
 	*envCtx = *newCtx //override value
 	return nil
+}
+
+func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input []byte, codeVersion, instanceName string) ([]byte, error) {
+	propertyFinder := plugin.NewSchemaPropertyFinder(schema)
+	var err error
+	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes([]byte(input))
+	valueResolve := func() func(string, string) (interface{}, error) {
+		return func(keyPath string, value string) (interface{}, error) {
+			propValue := value
+			if strings.HasPrefix(value, "{{") || strings.HasSuffix(value, "}}") {
+				valuePath := value[2 : len(value)-2]
+				depNode := valuePath
+
+				pathSeq, err := plugin.SplitJsonPath(valuePath)
+				if err != nil {
+					return nil, err
+				}
+				if len(pathSeq) == 1 {
+					node, err := envCtx.GetNode(depNode)
+					if err != nil {
+						return nil, err
+					}
+					propValue = string(node.OutPut) //do convert in front page
+				} else {
+					depNode = pathSeq[0].Name
+					node, err := envCtx.GetNode(depNode)
+					if err != nil {
+						return nil, err
+					}
+
+					//support array
+					valuePath = joinGjsonPath(pathSeq[1:])
+					propValue = string(gjson.Get(string(node.OutPut), valuePath).Raw)
+					if err != nil {
+						return nil, err
+					}
+				}
+				//get value from output value and then parser it
+			}
+			//convert to value
+			schemaType, err := propertyFinder.FindPath(keyPath)
+			if err != nil {
+				return nil, err
+			}
+			return plugin.GetJsonValue(schemaType, propValue)
+		}
+	}
+	iter.ResetBytes(input)
+	w := bytes.NewBufferString("")
+	encoder := jsoniter.NewStream(jsoniter.ConfigDefault, w, 512)
+	err = IterJSON(iter, encoder, "", valueResolve())
+	if err != nil {
+		return nil, err
+	}
+	err = encoder.Flush()
+	if err != nil {
+		return nil, err
+	}
+
+	resultInput := make(map[string]interface{})
+	err = json.Unmarshal(w.Bytes(), &resultInput)
+	if err != nil {
+		return nil, err
+	}
+
+	resultInput["instanceName"] = instanceName
+	resultInput["codeVersion"] = codeVersion
+	return json.Marshal(resultInput)
+}
+
+func joinGjsonPath(pathSeq []plugin.JsonPathSec) string {
+	var strBuilder strings.Builder
+	for _, path := range pathSeq {
+		strBuilder.WriteRune('.')
+		if path.IsIndex {
+			strBuilder.WriteString(strconv.Itoa(path.Index))
+		} else {
+			strBuilder.WriteString(path.Name)
+		}
+	}
+	return strings.Trim(strBuilder.String(), ".")
 }

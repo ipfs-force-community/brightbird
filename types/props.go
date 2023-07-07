@@ -6,17 +6,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// Property Property
-// swagger:model property
-type Property struct {
-	Name        string     `json:"name" yaml:"name"`
-	NamePath    string     `json:"namePath" yaml:"namePath"`
-	Type        string     `json:"type" yaml:"type"`
-	Description string     `json:"description" yaml:"description"`
-	Require     bool       `json:"require" yaml:"require"`
-	Chindren    []Property `json:"chindren" yaml:"chindren"`
-}
-
 type ExecNode struct {
 	// the name for this test flow
 	// required: true

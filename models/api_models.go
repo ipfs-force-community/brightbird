@@ -83,13 +83,13 @@ type CountJobRequest struct {
 // swagger:model listJobResp
 type ListJobResp []Job
 
-// StringArrary
+// StringArray
 // swagger:model stringArr
-type StringArrary []string
+type StringArray []string
 
-// Int64Arrary
+// Int64Array
 // swagger:model int64Arr
-type Int64Arrary []int64
+type Int64Array []int64
 
 // LogListResp
 // swagger:model logListResp

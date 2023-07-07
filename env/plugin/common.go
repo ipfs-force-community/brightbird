@@ -39,7 +39,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 
 	fnT := reflect.TypeOf(constructor)
 	depParmasT := fnT.In(2)
-	inputProperties, err := ParserProperties("", depParmasT)
+	inputSchema, err := ParserSchema(depParmasT)
 	if err != nil {
 		writeError(err)
 		os.Exit(1)
@@ -47,7 +47,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 	}
 
 	if fnT.NumOut() == 2 {
-		outputProperties, err := ParserProperties("", fnT.Out(0))
+		outputSchema, err := ParserSchema(fnT.Out(0))
 		if err != nil {
 			writeError(err)
 			os.Exit(1)
@@ -55,8 +55,8 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 		}
 
 		info.PluginParams = types.PluginParams{
-			InputProperties:  inputProperties,
-			OutputProperties: outputProperties,
+			InputSchema:  types.Schema(inputSchema),
+			OutputSchema: types.Schema(outputSchema),
 		}
 	}
 

@@ -30,7 +30,7 @@ type TestCaseParams struct {
 	UserName   string                            `json:"userName"`
 }
 
-// todo support arrary
+// todo support array
 type ListWalletInGatewayReturn = gateway.WalletDetail
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
