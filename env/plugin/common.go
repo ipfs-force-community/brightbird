@@ -104,7 +104,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 }
 
 func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *InitParams) error {
-	err := logging.SetLogLevel("*", incomingParams.Global.CustomProperties["logLevel"].(string))
+	err := logging.SetLogLevel("*", incomingParams.Global.LogLevel)
 	if err != nil {
 		return err
 	}
@@ -139,10 +139,6 @@ func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *I
 
 	//call function
 	results := reflect.ValueOf(constructor).Call([]reflect.Value{reflect.ValueOf(context.Background()), reflect.ValueOf(k8sEnv), paramsV.Elem()})
-	if len(results) == 1 {
-		return results[0].Interface().(error)
-	}
-
 	if len(results) == 1 {
 		if !results[0].IsNil() {
 			return results[0].Interface().(error)

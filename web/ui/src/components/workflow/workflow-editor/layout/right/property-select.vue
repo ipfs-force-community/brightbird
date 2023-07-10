@@ -70,7 +70,7 @@ export default defineComponent({
         const handleNodeClick = function (data: TreeProp, obj: any) {
             var pathSeq = [];
             var parent = obj;
-            while (parent.parent && parent.level > 1) {
+            while (parent.parent && parent.level > 0) {
                 let onePath = parent.data.name;
                 if (parent.data.name == "index") {
                     onePath = parent.data.index;
