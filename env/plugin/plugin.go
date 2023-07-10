@@ -96,7 +96,7 @@ func (finder *SchemaPropertyFinder) FindPath(path string) (jsonschema.SimpleType
 
 			currentSchema = finder.resolveChildType(defs, val.TypeObject)
 			if seq.IsLast {
-				return getSchemaType(val.TypeObject), nil
+				return getSchemaType(currentSchema), nil
 			}
 			continue
 		}
