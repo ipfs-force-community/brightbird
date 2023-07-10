@@ -205,10 +205,7 @@ func GetJsonValue(schemaType jsonschema.SimpleType, value string) (interface{}, 
 			if !ok {
 				return nil, fmt.Errorf("parser json number(%s) failed", value)
 			}
-			float64Val, exact := rat.Float64()
-			if exact {
-				return nil, fmt.Errorf("value %s overflow", value)
-			}
+			float64Val, _ := rat.Float64()
 			return float64Val, nil
 		}
 		intVal, ok := big.NewInt(0).SetString(value, 10)

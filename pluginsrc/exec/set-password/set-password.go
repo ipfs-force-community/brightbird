@@ -30,7 +30,7 @@ type TestCaseParams struct {
 	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
 }
 type SetPasswordReturn struct {
-	Password string
+	Password string `json:"password" jsonschema:"password" title:"Password" require:"true" description:"password for venus wallet"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*SetPasswordReturn, error) {

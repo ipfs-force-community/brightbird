@@ -207,9 +207,10 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 
 					//support array
 					valuePath = joinGjsonPath(pathSeq[1:])
-					propValue = string(gjson.Get(string(node.OutPut), valuePath).Raw)
-					if err != nil {
-						return nil, err
+					result := gjson.Get(string(node.OutPut), valuePath)
+					propValue = result.Raw
+					if result.Type == gjson.String {
+						propValue = result.Str
 					}
 				}
 				//get value from output value and then parser it
@@ -222,6 +223,7 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 			return plugin.GetJsonValue(schemaType, propValue)
 		}
 	}
+
 	iter.ResetBytes(input)
 	w := bytes.NewBufferString("")
 	encoder := jsoniter.NewStream(jsoniter.ConfigDefault, w, 512)

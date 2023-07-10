@@ -33,13 +33,12 @@ type TestCaseParams struct {
 // todo support array
 type ListWalletInGatewayReturn = gateway.WalletDetail
 
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*ListWalletInGatewayReturn, error) {
 	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Gateway.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer closer()
 
-	_, err = api.ListWalletInfoByWallet(ctx, params.UserName)
-	return err
+	return api.ListWalletInfoByWallet(ctx, params.UserName)
 }

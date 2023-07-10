@@ -9,6 +9,7 @@ import (
 	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
 	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
@@ -34,8 +35,8 @@ type TestCaseParams struct {
 }
 
 type CreateKeyPair struct {
-	Address    string
-	PrivateKey string
+	Address    address.Address `json:"address" jsonschema:"address" title:"Address" require:"true" description:"address created"`
+	PrivateKey string          `json:"privateKey" jsonschema:"privateKey" title:"Private Key" require:"true" description:"private key created"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateKeyPair, error) {
@@ -71,7 +72,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 
 	return &CreateKeyPair{
-		Address:    walletAddr.String(),
+		Address:    walletAddr,
 		PrivateKey: hex.EncodeToString(kiBytes),
 	}, nil
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
@@ -27,6 +28,10 @@ type DepParams struct {
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) error {
-	fmt.Println(depParams.Config)
+	data, err := json.MarshalIndent(depParams.Config, "\t", " ")
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(data))
 	return nil
 }

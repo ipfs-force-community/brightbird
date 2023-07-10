@@ -33,7 +33,7 @@ type TestCaseParams struct {
 }
 
 type CreateUserReturn struct {
-	UserName string `json:"userName"`
+	UserName string `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"user name in sophon auth"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateUserReturn, error) {

@@ -35,9 +35,9 @@ type TestCaseParams struct {
 }
 
 type CreateMinerReturn struct {
-	Miner  address.Address `json:"miner" type:"string"`
-	Owner  address.Address `json:"owner" type:"string"`
-	Worker address.Address `json:"worker" type:"string"`
+	Miner  address.Address `json:"miner" jsonschema:"miner" title:"Miner Address" require:"true" description:"miner address"`
+	Owner  address.Address `json:"owner" jsonschema:"owner" title:"Owner Address" require:"true" description:"owner address of miner"`
+	Worker address.Address `json:"worker" jsonschema:"worker" title:"Worker Address" require:"true" description:"worker address of miner"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateMinerReturn, error) {
