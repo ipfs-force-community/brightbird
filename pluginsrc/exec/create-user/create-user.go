@@ -27,9 +27,9 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophanAuthDeploy sophonauth.SophonAuthDeployReturn `json:"SophanAuth"`
-	UserName         string                            `json:"userName"`
-	Comment          string                            `json:"comment"`
+	Auth     sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	UserName string                            `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"token user name"`
+	Comment  string                            `json:"commnet" jsonschema:"comment" title:"Commnet" description:"commnet for user"`
 }
 
 type CreateUserReturn struct {
@@ -37,7 +37,7 @@ type CreateUserReturn struct {
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateUserReturn, error) {
-	authAPIClient, err := jwtclient.NewAuthClient(params.SophanAuthDeploy.SvcEndpoint.ToHTTP(), params.SophanAuthDeploy.AdminToken)
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return nil, err
 	}

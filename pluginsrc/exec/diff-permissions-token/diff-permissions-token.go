@@ -34,14 +34,14 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Permission string                            `json:"permission"`
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
-	Venus      venus.VenusDeployReturn           `json:"Venus"`
-	Wallet     address.Address                   `json:"Wallet"`
+	Auth       sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus      venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Wallet     address.Address                   `json:"wallet" jsonschema:"wallet" title:"Wallet" require:"true" description:""`
+	Permission string                            `json:"permission" jsonschema:"permission" title:"Permission" require:"true" description:""`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return err
 	}

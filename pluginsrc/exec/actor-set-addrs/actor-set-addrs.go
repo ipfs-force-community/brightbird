@@ -39,12 +39,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth     sophonauth.SophonAuthDeployReturn       `json:"SophonAuth"`
-	Gateway        sophongateway.SophonGatewayReturn       `json:"Gateway"`
-	Venus          venus.VenusDeployReturn                 `json:"Venus"`
-	SophonMessager sophonmessager.SophonMessagerReturn     `json:"SophonMessager"`
-	DropletMarket  dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" description:"droplet market return "`
-	MinerAddress   address.Address                         `json:"minerAddress" type:"string"`
+	Auth          sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Gateway       sophongateway.SophonGatewayReturn       `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
+	Venus         venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Messager      sophonmessager.SophonMessagerReturn     `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+	MinerAddress  address.Address                         `json:"minerAddress" jsonschema:"minerAddress" title:"Miner Address" require:"true" description:"miner to set market address"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -65,7 +65,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 }
 
 func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId cid.Cid) error {
-	client, closer, err := messager.DialIMessagerRPC(ctx, params.SophonMessager.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func ConstructParams(address peer.AddrInfo) (param []byte, err error) {
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Address) (vtypes.MinerInfo, error) {
-	client, closer, err := v1api.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
+	client, closer, err := v1api.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return vtypes.MinerInfo{}, err
 	}

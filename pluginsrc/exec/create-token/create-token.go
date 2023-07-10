@@ -27,15 +27,15 @@ type CreateTokenReturn struct {
 }
 
 type TestCaseParams struct {
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"[Deploy]sophon-auth"`
+	Auth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 
-	UserName string `json:"UserName" description:"token user name"`
-	Perm     string `json:"perm" description:"[OPTIONS] custom string in JWT payload"`
-	Extra    string `json:"extra" description:"[OPTIONS] permission for API auth (read, write, sign, admin)"`
+	UserName string `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"token user name"`
+	Perm     string `json:"perm" jsonschema:"perm" title:"Perm" require:"true" description:"custom string in JWT payload" enum:"read,write,sign,admin"`
+	Extra    string `json:"extra" jsonschema:"extra" title:"Extra" description:"addition information"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateTokenReturn, error) {
-	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return nil, err
 	}

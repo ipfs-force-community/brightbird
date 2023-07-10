@@ -106,7 +106,7 @@ import { getJob, updateJob } from '@/api/job';
 import { ITestFlowDetail } from '@/api/dto/testflow';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
-import { JobEnum } from '@/api/dto/enumeration';
+import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
 import { ElCol, ElRow } from 'element-plus';
 import yaml from 'yaml'
 
@@ -175,6 +175,9 @@ export default defineComponent({
       let versions: any = {};
       const { pipeline } = yaml.parse(testflow.graph);
       Object.values(pipeline).forEach((f: any) => {
+        if (f.pluginType == PluginTypeEnum.Exec) {
+          return
+        }
         versions[f.name] = '';
       });
       editorForm.value.versions = versions;

@@ -109,7 +109,7 @@ import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/vie
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
-import { JobEnum } from '@/api/dto/enumeration';
+import { JobEnum, PluginTypeEnum} from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
 import { ElCol, ElRow } from 'element-plus';
@@ -207,6 +207,9 @@ export default defineComponent({
       let versions: any = {};
       const { pipeline } = yaml.parse(testflow.graph);
       Object.values(pipeline).forEach((f: any) => {
+        if (f.pluginType == PluginTypeEnum.Exec) {
+          return
+        }
         versions[f.name] = '';
       });
       // use for cron

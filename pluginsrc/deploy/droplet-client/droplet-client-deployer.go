@@ -20,12 +20,12 @@ type Config struct {
 }
 
 type VConfig struct {
-	NodeUrl     string `ignore:"-" json:"nodeUrl"`
-	UserToken   string `json:"userToken"`
-	WalletUrl   string `ignore:"-" json:"walletUrl"`
-	WalletToken string `ignore:"-" json:"walletToken"`
+	NodeUrl     string `jsonschema:"-" json:"nodeUrl"`
+	WalletUrl   string `jsonschema:"-" json:"walletUrl"`
+	WalletToken string `jsonschema:"-" json:"walletToken"`
 
-	ClientAddr string `json:"clientAddr" description:"market client address"`
+	UserToken  string `json:"userToken" jsonschema:"clientAddr" title:"Client Address" description:"toke to connect daemon" require:"true" `
+	ClientAddr string `json:"clientAddr" jsonschema:"clientAddr" title:"Client Address" description:"pay for storage/retrieval" require:"true" `
 }
 
 type DropletClientDeployReturn struct {

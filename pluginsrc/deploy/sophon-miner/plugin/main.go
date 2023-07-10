@@ -18,9 +18,9 @@ func main() {
 type DepParams struct {
 	sophonminer.Config
 
-	Auth    sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
-	Venus   venus.VenusDeployReturn           `json:"Venus" description:"venus return"`
-	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
+	Auth    sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus   venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonminer.SophonMinerDeployReturn, error) {

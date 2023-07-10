@@ -29,8 +29,8 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet"`
-	KeyType     string                        `json:"keyType" description:"private key type bls/secp256k1/delegated"`
+	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
+	KeyType     string                        `json:"keyType" jsonschema:"keyType" title:"KeyType" require:"true" description:"private key type bls/secp256k1/delegated" enum:"bs,secp256k1,delegated"`
 }
 
 type CreateKeyPair struct {

@@ -25,13 +25,13 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Skip       string                            `json:"skip"`
-	Limit      string                            `json:"limit"`
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
+	Skip  string                            `json:"skip" jsonschema:"skip" title:"PageSkip" require:"true"`
+	Limit string                            `json:"limit" jsonschema:"limit" title:"PageLimit" require:"true"`
+	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return err
 	}

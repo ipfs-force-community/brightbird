@@ -20,19 +20,19 @@ func main() {
 type DepParams struct {
 	damoclesworker.Config
 
-	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" description:"sophon auth return"`
-	Venus    venus.VenusDeployReturn             `json:"Venus" description:"venus return"`
-	Gateway  sophongateway.SophonGatewayReturn   `json:"SophonGateway" description:"gateway return"`
-	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager" description:"messager return"`
+	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus    venus.VenusDeployReturn             `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Gateway  sophongateway.SophonGatewayReturn   `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
+	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 
-	SectorManager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager" description:"damocles manager return"`
+	DamoclesManager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager" jsonschema:"DamoclesManager" title:"Damocles Manager" description:"damocles manager return" require:"true"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesworker.DropletMarketDeployReturn, error) {
 	return damoclesworker.DeployFromConfig(ctx, k8sEnv, damoclesworker.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: damoclesworker.VConfig{
-			DamoclesManagerURL: depParams.SectorManager.SvcEndpoint.ToMultiAddr(),
+			DamoclesManagerURL: depParams.DamoclesManager.SvcEndpoint.ToMultiAddr(),
 			MarketToken:        depParams.MarketToken,
 			MinerAddress:       depParams.MinerAddress,
 		},

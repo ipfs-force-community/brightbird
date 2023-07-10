@@ -18,9 +18,9 @@ func main() {
 type DepParams struct {
 	dropletclient.Config
 
-	Auth        sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
-	Venus       venus.VenusDeployReturn           `json:"Venus" description:"venus return"`
-	VenusWallet venuswallet.VenusWalletReturn     `json:"VenusWallet" description:"wallet return"`
+	Auth        sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus       venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	VenusWallet venuswallet.VenusWalletReturn     `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*dropletclient.DropletClientDeployReturn, error) {

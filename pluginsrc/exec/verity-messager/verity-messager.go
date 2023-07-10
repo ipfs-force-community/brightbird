@@ -25,12 +25,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth"`
-	SophonMessager sophonmessager.SophonMessagerReturn `json:"SophonMessager"`
+	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	client, closer, err := messager.DialIMessagerRPC(ctx, params.SophonMessager.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return err
 	}

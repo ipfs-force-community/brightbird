@@ -19,15 +19,15 @@ type Config struct {
 }
 
 type VConfig struct {
-	NodeUrl     string `ignore:"-"`
-	MessagerUrl string `ignore:"-"`
-	MarketUrl   string `ignore:"-"`
-	GatewayUrl  string `ignore:"-"`
-	AuthUrl     string `ignore:"-"`
+	NodeUrl     string `jsonschema:"-"`
+	MessagerUrl string `jsonschema:"-"`
+	MarketUrl   string `jsonschema:"-"`
+	GatewayUrl  string `jsonschema:"-"`
+	AuthUrl     string `jsonschema:"-"`
 
-	SenderWalletAddress address.Address `json:"senderWalletAddress" type:"string"`
-	MinerAddress        address.Address `json:"minerAddress" type:"string"`
-	UserToken           string          `json:"userToken"`
+	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" `
+	MinerAddress        address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
+	UserToken           string          `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true" `
 }
 
 type DamoclesManagerReturn struct {

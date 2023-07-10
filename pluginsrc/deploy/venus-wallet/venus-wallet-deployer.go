@@ -19,8 +19,8 @@ type Config struct {
 }
 
 type VConfig struct {
-	GatewayUrl string `ignore:"-" json:"gatewayUrl"`
-	UserToken  string `json:"userToekn"`
+	GatewayUrl string `jsonschema:"-" json:"gatewayUrl"`
+	UserToken  string `json:"userToken" jsonschema:"userToken" title:"UserToken" description:"token for connect with sophon gateway"`
 }
 
 type VenusWalletReturn struct {

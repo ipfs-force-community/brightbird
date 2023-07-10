@@ -24,56 +24,54 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Params struct {
-		VenusURL     string `json:"venus_url"`
-		VenusToken   string `json:"venus_token"`
-		LotusURL     string `json:"lotus_url"`
-		LotusToken   string `json:"lotus_token"`
-		StopHeight   string `json:"stop_height"`
-		EnableEthRPC string `json:"enable_eth_rpc"`
-	} `optional:"true"`
+	VenusURL     string `json:"venusUrl" jsonschema:"venusUrl" title:"Venus Url" require:"true" desctiption:"url for connect venus"`
+	VenusToken   string `json:"venusToken" jsonschema:"venusToken" title:"Venus Token" require:"true" desctiption:"token for connect venus"`
+	LotusURL     string `json:"lotusUrl" jsonschema:"lotusUrl" title:"Lotus Url" require:"true" desctiption:"url for connect lotus"`
+	LotusToken   string `json:"lotusToken" jsonschema:"lotusToken" title:"Lotus Token" require:"true" desctiption:"url to connect lotus"`
+	StopHeight   string `json:"stopHeight" jsonschema:"stopHeight" title:"StopHeight" require:"true" desctiption:"check until specific height"`
+	EnableEthRPC bool   `json:"enableEthRpc" jsonschema:"enableEthRpc" title:"Enable Eth API" require:"true" default:"true" desctiption:"enable check eth api"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
 	cliCtx := &cli.Context{
 		Context: ctx,
 	}
-	if params.Params.VenusURL != "" {
-		err := cliCtx.Set("venus-url", params.Params.VenusURL)
+	if params.VenusURL != "" {
+		err := cliCtx.Set("venus-url", params.VenusURL)
 		if err != nil {
 			return err
 		}
 	}
-	if params.Params.VenusToken != "" {
-		err := cliCtx.Set("venus-token", params.Params.VenusToken)
-		if err != nil {
-			return err
-		}
-	}
-
-	if params.Params.LotusURL != "" {
-		err := cliCtx.Set("lotus-url", params.Params.LotusURL)
+	if params.VenusToken != "" {
+		err := cliCtx.Set("venus-token", params.VenusToken)
 		if err != nil {
 			return err
 		}
 	}
 
-	if params.Params.LotusToken != "" {
-		err := cliCtx.Set("lotus-token", params.Params.LotusToken)
+	if params.LotusURL != "" {
+		err := cliCtx.Set("lotus-url", params.LotusURL)
 		if err != nil {
 			return err
 		}
 	}
 
-	if params.Params.StopHeight != "" {
-		err := cliCtx.Set("stop-height", params.Params.StopHeight)
+	if params.LotusToken != "" {
+		err := cliCtx.Set("lotus-token", params.LotusToken)
 		if err != nil {
 			return err
 		}
 	}
 
-	if params.Params.EnableEthRPC != "" {
-		err := cliCtx.Set("enable-eth-rpc", params.Params.EnableEthRPC)
+	if params.StopHeight != "" {
+		err := cliCtx.Set("stop-height", params.StopHeight)
+		if err != nil {
+			return err
+		}
+	}
+
+	if params.EnableEthRPC {
+		err := cliCtx.Set("enable-eth-rpc", "true")
 		if err != nil {
 			return err
 		}

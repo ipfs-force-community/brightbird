@@ -14,13 +14,12 @@ import (
 
 func ParserSchema(t reflect.Type) (jsonschema.Schema, error) {
 	reflector := jsonschema.Reflector{}
-	defs := map[string]jsonschema.Schema{}
+	defs := map[string]jsonschema.SchemaOrBool{}
 	reflector.DefaultOptions = append(reflector.DefaultOptions,
 		jsonschema.ProcessWithoutTags,
 		jsonschema.PropertyNameTag("jsonschema"),
-		jsonschema.DefinitionsPrefix("#/$defs/"),
 		jsonschema.CollectDefinitions(func(name string, schema jsonschema.Schema) {
-			defs[name] = schema
+			defs[name] = schema.ToSchemaOrBool()
 		}),
 		jsonschema.InterceptSchema(func(params jsonschema.InterceptSchemaParams) (stop bool, err error) {
 			if params.Value.Type() == reflect.TypeOf(address.Undef) {
@@ -28,11 +27,11 @@ func ParserSchema(t reflect.Type) (jsonschema.Schema, error) {
 				s.AddType(jsonschema.String)
 				s.WithExtraPropertiesItem("configurable", true)
 				typeName := "FilAddress"
-				defs[typeName] = s
+				defs[typeName] = s.ToSchemaOrBool()
 
 				// Replacing current schema with reference.
 				rs := jsonschema.Schema{}
-				rs.WithRef(fmt.Sprintf("#/$defs/%s", typeName))
+				rs.WithRef(fmt.Sprintf("#/definitions/%s", typeName))
 				*params.Schema = rs
 				params.Processed = true
 				return true, nil
@@ -40,12 +39,15 @@ func ParserSchema(t reflect.Type) (jsonschema.Schema, error) {
 			return false, nil
 		}))
 
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+	}
 	val := reflect.Indirect(reflect.New(t).Elem()).Interface()
 	schema, err := reflector.Reflect(val)
 	if err != nil {
 		return jsonschema.Schema{}, err
 	}
-	schema.WithExtraPropertiesItem("$defs", defs)
+	schema.WithDefinitions(defs)
 	return schema, nil
 }
 
@@ -63,12 +65,12 @@ func NewSchemaPropertyFinder(gSchema jsonschema.Schema) *SchemaPropertyFinder {
 	return &SchemaPropertyFinder{gSchema: gSchema}
 }
 
-func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]jsonschema.Schema, schema *jsonschema.Schema) *jsonschema.Schema {
+func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]jsonschema.SchemaOrBool, schema *jsonschema.Schema) *jsonschema.Schema {
 	if schema.Ref != nil {
-		refKey := strings.ReplaceAll(*schema.Ref, "#/$defs/", "")
+		refKey := strings.ReplaceAll(*schema.Ref, "#/definitions/", "")
 		def, ok := definitions[refKey]
 		if ok {
-			return &def
+			return def.TypeObject
 		}
 		panic("not found")
 	}
@@ -77,7 +79,7 @@ func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]json
 }
 
 func (finder *SchemaPropertyFinder) FindPath(path string) (jsonschema.SimpleType, error) {
-	defs := finder.gSchema.ExtraProperties["$defs"].(map[string]jsonschema.Schema)
+	defs := finder.gSchema.Definitions
 	pathSeq, err := SplitJsonPath(path)
 	if err != nil {
 		return jsonschema.Null, err

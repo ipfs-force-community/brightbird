@@ -21,9 +21,9 @@ import (
 type Config struct {
 	env.BaseConfig
 
-	MysqlDSN string `ignore:"-" json:"mysqlDSN"`
+	MysqlDSN string `jsonschema:"-" json:"mysqlDSN"`
 
-	Replicas int `json:"replicas" description:"number of replicas"`
+	Replicas int `json:"replicas" jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 }
 
 func DefaultConfig() Config {

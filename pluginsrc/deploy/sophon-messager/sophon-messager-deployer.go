@@ -22,13 +22,13 @@ type Config struct {
 }
 
 type VConfig struct {
-	NodeUrl    string `ignore:"-" json:"nodeUrl"`
-	GatewayUrl string `ignore:"-" json:"gatewayUrl"`
-	AuthUrl    string `ignore:"-" json:"authUrl"`
-	AuthToken  string `ignore:"-" json:"authToken"`
-	MysqlDSN   string `ignore:"-" json:"mysqlDSN"`
+	NodeUrl    string `jsonschema:"-" json:"nodeUrl"`
+	GatewayUrl string `jsonschema:"-" json:"gatewayUrl"`
+	AuthUrl    string `jsonschema:"-" json:"authUrl"`
+	AuthToken  string `jsonschema:"-" json:"authToken"`
+	MysqlDSN   string `jsonschema:"-" json:"mysqlDSN"`
 
-	Replicas int `json:"replicas" description:"number of replicas"`
+	Replicas int `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 }
 
 type SophonMessagerReturn struct {

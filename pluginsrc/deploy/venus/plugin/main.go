@@ -17,8 +17,8 @@ func main() {
 type DepParams struct {
 	venus.Config
 
-	Global     env.GlobalParams                  `ignore:"-" json:"global"`
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
+	Global env.GlobalParams                  `jsonschema:"-" json:"global"`
+	Auth   sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venus.VenusDeployReturn, error) {
@@ -29,8 +29,8 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 	return venus.DeployFromConfig(ctx, k8sEnv, venus.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: venus.VConfig{
-			AuthUrl:        depParams.SophonAuth.SvcEndpoint.ToHTTP(),
-			AdminToken:     depParams.SophonAuth.AdminToken,
+			AuthUrl:        depParams.Auth.SvcEndpoint.ToHTTP(),
+			AdminToken:     depParams.Auth.AdminToken,
 			BootstrapPeers: bootstrapPeers,
 			NetType:        depParams.NetType,
 			Replicas:       depParams.Replicas,

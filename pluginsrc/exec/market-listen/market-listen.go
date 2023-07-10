@@ -25,8 +25,8 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth    sophonauth.SophonAuthDeployReturn       `json:"SophonAuth"`
-	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" description:"droplet market return "`
+	Auth          sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {

@@ -26,8 +26,8 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Password    string                        `json:"password"`
-	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet"`
+	Password    string                        `json:"password" jsonschema:"password" title:"Password" require:"true" description:"set password to wallet"`
+	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
 }
 type SetPasswordReturn struct {
 	Password string

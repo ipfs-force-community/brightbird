@@ -28,9 +28,9 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	AuthorizerURL  string                                    `json:"authorizer_url"`
-	SophonAuth     sophonauth.SophonAuthDeployReturn         `json:"SophonAuth"`
-	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"WalletPro"`
+	AuthorizerURL  string                                    `json:"authorizerUrl" jsonschema:"authorizerUrl" title:"AuthorizerUrl" require:"true" description:"wallet pro auth url"`
+	Auth           sophonauth.SophonAuthDeployReturn         `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"VenusWalletPro"  jsonschema:"VenusWalletPro" title:"Venus Wallet Auth" require:"true" description:"venus wallet return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -44,7 +44,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return err
 	}
 
-	err = GetWalletInfo(ctx, k8sEnv, params, params.SophonAuth.AdminToken, walletAddrs[0])
+	err = GetWalletInfo(ctx, k8sEnv, params, params.Auth.AdminToken, walletAddrs[0])
 	if err != nil {
 		return fmt.Errorf("get wallet finfo failed %w", err)
 	}
@@ -103,7 +103,7 @@ func ConnectAuthor(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestC
 }
 
 func GetWalletInfo(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, authToken string, walletAddr string) error {
-	api, closer, err := v2API.DialIGatewayRPC(ctx, params.SophonAuth.SvcEndpoint.ToHTTP(), authToken, nil)
+	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Auth.SvcEndpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}

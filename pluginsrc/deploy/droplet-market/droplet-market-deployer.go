@@ -19,13 +19,13 @@ type Config struct {
 }
 
 type VConfig struct {
-	UserToken string `json:"userToken"`
-	UseMysql  bool   `json:"useMysql" description:"true or false"`
+	UserToken string `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true"`
+	UseMysql  bool   `json:"useMysql" jsonschema:"useMysql" title:"UserMysql" require:"true" description:"true or false"`
 
-	NodeUrl     string `ignore:"-"`
-	GatewayUrl  string `ignore:"-"`
-	MessagerUrl string `ignore:"-"`
-	AuthUrl     string `ignore:"-"`
+	NodeUrl     string `jsonschema:"-"`
+	GatewayUrl  string `jsonschema:"-"`
+	MessagerUrl string `jsonschema:"-"`
+	AuthUrl     string `jsonschema:"-"`
 }
 
 type DropletMarketDeployReturn struct {

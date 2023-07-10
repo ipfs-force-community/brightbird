@@ -26,14 +26,14 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
-	Gateway     sophongateway.SophonGatewayReturn `json:"Gateway"`
-	VenusWallet venuswallet.VenusWalletReturn     `json:"VenusWallet"`
-	UserName    string                            `json:"userName"`
+	Auth        sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Gateway     sophongateway.SophonGatewayReturn `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
+	VenusWallet venuswallet.VenusWalletReturn     `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
+	UserName    string                            `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"user to check in gateway"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Gateway.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
+	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Gateway.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return err
 	}

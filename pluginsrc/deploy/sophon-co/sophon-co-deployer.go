@@ -17,11 +17,11 @@ type Config struct {
 	VConfig
 }
 type VConfig struct {
-	Replicas int `json:"replicas" description:"number of replicas"`
+	Replicas int `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 
-	AuthUrl    string   `ignore:"-" json:"authUrl"`
-	AdminToken string   `ignore:"-" json:"adminToken"`
-	Nodes      []string `ignore:"-" json:"nodes"`
+	AuthUrl    string   `jsonschema:"-" json:"authUrl"`
+	AdminToken string   `jsonschema:"-" json:"adminToken"`
+	Nodes      []string `jsonschema:"-" json:"nodes"`
 }
 
 type SophonCoDeployReturn struct {

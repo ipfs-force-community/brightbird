@@ -27,7 +27,7 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" description:"droplet market return "`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {

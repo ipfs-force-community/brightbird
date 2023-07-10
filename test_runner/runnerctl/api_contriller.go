@@ -15,6 +15,7 @@ import (
 var log = logging.Logger("api")
 
 type Params struct {
+	fx.In
 	Endpoint types.Endpoint
 	Engin    *gin.Engine
 	Shutdown types.Shutdown

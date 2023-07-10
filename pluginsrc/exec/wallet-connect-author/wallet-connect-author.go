@@ -28,8 +28,8 @@ var Info = types.PluginInfo{
 
 // TestCaseParams
 type TestCaseParams struct {
-	AuthorizerURL  string                                    `json:"authorizer_url"`
-	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"WalletPro"`
+	AuthorizerURL  string                                    `json:"authorizerUrl" jsonschema:"authorizerUrl" title:"AuthorizerUrl" require:"true" description:"wallet pro auth url"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"VenusWalletPro"  jsonschema:"VenusWalletPro" title:"Venus Wallet Auth" require:"true" description:"venus wallet return"`
 }
 
 // Exec

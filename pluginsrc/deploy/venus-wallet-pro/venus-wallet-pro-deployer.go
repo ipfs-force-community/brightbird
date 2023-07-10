@@ -17,11 +17,11 @@ type Config struct {
 }
 
 type VConfig struct {
-	GatewayUrl string `ignore:"-" json:"gatewayUrl"`
-	MysqlDSN   string `ignore:"-"`
-	Replicas   int    `ignore:"-" json:"replicas" description:"number of replicas"`
+	GatewayUrl string `jsonschema:"-" json:"gatewayUrl"`
+	MysqlDSN   string `jsonschema:"-"`
 
-	UserToken string `json:"userToken"`
+	Replicas  int    `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
+	UserToken string `json:"userToken" jsonschema:"userToken" title:"UserToken" description:"token for connect with sophon gateway"`
 }
 
 type VenusWalletProDeployReturn struct {

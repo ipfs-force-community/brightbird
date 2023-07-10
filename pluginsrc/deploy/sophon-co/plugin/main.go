@@ -19,23 +19,23 @@ func main() {
 type DepParams struct {
 	chainco.Config
 
-	Daemon     env.CommonDeployParams            `json:"Daemon" description:"[Deploy]venus/lotus/sophonco daemon"`
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
+	Venus env.CommonDeployParams            `json:"Venus"  jsonschema:"Venus Daemon" title:"Venus Daemon" require:"true" description:"[Deploy]venus/lotus/sophonco daemon"`
+	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*chainco.SophonCoDeployReturn, error) {
 
 	var pods []corev1.Pod
 	var err error
-	switch depParams.Daemon.DeployName {
+	switch depParams.Venus.DeployName {
 	case venus.PluginInfo.Name:
-		pods, err = venus.GetPods(ctx, k8sEnv, depParams.Daemon.InstanceName)
+		pods, err = venus.GetPods(ctx, k8sEnv, depParams.Venus.InstanceName)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	svc, err := k8sEnv.GetSvc(ctx, depParams.Daemon.SVCName)
+	svc, err := k8sEnv.GetSvc(ctx, depParams.Venus.SVCName)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,8 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 		BaseConfig: depParams.BaseConfig,
 		VConfig: chainco.VConfig{
 			Replicas:   1,
-			AuthUrl:    depParams.SophonAuth.SvcEndpoint.ToHTTP(),
-			AdminToken: depParams.SophonAuth.AdminToken,
+			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
+			AdminToken: depParams.Auth.AdminToken,
 			Nodes:      podEndpoints,
 		},
 	})

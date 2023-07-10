@@ -1,6 +1,7 @@
 import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
+import { JSONSchema } from 'json-schema-to-typescript';
 
 type TriggerValue = 'blur' | 'change';
 
@@ -58,5 +59,10 @@ export interface IWorkflow {
 
 export interface TreeProp {
   name: string;
+  isLeaf: boolean;
+  type: string;
+  index: number|undefined;
+  defs:Map<string, JSONSchema>;
+  schema: JSONSchema;
   children: TreeProp[]
 }

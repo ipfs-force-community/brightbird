@@ -19,12 +19,12 @@ type Config struct {
 }
 
 type VConfig struct {
-	NodeUrl    string `ignore:"-" json:"nodeUrl"`
-	AuthUrl    string `ignore:"-" json:"authUrl"`
-	GatewayUrl string `ignore:"-" json:"gatewayUrl"`
-	AuthToken  string `ignore:"-" json:"authToken"`
+	NodeUrl    string `jsonschema:"-" json:"nodeUrl"`
+	AuthUrl    string `jsonschema:"-" json:"authUrl"`
+	GatewayUrl string `jsonschema:"-" json:"gatewayUrl"`
+	AuthToken  string `jsonschema:"-" json:"authToken"`
 
-	UseMysql bool `json:"useMysql" description:"true or false"`
+	UseMysql bool `json:"useMysql" jsonschema:"useMysql" title:"UserMysql" require:"true" description:"true or false"`
 }
 
 type SophonMinerDeployReturn struct {

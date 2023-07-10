@@ -46,6 +46,9 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 		return
 	}
 
+	info.PluginParams = types.PluginParams{
+		InputSchema: types.Schema(inputSchema),
+	}
 	if fnT.NumOut() == 2 {
 		outputSchema, err := ParserSchema(fnT.Out(0))
 		if err != nil {
@@ -54,10 +57,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 			return
 		}
 
-		info.PluginParams = types.PluginParams{
-			InputSchema:  types.Schema(inputSchema),
-			OutputSchema: types.Schema(outputSchema),
-		}
+		info.PluginParams.OutputSchema = types.Schema(outputSchema)
 	}
 
 	if len(os.Args) > 1 && os.Args[1] == "info" {

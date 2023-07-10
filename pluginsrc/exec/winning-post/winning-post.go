@@ -31,10 +31,10 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonMessager  sophonmessager.SophonMessagerReturn   `json:"SophonMessager"`
-	DamoclesManager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager"`
-	SophonMiner     sophonminer.SophonMinerDeployReturn   `json:"SophonMiner"`
-	MinerAddress    address.Address                       `json:"MinerAddress" type:"string"`
+	Messager        sophonmessager.SophonMessagerReturn   `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
+	DamoclesManager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager" jsonschema:"DamoclesManager" title:"Damocles Manager" description:"damocles manager return" require:"true"`
+	Miner           sophonminer.SophonMinerDeployReturn   `json:"SophonMiner"  jsonschema:"SophonMiner" title:"Sophon Miner" description:"sophon miner eturn" require:"true"`
+	MinerAddress    address.Address                       `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -54,7 +54,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 }
 
 func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAddr string) (string, error) {
-	client, closer, err := miner.NewMinerRPC(ctx, params.SophonMiner.SvcEndpoint.ToMultiAddr(), nil)
+	client, closer, err := miner.NewMinerRPC(ctx, params.Miner.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return "", err
 	}
@@ -76,7 +76,7 @@ func GetMinerFromVenusMiner(ctx context.Context, params TestCaseParams, minerAdd
 }
 
 func GetWinningPostMsg(ctx context.Context, params TestCaseParams, authToken string) (string, error) {
-	client, closer, err := messager.DialIMessagerRPC(ctx, params.SophonMessager.SvcEndpoint.ToMultiAddr(), authToken, nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), authToken, nil)
 	if err != nil {
 		return "", err
 	}

@@ -24,12 +24,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" description:"sophon auth return"`
-	Venus      venus.VenusDeployReturn           `json:"Venus" description:"Venus return"`
+	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	err := checkPermission(ctx, params.SophonAuth.AdminToken, params)
+	err := checkPermission(ctx, params.Auth.AdminToken, params)
 	if err != nil {
 		return err
 	}

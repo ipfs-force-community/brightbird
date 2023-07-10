@@ -26,6 +26,8 @@
     "echarts": "^5.4.2",
     "element-plus": "^2.3.6",
     "good-listener": "^1.2.2",
+    "json-schema": "^0.4.0",
+    "json-schema-to-typescript": "^13.0.2",
     "mockjs": "^1.1.0",
     "normalize-wheel": "^1.0.1",
     "postcss-pxtorem": "^6.0.0",

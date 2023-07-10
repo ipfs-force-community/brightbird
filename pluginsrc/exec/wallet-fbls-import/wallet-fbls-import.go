@@ -28,7 +28,7 @@ var Info = types.PluginInfo{
 
 // TestCaseParams
 type TestCaseParams struct {
-	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"WalletPro"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"VenusWalletPro"  jsonschema:"VenusWalletPro" title:"Venus Wallet Auth" require:"true" description:"venus wallet return"`
 }
 
 // Exec

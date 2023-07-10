@@ -23,12 +23,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	UserName   string                            `json:"userName"`
-	SophonAuth sophonauth.SophonAuthDeployReturn `json:"SophonAuth"`
+	UserName string                            `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"user name"`
+	Auth     sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	authAPIClient, err := jwtclient.NewAuthClient(params.SophonAuth.SvcEndpoint.ToHTTP(), params.SophonAuth.AdminToken)
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return err
 	}

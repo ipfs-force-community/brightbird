@@ -29,9 +29,9 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonMessager sophonmessager.SophonMessagerReturn `json:"SophonMessager"`
+	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	//todo support set owner/worker/controller
-	WalletAddr address.Address `json:"walletAddr" type:"string" description:"owner/worker address must be f3 address"`
+	WalletAddr address.Address `json:"walletAddr" jsonschema:"walletAddr" title:"Wallet Address" require:"true" description:"owner/worker address must be f3 address"`
 }
 
 type CreateMinerReturn struct {
@@ -62,7 +62,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 }
 
 func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, walletAddr address.Address) (address.Address, error) {
-	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.SophonMessager.InstanceName)
+	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
 	if err != nil {
 		return address.Undef, err
 	}
@@ -85,7 +85,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 }
 
 func GetMinerInfo(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, minerAddr address.Address) (string, error) {
-	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.SophonMessager.InstanceName)
+	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
 	if err != nil {
 		return "", err
 	}

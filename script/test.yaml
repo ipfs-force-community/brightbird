@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: li
+  name: test-runner-4261e15e
+  labels:
+    app: venus-testrunner-pod
+    apptype: testrunner
+    testid: 4261e15e
+spec:
+  restartPolicy: OnFailure
+  initContainers:
+  containers:
+    - name: venus-testrunner
+      image: "192.168.200.175/filvenus/testrunner:li"
+      imagePullPolicy: Always
+      args: ["--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=li",  "--dbName=lidb", "--mongoUrl=mongodb://192.168.200.175:27017", "--mysql=root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci&readTimeout=10s&writeTimeout=10s", "--privReg=192.168.200.175", "--taskId=64aba5bf2585a267eb0ff286" --customProperties, '{"BootstrapPeer":["/ip4/192.168.200.125/tcp/34567/p2p/12D3KooWB1X6MKuvZGN15YMJFMDSFLDeSZyCEiiuRV6Wyucq3bAZ"]}' , "--bootPeer=/ip4/192.168.200.125/tcp/34567/p2p/12D3KooWB1X6MKuvZGN15YMJFMDSFLDeSZyCEiiuRV6Wyucq3bAZ" ]
+      env:
+        - name: PRODUCTION
+          value: "true"
+      volumeMounts:
+        - mountPath: /shared-dir
+          name: shared-dir-v
+          subPath: li
+  volumes:
+    - name: shared-dir-v
+      persistentVolumeClaim:
+        claimName: shared-dir

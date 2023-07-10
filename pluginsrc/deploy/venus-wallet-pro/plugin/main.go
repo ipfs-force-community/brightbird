@@ -15,7 +15,7 @@ func main() {
 
 type DepParams struct {
 	venuswalletpro.Config
-	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway" description:"gateway return"`
+	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venuswalletpro.VenusWalletProDeployReturn, error) {

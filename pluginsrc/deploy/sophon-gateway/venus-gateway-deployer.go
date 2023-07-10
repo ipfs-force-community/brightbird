@@ -19,10 +19,10 @@ type Config struct {
 }
 
 type VConfig struct {
-	AuthUrl    string `ignore:"-" json:"authUrl"`
-	AdminToken string `ignore:"-" json:"adminToken"`
+	AuthUrl    string `jsonschema:"-" json:"authUrl"`
+	AdminToken string `jsonschema:"-" json:"adminToken"`
 
-	Replicas int `json:"replicas" description:"number of replicas"`
+	Replicas int `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 }
 
 type RenderParams struct {

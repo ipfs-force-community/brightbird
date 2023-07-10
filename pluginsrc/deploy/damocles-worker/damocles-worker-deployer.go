@@ -20,10 +20,10 @@ type Config struct {
 }
 
 type VConfig struct {
-	DamoclesManagerURL string `ignore:"-" json:"damoclesManagerURL"`
+	DamoclesManagerURL string `jsonschema:"-" json:"damoclesManagerURL" title:"DamoclesManagerURL"  require:"true" `
 
-	MarketToken  string          `json:"marketToken"`
-	MinerAddress address.Address `json:"minerAddress" type:"string"`
+	MarketToken  string          `json:"marketToken" jsonschema:"marketToken" title:"Market Token"  require:"true" `
+	MinerAddress address.Address `json:"minerAddress" jsonschema:"minerAddress" title:"Miner Address"  require:"true" `
 }
 
 type DropletMarketDeployReturn struct {

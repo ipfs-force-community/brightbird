@@ -213,15 +213,21 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	if err != nil {
 		return nil, err
 	}
+
+	customPropertyBytes, err = yaml.Marshal(string(customPropertyBytes))
+	if err != nil {
+		return nil, err
+	}
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s" "--customProperties=%s"`,
+	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s", --customProperties, %s`,
 		taskMgr.cfg.NameSpace,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
 		taskMgr.cfg.Mysql,
 		taskMgr.privateRegistry,
 		task.ID.Hex(),
-		string(customPropertyBytes))
+		string(customPropertyBytes),
+	)
 
 	for _, p := range taskMgr.cfg.BootstrapPeers {
 		args += fmt.Sprintf(` , "--bootPeer=%s" `, p)

@@ -3,6 +3,7 @@ import {
   DslTypeEnum,
   PluginTypeEnum,
 } from '@/api/dto/enumeration';
+import { compile, compileFromFile } from 'json-schema-to-typescript'
 
 export interface Node
   extends Readonly<{
@@ -161,15 +162,6 @@ export interface INodeDefVo
     type: string;
   }> { }
 
-export interface Property  {
-    name: string;
-    namePath: string;
-    type: string;
-    description: string;
-    require: true;
-    children: Property[]
-}
-
 export interface GetPluginReq extends Readonly<{
   name?: string;
   pluginType?: PluginTypeEnum;
@@ -204,9 +196,10 @@ export interface PluginDef extends Readonly<{
     repo: string,
     imageTarget: string,
     path: string;
-    inputProperties: Property[];
-    outputProperties: Property[];
+    inputSchema : any;
+    outputSchema: any;
 }> {
+
 }
 
 export interface PluginDetail {

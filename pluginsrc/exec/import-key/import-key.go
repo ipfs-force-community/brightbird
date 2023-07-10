@@ -33,8 +33,8 @@ type ImportKeyReturn struct {
 }
 
 type TestCaseParams struct {
-	PrivKey     string                        `json:"privKey"`
-	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet"`
+	PrivKey     string                        `json:"privKey" jsonschema:"privKey" title:"Private Key" require:"true" description:"private key for venus/lotus keyinfo "`
+	VenusWallet venuswallet.VenusWalletReturn `json:"VenusWallet" jsonschema:"VenusWallet" title:"Venus Wallet" description:"wallet return" require:"true"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*ImportKeyReturn, error) {

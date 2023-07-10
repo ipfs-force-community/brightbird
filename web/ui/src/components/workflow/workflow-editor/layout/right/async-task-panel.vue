@@ -28,19 +28,19 @@
           </div>
         </div>
         <div class="inputs-container set-padding" v-if="tabFlag === 1">
-          <div v-if="inputProperties.length == 0">
+          <div v-if="!input">
             <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
           <div v-else>
-            <jm-form-item v-for="(item, index) in inputProperties" :key="item.name" :prop="`inputs.${index}.value`"
+            <jm-form-item v-for="(value, key) in input.properties" :key="key" :prop="`inputs.${key}.value`"
               class="node-name">
               <template #label>
-                {{ item.name }} ({{ item.type }})
-                <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
+                {{value.title}}
+                <jm-tooltip placement="top" v-if="value.description" :append-to-body="false" :content="value.description">
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <PropertySelect :name="form.instanceName" :input="form.input" :property="item" :treeData="nodeNames">
+              <PropertySelect :instanceName="form.instanceName" :propName="key" :input="form.input" :property="value" :treeData="nodeNames">
               </PropertySelect>
             </jm-form-item>
           </div>
@@ -63,12 +63,14 @@ import JmForm from '@/components/form/form';
 import jmFormItem from '@/components/form/form-item';
 import JmInput from '@/components/form/input';
 import { getPluginByName, getPluginDef } from '@/api/plugin';
-import { PluginDef, Property } from '@/api/dto/testflow';
+import { PluginDef } from '@/api/dto/testflow';
 import PropertySelect from './property-select.vue'
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
 import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import JmSelect from '@/components/form/select';
-
+import {Try} from "json-schema-to-typescript/dist/src/utils";
+import { JSONSchema } from 'json-schema-to-typescript';
+import { schema } from '@antv/g2plot';
 
 export default defineComponent({
   components: { JmEmpty, ExpressionEditor, PropertySelect, JmForm, jmFormItem, JmInput, JmSelect },
@@ -105,14 +107,20 @@ export default defineComponent({
     const tabFlag = ref<number>(1);
     const optionalFlag = ref<boolean>(false);
     const outputTabSelected = ref<boolean>(false);
-    const inputProperties = ref<Property[]>([]);
+    const input = ref<JSONSchema>();
 
+    const convertToSchema = (input: any):JSONSchema =>{
+      return Try<JSONSchema>(
+        () => input,
+        () => { throw new TypeError(`Error parsing JSON`)});
+    }
     const changeVersion = async () => {
       try {
         versionLoading.value = true;
         failureVisible.value = false;
         const selectPlugin = plugins.get(form.value.version);
-        inputProperties.value = selectPlugin?.inputProperties ?? [];
+        input.value  = convertToSchema(selectPlugin?.inputSchema);
+          
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -133,7 +141,12 @@ export default defineComponent({
             const pluginDef = await getPluginDef(anode.name, anode.version)
             nodeNames.push({
               name: anode.instanceName,
-              children: pluginDef.outputProperties,
+              type:"object",
+              index:-1,
+              defs: pluginDef.outputSchema.definitions,
+              schema: convertToSchema(pluginDef.outputSchema),
+              isLeaf: false,
+              children:[],
             });
           }
         }
@@ -161,10 +174,10 @@ export default defineComponent({
         }
 
         if (form.value.version) {
-          inputProperties.value = plugins.get(form.value.version)?.inputProperties ?? [];
+          input.value =  convertToSchema(plugins.get(form.value.version)?.inputSchema );
         } else {
           form.value.version = versionList.value.versions[0];
-          inputProperties.value = pluginDetail.pluginDefs[0]?.inputProperties ?? [];
+          input.value = convertToSchema(pluginDetail.pluginDefs[0]?.inputSchema); 
         }
 
 
@@ -196,7 +209,7 @@ export default defineComponent({
       outputTabSelected,
       noParamImage,
       nodeNames,
-      inputProperties,
+      input,
     };
 
   },

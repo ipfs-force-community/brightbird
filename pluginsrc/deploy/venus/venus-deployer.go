@@ -19,12 +19,12 @@ type Config struct {
 }
 
 type VConfig struct {
-	AuthUrl        string   `ignore:"-" json:"authUrl"`
-	AdminToken     string   `ignore:"-" json:"adminToken"`
-	BootstrapPeers []string `ignore:"-" json:"bootstrapPeers"`
+	AuthUrl        string   `jsonschema:"-" json:"authUrl"`
+	AdminToken     string   `jsonschema:"-" json:"adminToken"`
+	BootstrapPeers []string `jsonschema:"-" json:"bootstrapPeers"`
 
-	NetType  string `json:"netType" description:"network type: mainnet,2k,calibrationnet,force"`
-	Replicas int    `json:"replicas" description:"number of replicas"`
+	NetType  string `json:"netType" jsonschema:"netType" title:"Network Type" default:"force" require:"true" description:"network type: mainnet,2k,calibrationnet,force" enum:"mainnet,2k,calibrationnet,force"`
+	Replicas int    `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 }
 
 type RenderParams struct {

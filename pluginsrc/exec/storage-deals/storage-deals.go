@@ -36,15 +36,15 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	SophonAuth      sophonauth.SophonAuthDeployReturn       `json:"SophonAuth"`
-	Venus           venus.VenusDeployReturn                 `json:"Venus" description:"venus return"`
-	DropletMarket   dropletmarket.DropletMarketDeployReturn `json:"DropletMarket"`
-	DamoclesManager damoclesmanager.DamoclesManagerReturn   `json:"DamoclesManager"`
-	MinerAddress    address.Address                         `json:"minerAddress" type:"string"`
+	Auth            sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus           venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	DropletMarket   dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+	DamoclesManager damoclesmanager.DamoclesManagerReturn   `json:"DamoclesManager" jsonschema:"DamoclesManager" title:"Damocles Manager" description:"damocles manager return" require:"true"`
+	MinerAddress    address.Address                         `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	fullNode, closer, err := venusAPI.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.SophonAuth.AdminToken, nil)
+	fullNode, closer, err := venusAPI.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return err
 	}
