@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"errors"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
@@ -22,9 +21,10 @@ type DepParams struct {
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venus.VenusDeployReturn, error) {
-	var bootstrapPeers, ok = depParams.Global.CustomProperties["BootstrapPeer"].([]string)
-	if !ok {
-		return nil, errors.New("BootstrapPeer property not found")
+	var bootstrapPeers []string
+	err := depParams.Global.GetProperty("BootstrapPeer", &bootstrapPeers)
+	if err != nil {
+		return nil, err
 	}
 	return venus.DeployFromConfig(ctx, k8sEnv, venus.Config{
 		BaseConfig: depParams.BaseConfig,

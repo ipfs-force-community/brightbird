@@ -12,6 +12,19 @@ type GlobalParams struct {
 	CustomProperties map[string]interface{} `json:"customProperties"`
 }
 
+func (global GlobalParams) GetProperty(key string, val interface{}) error {
+	property, ok := global.CustomProperties[key]
+	if !ok {
+		return fmt.Errorf("key %s not found", key)
+	}
+
+	data, err := json.Marshal(property)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(data, val)
+}
+
 type NodeContext struct {
 	Input  json.RawMessage
 	OutPut json.RawMessage

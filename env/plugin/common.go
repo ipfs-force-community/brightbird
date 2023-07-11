@@ -71,12 +71,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 		return
 	}
 
-	reader := bufio.NewReader(os.Stdin)
-	data, err := reader.ReadBytes('\n')
-	if err != nil {
-		writeError(err)
-		return
-	}
+	data := []byte(`{"Namespace":"li","TestID":"95b41d9e","PrivateRegistry":"192.168.200.175","MysqlConnTemplate":"root:Aa123456@(192.168.200.175:3306)/%s?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","TmpPath":"/shared-dir/tmp","Global":{"logLevel":"DEBUG","customProperties":{"BootstrapPeer":["/ip4/192.168.200.125/tcp/34567/p2p/12D3KooWB1X6MKuvZGN15YMJFMDSFLDeSZyCEiiuRV6Wyucq3bAZ"]}},"Nodes":{"create_token-6e488a84":{"Input":{"SophonAuth":{"adminToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJwZXJtIjoiYWRtaW4iLCJleHQiOiIifQ.bOA7-uzkL_WF5S6TMhznaODTzJQ1bKkF-U71SM_sZXA","codeVersion":"f70d19c50f0005949b7f239e3a5cae804fae5496","configMapName":"sophon-auth-95b41d9ef1116e8a","deployName":"sophon-auth","instanceName":"sophon-auth-96e7cb7d","mysqlDSN":"root:Aa123456@(192.168.200.175:3306)/sophon-auth-95b41d9ef1116e8a?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","replicas":1,"statefulSetName":"sophon-auth-95b41d9ef1116e8a","svcEndpoint":"sophon-auth-95b41d9ef1116e8a-service:8989","svcName":"sophon-auth-95b41d9ef1116e8a-service"},"codeVersion":"","extra":"nono","instanceName":"create_token-6e488a84","perm":"read","userName":"li"},"OutPut":{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoibGkiLCJwZXJtIjoicmVhZCIsImV4dCI6Im5vbm8ifQ.7xLm_13pFVspa226ZVQW4TK2heSIaXQ9c7bU66Fr9eQ"}},"create_user-ecc4dbce":{"Input":{"SophonAuth":{"adminToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJwZXJtIjoiYWRtaW4iLCJleHQiOiIifQ.bOA7-uzkL_WF5S6TMhznaODTzJQ1bKkF-U71SM_sZXA","codeVersion":"f70d19c50f0005949b7f239e3a5cae804fae5496","configMapName":"sophon-auth-95b41d9ef1116e8a","deployName":"sophon-auth","instanceName":"sophon-auth-96e7cb7d","mysqlDSN":"root:Aa123456@(192.168.200.175:3306)/sophon-auth-95b41d9ef1116e8a?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","replicas":1,"statefulSetName":"sophon-auth-95b41d9ef1116e8a","svcEndpoint":"sophon-auth-95b41d9ef1116e8a-service:8989","svcName":"sophon-auth-95b41d9ef1116e8a-service"},"codeVersion":"","comment":"hei","instanceName":"create_user-ecc4dbce","userName":"li"},"OutPut":{"userName":"li"}},"sophon-auth-96e7cb7d":{"Input":{"codeVersion":"f70d19c50f0005949b7f239e3a5cae804fae5496","instanceName":"sophon-auth-96e7cb7d","replicas":1},"OutPut":{"mysqlDSN":"root:Aa123456@(192.168.200.175:3306)/sophon-auth-95b41d9ef1116e8a?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","replicas":1,"adminToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJwZXJtIjoiYWRtaW4iLCJleHQiOiIifQ.bOA7-uzkL_WF5S6TMhznaODTzJQ1bKkF-U71SM_sZXA","codeVersion":"f70d19c50f0005949b7f239e3a5cae804fae5496","instanceName":"sophon-auth-96e7cb7d","deployName":"sophon-auth","statefulSetName":"sophon-auth-95b41d9ef1116e8a","configMapName":"sophon-auth-95b41d9ef1116e8a","svcName":"sophon-auth-95b41d9ef1116e8a-service","svcEndpoint":"sophon-auth-95b41d9ef1116e8a-service:8989"}},"venus-daemon-b7a8fad0":{"Input":{"SophonAuth":{"adminToken":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiYWRtaW4iLCJwZXJtIjoiYWRtaW4iLCJleHQiOiIifQ.bOA7-uzkL_WF5S6TMhznaODTzJQ1bKkF-U71SM_sZXA","codeVersion":"f70d19c50f0005949b7f239e3a5cae804fae5496","configMapName":"sophon-auth-95b41d9ef1116e8a","deployName":"sophon-auth","instanceName":"sophon-auth-96e7cb7d","mysqlDSN":"root:Aa123456@(192.168.200.175:3306)/sophon-auth-95b41d9ef1116e8a?parseTime=true\u0026loc=Local\u0026charset=utf8mb4\u0026collation=utf8mb4_unicode_ci\u0026readTimeout=10s\u0026writeTimeout=10s","replicas":1,"statefulSetName":"sophon-auth-95b41d9ef1116e8a","svcEndpoint":"sophon-auth-95b41d9ef1116e8a-service:8989","svcName":"sophon-auth-95b41d9ef1116e8a-service"},"codeVersion":"d4b62f69831068f69e606544e7d489e2c67e14cb","instanceName":"venus-daemon-b7a8fad0","netType":"force","replicas":1},"OutPut":{}}},"CurrentContext":"venus-daemon-b7a8fad0"}	`)
 
 	incomingParams := &InitParams{}
 	err = json.Unmarshal(data, incomingParams)
@@ -131,11 +126,17 @@ func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *I
 	depParmasT := fnT.In(2)
 	paramsV := reflect.New(depParmasT)
 
-	sjson.SetBytes(input, "global", incomingParams.Global)
+	input, err = sjson.SetBytes(input, "global", incomingParams.Global)
+	if err != nil {
+		return err
+	}
+
 	err = json.Unmarshal(input, paramsV.Interface())
 	if err != nil {
 		return err
 	}
+	xx := paramsV.Interface()
+	fmt.Println(xx)
 
 	//call function
 	results := reflect.ValueOf(constructor).Call([]reflect.Value{reflect.ValueOf(context.Background()), reflect.ValueOf(k8sEnv), paramsV.Elem()})
