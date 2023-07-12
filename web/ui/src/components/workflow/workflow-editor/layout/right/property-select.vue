@@ -21,6 +21,7 @@ import { defineComponent, ref, PropType } from 'vue';
 import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { JSONSchema } from 'json-schema-to-typescript';
+import { JSONSchema4Object,JSONSchema4Array } from 'json-schema';
 
 export default defineComponent({
     emits: [],
@@ -65,6 +66,11 @@ export default defineComponent({
 
         if (props.input[props.propName]) {
             refValue.value = props.input[props.propName];
+        }
+
+        if (props.property.default) {
+            //todo check object and arrary default value
+            refValue.value = props.property.default as string;
         }
 
         const handleNodeClick = function (data: TreeProp, obj: any) {
@@ -138,15 +144,16 @@ export default defineComponent({
                 for (let [key, prop] of Object.entries(schema.properties)) {
                     let treeProp: TreeProp = {
                         name: key,
+                        index:0,
                         defs: defs,
                         isLeaf: false,
                         type: "",
                         schema: null,
-
                         children: []
                     }
-                    if (isSimpleType(prop.type)) {
-                        treeProp.type = prop.type;
+                    prop  =  resolveSchema(prop);
+                    if (isSimpleType(prop.type as string)) {
+                        treeProp.type = prop.type as string;
                         treeProp.schema = resolveSchema(prop);
                         treeProp.isLeaf = true
                         treeData.push(treeProp)
@@ -162,11 +169,11 @@ export default defineComponent({
                                 index:0,
                                 defs: defs,
                                 isLeaf: false,
-                                type: treeProp.schema.type,
+                                type: treeProp.schema.type as string,
                                 schema: treeProp.schema,
                                 children: []
                             }]
-                        if (isSimpleType(treeProp.schema.type)) {
+                        if (isSimpleType(treeProp.schema.type as string)) {
                             treeProp.children[0].isLeaf = true;
                         }
                         treeData.push(treeProp)
@@ -175,12 +182,10 @@ export default defineComponent({
 
                     //object
                     treeProp.type = "object"
-                    treeProp.schema = resolveSchema(prop);
+                    treeProp.schema = prop;
                     treeData.push(treeProp)
                     continue;
                 }
-            } else if (schema.type == "arrary") {
-                
             } else {
                 throw new TypeError(`unexpect json type` + schema.type)
             }

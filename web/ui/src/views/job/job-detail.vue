@@ -130,7 +130,7 @@ export default defineComponent({
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
           if (pageData.value.tasks[i].state != TaskStateEnum.Error && pageData.value.tasks[i].state != TaskStateEnum.Successful) {
-            pageData.value.tasks[i] = await getTask(pageData.value.tasks[i].id);
+            pageData.value.tasks[i] = await getTask({ID:pageData.value.tasks[i].id});
           }
         }
       } catch (err) {

@@ -28,6 +28,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/wait"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -281,6 +282,41 @@ func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, stateName str
 	}
 	log.Infof("Updated statefulSet %s.", stateName)
 	return nil
+}
+
+func (env *K8sEnvDeployer) DeletePodAndWait(ctx context.Context, podName string) error {
+	podClient := env.k8sClient.CoreV1().Pods(env.namespace)
+	err := podClient.Delete(ctx, podName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
+	return wait.PollImmediateUntilWithContext(ctx, time.Second*3, func(ctx context.Context) (done bool, err error) {
+		pod, err := podClient.Get(ctx, podName, metav1.GetOptions{})
+		if err != nil {
+			if errors2.IsNotFound(err) {
+				return false, nil
+			}
+			return false, err
+		}
+
+		return pod.DeletionTimestamp == nil && pod.Status.Phase == corev1.PodRunning && pod.Status.ContainerStatuses[0].Ready, nil
+	})
+}
+
+func (env *K8sEnvDeployer) WaitPodReady(ctx context.Context, podName string) error {
+	podClient := env.k8sClient.CoreV1().Pods(env.namespace)
+	return wait.PollImmediateUntilWithContext(ctx, time.Second*3, func(ctx context.Context) (done bool, err error) {
+		pod, err := podClient.Get(ctx, podName, metav1.GetOptions{})
+		if err != nil {
+			if errors2.IsNotFound(err) {
+				return false, nil
+			}
+			return false, err
+		}
+
+		return pod.Status.Phase == corev1.PodRunning && pod.Status.ContainerStatuses[0].Ready, nil
+	})
 }
 
 // RunDeployment deploy k8s's deployment from specific yaml config
@@ -695,6 +731,7 @@ func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName st
 
 func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types.Endpoint) error {
 	for {
+		time.Sleep(time.Second * 3)
 		tCtx, cancel := context.WithTimeout(ctx, time.Second*5)
 		_, err := env.dialCtx(tCtx, "tcp", string(endpoint))
 		if err == nil {
@@ -702,8 +739,6 @@ func (env *K8sEnvDeployer) WaitEndpointReady(ctx context.Context, endpoint types
 			return err
 		}
 		cancel()
-		fmt.Println(endpoint)
-		fmt.Println(err)
 	}
 }
 

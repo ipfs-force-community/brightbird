@@ -63,6 +63,6 @@ export interface TreeProp {
   type: string;
   index: number|undefined;
   defs:Map<string, JSONSchema>;
-  schema: JSONSchema;
+  schema: JSONSchema|null;
   children: TreeProp[]
 }

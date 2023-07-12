@@ -4,3 +4,4 @@
 config.toml
 __debug_bin
 dist
+node_modules

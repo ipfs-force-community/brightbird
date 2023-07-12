@@ -50,10 +50,10 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 	return chainco.DeployFromConfig(ctx, k8sEnv, chainco.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: chainco.VConfig{
-			Replicas:   1,
 			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
 			AdminToken: depParams.Auth.AdminToken,
 			Nodes:      podEndpoints,
+			Replicas:   depParams.Replicas,
 		},
 	})
 }

@@ -154,7 +154,7 @@ func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *models.Task) error
 }
 
 func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) error {
-	task, err := taskMgr.taskRepo.Get(ctx, id)
+	task, err := taskMgr.taskRepo.Get(ctx, &repo.GetTaskReq{ID: id})
 	if err != nil {
 		return err
 	}

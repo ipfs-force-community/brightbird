@@ -222,7 +222,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	task, err := taskRepo.Get(pCtx, taskId)
+	task, err := taskRepo.Get(pCtx, &repo.GetTaskReq{ID: taskId})
 	if err != nil {
 		return err
 	}
@@ -331,7 +331,7 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	task, err := taskRep.Get(ctx, taskId)
+	task, err := taskRep.Get(ctx, &repo.GetTaskReq{ID: taskId})
 	if err != nil {
 		return nil, err
 	}

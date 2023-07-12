@@ -100,12 +100,17 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}
 
 	pushPodName := pods[0].GetName()
-	_, err = k8sEnv.ExecRemoteCmd(ctx, pushPodName, "sed", "-i", "-e", "'s/skipProcessHead = true/skipProcessHead = false/g'", "-e", "'s/skipPushMessage = true/skipPushMessage = false/g'", "/root/.sophon-messager/config.toml.tmp")
+	_, err = k8sEnv.ExecRemoteCmd(ctx, pushPodName, "/bin/sh", "-c", "sed -i -e  's/skipProcessHead = true/skipProcessHead = false/g' -e 's/skipPushMessage = true/skipPushMessage = false/g' /root/.sophon-messager/config.toml")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("set first pod to push %w", err)
 	}
 
+	err = k8sEnv.DeletePodAndWait(ctx, pushPodName)
+	if err != nil {
+		return nil, fmt.Errorf("delete pod fail %w", err)
+	}
 	log.Infof("change pod %s to a push node", pushPodName)
+
 	//create service
 	svcCfg, err := f.Open("sophon-messager/sophon-messager-headless.yaml")
 	if err != nil {

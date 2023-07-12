@@ -106,6 +106,13 @@ type ListTasksParams struct {
 	CreateTime *int64 `form:"createTime" json:"createTime"`
 }
 
+// GetTaskReq
+// swagger:parameters getTaskReq
+type GetTaskReq struct {
+	TestId *string `form:"testid" json:"testID"`
+	ID     *string `form:"ID" json:"ID"`
+}
+
 // ListTasksReq
 // swagger:parameters listTasksReq
 type ListTasksReq struct { //todo https://github.com/go-swagger/go-swagger/issues/2802
@@ -198,18 +205,41 @@ type DeletePluginReq struct {
 	Version string `form:"version" json:"version" binding:"required"`
 }
 
+// PodLogReq
+// swagger:parameters podLogReq
+type PodLogReq struct {
+	// testid of task
+	//
+	// required: true
+	TestID string `form:"testID" json:"testID" binding:"required"`
+	// pod name
+	//
+	// required: true
+	PodName string `form:"podName" json:"podLog" binding:"required"`
+}
+
+type StepState string
+
+const (
+	StepNotRunning StepState = "notrunning"
+	StepRunning    StepState = "running"
+	StepSuccess    StepState = "success"
+	StepFail       StepState = "fail"
+)
+
 // StepLog
 // swagger:model stepLog
 type StepLog struct {
-	Name      string   `json:"name"`
-	Logs      []string `json:"logs"`
-	IsSuccess bool     `json:"success"`
+	Name         string    `json:"name"`
+	InstanceName string    `json:"instanceName"`
+	State        StepState `json:"state"`
+	Logs         []string  `json:"logs"`
 }
 
 // LogResp
 // swagger:model logResp
 type LogResp struct {
-	PodName string    `json:"podName"`
-	Steps   []StepLog `json:"steps"`
-	Logs    []string  `json:"logs"`
+	PodName string     `json:"podName"`
+	Steps   []*StepLog `json:"steps"`
+	Logs    []string   `json:"logs"`
 }

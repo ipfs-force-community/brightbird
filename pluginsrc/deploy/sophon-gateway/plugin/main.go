@@ -25,6 +25,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 		VConfig: sophongateway.VConfig{
 			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
 			AdminToken: depParams.Auth.AdminToken,
+			Replicas:   depParams.Replicas,
 		},
 	})
 }

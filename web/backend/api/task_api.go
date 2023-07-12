@@ -62,9 +62,9 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 		c.JSON(http.StatusOK, tasks)
 	})
 
-	// swagger:route Get /task/{id} task getTask
+	// swagger:route Get /task task getTaskReq
 	//
-	// Get task by id
+	// Get task by condition
 	//
 	//     Consumes:
 	//
@@ -75,24 +75,27 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 	//
 	//     Deprecated: false
 	//
-	//     Parameters:
-	//       + name: id
-	//         in: path
-	//         description: job id
-	//         required: true
-	//         type: string
-	//
 	//     Responses:
 	//       200: task
 	//		 503: apiError
-	group.GET(":id", func(c *gin.Context) {
-		id, err := primitive.ObjectIDFromHex(c.Param("id"))
+	group.GET("", func(c *gin.Context) {
+		var req models.GetTaskReq
+		err := c.ShouldBindQuery(&req)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
 
-		task, err := tasksRepo.Get(ctx, id)
+		req2 := &repo.GetTaskReq{TestId: req.TestId}
+		if req.ID != nil {
+			req2.ID, err = primitive.ObjectIDFromHex(*req.ID)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+		}
+
+		task, err := tasksRepo.Get(ctx, req2)
 		if err != nil {
 			c.Error(err) //nolint
 			return

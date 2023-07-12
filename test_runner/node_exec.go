@@ -172,6 +172,8 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		return err
 	}
 
+	log.Debugf("invoke result %s params %s", pip.InstanceName, lastline)
+
 	plugin.RespSuccess("")
 	*envCtx = *newCtx //override value
 	return nil

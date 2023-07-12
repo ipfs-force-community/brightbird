@@ -52,35 +52,28 @@
         </el-col>
       </el-row>
 
-      <el-row class="row-t" v-for="p in pluginDetail?.pluginDefs" >
-        <el-col :span="2">
-          <el-text class="mx-1">{{ p.version }} 详情:</el-text>
-        </el-col>
-        <el-col :span="22">
-          <el-collapse>
-            <el-text v-if="!p.inputProperties">无输入参数</el-text>
-            <el-collapse-item v-else title="输入参数">
-              <el-table :data="p.inputProperties" stripe size="small">
-                <el-table-column prop="name" label="名称" width="180" />
-                <el-table-column prop="valuePath" label="路径" width="180" />
-                <el-table-column prop="type" label="类型" width="180" />
-                <el-table-column prop="require" label="必须？" width="180" />
-                <el-table-column prop="description" label="描述" />
-              </el-table>
-            </el-collapse-item>
-
-            <el-text v-if="!p.outputProperties">无组件依赖</el-text>
-            <el-collapse-item v-else title="依赖组件">
-              <el-table :data="p.outputProperties" stripe size="small">
-                <el-table-column prop="x" label="名称" width="180" />
-                <el-table-column prop="type" label="类型" width="180" />
-                <el-table-column prop="require" label="必须？" width="180" />
-                <el-table-column prop="description" label="描述" />
-              </el-table>
-            </el-collapse-item>
-          </el-collapse>
-        </el-col>
-      </el-row>
+      <el-tabs type="card">
+        <el-tab-pane v-for="p in pluginDetail?.pluginDefs" :label="p.version">
+          <el-row>
+            <el-col :span="12">
+              <el-card class="box-card">
+                <template #header>
+                  <el-text>输入参数</el-text>
+                </template>
+                <vue-json-pretty :data="p.inputSchema" />
+              </el-card>
+            </el-col>
+            <el-col :span="12">
+              <el-card class="box-card">
+                <template #header>
+                  <el-text>输出参数</el-text>
+                </template>
+                <vue-json-pretty :data="p.outputSchema" />
+              </el-card>
+            </el-col>
+          </el-row>
+        </el-tab-pane>
+      </el-tabs>
     </div>
 
   </div>
@@ -95,6 +88,7 @@ import { useStore } from 'vuex';
 import { IRootState } from '@/model';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import PluginLabel from './plugin-label.vue';
+import VueJsonPretty from 'vue-json-pretty';
 
 export default defineComponent({
   props: {
@@ -104,7 +98,7 @@ export default defineComponent({
     },
   },
   components: {
-    PluginLabel,
+    PluginLabel, VueJsonPretty
   },
   setup(props) {
     const { proxy } = getCurrentInstance() as any;
@@ -176,9 +170,17 @@ export default defineComponent({
     padding: 24px;
     background-color: #ffffff;
 
+    .line {
+      display: block;
+    }
+
+    .box-card {
+    }
+
     .row-t {
       margin: 10px;
     }
+
     .top-title {
       display: flex;
       align-items: center;
