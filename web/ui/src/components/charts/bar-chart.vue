@@ -47,7 +47,7 @@
             {
               name: '',
               type: 'bar',
-              data: [50, 60, 80], // 修改为百分比数据
+              data: [50, 60, 80],
               itemStyle: {
                 // 设置柱子圆角
                 barBorderRadius: [0, 10, 10, 0],

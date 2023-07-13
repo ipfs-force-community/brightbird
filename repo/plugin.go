@@ -106,6 +106,7 @@ type IPluginService interface {
 	ListPlugin(context.Context, *ListPluginParams) ([]*models.PluginDetail, error)
 	GetPlugin(context.Context, string, string) (*models.Plugin, error)
 	SavePlugins(context.Context, *models.Plugin) error
+	CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
 }
 
 type PluginSvc struct {
@@ -308,4 +309,15 @@ func (p *PluginSvc) DeleteLabel(ctx context.Context, name string, toDeleteLabel 
 		"labels": toDeleteLabel,
 	}})
 	return err
+}
+
+func (p *PluginSvc) CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error) {
+	filter := bson.M{}
+	filter["plugintype"] = *pluginType
+
+	count, err := p.pluginCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
 }

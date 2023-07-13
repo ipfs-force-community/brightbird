@@ -7,6 +7,16 @@ import { defineComponent } from 'vue';
 import * as echarts from 'echarts';
 
 export default defineComponent({
+  props: {
+    dataArray: {
+      type: Array,
+      required: true
+    },
+    passRateArray: {
+      type: Array,
+      required: true
+    }
+  },
   mounted() {
     this.renderChart();
   },
@@ -20,14 +30,16 @@ export default defineComponent({
           },
         xAxis: {
           type: 'category',
-          data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          data: this.dataArray
+          // data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
         },
         yAxis: {
           type: 'value'
         },
         series: [
           {
-            data: [820, 932, 901, 934, 1290, 1330, 1320],
+            // data: [820, 932, 901, 934, 1290, 1330, 1320],
+            data: this.passRateArray,
             type: 'line',
             smooth: true
           }

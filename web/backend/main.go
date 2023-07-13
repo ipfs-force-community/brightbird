@@ -236,6 +236,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterJobRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterTaskRouter),
 		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterLogRouter),
+		fx_opt.Override(fx_opt.NextInvoke(), api.RegisterDashboardRouter),
 
 		//start
 		fx_opt.Override(fx_opt.NextInvoke(), func(ctx context.Context, builder *job.ImageBuilderMgr) {
