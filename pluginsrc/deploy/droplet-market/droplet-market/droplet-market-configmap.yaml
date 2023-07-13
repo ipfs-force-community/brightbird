@@ -20,20 +20,20 @@ data:
 
     [Node]
       Url = "{{.NodeUrl}}"
-      Token = "{{.AuthToken}}"
+      Token = "{{.UserToken}}"
 
     [Messager]
       Url = "{{.MessagerUrl}}"
-      Token = "{{.AuthToken}}"
+      Token = "{{.UserToken}}"
 
     [Signer]
       Type = "gateway"
       Url = "{{.GatewayUrl}}"
-      Token = "{{.AuthToken}}"
+      Token = "{{.UserToken}}"
 
     [AuthNode]
       Url = "{{.AuthUrl}}"
-      Token = "{{.AuthToken}}"
+      Token = "{{.UserToken}}"
 
     [Mysql]
       ConnectionString = "{{.MysqlDSN}}"

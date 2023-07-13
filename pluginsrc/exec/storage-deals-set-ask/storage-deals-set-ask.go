@@ -9,18 +9,21 @@ import (
 	"text/tabwriter"
 	"time"
 
-	"go.uber.org/fx"
-
 	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/venus/pkg/constants"
+	venusAPI "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/filecoin-project/venus/venus-shared/types/market"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -40,69 +43,42 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv          *env.K8sEnvDeployer `json:"-"`
-	DamoclesMarket  env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
-	DamoclesManager env.IDeployer       `json:"-" svcname:"DamoclesManager"`
-	CreateMiner     env.IExec           `json:"-" svcname:"CreateMiner"`
+	Auth            sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus           venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	DropletMarket   dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+	DamoclesManager damoclesmanager.DamoclesManagerReturn   `json:"DamoclesManager" jsonschema:"DamoclesManager" title:"Damocles Manager" description:"damocles manager return" require:"true"`
+	MinerAddress    address.Address                         `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
-	minerAddr, err := params.CreateMiner.Param("Miner")
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	fullNode, closer, err := venusAPI.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
-		return nil, err
+		return err
 	}
+	defer closer()
 
-	addr, err := env.UnmarshalJSON[address.Address](minerAddr.Raw())
-	if err != nil {
-		return nil, err
-	}
-
-	minerInfo, err := GetMinerInfo(ctx, params, addr)
+	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vTypes.EmptyTSK)
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
-		return nil, err
+		return err
 	}
-	log.Infof("miner info: %v", minerInfo, addr)
+	log.Infof("miner info: %v", minerInfo)
 
-	err = StorageAskSet(ctx, params, addr)
-	if err != nil {
-		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
-	}
-
-	err = StorageAskGet(ctx, params, addr)
-	if err != nil {
-		fmt.Printf("market net listen err: %v\n", err)
-		return nil, err
-	}
-
-	return env.NewSimpleExec(), nil
-}
-
-func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
+	err = StorageAskSet(ctx, params, params.MinerAddress)
 	if err != nil {
 		return err
 	}
 
-	if env.Debug {
-		pods, err := params.DamoclesMarket.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.DamoclesMarket.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
+	err = StorageAskGet(ctx, params, params.MinerAddress)
+	if err != nil {
+		return err
 	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+
+	return nil
+}
+
+func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}
@@ -181,27 +157,7 @@ func StorageAskSet(ctx context.Context, params TestCaseParams, mAddr address.Add
 }
 
 func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Address) error {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-
-	if env.Debug {
-		pods, err := params.DamoclesMarket.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.DamoclesMarket.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}
@@ -224,26 +180,4 @@ func StorageAskGet(ctx context.Context, params TestCaseParams, mAddr address.Add
 		return w.Flush()
 	}
 	return nil
-}
-
-func GetMinerInfo(ctx context.Context, params TestCaseParams, minerAddr address.Address) (string, error) {
-	getMinerCmd := []string{
-		"./venus-sector-manager",
-		"util",
-		"miner",
-		"info",
-		minerAddr.String(),
-	}
-
-	pods, err := params.DamoclesManager.Pods(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	minerInfo, err := params.K8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), getMinerCmd...)
-	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w", err)
-	}
-
-	return string(minerInfo), nil
 }

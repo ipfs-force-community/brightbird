@@ -3,7 +3,7 @@ import { IPageDto } from './common';
 export interface ITaskVo extends Readonly<{
   id: string;
   name: string;
-  podName:string;
+  podName: string;
   jobId: string;
   testflowId: string;
   testId: string;
@@ -23,3 +23,8 @@ export interface IListTaskVo
   > { }
 
 
+export interface IGetTaskReq extends Readonly<{
+}> {
+  testID?: string;
+  ID?: string;
+}

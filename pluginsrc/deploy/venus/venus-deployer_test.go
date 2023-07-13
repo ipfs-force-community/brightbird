@@ -16,10 +16,12 @@ func TestVenusHADeployer_YAML_Check(t *testing.T) {
 	renderParams := RenderParams{
 		UniqueId: "abc",
 		Config: Config{
-			Replicas:       1,
-			AuthUrl:        "http://127.0.0.1:8989",
-			AdminToken:     "token",
-			BootstrapPeers: []string{"/ip4/127.0.0.1/tcp/130"},
+			VConfig: VConfig{
+				Replicas:       1,
+				AuthUrl:        "http://127.0.0.1:8989",
+				AdminToken:     "token",
+				BootstrapPeers: []string{"/ip4/127.0.0.1/tcp/130"},
+			},
 		},
 	}
 	data, err := env.QuickRender(f, renderParams)

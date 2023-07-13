@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/fx"
-
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -29,28 +28,26 @@ var Info = types.PluginInfo{
 
 // TestCaseParams
 type TestCaseParams struct {
-	fx.In
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"VenusWalletPro"  jsonschema:"VenusWalletPro" title:"Venus Wallet Auth" require:"true" description:"venus wallet return"`
 }
 
 // Exec
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	walletAddrs, err := ImportFbls(ctx, params)
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	walletAddrs, err := ImportFbls(ctx, k8sEnv, params)
 	if err != nil {
 		fmt.Printf("create miner failed: %v\n", err)
-		return nil, err
+		return err
 	}
 	for id, addr := range walletAddrs {
 		log.Infof("wallet %v is: %v", id, addr)
 	}
 
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 // ImportFbls
-func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
-	venusWalletProPods, err := params.VenusWalletPro.Pods(ctx)
+func ImportFbls(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) ([]string, error) {
+	venusWalletProPods, err := venuswalletpro.GetPods(ctx, k8sEnv, params.VenusWalletPro.InstanceName)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +61,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	var addrs []string
 
-	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
+	walletAaddrs, err := k8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
 		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}

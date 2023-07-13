@@ -16,9 +16,23 @@
           <el-collapse-item v-for="step in podLog?.steps" class="step-header">
             <template #title>
               <div class="header-title">
-                <el-icon v-if="step.success" size="20"><SuccessFilled color="green" /></el-icon> 
-                <el-icon v-else size="20"><CircleCloseFilled color="rgb(255, 168, 168)"/></el-icon>
-                <el-text class="title" size="small" > {{ step.name }} </el-text>
+                <el-icon v-if="step.state == StepStateEnum.Success" size="20">
+                  <SuccessFilled color="green" />
+                </el-icon>
+
+                <el-icon v-if="step.state == StepStateEnum.Fail" size="20">
+                  <CircleCloseFilled color="rgb(255, 168, 168)" />
+                </el-icon>
+
+                <el-icon v-if="step.state == StepStateEnum.NotRunning" size="20">
+                  <RemoveFilled color="gray" />
+                </el-icon>
+
+                <el-icon v-if="step.state == StepStateEnum.Running" size="20">
+                  <QuestionFilled color="green" />
+                </el-icon>
+
+                <el-text class="title" size="small"> {{ step.name }} </el-text>
               </div>
             </template>
             <div class="steps">
@@ -38,6 +52,7 @@ import { defineComponent, getCurrentInstance, onMounted, provide, ref } from 'vu
 import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
+import { StepStateEnum } from '@/api/dto/enumeration';
 
 export default defineComponent({
   props: {
@@ -73,7 +88,7 @@ export default defineComponent({
     const selectTask = async (podName: string) => {
       try {
         selectedPod.value = podName;
-        podLog.value = await getPodLog(podName);
+        podLog.value = await getPodLog({ podName: podName, testID: props.testId });
       } catch (error) {
         console.error(error);
       }
@@ -110,7 +125,7 @@ export default defineComponent({
     const loadFirstPodLog = async () => {
       if (podList.value.length > 0) {
         selectedPod.value = podList.value[0];
-        podLog.value = await getPodLog(selectedPod.value);
+        podLog.value = await getPodLog({podName:selectedPod.value, testID:props.testId});
       }
     };
 
@@ -123,6 +138,8 @@ export default defineComponent({
     });
 
     return {
+      StepStateEnum,
+
       podList,
       selectedPod,
       podLog,
@@ -206,23 +223,24 @@ export default defineComponent({
       cursor: default;
       --el-collapse-header-bg-color: rgb(154, 154, 154);
       --el-collapse-content-bg-color: #e1e1e1;
-      --el-collapse-border-color:rgb(154, 154, 154);
+      --el-collapse-border-color: rgb(154, 154, 154);
       --el-collapse-header-height: 30px;
-      .step-header  {
+
+      .step-header {
         margin-left: 8px;
         margin-bottom: 3px;
         border-radius: 8px;
-        border:3px solid rgb(154, 154, 154);
+        border: 3px solid rgb(154, 154, 154);
 
         .header-title {
-            display: inline-flex;
-            align-items: center;
+          display: inline-flex;
+          align-items: center;
 
-            .title {
-              color: rgb(255, 255, 255);
-              padding-left: 10px;
-              font-size: 15px;
-            }
+          .title {
+            color: rgb(255, 255, 255);
+            padding-left: 10px;
+            font-size: 15px;
+          }
         }
       }
 
@@ -245,5 +263,4 @@ export default defineComponent({
       }
     }
   }
-}
-</style>
+}</style>

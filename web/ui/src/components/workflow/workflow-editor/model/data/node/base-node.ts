@@ -5,19 +5,25 @@ import { ISelectableParam } from '../../../../workflow-expression-editor/model/d
 
 export abstract class BaseNode implements IWorkflowNode {
   name: string;
+  instanceName: string;
   labels: string[];
   private readonly type: NodeTypeEnum;
   private readonly icon: string;
 
-  protected constructor(name: string,
+  protected constructor(name: string, instanceName: string,
     type: NodeTypeEnum, icon: string, labels: string[]) {
     this.name = name;
+    this.instanceName = instanceName,
     this.type = type;
     this.icon = icon;
     this.labels = labels;
   }
 
-  getDisplayName(): string {
+  getName(): string {
+    return this.name;
+  }
+
+  getInstanceName(): string {
     return this.name;
   }
 
@@ -43,6 +49,13 @@ export abstract class BaseNode implements IWorkflowNode {
         {
           required: true,
           message: '节点名称不能为空',
+          trigger: 'blur',
+        },
+      ],
+      instanceName: [
+        {
+          required: true,
+          message: '实例名称不能为空',
           trigger: 'blur',
         },
       ],

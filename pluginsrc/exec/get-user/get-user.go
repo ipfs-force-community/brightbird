@@ -2,14 +2,13 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -24,51 +23,20 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		UserName string `json:"userName"`
-	} `optional:"true"`
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	UserName string                            `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"user name"`
+	Auth     sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if env.Debug {
-		venusAuthPods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
-	adminToken, err := params.SophonAuth.Param("AdminToken")
+	_, err = authAPIClient.GetUser(ctx, params.UserName)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminToken.MustString())
-	if err != nil {
-		return nil, err
-	}
-
-	user, err := authAPIClient.GetUser(ctx, params.Params.UserName)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println(user.Name)
-	return env.NewSimpleExec(), nil
+	return nil
 }

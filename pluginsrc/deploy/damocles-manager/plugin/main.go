@@ -3,10 +3,15 @@ package main
 import (
 	"context"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {
@@ -14,84 +19,28 @@ func main() {
 }
 
 type DepParams struct {
-	Params damoclesmanager.Config `optional:"true"`
+	damoclesmanager.Config
 
-	Auth         env.IDeployer `svcname:"SophonAuth"`
-	Venus        env.IDeployer `svcname:"Venus"`
-	Message      env.IDeployer `svcname:"SophonMessager"`
-	Gateway      env.IDeployer `svcname:"SophonGateway"`
-	WalletDeploy env.IDeployer `svcname:"VenusWallet"`
+	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus    venus.VenusDeployReturn             `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Gateway  sophongateway.SophonGatewayReturn   `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
+	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 
-	K8sEnv *env.K8sEnvDeployer
-	Market env.IDeployer `optional:"true"`
-
-	Miner env.IExec `svcname:"MinerInfo"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.Auth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	venusEndpoint, err := depParams.Venus.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	authEndpoint, err := depParams.Auth.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	messagerEndpoint, err := depParams.Message.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-	marketEndpoint, err := depParams.Market.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	minerP, err := depParams.Miner.Param("Miner")
-	if err != nil {
-		return nil, err
-	}
-	minerAddr, err := env.UnmarshalJSON[address.Address](minerP.Raw())
-	if err != nil {
-		return nil, err
-	}
-
-	workerP, err := depParams.Miner.Param("Worker")
-	if err != nil {
-		return nil, err
-	}
-	workerAddr, err := env.UnmarshalJSON[address.Address](workerP.Raw())
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := damoclesmanager.DeployerFromConfig(depParams.K8sEnv, damoclesmanager.Config{
-		NodeUrl:             venusEndpoint.ToMultiAddr(),
-		MessagerUrl:         messagerEndpoint.ToMultiAddr(),
-		MarketUrl:           marketEndpoint.ToMultiAddr(),
-		GatewayUrl:          gatewayEndpoint.ToMultiAddr(),
-		AuthUrl:             authEndpoint.ToHTTP(),
-		AuthToken:           adminToken.MustString(),
-		MinerAddress:        minerAddr,
-		SenderWalletAddress: workerAddr,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesmanager.DamoclesManagerReturn, error) {
+	return damoclesmanager.DeployFromConfig(ctx, k8sEnv, damoclesmanager.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: damoclesmanager.VConfig{
+			NodeUrl:             depParams.Auth.SvcEndpoint.ToMultiAddr(),
+			MessagerUrl:         depParams.Messager.SvcEndpoint.ToMultiAddr(),
+			MarketUrl:           depParams.DropletMarket.SvcEndpoint.ToMultiAddr(),
+			GatewayUrl:          depParams.Gateway.SvcEndpoint.ToMultiAddr(),
+			AuthUrl:             depParams.Auth.SvcEndpoint.ToHTTP(),
+			UserToken:           depParams.UserToken,
+			MinerAddress:        depParams.MinerAddress,
+			SenderWalletAddress: depParams.SenderWalletAddress,
+		},
+	})
 }

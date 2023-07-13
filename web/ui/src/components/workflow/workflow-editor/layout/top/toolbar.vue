@@ -36,7 +36,6 @@ import { IWorkflow } from '../../model/data/common';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import { cloneDeep } from 'lodash';
 import { compare } from '../../model/util/object';
-import { Case, Node } from '@/api/dto/testflow';
 
 export default defineComponent({
   components: { ProjectPanel },
@@ -128,38 +127,9 @@ export default defineComponent({
                 proxy.$error(message);
                 return;
               }
-              const caseList: Case[] = [];
-              const nodeList: Node[] = [];
-              targetData.cells.forEach((cell: { shape: string; data: string; }) => {
-                if (cell.shape === 'edge') {
-                  return;
-                }
-                const jsonObject = JSON.parse(cell.data);
-                if (jsonObject.pluginType === 'Exec') {
-                  const CaseObj: Case = {
-                    name: jsonObject.name,
-                    version: jsonObject.version,
-                    properties: jsonObject.inputs,
-                    dependencies: jsonObject.dependencies,
-                    instance: jsonObject.instance,
-                  };
-                  caseList.push(CaseObj);
-                } else if (jsonObject.pluginType === 'Deployer') {
-                  const NodeObj: Node = {
-                    name: jsonObject.name,
-                    properties: jsonObject.inputs,
-                    dependencies: jsonObject.dependencies,
-                    version: jsonObject.version,
-                    instance: jsonObject.instance,
-                  };
-                  nodeList.push(NodeObj);
-                }
-              });
-
+            
               workflowForm.value.graph = JSON.stringify(targetData);
-              workflowForm.value.cases = caseList;
-              workflowForm.value.nodes = nodeList;
-              emit('save', true,  caseList, nodeList, workflowTool.toDsl(workflowForm.value));
+              emit('save', true, workflowTool.toDsl(workflowForm.value));
             })
             .catch((action: string) => {
               if (action === 'cancel') {
@@ -183,40 +153,8 @@ export default defineComponent({
 
           const graphData = graph.toJSON();
           workflowTool.slimGraphData(graphData);
-
-          const caseList: Case[] = [];
-          const nodeList: Node[] = [];
-          graphData.cells.forEach(cell => {
-            if (cell.shape === 'edge') {
-              return;
-            }
-            const jsonObject = JSON.parse(cell.data);
-            if (jsonObject.pluginType === 'Exec') {
-              const CaseObj: Case = {
-                name: jsonObject.name,
-                version: jsonObject.version,
-                properties: jsonObject.inputs,
-                dependencies: jsonObject.dependencies,
-                instance: jsonObject.instance,
-              };
-              caseList.push(CaseObj);
-            } else if (jsonObject.pluginType === 'Deployer') {
-              const NodeObj: Node = {
-                name: jsonObject.name,
-                version: jsonObject.version,
-                properties: jsonObject.inputs,
-                dependencies: jsonObject.dependencies,
-                instance: jsonObject.instance,
-              };
-              nodeList.push(NodeObj);
-            }
-          });
-
           workflowForm.value.graph = JSON.stringify(graphData);
-          workflowForm.value.cases = caseList;
-          workflowForm.value.nodes = nodeList;
-
-          emit('save', back, caseList, nodeList, workflowTool.toDsl(workflowForm.value));
+          emit('save', back, workflowTool.toDsl(workflowForm.value));
           workflowBackUp = cloneDeep(workflowForm.value);
         } catch ({ message }) {
           proxy.$error(message);

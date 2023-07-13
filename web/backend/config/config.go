@@ -23,6 +23,8 @@ type Config struct {
 	DockerRegistry []DockerRegistry
 
 	BuildWorkers []BuildWorkerConfig
+
+	CustomProperties map[string]interface{}
 }
 
 type BuildWorkerConfig struct {

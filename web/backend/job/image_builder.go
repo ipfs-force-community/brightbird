@@ -9,6 +9,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/hunjixin/brightbird/models"
 	"github.com/hunjixin/brightbird/repo"
 
 	git "github.com/go-git/go-git/v5"
@@ -87,13 +88,16 @@ func NewImageBuilderMgr(pluginRepo repo.IPluginService, provider IBuilderWorkerP
 	}
 }
 
-func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []*types.DeployNode, versions map[string]string) (map[string]string, error) {
+func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []models.PipelineItem, versions map[string]string) (map[string]string, error) {
 	versionMap := make(map[string]string)
 	mapLk := sync.Mutex{}
 
 	g, _ := errgroup.WithContext(ctx)
 	for _, node := range deployNodes {
-		nodeCpy := *node //copy
+		if node.Value.PluginType != types.Deploy {
+			continue
+		}
+		nodeCpy := *node.Value //copy
 		g.Go(func() error {
 			plugin, err := mgr.pluginRepo.GetPlugin(ctx, nodeCpy.Name, nodeCpy.Version)
 			if err != nil {

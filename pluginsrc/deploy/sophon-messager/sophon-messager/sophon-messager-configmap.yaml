@@ -19,7 +19,7 @@ data:
 
     [gateway]
       token = "{{.AuthToken}}"
-      url = [{{.GatewayUrl}}]
+      url = ["{{.GatewayUrl}}"]
 
     [jwt]
       authURL = "{{.AuthUrl}}"

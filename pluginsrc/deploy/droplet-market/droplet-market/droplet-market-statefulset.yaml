@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.droplet-market; cp /root/config.tmp /root/.droplet-market/config.toml"]
+          command: ['sh', '-c', "[ -d \"/root/.droplet-market\" ]||(mkdir -p /root/.droplet-market && cp /root/config.tmp /root/.droplet-market/config.toml);"]
           volumeMounts:
             - mountPath: /root
               name: droplet-market-pvc

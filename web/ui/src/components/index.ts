@@ -15,6 +15,7 @@ import './theme/icon/tabs/css/jm-icon-tab.css';
 import './theme/icon/link/css/jm-icon-link.css';
 import './theme/icon/menu/css/jm-icon-menu.css';
 import './theme/icon/input/css/jm-icon-input.css';
+import 'vue-json-pretty/lib/styles.css';
 import './theme/icon/workflow/css/jm-icon-workflow.css';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
@@ -23,6 +24,7 @@ import JmMessage from './notice/message';
 import JmMessageBox from './notice/message-box';
 import JmInfiniteScroll from './infinite-scroll';
 
+import {VueJsonPretty} from 'vue-json-pretty'
 export default {
   // app.use()触发install的调用
   install: (app: App) => {
@@ -43,6 +45,8 @@ export default {
         app.component(component.name, component);
       });
 
+    app.use(VueJsonPretty);
+    
     // 全局注册指令
     app.directive('scroll', JmInfiniteScroll.directive);
     // 全局注册变量

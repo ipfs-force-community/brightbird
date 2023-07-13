@@ -2,12 +2,14 @@ package job
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"math"
 	"os"
 	"time"
 
 	"github.com/hunjixin/brightbird/models"
+	"gopkg.in/yaml.v3"
 
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 
@@ -152,7 +154,7 @@ func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *models.Task) error
 }
 
 func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) error {
-	task, err := taskMgr.taskRepo.Get(ctx, id)
+	task, err := taskMgr.taskRepo.Get(ctx, &repo.GetTaskReq{ID: id})
 	if err != nil {
 		return err
 	}
@@ -183,9 +185,14 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
+	graph := &models.Graph{}
+	err = yaml.Unmarshal([]byte(testFlow.Graph), graph)
+	if err != nil {
+		return nil, err
+	}
 	//confirm version and build image.
 	taskLog.Infof("start to build image for testflow %s job %s", testFlow.Name, job.Name)
-	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, testFlow.Nodes, task.InheritVersions) //todo maybe move this code to previous step
+	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
 	if err != nil {
 		return nil, err
 	}
@@ -201,14 +208,27 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	if err != nil {
 		return nil, err
 	}
+
+	customPropertyBytes, err := json.Marshal(taskMgr.cfg.CustomProperties)
+	if err != nil {
+		return nil, err
+	}
+
+	customPropertyBytes, err = yaml.Marshal(string(customPropertyBytes))
+	if err != nil {
+		return nil, err
+	}
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s"`,
+	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s", --customProperties, %s`,
 		taskMgr.cfg.NameSpace,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
 		taskMgr.cfg.Mysql,
 		taskMgr.privateRegistry,
-		task.ID.Hex())
+		task.ID.Hex(),
+		string(customPropertyBytes),
+	)
+
 	for _, p := range taskMgr.cfg.BootstrapPeers {
 		args += fmt.Sprintf(` , "--bootPeer=%s" `, p)
 	}

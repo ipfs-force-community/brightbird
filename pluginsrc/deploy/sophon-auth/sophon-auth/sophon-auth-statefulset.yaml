@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.sophon-auth; cp /root/config.tmp /root/.sophon-auth/config.toml"]
+          command: ['sh', '-c', "[ -d \"/root/.sophon-auth\" ]||(mkdir -p /root/.sophon-auth && cp /root/config.tmp /root/.sophon-auth/config.toml);"]
           volumeMounts:
             - mountPath: /root
               name: sophon-auth-pvc

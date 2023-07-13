@@ -18,14 +18,6 @@ var log = logging.Logger("env")
 // SyncWait returns when ChainHead is within 20 epochs of the expected height
 func SyncWait(ctx context.Context, k8sEnv *env.K8sEnvDeployer, pod corev1.Pod, port int, adminToken string) error {
 	endpoint := types.EndpointFromString(pod.Status.PodIP + ":" + strconv.Itoa(port))
-	if env.Debug {
-		var err error
-		endpoint, err = k8sEnv.PortForwardPod(ctx, pod.Name, port)
-		if err != nil {
-			return err
-		}
-	}
-
 	napi, closer, err := v1.DialFullNodeRPC(ctx, endpoint.ToMultiAddr(), adminToken, nil)
 	if err != nil {
 		return err

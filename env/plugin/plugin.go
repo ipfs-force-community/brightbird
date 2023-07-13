@@ -1,245 +1,234 @@
 package plugin
 
 import (
-	"errors"
+	"encoding/json"
 	"fmt"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/utils"
-
-	"github.com/hunjixin/brightbird/types"
+	"github.com/filecoin-project/go-address"
+	"github.com/swaggest/jsonschema-go"
 )
 
-func ParseParams(params reflect.Type) (types.PluginParams, error) {
-	pluginParams := types.PluginParams{}
-	numFields := params.NumField()
-	var svcProperties []types.DependencyProperty
-	for i := 0; i < numFields; i++ {
-		field := params.Field(i)
-		if field.Name == "Params" {
-			configProperties, err := ParserProperties(field.Type)
-			if err != nil {
-				return types.PluginParams{}, err
+func ParserSchema(t reflect.Type) (jsonschema.Schema, error) {
+	reflector := jsonschema.Reflector{}
+	defs := map[string]jsonschema.SchemaOrBool{}
+	reflector.DefaultOptions = append(reflector.DefaultOptions,
+		jsonschema.ProcessWithoutTags,
+		jsonschema.PropertyNameTag("jsonschema"),
+		jsonschema.CollectDefinitions(func(name string, schema jsonschema.Schema) {
+			defs[name] = schema.ToSchemaOrBool()
+		}),
+		jsonschema.InterceptSchema(func(params jsonschema.InterceptSchemaParams) (stop bool, err error) {
+			if params.Value.Type() == reflect.TypeOf(address.Undef) {
+				s := jsonschema.Schema{}
+				s.AddType(jsonschema.String)
+				s.WithExtraPropertiesItem("configurable", true)
+				typeName := "FilAddress"
+				defs[typeName] = s.ToSchemaOrBool()
+
+				// Replacing current schema with reference.
+				rs := jsonschema.Schema{}
+				rs.WithRef(fmt.Sprintf("#/definitions/%s", typeName))
+				*params.Schema = rs
+				params.Processed = true
+				return true, nil
 			}
-			pluginParams.Properties = configProperties
-		} else {
-			optional := field.Tag.Get(Optional)
-			svcName := field.Tag.Get(SvcName)
-			if len(svcName) == 0 {
-				continue
-			}
-			description := field.Tag.Get("description")
-			if field.Type == env.IDeployerT {
-				svcProperties = append(svcProperties, types.DependencyProperty{
-					Name:        svcName,
-					Type:        types.Deploy,
-					Description: description,
-					Require:     optional != "true",
-				})
-			} else if field.Type == env.IExecT {
-				svcProperties = append(svcProperties, types.DependencyProperty{
-					Name:        svcName,
-					Type:        types.TestExec,
-					Description: description,
-					Require:     optional != "true",
-				})
-			} else {
-				return types.PluginParams{}, errors.New("unsupport plugin type")
-			}
-		}
+			return false, nil
+		}))
+
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
 	}
-	pluginParams.Dependencies = svcProperties
-	return pluginParams, nil
+	val := reflect.Indirect(reflect.New(t).Elem()).Interface()
+	schema, err := reflector.Reflect(val)
+	if err != nil {
+		return jsonschema.Schema{}, err
+	}
+	schema.WithDefinitions(defs)
+	return schema, nil
 }
 
-func ParserProperties(configT reflect.Type) ([]types.Property, error) {
-	configFieldsNum := configT.NumField()
-	var properties []types.Property
-	for j := 0; j < configFieldsNum; j++ {
-		field := configT.Field(j)
-		if field.Anonymous {
-			embedProperties, err := ParserProperties(field.Type)
-			if err != nil {
-				return nil, err
+// path a
+// path a.b
+// path a[0].b   object
+// path a[0][0]  matrics
+// path a[0]     simple type
+
+type SchemaPropertyFinder struct {
+	gSchema jsonschema.Schema
+}
+
+func NewSchemaPropertyFinder(gSchema jsonschema.Schema) *SchemaPropertyFinder {
+	return &SchemaPropertyFinder{gSchema: gSchema}
+}
+
+func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]jsonschema.SchemaOrBool, schema *jsonschema.Schema) *jsonschema.Schema {
+	if schema.Ref != nil {
+		refKey := strings.ReplaceAll(*schema.Ref, "#/definitions/", "")
+		def, ok := definitions[refKey]
+		if ok {
+			return def.TypeObject
+		}
+		panic("not found")
+	}
+
+	return schema
+}
+
+func (finder *SchemaPropertyFinder) FindPath(path string) (jsonschema.SimpleType, error) {
+	defs := finder.gSchema.Definitions
+	pathSeq, err := SplitJSONPath(path)
+	if err != nil {
+		return jsonschema.Null, err
+	}
+	currentSchema := &finder.gSchema
+	for i := 0; i < len(pathSeq); i++ {
+		seq := pathSeq[i]
+		if seq.IsFirst {
+			//specific case first
+			val, ok := currentSchema.Properties[seq.Name]
+			if !ok {
+				return jsonschema.Null, fmt.Errorf("property %v not found", seq)
 			}
-			properties = append(properties, embedProperties...)
+
+			currentSchema = finder.resolveChildType(defs, val.TypeObject)
+			if seq.IsLast {
+				return getSchemaType(currentSchema), nil
+			}
 			continue
 		}
 
-		fieldName := getFieldJSONName(field)
-		if fieldName == "-" || fieldName == "" {
+		if currentSchema.Type.SliceOfSimpleTypeValues != nil && currentSchema.Items != nil {
+			//array
+			if !seq.IsIndex {
+				return jsonschema.Null, fmt.Errorf("schema is array but path not %v", seq)
+			}
+			if seq.IsLast {
+				return getSchemaType(currentSchema.Items.SchemaOrBool.TypeObject), nil
+			}
+			currentSchema = finder.resolveChildType(defs, currentSchema.Items.SchemaOrBool.TypeObject)
 			continue
 		}
-		typeName, err := mapType(field.Type.Kind())
+
+		switch *currentSchema.Type.SimpleTypes {
+		case jsonschema.Object:
+			//specific case first
+			val, ok := currentSchema.Properties[seq.Name]
+			if !ok {
+				return jsonschema.Null, fmt.Errorf("property %v not found", seq)
+			}
+			currentSchema = finder.resolveChildType(defs, val.TypeObject)
+			if seq.IsLast {
+				return getSchemaType(currentSchema), nil
+			}
+			continue
+		case jsonschema.String:
+			fallthrough
+		case jsonschema.Boolean:
+			fallthrough
+		case jsonschema.Integer:
+			fallthrough
+		case jsonschema.Null:
+			fallthrough
+		case jsonschema.Number:
+			return *currentSchema.Type.SimpleTypes, nil
+		default:
+			return jsonschema.Null, fmt.Errorf("type should be chekc before")
+		}
+	}
+
+	return jsonschema.Null, fmt.Errorf("path and schema not match , path have more path than schema %s", path)
+}
+
+func getSchemaType(schema *jsonschema.Schema) jsonschema.SimpleType {
+	if schema.Type.SliceOfSimpleTypeValues != nil && schema.Items != nil {
+		//array
+		return jsonschema.Array
+	}
+
+	return *schema.Type.SimpleTypes
+}
+
+type JSONPathSec struct {
+	Index   int
+	IsIndex bool
+	IsArray bool
+	Name    string
+	IsLast  bool
+	IsFirst bool
+}
+
+func SplitJSONPath(path string) ([]JSONPathSec, error) {
+	var result []JSONPathSec
+	for _, seq := range strings.Split(path, ".") {
+		index, err := strconv.Atoi(seq)
 		if err != nil {
-			return nil, fmt.Errorf("field %s has unspport type %w", fieldName, err)
+			//not index
+			result = append(result, JSONPathSec{
+				Name: seq,
+			})
+			continue
 		}
-
-		description := field.Tag.Get("description")
-
-		properties = append(properties, types.Property{
-			Name:        fieldName,
-			Type:        typeName,
-			Description: description,
+		//change pre to array
+		result[len(result)-1].IsArray = true
+		result = append(result, JSONPathSec{
+			Name:    "[]",
+			IsIndex: true,
+			Index:   index,
 		})
 	}
-	return properties, nil
-}
 
-func getFieldJSONName(field reflect.StructField) string {
-	fieldName := field.Name
-	jsonTag := field.Tag.Get("json")
-	jsonFlags := strings.Split(jsonTag, ",")
-	if val := strings.TrimSpace(jsonFlags[0]); len(val) > 0 {
-		fieldName = val
+	if len(result) > 0 {
+		result[0].IsFirst = true
+		result[len(result)-1].IsLast = true
 	}
-	return fieldName
+	return result, nil
 }
 
-func mapType(val reflect.Kind) (string, error) {
-	switch val {
-	case reflect.Bool:
-		return "bool", nil
-	case reflect.Int:
-		fallthrough
-	case reflect.Int8:
-		fallthrough
-	case reflect.Int16:
-		fallthrough
-	case reflect.Int32:
-		fallthrough
-	case reflect.Uint8:
-		fallthrough
-	case reflect.Uint16:
-		fallthrough
-	case reflect.Uint32:
-		fallthrough
-	case reflect.Int64: //todo use bignumber
-		fallthrough
-	case reflect.Uint64: //todo use bignumber
-		return "number", nil
-	case reflect.Float32:
-		fallthrough
-	case reflect.Float64: //todo use bigdecimal
-		return "decimical", nil
-	case reflect.String:
-		return "string", nil
-	}
-	return "", fmt.Errorf("types %s not support", val.String())
-}
-
-func GetPropertyValue(property *types.Property) (interface{}, error) {
-	switch property.Type {
-	case "bool":
-		return property.Value == "true", nil
-	case "number":
-		val, err := strconv.ParseInt(property.Value, 10, 64)
+func GetJSONValue(schemaType jsonschema.SimpleType, value string) (interface{}, error) {
+	switch schemaType {
+	case jsonschema.Boolean:
+		return value == "true", nil
+	case jsonschema.Integer:
+		intVal, ok := big.NewInt(0).SetString(value, 10)
+		if !ok {
+			return nil, fmt.Errorf("parser json number(%s) failed", value)
+		}
+		return intVal.Int64(), nil
+	case jsonschema.Number: //todo consider big number
+		if strings.Contains(value, ".") {
+			rat := &big.Rat{}
+			rat, ok := rat.SetString(value)
+			if !ok {
+				return nil, fmt.Errorf("parser json number(%s) failed", value)
+			}
+			float64Val, _ := rat.Float64()
+			return float64Val, nil
+		}
+		intVal, ok := big.NewInt(0).SetString(value, 10)
+		if !ok {
+			return nil, fmt.Errorf("parser json number(%s) failed", value)
+		}
+		return intVal.Int64(), nil
+	case jsonschema.String:
+		return value, nil
+	case jsonschema.Object:
+		var jsonRaw interface{}
+		err := json.Unmarshal([]byte(value), &jsonRaw)
 		if err != nil {
 			return nil, err
 		}
-		return val, nil
-	case "decimical":
-		val, err := strconv.ParseFloat(property.Value, 64)
+		return jsonRaw, nil
+	case jsonschema.Array:
+		var jsonRaw []interface{}
+		err := json.Unmarshal([]byte(value), &jsonRaw)
 		if err != nil {
 			return nil, err
 		}
-		return val, nil
-	case "string":
-		return property.Value, nil
+		return jsonRaw, nil
 	}
-	return nil, fmt.Errorf("unsupport property type %s", property.Type)
-}
-func ConvertValue[T any](value string) (T, error) {
-	dstValue := new(T)
-	valR := reflect.ValueOf(dstValue).Elem()
-	switch valR.Type().Kind() {
-	case reflect.Int:
-		val, err := strconv.Atoi(value)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(val))
-	case reflect.Bool:
-		if value == "true" {
-			valR.Set(reflect.ValueOf(true))
-		} else {
-			valR.Set(reflect.ValueOf(false))
-		}
-
-	case reflect.Int8:
-		val, err := strconv.ParseInt(value, 10, 8)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(int8(val)))
-
-	case reflect.Int16:
-		val, err := strconv.ParseInt(value, 10, 16)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(int16(val)))
-
-	case reflect.Int32:
-		val, err := strconv.ParseInt(value, 10, 32)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(int32(val)))
-
-	case reflect.Int64: //todo use bignumber
-		val, err := strconv.ParseInt(value, 10, 64)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(val))
-
-	case reflect.Uint8:
-		val, err := strconv.ParseUint(value, 10, 8)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint8(val)))
-
-	case reflect.Uint16:
-		val, err := strconv.ParseUint(value, 10, 16)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint16(val)))
-
-	case reflect.Uint32:
-		val, err := strconv.ParseUint(value, 10, 32)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(uint32(val)))
-
-	case reflect.Uint64:
-		val, err := strconv.ParseUint(value, 10, 64)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(val))
-	case reflect.Float32:
-		val, err := strconv.ParseFloat(value, 32)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(float32(val)))
-	case reflect.Float64:
-		val, err := strconv.ParseFloat(value, 64)
-		if err != nil {
-			return *dstValue, err
-		}
-		valR.Set(reflect.ValueOf(val))
-	case reflect.String:
-		valR.Set(reflect.ValueOf(value))
-	default:
-		return utils.Default[T](), fmt.Errorf("types %s not support", valR.Kind().String())
-	}
-	return *dstValue, nil
+	return nil, fmt.Errorf("unsupport property type %s", schemaType)
 }

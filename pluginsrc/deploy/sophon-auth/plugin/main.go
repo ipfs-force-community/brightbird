@@ -13,21 +13,9 @@ func main() {
 }
 
 type DepParams struct {
-	Params sophonauth.Config `optional:"true"`
-	K8sEnv *env.K8sEnvDeployer
+	sophonauth.Config
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	deployer, err := sophonauth.DeployerFromConfig(depParams.K8sEnv, sophonauth.Config{
-		Replicas: 1,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonauth.SophonAuthDeployReturn, error) {
+	return sophonauth.DeployFromConfig(ctx, k8sEnv, depParams.Config)
 }

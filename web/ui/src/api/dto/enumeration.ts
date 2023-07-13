@@ -126,11 +126,11 @@ export enum JobEnum {
  * task state枚举类型
  */
 export enum TaskStateEnum {
-	Init        = 1,
-	Running     = 2,
-  TempError   = 3,
-	Error       = 4,
-	Successful  = 5,
+  Init = 1,
+  Running = 2,
+  TempError = 3,
+  Error = 4,
+  Successful = 5,
 }
 
 export namespace TaskStateEnum {
@@ -154,6 +154,15 @@ export namespace TaskStateEnum {
  * task state枚举类型
  */
 export enum PluginTypeEnum {
-	Deploy        = 'Deployer',
-	Exec     = 'Exec',
+  Deploy = 'Deployer',
+  Exec = 'Exec',
 }
+
+
+export enum StepStateEnum {
+  NotRunning = "notrunning",
+  Running = "running",
+  Success = "success",
+  Fail = "fail",
+}
+

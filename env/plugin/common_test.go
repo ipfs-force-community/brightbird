@@ -8,7 +8,7 @@ import (
 )
 
 func TestGetPluginInfo(t *testing.T) {
-	file := "../../dist/plugins/deploy/sophon-co"
+	file := "../../dist/plugins/deploy/sophon-auth"
 	info, err := GetPluginInfo(file)
 	assert.NoError(t, err)
 	reg, err := regexp.Compile(`^v[\d]+?.[\d]+?.[\d]+?$`)
@@ -36,12 +36,5 @@ func TestReadCMD(t *testing.T) {
 		assert.True(t, isCmd)
 		assert.Equal(t, CMDSUCCESSPREFIX, cmd)
 		assert.Equal(t, "test", addition)
-	}
-
-	{
-		cmd, val, isCmd := ReadCMD(CMDVALPREFIX + "vvvvvvvvvvvvv")
-		assert.True(t, isCmd)
-		assert.Equal(t, CMDVALPREFIX, cmd)
-		assert.Equal(t, "vvvvvvvvvvvvv", val)
 	}
 }

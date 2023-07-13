@@ -5,8 +5,8 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	venus "github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
-	"github.com/hunjixin/brightbird/types"
 )
 
 func main() {
@@ -14,38 +14,26 @@ func main() {
 }
 
 type DepParams struct {
-	Params venus.Config `optional:"true"`
+	venus.Config
 
-	VenusAuth env.IDeployer `svcname:"SophonAuth"`
-
-	K8sEnv         *env.K8sEnvDeployer
-	BootstrapPeers types.BootstrapPeers
+	Global env.GlobalParams                  `jsonschema:"-" json:"global"`
+	Auth   sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.VenusAuth.Param("AdminToken")
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venus.VenusDeployReturn, error) {
+	var bootstrapPeers []string
+	err := depParams.Global.GetProperty("BootstrapPeer", &bootstrapPeers)
 	if err != nil {
 		return nil, err
 	}
-
-	authEndpoint, err := depParams.VenusAuth.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := venus.DeployerFromConfig(depParams.K8sEnv, venus.Config{
-		AuthUrl:        authEndpoint.ToHTTP(),
-		AdminToken:     adminToken.MustString(),
-		BootstrapPeers: depParams.BootstrapPeers,
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return deployer, nil
+	return venus.DeployFromConfig(ctx, k8sEnv, venus.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: venus.VConfig{
+			AuthUrl:        depParams.Auth.SvcEndpoint.ToHTTP(),
+			AdminToken:     depParams.Auth.AdminToken,
+			BootstrapPeers: bootstrapPeers,
+			NetType:        depParams.NetType,
+			Replicas:       depParams.Replicas,
+		},
+	})
 }

@@ -19,7 +19,7 @@ data:
     # /ip4/192.168.200.158/tcp/1789
     rpc_client.addr = "{{.DamoclesManagerUrl}"
     rpc_client.headers = { User-Agent = "jsonrpc-core-client" }
-    piece_token = "{{.AuthToken}}"
+    piece_token = "{{.MarketToken}}"
     [sealing]
     allowed_miners = [{{.MinerAddress}}]
     allowed_sizes = ["2KiB"]

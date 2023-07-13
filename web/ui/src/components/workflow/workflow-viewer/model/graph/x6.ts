@@ -268,7 +268,7 @@ export class X6Graph extends BaseGraph {
     id: string; description: string, type: G6NodeTypeEnum;
   } {
     const workflowNode = new CustomX6NodeProxy(node).getData();
-    const description = workflowNode.getDisplayName();
+    const description = workflowNode.getInstanceName();
     const type = (workflowNode.getType()) as G6NodeTypeEnum;
 
     let index = 0;

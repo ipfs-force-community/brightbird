@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.sophon-messager; cp /root/config.tmp /root/.sophon-messager/config.toml"]
+          command: ['sh', '-c', "[ -d \"/root/.sophon-messager\" ]||(mkdir -p /root/.sophon-messager && cp /root/config.tmp /root/.sophon-messager/config.toml && echo \"init success\");"]
           volumeMounts:
             - mountPath: /root
               name: sophon-messager-pvc

@@ -15,12 +15,16 @@ import (
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs/go-cid"
 	"github.com/libp2p/go-libp2p/core/peer"
 	ma "github.com/multiformats/go-multiaddr"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -35,70 +39,33 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	K8sEnv                  *env.K8sEnvDeployer `json:"-"`
-	SophonAuth              env.IDeployer       `json:"-" svcname:"SophonAuth"`
-	DamoclesMarket          env.IDeployer       `json:"-" svcname:"DamoclesMarket"`
-	Miner                   env.IDeployer       `json:"-" svcname:"SophonMiner"`
-	DamoclesManagerDeployer env.IDeployer       `json:"-" svcname:"DamoclesManager"`
-	Venus                   env.IDeployer       `json:"-" svcname:"Venus"`
-	Message                 env.IDeployer       `json:"-" svcname:"SophonMessager"`
-	CreateMiner             env.IExec           `json:"-" svcname:"CreateMiner"`
-	NewAddrsListen          env.IExec           `json:"-" svcname:"NewAddrsListen"`
+	Auth          sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Gateway       sophongateway.SophonGatewayReturn       `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
+	Venus         venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Messager      sophonmessager.SophonMessagerReturn     `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
+	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+	MinerAddress  address.Address                         `json:"minerAddress" jsonschema:"minerAddress" title:"Miner Address" require:"true" description:"miner to set market address"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
-	minerAddr, err := params.CreateMiner.Param("Miner")
-	if err != nil {
-		return nil, err
-	}
-
-	messageId, err := SetActorAddr(ctx, params, minerAddr.MustString())
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	messageId, err := SetActorAddr(ctx, params)
 	if err != nil {
 		fmt.Printf("set actor address failed: %v\n", err)
-		return nil, err
+		return err
 	}
 	fmt.Printf("set actor address message id is: %v\n", messageId)
 
 	err = VertifyMessageIfVaild(ctx, params, messageId)
 	if err != nil {
 		fmt.Printf("set actor address failed: %v\n", err)
-		return nil, err
+		return err
 	}
 
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId cid.Cid) error {
-
-	adminTokenV, err := params.SophonAuth.Param("AdminToken")
-	if err != nil {
-		return err
-	}
-
-	endpoint, err := params.Message.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-
-	if env.Debug {
-		pods, err := params.Message.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.Message.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-
-	client, closer, err := messager.DialIMessagerRPC(ctx, endpoint.ToHTTP(), adminTokenV.MustString(), nil)
+	client, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return err
 	}
@@ -113,28 +80,8 @@ func VertifyMessageIfVaild(ctx context.Context, params TestCaseParams, messageId
 	return nil
 }
 
-func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) (cid.Cid, error) {
-	endpoint, err := params.DamoclesMarket.SvcEndpoint()
-	if err != nil {
-		return cid.Undef, err
-	}
-
-	if env.Debug {
-		pods, err := params.DamoclesMarket.Pods(ctx)
-		if err != nil {
-			return cid.Undef, err
-		}
-
-		svc, err := params.DamoclesMarket.Svc(ctx)
-		if err != nil {
-			return cid.Undef, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return cid.Undef, err
-		}
-	}
-	client, closer, err := marketapi.NewIMarketRPC(ctx, endpoint.ToHTTP(), nil)
+func SetActorAddr(ctx context.Context, params TestCaseParams) (cid.Cid, error) {
+	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return cid.Undef, err
 	}
@@ -150,18 +97,13 @@ func SetActorAddr(ctx context.Context, params TestCaseParams, minerAddr string) 
 		return cid.Undef, err
 	}
 
-	maddr, err := address.NewFromString(minerAddr)
-	if err != nil {
-		return cid.Undef, nil
-	}
-
-	minfo, err := GetMinerInfo(ctx, params, maddr)
+	minfo, err := GetMinerInfo(ctx, params, params.MinerAddress)
 	if err != nil {
 		return cid.Undef, err
 	}
 
 	messageid, err := client.MessagerPushMessage(ctx, &vtypes.Message{
-		To:       maddr,
+		To:       params.MinerAddress,
 		From:     minfo.Worker,
 		Value:    vtypes.NewInt(0),
 		GasLimit: 0,
@@ -208,27 +150,7 @@ func ConstructParams(address peer.AddrInfo) (param []byte, err error) {
 }
 
 func GetMinerInfo(ctx context.Context, params TestCaseParams, maddr address.Address) (vtypes.MinerInfo, error) {
-	endpoint, err := params.Venus.SvcEndpoint()
-	if err != nil {
-		return vtypes.MinerInfo{}, nil
-	}
-
-	if env.Debug {
-		pods, err := params.Venus.Pods(ctx)
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
-
-		svc, err := params.Venus.Svc(ctx)
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return vtypes.MinerInfo{}, err
-		}
-	}
-	client, closer, err := v1api.NewFullNodeRPC(ctx, endpoint.ToHTTP(), nil)
+	client, closer, err := v1api.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return vtypes.MinerInfo{}, err
 	}

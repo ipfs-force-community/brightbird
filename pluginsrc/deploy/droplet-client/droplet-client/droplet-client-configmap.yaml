@@ -20,7 +20,7 @@ data:
 
     [Node]
       Url = "{{.NodeUrl}}"
-      Token = "{{.NodeToken}}"
+      Token = "{{.UserToken}}"
 
     [Signer]
       Type = "wallet"

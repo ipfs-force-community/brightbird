@@ -9,9 +9,10 @@ require (
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-fil-markets v1.25.2
 	github.com/filecoin-project/go-state-types v0.11.1
-	github.com/filecoin-project/venus v1.12.0-rc1
+	github.com/filecoin-project/venus v1.12.0
 	github.com/filecoin-project/venus-wallet v1.11.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
+	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-git/go-git/v5 v5.6.1
@@ -29,15 +30,17 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
-	github.com/ipfs-force-community/sophon-auth v1.12.0-rc2
-	github.com/ipfs-force-community/sophon-messager v1.12.0-rc2
-	github.com/ipfs-force-community/sophon-miner v1.12.0-rc2
+	github.com/ipfs-force-community/droplet/v2 v2.8.1
+	github.com/ipfs-force-community/sophon-auth v1.12.0
+	github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183
+	github.com/ipfs-force-community/sophon-messager v1.12.0
+	github.com/ipfs-force-community/sophon-miner v1.12.0
 	github.com/ipfs/go-cid v0.3.2
 	github.com/ipfs/go-log/v2 v2.5.1
+	github.com/json-iterator/go v1.1.12
 	github.com/libp2p/go-libp2p v0.23.4
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/mittwald/goharbor-client/v5 v5.3.1
-	github.com/modern-go/reflect2 v1.0.2
 	github.com/multiformats/go-multiaddr v0.8.0
 	github.com/naoina/toml v0.1.1
 	github.com/onsi/ginkgo v1.16.5
@@ -48,9 +51,13 @@ require (
 	github.com/saagie/fluent-bit-mongo v0.0.0-20230329131900-c984d3f02519
 	github.com/simlecode/api-compare v0.0.0-20230418093942-c8a2515a688a
 	github.com/stretchr/testify v1.8.3
+	github.com/swaggest/jsonschema-go v0.3.52
+	github.com/tidwall/gjson v1.14.4
+	github.com/tidwall/sjson v1.2.5
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/whilp/git-urls v1.0.0
+	github.com/wk8/go-ordered-map v1.0.0
 	go.mongodb.org/mongo-driver v1.11.2
 	go.uber.org/fx v1.19.2
 	go.uber.org/zap v1.23.0
@@ -58,7 +65,7 @@ require (
 	golang.org/x/sync v0.1.0
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2
 	google.golang.org/appengine v1.6.7
-	gopkg.in/yaml.v2 v2.4.0
+	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.2
 	k8s.io/client-go v0.26.1
@@ -102,7 +109,6 @@ require (
 	github.com/emicklei/go-restful/v3 v3.9.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/etherlabsio/healthcheck/v2 v2.0.0 // indirect
-	github.com/filecoin-project/dagstore v0.6.0 // indirect
 	github.com/filecoin-project/go-amt-ipld/v2 v2.1.1-0.20201006184820-924ee87a1349 // indirect
 	github.com/filecoin-project/go-amt-ipld/v3 v3.1.0 // indirect
 	github.com/filecoin-project/go-amt-ipld/v4 v4.0.0 // indirect
@@ -170,6 +176,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.2.2 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
 	github.com/ipfs-force-community/metrics v1.0.1-0.20230208073319-4c0e29b038e1 // indirect
+	github.com/ipfs-force-community/venus-common-utils v0.0.0-20220217030526-e5e4c6bc14f7 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/go-block-format v0.1.1 // indirect
 	github.com/ipfs/go-blockservice v0.5.0 // indirect
@@ -204,7 +211,6 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
-	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kevinburke/ssh_config v1.2.0 // indirect
 	github.com/klauspost/compress v1.15.15 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
@@ -228,6 +234,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/montanaflynn/stats v0.6.6 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
@@ -258,7 +265,7 @@ require (
 	github.com/raulk/clock v1.1.0 // indirect
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sergi/go-diff v1.1.0 // indirect
+	github.com/sergi/go-diff v1.3.1 // indirect
 	github.com/shirou/gopsutil v2.18.12+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.1.0 // indirect
@@ -270,6 +277,9 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.14.0 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
+	github.com/swaggest/refl v1.1.0 // indirect
+	github.com/tidwall/match v1.1.1 // indirect
+	github.com/tidwall/pretty v1.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.25.0+incompatible // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
@@ -309,7 +319,7 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
 	gopkg.in/warnings.v0 v0.1.2 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.3.5 // indirect
 	gorm.io/gorm v1.23.8 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect

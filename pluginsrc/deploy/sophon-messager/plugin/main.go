@@ -5,7 +5,10 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
 	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {
@@ -13,50 +16,22 @@ func main() {
 }
 
 type DepParams struct {
-	Params sophonmessager.Config `optional:"true"`
+	sophonmessager.Config
 
-	Auth    env.IDeployer `svcname:"SophonAuth"`
-	Venus   env.IDeployer `svcname:"Venus"`
-	Gateway env.IDeployer `svcname:"SophonGateway"`
-
-	K8sEnv *env.K8sEnvDeployer
+	Auth    sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	Venus   venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Gateway sophongateway.SophonGatewayReturn `json:"SophonGateway"  jsonschema:"SophonGateway"  title:"SophonGateway" require:"true" description:"gateway deploy return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.Auth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	venusEndpoint, err := depParams.Venus.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	gatewayEndpoint, err := depParams.Gateway.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	authEndpoint, err := depParams.Auth.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := sophonmessager.DeployerFromConfig(depParams.K8sEnv, sophonmessager.Config{
-		NodeUrl:    venusEndpoint.ToMultiAddr(),
-		GatewayUrl: gatewayEndpoint.ToMultiAddr(),
-		AuthUrl:    authEndpoint.ToHTTP(),
-		AuthToken:  adminToken.MustString(),
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophonmessager.SophonMessagerReturn, error) {
+	return sophonmessager.DeployFromConfig(ctx, k8sEnv, sophonmessager.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: sophonmessager.VConfig{
+			NodeUrl:    depParams.Venus.SvcEndpoint.ToMultiAddr(),
+			GatewayUrl: depParams.Gateway.SvcEndpoint.ToMultiAddr(),
+			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
+			AuthToken:  depParams.Auth.AdminToken,
+			Replicas:   depParams.Replicas,
+		},
+	})
 }

@@ -20,12 +20,17 @@ type ListTaskParams struct {
 	CreateTime *int64             `form:"createtime"`
 }
 
+type GetTaskReq struct {
+	TestId *string            `form:"testid"`
+	ID     primitive.ObjectID `form:"ID"`
+}
+
 type ITaskRepo interface {
 	List(context.Context, models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error)
 	UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state models.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
-	Get(context.Context, primitive.ObjectID) (*models.Task, error)
+	Get(context.Context, *GetTaskReq) (*models.Task, error)
 	Save(context.Context, *models.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 }
@@ -103,9 +108,18 @@ func (j *TaskRepo) List(ctx context.Context, params models.PageReq[ListTaskParam
 	}, nil
 }
 
-func (j *TaskRepo) Get(ctx context.Context, id primitive.ObjectID) (*models.Task, error) {
+func (j *TaskRepo) Get(ctx context.Context, req *GetTaskReq) (*models.Task, error) {
+	filter := bson.D{}
+	if !req.ID.IsZero() {
+		filter = append(filter, bson.E{Key: "_id", Value: req.ID})
+	}
+
+	if req.TestId != nil {
+		filter = append(filter, bson.E{Key: "testid", Value: *req.TestId})
+	}
+
 	tf := &models.Task{}
-	err := j.taskCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
+	err := j.taskCol.FindOne(ctx, filter).Decode(tf)
 	if err != nil {
 		return nil, err
 	}
