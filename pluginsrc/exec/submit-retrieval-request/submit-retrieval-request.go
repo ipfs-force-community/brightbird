@@ -25,7 +25,6 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 
 	venusAPI "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
-	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 )
 
 var log = logging.Logger("submit-retrieval-request")
@@ -56,7 +55,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vTypes.EmptyTSK)
+	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vtypes.EmptyTSK)
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return err

@@ -27,7 +27,7 @@ type VConfig struct {
 	UseMysql bool `json:"useMysql" jsonschema:"useMysql" title:"UserMysql" require:"true" description:"true or false"`
 }
 
-type SophonMinerDeployReturn struct {
+type SophonMinerDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

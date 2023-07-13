@@ -5,10 +5,8 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	v1api "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	venusAPI "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
-	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
@@ -50,7 +48,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vTypes.EmptyTSK)
+	minerInfo, err := fullNode.StateMinerInfo(ctx, params.MinerAddress, vtypes.EmptyTSK)
 	if err != nil {
 		fmt.Printf("get miner info failed: %v\n", err)
 		return err
@@ -72,7 +70,7 @@ func StorageAsksQuery(ctx context.Context, params TestCaseParams, maddr address.
 	}
 	defer closer()
 
-	fnapi, closer, err := v1api.NewFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), nil)
+	fnapi, closer, err := venusAPI.NewFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), nil)
 	if err != nil {
 		return err
 	}

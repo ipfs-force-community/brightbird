@@ -34,7 +34,7 @@ type RenderParams struct {
 	UniqueId        string
 }
 
-type SophonGatewayReturn struct {
+type SophonGatewayReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

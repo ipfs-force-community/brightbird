@@ -24,7 +24,7 @@ type VConfig struct {
 	Nodes      []string `jsonschema:"-" json:"nodes"`
 }
 
-type SophonCoDeployReturn struct {
+type SophonCoDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }
@@ -46,16 +46,6 @@ var PluginInfo = types2.PluginInfo{
 	Description: "",
 	Repo:        "https://github.com/ipfs-force-community/sophon-co.git",
 	ImageTarget: "sophon-co",
-}
-
-type SophonCoDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types2.Endpoint
-
-	statefulSetName string
-	svcName         string
 }
 
 //go:embed  sophon-co

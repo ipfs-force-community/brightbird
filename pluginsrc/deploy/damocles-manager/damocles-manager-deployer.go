@@ -30,7 +30,7 @@ type VConfig struct {
 	UserToken           string          `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true" `
 }
 
-type DamoclesManagerReturn struct {
+type DamoclesManagerReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

@@ -99,6 +99,6 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		ID:          messagerId,
 		UnsignedCid: result.UnsignedCid,
 		SignedCid:   result.SignedCid,
-		Receipt:     *&result.Receipt,
+		Receipt:     result.Receipt,
 	}, nil
 }

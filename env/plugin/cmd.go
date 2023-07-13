@@ -26,11 +26,6 @@ func RespSuccess(addition string) {
 	fmt.Println(addition)
 }
 
-func RespSuccessJson(addition interface{}) {
-	fmt.Print(CMDSUCCESSPREFIX)
-	fmt.Println(addition)
-}
-
 func isCmd(cmd string) bool {
 	return cmd == CMDERRORREFIX || cmd == CMDSTARTPREFIX || cmd == CMDSUCCESSPREFIX
 }

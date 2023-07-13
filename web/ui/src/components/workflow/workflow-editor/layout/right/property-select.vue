@@ -1,16 +1,11 @@
 <template>
-    <el-input v-model="refValue" :placeholder="property.description ? property.description : '请输入' + property.name" @focus="inputFocus" @input="showTree = false" @blur="setPropValue" />
-    <el-tree v-show="showTree" :data="treeData" :props="defaultProps" :load="loadNode" lazy
-    >
+    <el-input v-model="refValue" :placeholder="property.description ? property.description : '请输入' + property.name"
+        @focus="inputFocus" @input="showTree = false" @blur="setPropValue" />
+    <el-tree v-show="showTree" :data="treeData" :props="defaultProps" :load="loadNode" lazy>
         <template #default="{ node, data }">
             <span class="custom-tree-node">
                 <span @click="handleNodeClick(data, node)">{{ node.label }}</span>
-                <el-input-number 
-                    v-show="data.name=='index'"
-                    class="arrayIndex"
-                    v-model="data.index"
-                    size="small"
-                />
+                <el-input-number v-show="data.name == 'index'" class="arrayIndex" v-model="data.index" size="small" />
             </span>
         </template>
     </el-tree>
@@ -21,7 +16,7 @@ import { defineComponent, ref, PropType } from 'vue';
 import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import type Node from 'element-plus/es/components/tree/src/model/node'
 import { JSONSchema } from 'json-schema-to-typescript';
-import { JSONSchema4Object,JSONSchema4Array } from 'json-schema';
+import { JSONSchema4Object, JSONSchema4Array } from 'json-schema';
 
 export default defineComponent({
     emits: [],
@@ -66,11 +61,11 @@ export default defineComponent({
 
         if (props.input[props.propName]) {
             refValue.value = props.input[props.propName];
-        }
-
-        if (props.property.default) {
-            //todo check object and arrary default value
-            refValue.value = props.property.default as string;
+        } else {
+            if (props.property.default) {
+                //todo check object and arrary default value
+                refValue.value = props.property.default as string;
+            }
         }
 
         const handleNodeClick = function (data: TreeProp, obj: any) {
@@ -144,14 +139,14 @@ export default defineComponent({
                 for (let [key, prop] of Object.entries(schema.properties)) {
                     let treeProp: TreeProp = {
                         name: key,
-                        index:0,
+                        index: 0,
                         defs: defs,
                         isLeaf: false,
                         type: "",
                         schema: null,
                         children: []
                     }
-                    prop  =  resolveSchema(prop);
+                    prop = resolveSchema(prop);
                     if (isSimpleType(prop.type as string)) {
                         treeProp.type = prop.type as string;
                         treeProp.schema = resolveSchema(prop);
@@ -164,15 +159,15 @@ export default defineComponent({
                         treeProp.type = "array"
                         treeProp.index = 0;
                         treeProp.schema = resolveSchema(prop.items)
-                        treeProp.children= [{
-                                name: "index",
-                                index:0,
-                                defs: defs,
-                                isLeaf: false,
-                                type: treeProp.schema.type as string,
-                                schema: treeProp.schema,
-                                children: []
-                            }]
+                        treeProp.children = [{
+                            name: "index",
+                            index: 0,
+                            defs: defs,
+                            isLeaf: false,
+                            type: treeProp.schema.type as string,
+                            schema: treeProp.schema,
+                            children: []
+                        }]
                         if (isSimpleType(treeProp.schema.type as string)) {
                             treeProp.children[0].isLeaf = true;
                         }

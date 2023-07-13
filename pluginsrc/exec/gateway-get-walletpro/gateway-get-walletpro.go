@@ -11,10 +11,7 @@ import (
 	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	logging "github.com/ipfs/go-log/v2"
 )
-
-var log = logging.Logger("walletpro_gateway")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)

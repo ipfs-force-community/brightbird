@@ -30,7 +30,7 @@ type NodeContext struct {
 	OutPut json.RawMessage
 }
 
-type EnvContext struct {
+type EnvContext struct { //nolint
 	Global         GlobalParams
 	Nodes          map[string]*NodeContext
 	CurrentContext string

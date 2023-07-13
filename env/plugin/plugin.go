@@ -80,7 +80,7 @@ func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]json
 
 func (finder *SchemaPropertyFinder) FindPath(path string) (jsonschema.SimpleType, error) {
 	defs := finder.gSchema.Definitions
-	pathSeq, err := SplitJsonPath(path)
+	pathSeq, err := SplitJSONPath(path)
 	if err != nil {
 		return jsonschema.Null, err
 	}
@@ -152,7 +152,7 @@ func getSchemaType(schema *jsonschema.Schema) jsonschema.SimpleType {
 	return *schema.Type.SimpleTypes
 }
 
-type JsonPathSec struct {
+type JSONPathSec struct {
 	Index   int
 	IsIndex bool
 	IsArray bool
@@ -161,20 +161,20 @@ type JsonPathSec struct {
 	IsFirst bool
 }
 
-func SplitJsonPath(path string) ([]JsonPathSec, error) {
-	var result []JsonPathSec
+func SplitJSONPath(path string) ([]JSONPathSec, error) {
+	var result []JSONPathSec
 	for _, seq := range strings.Split(path, ".") {
 		index, err := strconv.Atoi(seq)
 		if err != nil {
 			//not index
-			result = append(result, JsonPathSec{
+			result = append(result, JSONPathSec{
 				Name: seq,
 			})
 			continue
 		}
 		//change pre to array
 		result[len(result)-1].IsArray = true
-		result = append(result, JsonPathSec{
+		result = append(result, JSONPathSec{
 			Name:    "[]",
 			IsIndex: true,
 			Index:   index,
@@ -188,7 +188,7 @@ func SplitJsonPath(path string) ([]JsonPathSec, error) {
 	return result, nil
 }
 
-func GetJsonValue(schemaType jsonschema.SimpleType, value string) (interface{}, error) {
+func GetJSONValue(schemaType jsonschema.SimpleType, value string) (interface{}, error) {
 	switch schemaType {
 	case jsonschema.Boolean:
 		return value == "true", nil

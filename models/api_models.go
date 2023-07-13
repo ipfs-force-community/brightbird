@@ -221,10 +221,10 @@ type PodLogReq struct {
 type StepState string
 
 const (
-	StepNotRunning StepState = "notrunning"
-	StepRunning    StepState = "running"
-	StepSuccess    StepState = "success"
-	StepFail       StepState = "fail"
+	StepNotRunning StepState = "notrunning" //nolint
+	StepRunning    StepState = "running"    //nolint
+	StepSuccess    StepState = "success"    //nolint
+	StepFail       StepState = "fail"       //nolint
 )
 
 // StepLog

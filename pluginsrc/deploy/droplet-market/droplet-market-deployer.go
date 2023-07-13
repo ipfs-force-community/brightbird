@@ -28,7 +28,7 @@ type VConfig struct {
 	AuthUrl     string `jsonschema:"-"`
 }
 
-type DropletMarketDeployReturn struct {
+type DropletMarketDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

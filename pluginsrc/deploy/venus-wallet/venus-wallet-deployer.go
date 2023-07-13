@@ -23,7 +23,7 @@ type VConfig struct {
 	UserToken  string `json:"userToken" jsonschema:"userToken" title:"UserToken" description:"token for connect with sophon gateway"`
 }
 
-type VenusWalletReturn struct {
+type VenusWalletReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

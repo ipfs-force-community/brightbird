@@ -12,6 +12,7 @@ require (
 	github.com/filecoin-project/venus v1.12.0
 	github.com/filecoin-project/venus-wallet v1.11.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
+	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-git/go-git/v5 v5.6.1
@@ -56,6 +57,7 @@ require (
 	github.com/urfave/cli/v2 v2.25.0
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/whilp/git-urls v1.0.0
+	github.com/wk8/go-ordered-map v1.0.0
 	go.mongodb.org/mongo-driver v1.11.2
 	go.uber.org/fx v1.19.2
 	go.uber.org/zap v1.23.0
@@ -131,7 +133,6 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gbrlsnchs/jwt/v3 v3.0.1 // indirect
-	github.com/gin-contrib/gzip v0.0.6 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-git/gcfg v1.5.0 // indirect
 	github.com/go-git/go-billy/v5 v5.4.1 // indirect
@@ -289,7 +290,6 @@ require (
 	github.com/whyrusleeping/cbor-gen v0.0.0-20221021053955-c138aae13722 // indirect
 	github.com/whyrusleeping/go-logging v0.0.1 // indirect
 	github.com/whyrusleeping/timecache v0.0.0-20160911033111-cfcb2f1abfee // indirect
-	github.com/wk8/go-ordered-map v1.0.0 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.1 // indirect

@@ -37,7 +37,7 @@ type RenderParams struct {
 	UniqueId string
 }
 
-type VenusDeployReturn struct {
+type VenusDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

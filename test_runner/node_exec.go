@@ -162,7 +162,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 			}
 			lastErr = thisLine
 		}
-		return fmt.Errorf("node exit with status %d  %s", st.ExitCode(), string(lastErr))
+		return fmt.Errorf("node exit with status %d  %s", st.ExitCode(), lastErr)
 	}
 
 	lastline := <-readLastLine
@@ -182,7 +182,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input []byte, codeVersion, instanceName string) ([]byte, error) {
 	propertyFinder := plugin.NewSchemaPropertyFinder(schema)
 	var err error
-	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes([]byte(input))
+	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes(input)
 	valueResolve := func() func(string, string) (interface{}, error) {
 		return func(keyPath string, value string) (interface{}, error) {
 			propValue := value
@@ -190,7 +190,7 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 				valuePath := value[2 : len(value)-2]
 				depNode := valuePath
 
-				pathSeq, err := plugin.SplitJsonPath(valuePath)
+				pathSeq, err := plugin.SplitJSONPath(valuePath)
 				if err != nil {
 					return nil, err
 				}
@@ -222,7 +222,7 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 			if err != nil {
 				return nil, err
 			}
-			return plugin.GetJsonValue(schemaType, propValue)
+			return plugin.GetJSONValue(schemaType, propValue)
 		}
 	}
 
@@ -249,7 +249,7 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 	return json.Marshal(resultInput)
 }
 
-func joinGjsonPath(pathSeq []plugin.JsonPathSec) string {
+func joinGjsonPath(pathSeq []plugin.JSONPathSec) string {
 	var strBuilder strings.Builder
 	for _, path := range pathSeq {
 		strBuilder.WriteRune('.')

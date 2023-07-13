@@ -16,7 +16,7 @@ type Config struct {
 	StringArrTest []string `json:"stringArrTest"  jsonschema:"stringArrTest" title:"String Array Test" default:"1" require:"true" description:"test of string array"`
 
 	EmbedStruct      EmbedStruct   `json:"embedStructTest"  jsonschema:"embedStructTest" title:"Embed Struct Test" require:"true" description:"test of embed struct"`
-	EmbedArrayStruct []EmbedStruct `json:"embedArrayStruct"  jsonschema:"embedArrayStruct" title:"Embed Array Struct Test" require:"true" description:"test of embed struct arrary"`
+	EmbedArrayStruct []EmbedStruct `json:"embedArrayStruct"  jsonschema:"embedArrayStruct" title:"Embed Array Struct Test" require:"true" description:"test of embed struct array"`
 }
 
 type TestDeployReturn struct {

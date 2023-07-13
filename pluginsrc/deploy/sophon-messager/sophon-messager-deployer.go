@@ -31,7 +31,7 @@ type VConfig struct {
 	Replicas int `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
 }
 
-type SophonMessagerReturn struct {
+type SophonMessagerReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 	PushPodName string `json:"pushPodName"`

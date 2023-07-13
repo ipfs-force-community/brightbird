@@ -42,7 +42,7 @@ type RenderParams struct {
 	UniqueId        string
 }
 
-type SophonAuthDeployReturn struct {
+type SophonAuthDeployReturn struct { //nolint
 	MysqlDSN   string `json:"mysqlDSN"`
 	Replicas   int    `json:"replicas" description:"number of replicas"`
 	AdminToken string `json:"adminToken"`
@@ -133,6 +133,10 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 
 func GenerateAdminToken(ctx context.Context, k8sEnv *env.K8sEnvDeployer, isntanceName string, endpoint types.Endpoint) (string, error) {
 	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), isntanceName)))
+	if err != nil {
+		return "", err
+	}
+
 	localToken, err := k8sEnv.ReadSmallFilelInPod(ctx, pods[0].GetName(), "/root/.sophon-auth/token")
 	if err != nil {
 		return "", err

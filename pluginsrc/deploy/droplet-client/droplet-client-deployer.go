@@ -28,7 +28,7 @@ type VConfig struct {
 	ClientAddr string `json:"clientAddr" jsonschema:"clientAddr" title:"Client Address" description:"pay for storage/retrieval" require:"true" `
 }
 
-type DropletClientDeployReturn struct {
+type DropletClientDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }

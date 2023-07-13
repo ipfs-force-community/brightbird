@@ -13,10 +13,10 @@ import (
 
 func TestSplitJsonPath(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
-		path, err := SplitJsonPath("p1")
+		path, err := SplitJSONPath("p1")
 		assert.Nil(t, err)
 		assert.Len(t, path, 1)
-		assert.Equal(t, path[0], JsonPathSec{
+		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -27,10 +27,10 @@ func TestSplitJsonPath(t *testing.T) {
 	})
 
 	t.Run("test first last", func(t *testing.T) {
-		path, err := SplitJsonPath("p1.p2.p3")
+		path, err := SplitJSONPath("p1.p2.p3")
 		assert.Nil(t, err)
 		assert.Len(t, path, 3)
-		assert.Equal(t, path[0], JsonPathSec{
+		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -38,7 +38,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: true,
 		})
-		assert.Equal(t, path[1], JsonPathSec{
+		assert.Equal(t, path[1], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -46,7 +46,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: false,
 		})
-		assert.Equal(t, path[2], JsonPathSec{
+		assert.Equal(t, path[2], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -56,11 +56,11 @@ func TestSplitJsonPath(t *testing.T) {
 		})
 	})
 
-	t.Run("arrary", func(t *testing.T) {
-		path, err := SplitJsonPath("p1.p2.1.2.p3")
+	t.Run("array", func(t *testing.T) {
+		path, err := SplitJSONPath("p1.p2.1.2.p3")
 		assert.Nil(t, err)
 		assert.Len(t, path, 5)
-		assert.Equal(t, path[0], JsonPathSec{
+		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -68,7 +68,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: true,
 		})
-		assert.Equal(t, path[1], JsonPathSec{
+		assert.Equal(t, path[1], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: true,
@@ -76,7 +76,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: false,
 		})
-		assert.Equal(t, path[2], JsonPathSec{
+		assert.Equal(t, path[2], JSONPathSec{
 			Index:   1,
 			IsIndex: true,
 			IsArray: true,
@@ -84,7 +84,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: false,
 		})
-		assert.Equal(t, path[3], JsonPathSec{
+		assert.Equal(t, path[3], JSONPathSec{
 			Index:   2,
 			IsIndex: true,
 			IsArray: false,
@@ -92,7 +92,7 @@ func TestSplitJsonPath(t *testing.T) {
 			IsLast:  false,
 			IsFirst: false,
 		})
-		assert.Equal(t, path[4], JsonPathSec{
+		assert.Equal(t, path[4], JSONPathSec{
 			Index:   0,
 			IsIndex: false,
 			IsArray: false,
@@ -188,40 +188,40 @@ func TestSchemaPropertyFinder_FindPath(t *testing.T) {
 
 func TestGetJsonValue(t *testing.T) {
 	t.Run("string", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.String, "aaa")
+		ret, err := GetJSONValue(jsonschema.String, "aaa")
 		assert.Nil(t, err)
 		assert.Equal(t, "aaa", ret)
 	})
 
 	t.Run("integer", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.Integer, "123")
+		ret, err := GetJSONValue(jsonschema.Integer, "123")
 		assert.Nil(t, err)
 		assert.Equal(t, int64(123), ret)
 	})
 
 	t.Run("string", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.Number, "1.2312")
+		ret, err := GetJSONValue(jsonschema.Number, "1.2312")
 		assert.Nil(t, err)
 		assert.Equal(t, float64(1.2312), ret)
 	})
 
 	t.Run("bool", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.Boolean, "true")
+		ret, err := GetJSONValue(jsonschema.Boolean, "true")
 		assert.Nil(t, err)
 		assert.Equal(t, true, ret)
 
-		ret, err = GetJsonValue(jsonschema.Boolean, "false")
+		ret, err = GetJSONValue(jsonschema.Boolean, "false")
 		assert.Nil(t, err)
 		assert.Equal(t, false, ret)
 	})
 
 	t.Run("object", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.Object, `{"a":1}`)
+		ret, err := GetJSONValue(jsonschema.Object, `{"a":1}`)
 		assert.Nil(t, err)
 		assert.Equal(t, float64(1), ret.(map[string]interface{})["a"].(float64))
 	})
-	t.Run("arrary", func(t *testing.T) {
-		ret, err := GetJsonValue(jsonschema.Object, `[1,2,3,4]`)
+	t.Run("array", func(t *testing.T) {
+		ret, err := GetJSONValue(jsonschema.Object, `[1,2,3,4]`)
 		assert.Nil(t, err)
 		assert.Equal(t, float64(2), ret.([]interface{})[1].(float64))
 	})
