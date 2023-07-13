@@ -29,7 +29,7 @@ var Info = types2.PluginInfo{
 }
 
 type ImportKeyReturn struct {
-	Address address.Address `json:"address"`
+	Address address.Address `json:"address" jsonschema:"address" title:"Address" description:"import address" require:"true"`
 }
 
 type TestCaseParams struct {

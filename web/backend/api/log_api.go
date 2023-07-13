@@ -84,7 +84,6 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 			PodName: podReq.PodName,
 			Logs:    logs,
 		}
-
 		if strings.Contains(podReq.PodName, "test-runner") {
 			task, err := taskRepo.Get(ctx, &repo.GetTaskReq{TestId: &podReq.TestID})
 			if err != nil {

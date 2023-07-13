@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.venus_wallet_pro; cp /root/config.tmp /root/.venus_wallet_pro/config.toml"]
+          command: ['sh', '-c', "[ -d \"/root/.venus_wallet_pro\" ]||(mkdir -p /root/.venus_wallet_pro && cp /root/config.tmp /root/.venus_wallet_pro/config.toml);"]
           volumeMounts:
             - mountPath: /root
               name: venus-wallet-pro-pvc

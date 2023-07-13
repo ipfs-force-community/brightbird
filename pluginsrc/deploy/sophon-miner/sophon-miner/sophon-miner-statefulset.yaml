@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.sophon-miner; cp /root/config.tmp /root/.sophon-miner/config.toml"]
+          command: ['sh', '-c', "[ -d \"/root/.sophon-miner\" ]||(mkdir -p /root/.sophon-miner && cp /root/config.tmp /root/.sophon-miner/config.toml);"]
           volumeMounts:
             - mountPath: /root
               name: sophon-miner-pvc

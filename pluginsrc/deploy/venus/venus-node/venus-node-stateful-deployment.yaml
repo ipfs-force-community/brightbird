@@ -17,7 +17,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "mkdir -p /root/.venus; cp /root/config.tmp /root/.venus/config.json"]
+          command: ['sh', '-c', "[ -d \"/root/.venus\" ]||(mkdir -p /root/.venus && cp /root/config.tmp /root/.venus/config.json);"]
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
