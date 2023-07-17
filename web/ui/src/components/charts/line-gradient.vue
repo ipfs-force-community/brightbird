@@ -8,7 +8,7 @@ import * as echarts from 'echarts';
 
 export default defineComponent({
   props: {
-    dataArray: {
+    dateArray: {
       type: Array,
       required: true
     },
@@ -30,15 +30,13 @@ export default defineComponent({
           },
         xAxis: {
           type: 'category',
-          data: this.dataArray
-          // data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          data: this.dateArray
         },
         yAxis: {
           type: 'value'
         },
         series: [
           {
-            // data: [820, 932, 901, 934, 1290, 1330, 1320],
             data: this.passRateArray,
             type: 'line',
             smooth: true

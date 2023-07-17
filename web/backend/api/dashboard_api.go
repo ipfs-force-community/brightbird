@@ -14,103 +14,33 @@ import (
 func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo, pluginRepo repo.IPluginService) {
 	group := v1group.Group("/dashboard")
 
-	// swagger:route GET /task-count/total task countAllAmountReq
+	// swagger:route GET /task-count tasks getTaskCount
 	//
-	// Counts the total number of tasks.
-	//
-	//     Consumes:
+	// Retrieves the Statistics of tasks.
 	//
 	//     Produces:
 	//     - application/json
 	//
 	//     Schemes: http, https
 	//
-	//     Deprecated: false
-	//
 	//
 	//     Responses:
-	//       200: countAllAmountResp
+	//       200: taskCountResp
 	//       500: apiError
-	group.GET("/task-count/total", func(c *gin.Context) {
+	group.GET("/task-count", func(c *gin.Context) {
 		total, err := tasksRepo.CountAllAmount(ctx)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
 
-		c.JSON(http.StatusOK, total)
-	})
-
-	// swagger:route GET /task-count/passed task countPassedTasksReq
-	//
-	// Counts the number of passed tasks.
-	//
-	//     Produces:
-	//     - application/json
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//
-	//     Responses:
-	//       200: countPassedTasksResp
-	//       500: apiError
-	group.GET("/task-count/passed", func(c *gin.Context) {
 		passedAmount, err := tasksRepo.CountAllAmount(ctx, models.Successful)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
 
-		c.JSON(http.StatusOK, passedAmount)
-	})
-
-	// swagger:route GET /task-count/failed task getFailedTaskCountReq
-	//
-	// Get count of failed tasks.
-	//
-	//     Produces:
-	//     - application/json
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//
-	//     Responses:
-	//       200: failedTaskCountResp
-	//       500: apiError
-	group.GET("/task-count/failed", func(c *gin.Context) {
 		failedAmount, err := tasksRepo.CountAllAmount(ctx, models.Error)
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
-
-		c.JSON(http.StatusOK, failedAmount)
-	})
-
-	// swagger:route GET /task-count/pass-rate tasks getTaskPassRate
-	//
-	// Retrieves the pass rate of tasks.
-	//
-	//     Produces:
-	//     - application/json
-	//
-	//     Schemes: http, https
-	//
-	//
-	//     Responses:
-	//       200: taskPassRateResp
-	//       500: apiError
-	group.GET("/task-count/pass-rate", func(c *gin.Context) {
-		total, err := tasksRepo.CountAllAmount(ctx)
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
-		passedAmount, err := tasksRepo.CountAllAmount(ctx, models.Successful)
 		if err != nil {
 			c.Error(err) //nolint
 			return
@@ -120,7 +50,14 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 
 		passRateFormatted := fmt.Sprintf("%.1f%%", passRate)
 
-		c.JSON(http.StatusOK, passRateFormatted)
+		response := map[string]interface{}{
+			"total":  total,
+			"passed": passedAmount,
+			"failed":  failedAmount,
+			"passRate":  passRateFormatted,
+		}
+
+		c.JSON(http.StatusOK, response)
 	})
 
 	// swagger:route GET /test-data test-data listTestData
@@ -198,13 +135,17 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//       200: ratioMapResp
 	//       500: apiError
 	group.GET("/failed-tasks", func(c *gin.Context) {
-		ratioMap, err := tasksRepo.JobFailureRatiobLast2Week(ctx)
+		failTask, err := tasksRepo.JobFailureRatiobLast2Week(ctx)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
 
-		c.JSON(http.StatusOK, ratioMap)
+		response := map[string]interface{}{
+			"failTask":     failTask,
+		}
+
+		c.JSON(http.StatusOK, response)
 	})
 
 	// swagger:route GET /pass-rate-trends task passRateTrends

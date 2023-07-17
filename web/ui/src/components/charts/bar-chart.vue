@@ -7,6 +7,16 @@
   import * as echarts from 'echarts';
   
   export default defineComponent({
+    props: {
+      jobNames: {
+        type: Array,
+        required: true,
+      },
+      passRates: {
+        type: Array,
+        required: true,
+      },
+    },
     mounted() {
       this.renderChart();
     },
@@ -41,13 +51,15 @@
           },
           yAxis: {
             type: 'category',
-            data: ['Job1', 'Job2', 'Job3']
+            // data: ['Job1', 'Job2', 'Job3']
+            data: this.jobNames
           },
           series: [
             {
               name: '',
               type: 'bar',
-              data: [50, 60, 80],
+              // data: [50, 60, 80],
+              data: this.passRates,
               itemStyle: {
                 // 设置柱子圆角
                 barBorderRadius: [0, 10, 10, 0],

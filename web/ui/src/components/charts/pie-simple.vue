@@ -7,6 +7,16 @@
   import * as echarts from 'echarts';
   
   export default defineComponent({
+    props: {
+      deployPlugin: {
+        type: Number,
+        required: true
+      },
+      execPlugin: {
+        type: Number,
+        required: true
+      }
+    },
     mounted() {
       this.renderChart();
     },
@@ -30,8 +40,8 @@
               type: 'pie',
               radius: '50%',
               data: [
-                { value: 15, name: '部署组件' },
-                { value: 30, name: '测试组件' },
+                { value: this.deployPlugin, name: '部署组件' },
+                { value: this.execPlugin, name: '测试组件' },
               ],
               emphasis: {
                 itemStyle: {

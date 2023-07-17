@@ -7,6 +7,16 @@ import { defineComponent } from 'vue';
 import * as echarts from 'echarts';
 
 export default defineComponent({
+  props: {
+    testData: {
+      type: Object as () => Map<string, number[]>,
+      required: true
+    },
+    dateArray: {
+      type: Array as () => string[],
+      required: true
+    }
+  },
   mounted() {
     this.renderChart();
   },
@@ -14,6 +24,24 @@ export default defineComponent({
     renderChart() {
       const chartContainer = this.$refs.chartContainer as HTMLElement;
       const myChart = echarts.init(chartContainer);
+
+      const seriesData = Object.entries(this.testData).map(([name, data]) => ({
+        name,
+        type: 'line',
+        stack: 'Total',
+        areaStyle: {
+          color: this.getRandomColor()
+        },
+        emphasis: {
+          focus: 'series'
+        },
+        smooth: true,
+        lineStyle: {
+          color: this.getRandomColor()
+        },
+        data: data,
+      }));
+
       const option = {
         title: {
           text: '近2周 / 测试数据'
@@ -45,7 +73,7 @@ export default defineComponent({
           {
             type: 'category',
             boundaryGap: false,
-            data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+            data: this.dateArray,
           }
         ],
         yAxis: [
@@ -53,75 +81,15 @@ export default defineComponent({
             type: 'value'
           }
         ],
-        series: [
-          {
-            name: 'Job1',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {
-              color: 'rgb(240, 235, 246)'
-            },
-            emphasis: {
-              focus: 'series'
-            },
-            smooth: true,
-            lineStyle: {
-              color: 'rgb(130, 65, 196)'
-            },
-            data: [120, 132, 101, 134, 90, 230, 210]
-          },
-          {
-            name: 'Job2',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {
-              color: 'rgb(253, 247, 236)'
-            },
-            emphasis: {
-              focus: 'series'
-            },
-            smooth: true,
-            lineStyle: {
-              color: 'rgb(255, 125, 0)'
-            },
-            data: [220, 182, 191, 234, 290, 330, 310]
-          },
-          {
-            name: 'Job3',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {
-              color: 'rgb(226, 248, 252)'
-            },
-            emphasis: {
-              focus: 'series'
-            },
-            smooth: true,
-            lineStyle: {
-              color: 'rgb(59, 226, 226)'
-            },
-            data: [150, 232, 201, 154, 190, 330, 410]
-          },
-          {
-            name: 'Job4',
-            type: 'line',
-            stack: 'Total',
-            areaStyle: {
-              color: 'rgb(236, 243, 255)'
-            },
-            emphasis: {
-              focus: 'series'
-            },
-            smooth: true,
-            lineStyle: {
-              color: 'rgb(56, 108, 255)'
-            },
-            data: [320, 332, 301, 334, 390, 330, 320]
-          },
-        ]
+        series: seriesData
       };
       myChart.setOption(option);
     },
+    getRandomColor() {
+      const colors = ['rgb(240, 235, 246)', 'rgb(253, 247, 236)', 'rgb(226, 248, 252)', 'rgb(236, 243, 255)'];
+      const randomIndex = Math.floor(Math.random() * colors.length);
+      return colors[randomIndex];
+    }
   },
 });
 </script>

@@ -472,7 +472,7 @@ func (j *TaskRepo) TasktPassRateLast30Days(ctx context.Context) ([]string, []int
 	}
 	defer cursor.Close(ctx)
 
-	dateArray := make([]string, 30)
+	dateArray := make([]string, 0)
 	now := time.Now().UTC()
 	startDate := now.AddDate(0, 0, -30)
 	for date := startDate; date.Before(now); date = date.AddDate(0, 0, 1) {

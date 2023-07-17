@@ -8,10 +8,14 @@
   
   export default defineComponent({
     props: {
-      chartData: {
-        type: Array as () => number[][],
+      testData: {
+        type: Object as () => Map<string, number[]>,
         required: true,
       },
+      dateArray: {
+        type: Array,
+        required: true,
+      }
     },
     mounted() {
       this.renderChart();
@@ -20,7 +24,9 @@
       renderChart() {
         const chartContainer = this.$refs.chartContainer as HTMLElement;
         const myChart = echarts.init(chartContainer);
-        const seriesData = this.chartData.map((data: number[]) => ({
+
+        const seriesData = Object.entries(this.testData).map(([name, data]) => ({
+          name,
           type: 'line',
           stack: 'Total',
           smooth: true,
@@ -51,7 +57,7 @@
           xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['Wek1', 'Wek2', 'Wek3', 'Wek4']
+            data: this.dateArray,
           },
           yAxis: {
             type: 'value'

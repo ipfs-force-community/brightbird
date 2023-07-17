@@ -7,6 +7,12 @@
   import * as echarts from 'echarts';
   
   export default defineComponent({
+    props: {
+      map: {
+        type: Object as () => Map<string, number>,
+        required: true
+      }
+    },
     mounted() {
       this.renderChart();
     },
@@ -14,6 +20,9 @@
       renderChart() {
         const chartContainer = this.$refs.chartContainer as HTMLElement;
         const myChart = echarts.init(chartContainer);
+
+        const data = Object.entries(this.map).map(([name, value]) => ({ name, value }));
+
         const option = {
           title: {
             text: '任务失败占比',
@@ -41,8 +50,8 @@
                 borderWidth: 2
               },
               label: {
-                show: true, // 显示标签文本
-                formatter: '{b}：{d}%' // 标签文本格式，{b}代表name，{d}%代表占比
+                show: true, 
+                formatter: '{b}：{d}%'
               },
               emphasis: {
                 itemStyle: {
@@ -51,12 +60,7 @@
                   shadowColor: 'rgba(0, 0, 0, 0.5)'
                 }
               },
-              data: [
-                { value: 15, name: 'Job1' },
-                { value: 65, name: 'Job2' },
-                { value: 2, name: 'Job3' },
-                { value: 42, name: 'Job4' }
-              ]
+              data
             }
           ]
         };
