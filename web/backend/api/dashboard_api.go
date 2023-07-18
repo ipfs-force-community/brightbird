@@ -11,7 +11,8 @@ import (
 	"github.com/hunjixin/brightbird/types"
 )
 
-func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo, pluginRepo repo.IPluginService) {
+func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo, 
+	pluginRepo repo.IPluginService, jobRepo repo.IJobRepo) {
 	group := v1group.Group("/dashboard")
 
 	// swagger:route GET /task-count tasks getTaskCount
@@ -82,8 +83,18 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 			return
 		}
 
+		newData := make(map[string][]int)
+		for jobId, countArray := range testData {
+			job, err := jobRepo.Get(ctx, jobId)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+			newData[job.Name] = countArray
+		}
+
 		response := map[string]interface{}{
-			"testData":  testData,
+			"testData":  newData,
 			"dateArray": dateArray,
 		}
 
@@ -108,10 +119,22 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//       200: todayPassRateRankingResp
 	//       500: apiError
 	group.GET("/today-pass-rate-ranking", func(c *gin.Context) {
-		jobNames, passRates, err := tasksRepo.JobPassRateTop3Today(ctx)
+		jobIds, passRates, err := tasksRepo.JobPassRateTop3Today(ctx)
 		if err != nil {
 			c.Error(err) //nolint
 			return
+		}
+
+		jobNames := []string{}
+
+		for _, jobId := range jobIds {
+			job, err := jobRepo.Get(ctx, jobId)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+		
+			jobNames = append(jobNames, job.Name)
 		}
 
 		response := map[string]interface{}{
@@ -141,8 +164,18 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 			return
 		}
 
+		failTaskWithJobname := make(map[string]interface{})
+		for jobId, value := range failTask {
+			job, err := jobRepo.Get(ctx, jobId)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+			failTaskWithJobname[job.Name] = value
+		}
+
 		response := map[string]interface{}{
-			"failTask":     failTask,
+			"failTask": failTaskWithJobname,
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -233,8 +266,18 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 			return
 		}
 
+		newData := make(map[string][]int)
+		for jobId, countArray := range testData {
+			job, err := jobRepo.Get(ctx, jobId)
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
+			newData[job.Name] = countArray
+		}
+
 		response := map[string]interface{}{
-			"testData":  testData,
+			"testData":  newData,
 			"dateArray": dateArray,
 		}
 

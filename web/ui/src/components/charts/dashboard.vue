@@ -1,94 +1,96 @@
 <template>
     <div>
-        <el-row justify="center" style="margin-bottom: 20px;">
-            <el-col :span="6">
+        <el-row style="margin-top: 2vw;">
+            <el-col :span="1">
+            </el-col>
+            <el-col :span="3">
                 <el-row style="margin-bottom: 10px;">
                     <el-col>
                         <div style="color: rgba(16, 16, 16, 1); font-size: 20px; text-align: left;">总任务数</div>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 10px;"> 
-                    <el-col :span="3">
+                    <el-col :span="5">
                         <el-icon :size="25" style="width: 37px; height: 37px; border-radius: 10%; background-color: rgb(255, 228, 186);">
                             <EditPen style="color: rgb(255, 130, 10)" />
                         </el-icon>
                     </el-col>
-                    <el-col :span="3"> 
+                    <el-col :span="6"> 
                         <div style="width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">{{ taskCount.total }}</div>
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="6">
+            <el-col :span="3">
                 <el-row style="margin-bottom: 10px;">
                     <el-col>
                         <div style="color: rgba(16, 16, 16, 1); font-size: 20px; text-align: left;">通过任务数</div>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 10px;"> 
-                    <el-col :span="3">
+                    <el-col :span="5">
                         <el-icon :size="25" style="width: 37px; height: 37px; border-radius: 10%; background-color: rgb(232, 255, 251);">
                             <CircleCheck style="color: rgb(16, 198, 194)" />
                         </el-icon>
                     </el-col>
-                    <el-col :span="3"> 
+                    <el-col :span="6"> 
                         <div style="width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">{{ taskCount.passed }}</div>
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="6">
+            <el-col :span="3">
                 <el-row style="margin-bottom: 10px;">
                     <el-col>
                         <div style="color: rgba(16, 16, 16, 1); font-size: 20px; text-align: left;">失败任务数</div>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 10px;"> 
-                    <el-col :span="3">
+                    <el-col :span="5">
                         <el-icon :size="25" style="width: 37px; height: 37px; border-radius: 10%; background-color: rgb(232, 243, 255);">
                             <CircleClose style="color: rgb(34, 101, 255)" />
                         </el-icon>
                     </el-col>
-                    <el-col :span="3"> 
+                    <el-col :span="6"> 
                         <div style="width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">{{ taskCount.failed }}</div>
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="6">
+            <el-col :span="4">
                 <el-row style="margin-bottom: 10px;">
                     <el-col>
                         <div style="color: rgba(16, 16, 16, 1); font-size: 20px; text-align: left;">通过率</div>
                     </el-col>
                 </el-row>
                 <el-row style="margin-bottom: 10px;"> 
-                    <el-col :span="3">
+                    <el-col :span="5">
                         <el-icon :size="25" style="width: 37px; height: 37px; border-radius: 10%; background-color: rgb(245, 232, 255);">
                             <PieChart style="color: rgb(129, 67, 214)" />
                         </el-icon>
                     </el-col>
-                    <el-col :span="3"> 
+                    <el-col :span="6"> 
                         <div style="width: 109px; height: 40px; color: rgba(16, 16, 16, 1); font-size: 26px; text-align: left; font-weight: bold;">{{ taskCount.passRate }}</div>
                     </el-col>
                 </el-row>
             </el-col>
-        </el-row>
-        <el-row >
-            <el-col :span="12" style="height: 500px;"> 
-                <StackedAreaChart v-if="isTaskData2WeekReady && taskData2Week.dateArray" :testData="taskData2Week.testData" :dateArray="taskData2Week.dateArray"/>
-            </el-col>
-            <el-col :span="6">
+            <el-col :span="10" style="height: 6vw;">
                 <BarChart v-if="isTodayPassRateReady" :job-names="todayPassRate.jobNames" :pass-rates="todayPassRate.passRates"/>
             </el-col>
-            <el-col :span="6">
+        </el-row>
+        <el-row>
+            <el-col :span="14" style="height: 20vw;"> 
+                <StackedAreaChart v-if="isTaskData2WeekReady && taskData2Week.dateArray" :testData="taskData2Week.testData" :dateArray="taskData2Week.dateArray"/>
+            </el-col>
+            <el-col :span="10">
                 <PieBorderRadius v-if="isFailureRatiobLast2WeekReady" :map="failureRatiobLast2Week?.failTask"/>
             </el-col>
         </el-row>
         <el-row>
-            <el-col :span="8" style="height: 400px;">
+            <el-col :span="8" style="height: 13vw;">
                 <LineGradient v-if="isTasktPassRateLast30DaysReady && tasktPassRateLast30Days.dateArray" :dateArray="tasktPassRateLast30Days.dateArray" :passRateArray="tasktPassRateLast30Days.passRateArray"/>
             </el-col>
-            <el-col :span="8" style="height: 400px;">
+            <el-col :span="6">
                 <PieSimple v-if="isPluginsCountReady" :deployPlugin="pluginsCount.deployerCount" :execPlugin="pluginsCount.execCount" />
             </el-col>
-            <el-col :span="8" style="height: 400px;">
+            <el-col :span="10">
                 <LineStack v-if="isJobPassCountLast30DaysReady && jobPassCountLast30Days.dateArray " :testData="jobPassCountLast30Days.testData" :dateArray="jobPassCountLast30Days.dateArray"/>
             </el-col>
         </el-row>

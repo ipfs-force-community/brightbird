@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"strings"
 
 	"github.com/hunjixin/brightbird/models"
-
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -30,11 +29,11 @@ type ITaskRepo interface {
 	Save(context.Context, *models.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	CountAllAmount(ctx context.Context, state ...models.State) (int64, error)
-	TaskAmountOfJobLast2Week(ctx context.Context) (map[string][]int, []string, error)
-	JobPassRateTop3Today(ctx context.Context) ([]string, []string, error)
-	JobFailureRatiobLast2Week(ctx context.Context) (map[string]int, error)
+	TaskAmountOfJobLast2Week(ctx context.Context) (map[primitive.ObjectID][]int, []string, error)
+	JobPassRateTop3Today(ctx context.Context) ([]primitive.ObjectID, []string, error)
+	JobFailureRatiobLast2Week(ctx context.Context) (map[primitive.ObjectID]int, error)
 	TasktPassRateLast30Days(ctx context.Context) ([]string, []int32, error)
-	JobPassRateLast30Days(ctx context.Context) (map[string][]int, []string, error)
+	JobPassRateLast30Days(ctx context.Context) (map[primitive.ObjectID][]int, []string, error)
 }
 
 var _ ITaskRepo = (*TaskRepo)(nil)
@@ -222,7 +221,7 @@ func (j *TaskRepo) CountAllAmount(ctx context.Context, state ...models.State) (i
 	return count, nil
 }
 
-func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[string][]int, []string, error) {
+func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[primitive.ObjectID][]int, []string, error) {
 	endD := time.Now().Unix()
 	startD := time.Now().AddDate(0, 0, -14).Unix()
 
@@ -275,7 +274,7 @@ func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[string][]i
 		dateArray = append(dateArray, dateStr)
 	}
 
-	jobIDHashTable := make(map[string][]int)
+	jobIDHashTable := make(map[primitive.ObjectID][]int)
 
 	for cursor.Next(ctx) {
 		var result bson.M
@@ -283,7 +282,7 @@ func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[string][]i
 			return nil, nil, err
 		}
 
-		jobID := result["jobid"].(primitive.ObjectID).Hex()
+		jobID := result["jobid"].(primitive.ObjectID)
 
 		dates := result["dates"].(primitive.A)
 		datesSlice := []interface{}(dates)
@@ -315,7 +314,7 @@ func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[string][]i
 	return jobIDHashTable, dateArray, nil
 }
 
-func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]string, []string, error) {
+func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]primitive.ObjectID, []string, error) {
 	endD := time.Now().Unix()
 	startD := time.Now().AddDate(0, 0, -1).Unix()
 
@@ -373,7 +372,7 @@ func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]string, []string
 	}
 	defer cursor.Close(ctx)
 
-	var jobNames []string
+	var jobIds []primitive.ObjectID
 	var passRates []string
 	for cursor.Next(ctx) {
 		var result bson.M
@@ -381,10 +380,11 @@ func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]string, []string
 			return nil, nil, err
 		}
 
-		jobName := result["jobid"].(primitive.ObjectID).Hex()
+		jobId := result["jobid"].(primitive.ObjectID)
 		passRate := result["pass_rate"].(string)
+		passRate = strings.TrimRight(passRate, "%")
 
-		jobNames = append(jobNames, jobName)
+		jobIds = append(jobIds, jobId)
 		passRates = append(passRates, passRate)
 	}
 
@@ -392,10 +392,10 @@ func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]string, []string
 		return nil, nil, err
 	}
 
-	return jobNames, passRates, nil
+	return jobIds, passRates, nil
 }
 
-func (j *TaskRepo) JobFailureRatiobLast2Week(ctx context.Context) (map[string]int, error) {
+func (j *TaskRepo) JobFailureRatiobLast2Week(ctx context.Context) (map[primitive.ObjectID]int, error) {
 	endD := time.Now().Unix()
 	startD := time.Now().AddDate(0, 0, -14).Unix()
 
@@ -428,9 +428,9 @@ func (j *TaskRepo) JobFailureRatiobLast2Week(ctx context.Context) (map[string]in
 		return nil, err
 	}
 
-	jobIDHashTable := make(map[string]int)
+	jobIDHashTable := make(map[primitive.ObjectID]int)
 	for _, result := range results {
-		jobID := result["_id"].(primitive.ObjectID).Hex()
+		jobID := result["_id"].(primitive.ObjectID)
 		failureCount := result["failure_count"].(int32)
 
 		jobIDHashTable[jobID] = int(failureCount)
@@ -507,7 +507,7 @@ func (j *TaskRepo) TasktPassRateLast30Days(ctx context.Context) ([]string, []int
 	return dateArray, passTaskArray, nil
 }
 
-func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[string][]int, []string, error) {
+func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[primitive.ObjectID][]int, []string, error) {
 	endD := time.Now().Unix()
 	startD := time.Now().AddDate(0, 0, -30).Unix()
 
@@ -561,7 +561,7 @@ func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[string][]int,
 		dateArray = append(dateArray, dateStr)
 	}
 
-	jobIDHashTable := make(map[string][]int)
+	jobIDHashTable := make(map[primitive.ObjectID][]int)
 
 	for cursor.Next(ctx) {
 		var result bson.M
@@ -569,7 +569,7 @@ func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[string][]int,
 			return nil, nil, err
 		}
 
-		jobID := result["jobid"].(primitive.ObjectID).Hex()
+		jobID := result["jobid"].(primitive.ObjectID)
 
 		dates := result["dates"].(primitive.A)
 		datesSlice := []interface{}(dates)
