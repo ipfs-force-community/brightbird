@@ -2,13 +2,13 @@ package repo
 
 import (
 	"context"
+	"fmt"
 	"time"
+	"strings"
 
 	"github.com/hunjixin/brightbird/models"
-
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/x/bsonx"
-
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -33,6 +33,12 @@ type ITaskRepo interface {
 	Get(context.Context, *GetTaskReq) (*models.Task, error)
 	Save(context.Context, *models.Task) (primitive.ObjectID, error)
 	Delete(ctx context.Context, id primitive.ObjectID) error
+	CountAllAmount(ctx context.Context, state ...models.State) (int64, error)
+	TaskAmountOfJobLast2Week(ctx context.Context) (map[primitive.ObjectID][]int, []string, error)
+	JobPassRateTop3Today(ctx context.Context) ([]primitive.ObjectID, []string, error)
+	JobFailureRatiobLast2Week(ctx context.Context) (map[primitive.ObjectID]int, error)
+	TasktPassRateLast30Days(ctx context.Context) ([]string, []int32, error)
+	JobPassRateLast30Days(ctx context.Context) (map[primitive.ObjectID][]int, []string, error)
 }
 
 var _ ITaskRepo = (*TaskRepo)(nil)
@@ -214,4 +220,397 @@ func (j *TaskRepo) UpdateCommitMap(ctx context.Context, id primitive.ObjectID, v
 		return err
 	}
 	return nil
+}
+
+func (j *TaskRepo) CountAllAmount(ctx context.Context, state ...models.State) (int64, error) {
+	filter := bson.M{}
+	if len(state) > 0 {
+		filter["state"] = state[0]
+	}
+
+	count, err := j.taskCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return -1, err
+	}
+	return count, nil
+}
+
+func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[primitive.ObjectID][]int, []string, error) {
+	endD := time.Now().Unix()
+	startD := time.Now().AddDate(0, 0, -14).Unix()
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"createtime": bson.M{
+					"$gt": startD,
+					"$lt": endD,
+				},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"jobid": "$jobid",
+					"date":  "$createtime",
+				},
+				"task_count": bson.M{"$sum": 1},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":        "$_id.jobid",
+				"date":       bson.M{"$addToSet": "$_id.date"},
+				"task_count": bson.M{"$addToSet": "$task_count"},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":         0,
+				"jobid":       "$_id",
+				"dates":       "$date",
+				"task_counts": bson.M{"$first": "$task_count"},
+			},
+		},
+	}
+
+	cursor, err := j.taskCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	now := time.Now().UTC()
+	startDate := now.AddDate(0, 0, -14)
+	dateArray := make([]string, 0)
+	for date := startDate; date.Before(now); date = date.AddDate(0, 0, 1) {
+		dateStr := date.Format("01-02")
+		dateArray = append(dateArray, dateStr)
+	}
+
+	jobIDHashTable := make(map[primitive.ObjectID][]int)
+
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			return nil, nil, err
+		}
+
+		jobID := result["jobid"].(primitive.ObjectID)
+
+		dates := result["dates"].(primitive.A)
+		datesSlice := []interface{}(dates)
+		timestamp := datesSlice[0].(int64)
+		date := time.Unix(timestamp, 0)
+		diff := date.Sub(startDate).Hours() / 24
+		daysDiff := int(diff)
+
+		taskCount := result["task_counts"].(int32)
+
+		taskCountSlice := make([]int, 14)
+		for i := range taskCountSlice {
+			taskCountSlice[i] = 0
+		}
+		taskCountSlice[daysDiff] = int(taskCount)
+
+		jobIDHashTable[jobID] = taskCountSlice
+
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	for jobID, counts := range jobIDHashTable {
+		fmt.Printf("JobID: %s, Counts: %v\n", jobID, counts)
+	}
+
+	return jobIDHashTable, dateArray, nil
+}
+
+func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]primitive.ObjectID, []string, error) {
+	endD := time.Now().Unix()
+	startD := time.Now().AddDate(0, 0, -1).Unix()
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"createtime": bson.M{
+					"$gt": startD,
+					"$lt": endD,
+				},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": "$jobid",
+				"pass_count": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$eq": []interface{}{"$state", 5}},
+							"then": 1,
+							"else": 0,
+						},
+					},
+				},
+				"total_count": bson.M{"$sum": 1},
+			},
+		},
+		{
+			"$project": bson.M{
+				"jobid": "$_id",
+				"pass_rate": bson.M{"$concat": []interface{}{
+					bson.M{"$toString": bson.M{"$multiply": []interface{}{
+						bson.M{"$divide": []interface{}{
+							"$pass_count",
+							bson.M{"$cond": []interface{}{
+								bson.M{"$ne": []interface{}{"$total_count", 0}},
+								"$total_count",
+								1,
+							}},
+						}},
+						100,
+					}}},
+					"%",
+				}},
+			},
+		},
+		{
+			"$sort": bson.M{"pass_rate": -1},
+		},
+	}
+
+	cursor, err := j.taskCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var jobIds []primitive.ObjectID
+	var passRates []string
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			return nil, nil, err
+		}
+
+		jobId := result["jobid"].(primitive.ObjectID)
+		passRate := result["pass_rate"].(string)
+		passRate = strings.TrimRight(passRate, "%")
+
+		jobIds = append(jobIds, jobId)
+		passRates = append(passRates, passRate)
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return jobIds, passRates, nil
+}
+
+func (j *TaskRepo) JobFailureRatiobLast2Week(ctx context.Context) (map[primitive.ObjectID]int, error) {
+	endD := time.Now().Unix()
+	startD := time.Now().AddDate(0, 0, -14).Unix()
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"state": 4,
+				"createtime": bson.M{
+					"$gt": startD,
+					"$lt": endD,
+				},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":           "$jobid",
+				"failure_count": bson.M{"$sum": 1},
+			},
+		},
+	}
+
+	cursor, err := j.taskCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var results []bson.M
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	jobIDHashTable := make(map[primitive.ObjectID]int)
+	for _, result := range results {
+		jobID := result["_id"].(primitive.ObjectID)
+		failureCount := result["failure_count"].(int32)
+
+		jobIDHashTable[jobID] = int(failureCount)
+	}
+
+	return jobIDHashTable, nil
+}
+
+func (j *TaskRepo) TasktPassRateLast30Days(ctx context.Context) ([]string, []int32, error) {
+	passTaskArray := make([]int32, 30)
+
+	endD := time.Now().Unix()
+	startD := time.Now().AddDate(0, 0, -30).Unix()
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"createtime": bson.M{
+					"$gte": startD,
+					"$lt":  endD,
+				},
+				"state": 5,
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":        "$createtime",
+				"pass_count": bson.M{"$sum": 1},
+			},
+		},
+		{
+			"$sort": bson.M{"_id": 1},
+		},
+	}
+
+	cursor, err := j.taskCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	dateArray := make([]string, 0)
+	now := time.Now().UTC()
+	startDate := now.AddDate(0, 0, -30)
+	for date := startDate; date.Before(now); date = date.AddDate(0, 0, 1) {
+		dateStr := date.Format("01-02")
+		dateArray = append(dateArray, dateStr)
+	}
+
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			return nil, nil, err
+		}
+
+		timestamp := result["_id"].(int64)
+		t := time.Unix(timestamp, 0)
+		diff := t.Sub(startDate).Hours() / 24
+		daysDiff := int(diff)
+
+		count := result["pass_count"].(int32)
+
+		if err != nil {
+			return nil, nil, err
+		}
+
+		passTaskArray[daysDiff] += count
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	return dateArray, passTaskArray, nil
+}
+
+func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[primitive.ObjectID][]int, []string, error) {
+	endD := time.Now().Unix()
+	startD := time.Now().AddDate(0, 0, -30).Unix()
+
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"createtime": bson.M{
+					"$gte": startD,
+					"$lt":  endD,
+				},
+				"state": 5,
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"jobid": "$jobid",
+					"date":  "$createtime",
+				},
+				"task_count": bson.M{"$sum": 1},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id":        "$_id.jobid",
+				"date":       bson.M{"$addToSet": "$_id.date"},
+				"task_count": bson.M{"$addToSet": "$task_count"},
+			},
+		},
+		{
+			"$project": bson.M{
+				"_id":         0,
+				"jobid":       "$_id",
+				"dates":       "$date",
+				"task_counts": bson.M{"$first": "$task_count"},
+			},
+		},
+	}
+
+	cursor, err := j.taskCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer cursor.Close(ctx)
+
+	now := time.Now().UTC()
+	startDate := now.AddDate(0, 0, -30)
+	dateArray := make([]string, 0)
+	for date := startDate; date.Before(now); date = date.AddDate(0, 0, 1) {
+		dateStr := date.Format("01-02")
+		dateArray = append(dateArray, dateStr)
+	}
+
+	jobIDHashTable := make(map[primitive.ObjectID][]int)
+
+	for cursor.Next(ctx) {
+		var result bson.M
+		if err := cursor.Decode(&result); err != nil {
+			return nil, nil, err
+		}
+
+		jobID := result["jobid"].(primitive.ObjectID)
+
+		dates := result["dates"].(primitive.A)
+		datesSlice := []interface{}(dates)
+		timestamp := datesSlice[0].(int64)
+		date := time.Unix(timestamp, 0)
+		diff := date.Sub(startDate).Hours() / 24
+		daysDiff := int(diff)
+
+		taskCount := result["task_counts"].(int32)
+
+		taskCountSlice := make([]int, 30)
+		for i := range taskCountSlice {
+			taskCountSlice[i] = 0
+		}
+		taskCountSlice[daysDiff] = int(taskCount)
+
+		jobIDHashTable[jobID] = taskCountSlice
+
+	}
+
+	if err := cursor.Err(); err != nil {
+		return nil, nil, err
+	}
+
+	for jobID, counts := range jobIDHashTable {
+		fmt.Printf("JobID: %s, Counts: %v\n", jobID, counts)
+	}
+
+	return jobIDHashTable, dateArray, nil
 }

@@ -7,6 +7,16 @@
   import * as echarts from 'echarts';
   
   export default defineComponent({
+    props: {
+      testData: {
+        type: Object as () => Map<string, number[]>,
+        required: true,
+      },
+      dateArray: {
+        type: Array,
+        required: true,
+      }
+    },
     mounted() {
       this.renderChart();
     },
@@ -14,6 +24,15 @@
       renderChart() {
         const chartContainer = this.$refs.chartContainer as HTMLElement;
         const myChart = echarts.init(chartContainer);
+
+        const seriesData = Object.entries(this.testData).map(([name, data]) => ({
+          name,
+          type: 'line',
+          stack: 'Total',
+          smooth: true,
+          data,
+        }));
+
         const option = {
           title: {
             text: '近 30 天Job成功数量走势'
@@ -38,27 +57,12 @@
           xAxis: {
             type: 'category',
             boundaryGap: false,
-            data: ['Wek1', 'Wek2', 'Wek3', 'Wek4']
+            data: this.dateArray,
           },
           yAxis: {
             type: 'value'
           },
-          series: [
-            {
-              name: 'Email',
-              type: 'line',
-              stack: 'Total',
-              smooth: true, // 设置为平滑曲线
-              data: [150, 50, 100, 150]
-            },
-            {
-              name: 'Union Ads',
-              type: 'line',
-              stack: 'Total',
-              smooth: true, // 设置为平滑曲线
-              data: [100, 150, 250, 100]
-            },
-          ]
+          series: seriesData,
         };
         myChart.setOption(option);
       },

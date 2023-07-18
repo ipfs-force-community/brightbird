@@ -7,6 +7,16 @@
   import * as echarts from 'echarts';
   
   export default defineComponent({
+    props: {
+      jobNames: {
+        type: Array,
+        required: true,
+      },
+      passRates: {
+        type: Array,
+        required: true,
+      },
+    },
     mounted() {
       this.renderChart();
     },
@@ -19,13 +29,6 @@
           title: {
             text: '当日通过率排行'
           },
-          tooltip: {
-            trigger: 'axis',
-            axisPointer: {
-              type: 'shadow'
-            }
-          },
-          legend: {},
           grid: {
             left: '3%',
             right: '4%',
@@ -41,19 +44,18 @@
           },
           yAxis: {
             type: 'category',
-            data: ['Job1', 'Job2', 'Job3']
+            data: this.jobNames
           },
           series: [
             {
               name: '',
               type: 'bar',
-              data: [50, 60, 80], // 修改为百分比数据
+              data: this.passRates,
               itemStyle: {
                 // 设置柱子圆角
                 barBorderRadius: [0, 10, 10, 0],
                 color: 'rgb(64, 134, 255)'
               },
-              barWidth: 12,
               label: {
                 show: true,
                 position: 'inside',
