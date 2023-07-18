@@ -83,13 +83,13 @@ type CountJobRequest struct {
 // swagger:model listJobResp
 type ListJobResp []Job
 
-// StringArrary
+// StringArray
 // swagger:model stringArr
-type StringArrary []string
+type StringArray []string
 
-// Int64Arrary
+// Int64Array
 // swagger:model int64Arr
-type Int64Arrary []int64
+type Int64Array []int64
 
 // LogListResp
 // swagger:model logListResp
@@ -104,6 +104,13 @@ type ListTasksParams struct {
 	State []State `form:"state" json:"state"`
 	// createtime of task
 	CreateTime *int64 `form:"createTime" json:"createTime"`
+}
+
+// GetTaskReq
+// swagger:parameters getTaskReq
+type GetTaskReq struct {
+	TestId *string `form:"testid" json:"testID"`
+	ID     *string `form:"ID" json:"ID"`
 }
 
 // ListTasksReq
@@ -198,18 +205,41 @@ type DeletePluginReq struct {
 	Version string `form:"version" json:"version" binding:"required"`
 }
 
+// PodLogReq
+// swagger:parameters podLogReq
+type PodLogReq struct {
+	// testid of task
+	//
+	// required: true
+	TestID string `form:"testID" json:"testID" binding:"required"`
+	// pod name
+	//
+	// required: true
+	PodName string `form:"podName" json:"podLog" binding:"required"`
+}
+
+type StepState string
+
+const (
+	StepNotRunning StepState = "notrunning" //nolint
+	StepRunning    StepState = "running"    //nolint
+	StepSuccess    StepState = "success"    //nolint
+	StepFail       StepState = "fail"       //nolint
+)
+
 // StepLog
 // swagger:model stepLog
 type StepLog struct {
-	Name      string   `json:"name"`
-	Logs      []string `json:"logs"`
-	IsSuccess bool     `json:"success"`
+	Name         string    `json:"name"`
+	InstanceName string    `json:"instanceName"`
+	State        StepState `json:"state"`
+	Logs         []string  `json:"logs"`
 }
 
 // LogResp
 // swagger:model logResp
 type LogResp struct {
-	PodName string    `json:"podName"`
-	Steps   []StepLog `json:"steps"`
-	Logs    []string  `json:"logs"`
+	PodName string     `json:"podName"`
+	Steps   []*StepLog `json:"steps"`
+	Logs    []string   `json:"logs"`
 }

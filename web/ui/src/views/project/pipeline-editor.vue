@@ -52,8 +52,6 @@ export default defineComponent({
             groupId: fetchedData.groupId,
             createTime: fetchedData.createTime,
             modifiedTime: fetchedData.modifiedTime,
-            cases: fetchedData.cases,
-            nodes: fetchedData.nodes,
             graph: fetchedData.graph,
             data: rawData,
           };
@@ -68,7 +66,7 @@ export default defineComponent({
     const close = async () => {
       await router.push({ name: 'index' });
     };
-    const save = async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
+    const save = async (back: boolean, graph: string) => {
       try {
         if (workflow.value.name === '' || workflow.value.groupId === '') {
           projectPanelVisible.value = true;
@@ -80,8 +78,6 @@ export default defineComponent({
           name: workflow.value.name,
           createTime: (editMode ? BigInt(flowCreateTime.value) : BigInt(Date.now()) * BigInt(1000000)).toString(),
           modifiedTime: (Date.now() * 1000000).toString(),
-          cases: caseList,
-          nodes: nodeList,
           graph: graph,
           id: editMode ? props.id : '',
           description: workflow.value.description || '',

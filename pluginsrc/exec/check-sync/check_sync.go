@@ -6,9 +6,10 @@ import (
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
 	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -23,34 +24,21 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	Venus      env.IDeployer       `json:"-" svcname:"Venus"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	Venus venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	adminToken, err := params.SophonAuth.Param("AdminToken")
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	pods, err := venus.GetPods(ctx, k8sEnv, params.Venus.InstanceName)
 	if err != nil {
-		return nil, err
-	}
-
-	pods, err := params.Venus.Pods(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	endpoint, err := params.Venus.SvcEndpoint()
-	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for _, pod := range pods {
-		err := venusutils.SyncWait(ctx, params.K8sEnv, pod, endpoint.Port(), adminToken.MustString())
+		err := venusutils.SyncWait(ctx, k8sEnv, pod, params.Venus.SvcEndpoint.Port(), params.Auth.AdminToken)
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
-	return env.NewSimpleExec(), nil
+	return nil
 }

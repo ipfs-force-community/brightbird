@@ -11,7 +11,8 @@ import (
 	"github.com/ipfs-force-community/sophon-auth/auth"
 	"github.com/ipfs-force-community/sophon-auth/core"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"go.uber.org/fx"
+
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 )
 
 func main() {
@@ -26,54 +27,28 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		UserName string `json:"userName"`
-		Comment  string `json:"comment"`
-	} `optional:"true"`
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	Auth     sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	UserName string                            `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"token user name"`
+	Comment  string                            `json:"commnet" jsonschema:"comment" title:"Commnet" description:"commnet for user"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
+type CreateUserReturn struct {
+	UserName string `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"user name in sophon auth"`
+}
+
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateUserReturn, error) {
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
 		return nil, err
 	}
 
-	if env.Debug {
-		venusAuthPods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, venusAuthPods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
-	}
-	adminToken, err := params.SophonAuth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminToken.MustString())
-	if err != nil {
-		return nil, err
-	}
-
-	if len(params.Params.UserName) == 0 {
+	if len(params.UserName) == 0 {
 		return nil, fmt.Errorf("username cant be empty")
 	}
 
 	user, err := authAPIClient.CreateUser(ctx, &auth.CreateUserRequest{
-		Name:    params.Params.UserName,
-		Comment: &params.Params.Comment,
+		Name:    params.UserName,
+		Comment: &params.Comment,
 		State:   core.UserStateEnabled,
 	})
 	if err != nil {
@@ -81,5 +56,7 @@ func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
 	}
 
 	fmt.Println(user.Name)
-	return env.NewSimpleExec().Add("UserName", env.ParamsFromVal(params.Params.UserName)), nil
+	return &CreateUserReturn{
+		UserName: user.Name,
+	}, nil
 }

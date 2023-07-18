@@ -7,10 +7,10 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"go.uber.org/fx"
 )
 
 func main() {
@@ -25,63 +25,32 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		Skip  string `json:"skip"`
-		Limit string `json:"limit"`
-	} `optional:"true"`
-
-	K8sEnv     *env.K8sEnvDeployer `json:"-"`
-	SophonAuth env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	Skip  string                            `json:"skip" jsonschema:"skip" title:"PageSkip" require:"true"`
+	Limit string                            `json:"limit" jsonschema:"limit" title:"PageLimit" require:"true"`
+	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	authAPIClient, err := jwtclient.NewAuthClient(params.Auth.SvcEndpoint.ToHTTP(), params.Auth.AdminToken)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	if env.Debug {
-		pods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return nil, err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return nil, err
-		}
+	skip, err := strconv.ParseInt(params.Skip, 10, 64)
+	if err != nil {
+		return err
 	}
 
-	adminTokenV, err := params.SophonAuth.Param("AdminToken")
+	limit, err := strconv.ParseInt(params.Limit, 10, 64)
 	if err != nil {
-		return nil, err
-	}
-
-	authAPIClient, err := jwtclient.NewAuthClient(endpoint.ToHTTP(), adminTokenV.MustString())
-	if err != nil {
-		return nil, err
-	}
-
-	skip, err := strconv.ParseInt(params.Params.Skip, 10, 64)
-	if err != nil {
-		return nil, err
-	}
-
-	limit, err := strconv.ParseInt(params.Params.Limit, 10, 64)
-	if err != nil {
-		return nil, err
+		return err
 	}
 	tokenList, err := authAPIClient.Tokens(ctx, skip, limit)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	for _, token := range tokenList {
 		fmt.Println(token)
 	}
-	return env.NewSimpleExec(), nil
+	return nil
 }

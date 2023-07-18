@@ -1,7 +1,7 @@
 import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
-import { Case, Node } from '@/api/dto/testflow';
+import { JSONSchema } from 'json-schema-to-typescript';
 
 type TriggerValue = 'blur' | 'change';
 
@@ -15,8 +15,10 @@ export type CustomRule = CustomRuleItem | CustomRuleItem[];
  * 节点数据
  */
 export interface IWorkflowNode {
-  getDisplayName(): string;
+  getInstanceName(): string;
 
+  getName(): string;
+  
   getType(): NodeTypeEnum;
 
   getIcon(): string;
@@ -49,9 +51,18 @@ export interface IWorkflow {
   groupId: string;
   createTime: string;
   modifiedTime: string;
-  cases?: Case[];
-  nodes?: Node[];
   graph?: string;
   description?: string;
   data: string;
+}
+
+
+export interface TreeProp {
+  name: string;
+  isLeaf: boolean;
+  type: string;
+  index: number|undefined;
+  defs:Map<string, JSONSchema>;
+  schema: JSONSchema|null;
+  children: TreeProp[]
 }

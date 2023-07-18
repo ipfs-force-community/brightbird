@@ -1,7 +1,7 @@
 import { IJobCreateVo, IJobUpdateVo, IJobIdVo, IJobVo, IJobDetailVo } from './dto/job';
 import { restProxy } from '@/api';
 import { JobEnum } from './dto/enumeration';
-import { ITaskVo, IListTaskVo } from './dto/tasks';
+import { ITaskVo, IListTaskVo, IGetTaskReq } from './dto/tasks';
 import { IPageDto, IPageVo } from './dto/common';
 
 export const baseUrl = {
@@ -12,10 +12,11 @@ export const baseUrl = {
  * 获取job
  * @param dto
  */
-export async function getTask(id: string): Promise<ITaskVo> {
+export async function getTask(req: IGetTaskReq): Promise<ITaskVo> {
   const res = await restProxy({ 
-    url:`${baseUrl.task}/${id}`,
+    url:`${baseUrl.task}`,
     method:'get',
+    payload:req 
   });
   
   return res;

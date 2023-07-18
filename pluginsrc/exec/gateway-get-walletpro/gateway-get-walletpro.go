@@ -4,17 +4,14 @@ import (
 	"context"
 	"fmt"
 
-	"go.uber.org/fx"
-
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
 	"github.com/hunjixin/brightbird/types"
 	"github.com/hunjixin/brightbird/version"
-	logging "github.com/ipfs/go-log/v2"
 )
-
-var log = logging.Logger("walletpro_gateway")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -28,48 +25,33 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	fx.In
-	Params struct {
-		AuthorizerURL string `json:"authorizer_url"`
-	} `optional:"true"`
-	K8sEnv         *env.K8sEnvDeployer `json:"-"`
-	VenusWalletPro env.IDeployer       `json:"-" svcname:"VenusWalletPro"`
-	SophonAuth     env.IDeployer       `json:"-" svcname:"SophonAuth"`
+	AuthorizerURL  string                                    `json:"authorizerUrl" jsonschema:"authorizerUrl" title:"AuthorizerUrl" require:"true" description:"wallet pro auth url"`
+	Auth           sophonauth.SophonAuthDeployReturn         `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
+	VenusWalletPro venuswalletpro.VenusWalletProDeployReturn `json:"VenusWalletPro"  jsonschema:"VenusWalletPro" title:"Venus Wallet Auth" require:"true" description:"venus wallet return"`
 }
 
-func Exec(ctx context.Context, params TestCaseParams) (env.IExec, error) {
-
-	walletAddrs, err := ImportFbls(ctx, params)
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	walletAddrs, err := ImportFbls(ctx, k8sEnv, params)
 	if err != nil || len(walletAddrs) <= 0 {
-		log.Infof("create miner failed: %v", err)
-		return nil, err
-	}
-	for id, addr := range walletAddrs {
-		log.Infof("wallet %v is: %v", id, addr)
+		return fmt.Errorf("create miner err %w", err)
 	}
 
-	err = ConnectAuthor(ctx, params)
+	err = ConnectAuthor(ctx, k8sEnv, params)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	adminTokenV, err := params.SophonAuth.Param("AdminToken")
+	err = GetWalletInfo(ctx, k8sEnv, params, params.Auth.AdminToken, walletAddrs[0])
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("get wallet finfo failed %w", err)
 	}
 
-	err = GetWalletInfo(ctx, params, adminTokenV.MustString(), walletAddrs[0])
-	if err != nil {
-		log.Infof("get wallet info failed: %v", err)
-		return nil, err
-	}
-
-	return env.NewSimpleExec(), nil
+	return nil
 }
 
 // ImportFbls
-func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
-	venusWalletProPods, err := params.VenusWalletPro.Pods(ctx)
+func ImportFbls(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) ([]string, error) {
+	venusWalletProPods, err := venuswalletpro.GetPods(ctx, k8sEnv, params.VenusWalletPro.InstanceName)
 	if err != nil {
 		return nil, err
 	}
@@ -83,7 +65,7 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 
 	var addrs []string
 
-	walletAaddrs, err := params.K8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
+	walletAaddrs, err := k8sEnv.ExecRemoteCmd(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
 		return nil, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
@@ -96,8 +78,8 @@ func ImportFbls(ctx context.Context, params TestCaseParams) ([]string, error) {
 }
 
 // ImportFbls
-func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
-	venusWalletProPods, err := params.VenusWalletPro.Pods(ctx)
+func ConnectAuthor(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
+	venusWalletProPods, err := venuswalletpro.GetPods(ctx, k8sEnv, params.VenusWalletPro.InstanceName)
 	if err != nil {
 		return err
 	}
@@ -106,10 +88,10 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 		"wallet",
 		"connect_author",
 		"--authorizer",
-		params.Params.AuthorizerURL,
+		params.AuthorizerURL,
 	}
 
-	_, err = params.K8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
+	_, err = k8sEnv.ExecRemoteCmdWithName(ctx, venusWalletProPods[0].GetName(), cmd...)
 	if err != nil {
 		return fmt.Errorf("exec remote cmd failed: %w", err)
 	}
@@ -117,28 +99,8 @@ func ConnectAuthor(ctx context.Context, params TestCaseParams) error {
 	return nil
 }
 
-func GetWalletInfo(ctx context.Context, params TestCaseParams, authToken string, walletAddr string) error {
-	endpoint, err := params.SophonAuth.SvcEndpoint()
-	if err != nil {
-		return err
-	}
-	if env.Debug {
-		pods, err := params.SophonAuth.Pods(ctx)
-		if err != nil {
-			return err
-		}
-
-		svc, err := params.SophonAuth.Svc(ctx)
-		if err != nil {
-			return err
-		}
-		endpoint, err = params.K8sEnv.PortForwardPod(ctx, pods[0].GetName(), int(svc.Spec.Ports[0].Port))
-		if err != nil {
-			return err
-		}
-	}
-
-	api, closer, err := v2API.DialIGatewayRPC(ctx, endpoint.ToHTTP(), authToken, nil)
+func GetWalletInfo(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, authToken string, walletAddr string) error {
+	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Auth.SvcEndpoint.ToHTTP(), authToken, nil)
 	if err != nil {
 		return err
 	}

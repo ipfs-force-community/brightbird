@@ -2,8 +2,12 @@
   <div class="jm-workflow-editor-async-task-panel">
     <jm-form label-width="auto" :model="form" label-position="top" ref="formRef" @submit.prevent>
       <div class="set-padding">
-        <jm-form-item label="节点名称" prop="name" class="name-item" :rules="nodeData.getFormRules().name">
-          <jm-input v-model="form.name" show-word-limit :maxlength="36" />
+        <div class="name-item">
+          <el-text size="large" tag="b">{{ form.name }}</el-text>
+        </div>
+
+        <jm-form-item label="实例名称" prop="instanceName" class="name-item" :rules="nodeData.getFormRules().instanceName">
+          <jm-input v-model="form.instanceName" show-word-limit :maxlength="36" />
         </jm-form-item>
         <jm-form-item label="节点版本" prop="version" :rules="nodeData.getFormRules().version" class="node-item">
           <jm-select v-loading="versionLoading" :disabled="versionLoading" v-model="form.version" placeholder="请选择节点版本"
@@ -22,70 +26,22 @@
             输入参数
             <div class="checked-underline" v-if="tabFlag === 1"></div>
           </div>
-       
-          <div :class="{ 'optional-tab': true, 'selected-tab': tabFlag === 3 }" @click="tabFlag = 3">
-            依赖参数
-            <div class="checked-underline" v-if="tabFlag === 3"></div>
-          </div>
         </div>
         <div class="inputs-container set-padding" v-if="tabFlag === 1">
-          <div v-if="!form.inputs.toString()">
+          <div v-if="!input">
             <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
-            <div v-else>
-            <jm-form-item v-for="(item, index) in form.inputs" :key="item.name" :prop="`inputs.${index}.value`"
-              :rules="nodeData.getFormRules().version" class="node-name">
+          <div v-else>
+            <jm-form-item v-for="(value, key) in input.properties" :key="key" :prop="`inputs.${key}.value`"
+              class="node-name">
               <template #label>
-                {{ item.name }} ({{ item.type }}, require = {{ item.require }})
-                <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
+                {{value.title}}
+                <jm-tooltip placement="top" v-if="value.description" :append-to-body="false" :content="value.description">
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <jm-input v-model="item.value" :node-id="nodeId"
-                :placeholder="item.description ? item.description : '请输入' + item.name" show-word-limit :maxlength="36" />
-            </jm-form-item>
-          </div>
-        </div>
-        <div class="outputs-container set-padding" v-else-if="tabFlag === 2">
-          <div v-if="!form.instance.toString()">
-              <jm-empty description="无输出参数" :image="noParamImage"></jm-empty>
-          </div>
-          <div v-else>
-            <div class="label">
-              <i class="required-icon" v-if="form.instance.require"></i>
-              组件实例名称
-              <jm-tooltip placement="top" v-if="form.instance.description" :append-to-body="false"
-                :content="form.instance.description">
-                <i class="jm-icon-button-help"></i>
-              </jm-tooltip>
-            </div>
-            <jm-input v-model="form.instance.value" :node-id="nodeId"
-              :placeholder="form.instance.description ? form.instance.description : '请输入' + form.instance.type"
-              show-word-limit :maxlength="36" />
-          </div>
-        </div>
-        <div class="optional-container set-padding" v-else-if="tabFlag === 3">
-          <div v-if="!form.dependencies.toString()">
-              <jm-empty description="无依赖参数" :image="noParamImage"></jm-empty>
-          </div>
-          <div v-else>
-            <jm-form-item v-for="(item, index) in form.dependencies" :key="item.name"
-              :prop="form.dependencies.length ? `dependencies.${index}.value` : null" class="node-name">
-              <template #label>
-                {{ item.name }} ({{ item.type }})
-                <jm-tooltip placement="top" v-if="item.description" :append-to-body="false" :content="item.description">
-                  <i class="jm-icon-button-help"></i>
-                </jm-tooltip>
-              </template>
-              <jm-select
-                v-model="item.value"
-                :node-id="nodeId"
-                :placeholder="item.description ? item.description : '请输入' + item.name"
-                show-word-limit
-                :maxlength="36"
-              >
-                <jm-option v-for="nodeName in nodeNames" :key="nodeName" :label="nodeName" :value="nodeName" />
-              </jm-select>
+              <PropertySelect :instanceName="form.instanceName" :propName="key" :input="form.input" :property="value" :treeData="nodeNames">
+              </PropertySelect>
             </jm-form-item>
           </div>
         </div>
@@ -106,13 +62,18 @@ import JmEmpty from '@/components/data/empty/index.vue';
 import JmForm from '@/components/form/form';
 import jmFormItem from '@/components/form/form-item';
 import JmInput from '@/components/form/input';
-import { getPluginByName } from '@/api/plugin';
-import { Plugin } from '@/api/dto/testflow';
+import { getPluginByName, getPluginDef } from '@/api/plugin';
+import { PluginDef } from '@/api/dto/testflow';
+import PropertySelect from './property-select.vue'
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
+import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import JmSelect from '@/components/form/select';
+import {Try} from "json-schema-to-typescript/dist/src/utils";
+import { JSONSchema } from 'json-schema-to-typescript';
+import { schema } from '@antv/g2plot';
 
 export default defineComponent({
-  components: { JmEmpty, ExpressionEditor, JmForm, jmFormItem, JmInput, JmSelect },
+  components: { JmEmpty, ExpressionEditor, PropertySelect, JmForm, jmFormItem, JmInput, JmSelect },
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,
@@ -131,20 +92,12 @@ export default defineComponent({
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();
 
-    const instanceName = props.nodeData.getDisplayName();
-    const nodeNames: string[] = [];
-    graph.getNodes().forEach(node=>{
-      const proxy = new CustomX6NodeProxy(node);
-      // 不能为ref，否则，表单内容的变化影响数据绑定
-      const nodeData = proxy.getData(graph);
-      const  displayName = nodeData.getDisplayName();
-      if (displayName&&displayName!=instanceName) {
-        nodeNames.push(displayName);
-      }
-    });
+    const instanceName = props.nodeData.getInstanceName();
+    const nodeNames: TreeProp[] = [];
 
+    console.log(nodeNames)
     // 版本列表
-    const plugins = new Map<string, Plugin>();
+    const plugins = new Map<string, PluginDef>();
     const versionList = ref<INodeDefVersionListVo>({ versions: [] });
     const nodeId = ref<string>('');
     const getNode = inject('getNode') as () => Node;
@@ -154,16 +107,20 @@ export default defineComponent({
     const tabFlag = ref<number>(1);
     const optionalFlag = ref<boolean>(false);
     const outputTabSelected = ref<boolean>(false);
+    const input = ref<JSONSchema>();
 
+    const convertToSchema = (input: any):JSONSchema =>{
+      return Try<JSONSchema>(
+        () => input,
+        () => { throw new TypeError(`Error parsing JSON`)});
+    }
     const changeVersion = async () => {
-      form.value.inputs.length = 0;
-      form.value.dependencies.length = 0;
       try {
         versionLoading.value = true;
         failureVisible.value = false;
         const selectPlugin = plugins.get(form.value.version);
-        form.value.inputs = selectPlugin?.properties ?? [];
-        form.value.dependencies = selectPlugin?.dependencies ?? [];
+        input.value  = convertToSchema(selectPlugin?.inputSchema);
+          
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -172,48 +129,70 @@ export default defineComponent({
       }
     };
 
-    const generateRandomNumber = () => {
-      const randomNumber = Math.floor(1000 + Math.random() * 9000);
-      return randomNumber.toString();
-    };
+    const prepareNodeParams = async () => {
+      try {
+        //prepare plugin paramsters
+        const nodes = graph.getNodes()
+        for (var i = 0; i < nodes.length; i++) {
+          const proxy = new CustomX6NodeProxy(nodes[i]);
+          const nodeData = proxy.getData(graph);
+          const anode = nodeData as AsyncTask
+          if (anode.instanceName != instanceName) {
+            const pluginDef = await getPluginDef(anode.name, anode.version)
+            nodeNames.push({
+              name: anode.instanceName,
+              type:"object",
+              index:-1,
+              defs: pluginDef.outputSchema.definitions,
+              schema: convertToSchema(pluginDef.outputSchema),
+              isLeaf: false,
+              children:[],
+            });
+          }
+        }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        versionLoading.value = false;
+        failureVisible.value = true;
+      }
+    }
 
-    onMounted(async () => {
+    const loadVersionOrDefault = async () => {
       if (form.value.version) {
         failureVisible.value = true;
       }
       try {
         const pluginDetail = await getPluginByName(props.nodeData.name);
-        pluginDetail.plugins?.forEach(a => {
+        pluginDetail.pluginDefs?.forEach(a => {
           plugins.set(a.version, a);
           versionList.value.versions.push(a.version);
         });
-        if (!form.value.version) {
-          form.value.version = versionList.value.versions[0];
-          if (pluginDetail.plugins) {
-            form.value.inputs = pluginDetail.plugins[0]?.properties ?? [];
-            form.value.dependencies = pluginDetail.plugins[0]?.dependencies ?? [];
-          }
+
+        if (!pluginDetail.pluginDefs || pluginDetail.pluginDefs.length == 0) {
+          return
         }
 
-        if (!form.value.instance || !form.value.instance.value) {
-          const defaultInstanceName = `${form.value.name}-${generateRandomNumber()}`;
-          form.value.instance = {
-            name: '组件实例名称',
-            value: defaultInstanceName,
-            type: form.value.instance.type,
-            sockPath: '',
-            require: true,
-            description: '',
-          };
+        if (form.value.version) {
+          input.value =  convertToSchema(plugins.get(form.value.version)?.inputSchema );
+        } else {
+          form.value.version = versionList.value.versions[0];
+          input.value = convertToSchema(pluginDetail.pluginDefs[0]?.inputSchema); 
         }
+
 
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
         versionLoading.value = false;
-        // 等待异步数据请求结束才代码form创建成功（解决第一次点击警告按钮打开drawer没有表单验证）
-        emit('form-created', formRef.value);
+
       }
+    }
+    onMounted(async () => {
+      await prepareNodeParams()
+      await loadVersionOrDefault()
+      // 等待异步数据请求结束才代码form创建成功（解决第一次点击警告按钮打开drawer没有表单验证）
+      emit('form-created', formRef.value);
     });
 
     return {
@@ -224,13 +203,13 @@ export default defineComponent({
       nodeId,
       versionLoading,
       failureVisible,
-      // 获取节点信息
       changeVersion,
       tabFlag,
       optionalFlag,
       outputTabSelected,
       noParamImage,
       nodeNames,
+      input,
     };
 
   },

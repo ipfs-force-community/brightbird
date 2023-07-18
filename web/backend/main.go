@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/gin-contrib/gzip"
 	"github.com/gin-contrib/static"
 	"github.com/hunjixin/brightbird/models"
 
@@ -173,6 +174,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		})
 		e.Use(static.Serve("/", static.LocalFile(cfg.StaticRoot, false)))
 	}
+	e.Use(gzip.Gzip(gzip.DefaultCompression))
 	e.Use(corsMiddleWare())
 	e.Use(errorHandleMiddleWare())
 

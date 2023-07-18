@@ -2,12 +2,11 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"time"
-
-	"github.com/hunjixin/brightbird/env/plugin"
 
 	"github.com/hunjixin/brightbird/models"
 
@@ -87,22 +86,21 @@ func main() {
 				Usage: "use private registry",
 			},
 			&cli.StringFlag{
+				Name:  "listen",
+				Value: "0.0.0.0:5682",
+			},
+			&cli.StringFlag{
 				Name:  "logLevel",
 				Value: "INFO",
 			},
 			&cli.StringFlag{
-				Name:  "listen",
-				Value: "0.0.0.0:5682",
+				Name:  "customProperties",
+				Value: "{}",
 			},
 		},
 		Action: func(c *cli.Context) error {
 			fmt.Println(RunnerStart)
 			defer fmt.Println(RunnerEnd) //NOTICE do not remove this code, this is labels to split log
-
-			err := logging.SetLogLevel("*", c.String("logLevel"))
-			if err != nil {
-				return err
-			}
 
 			cfg := Config{}
 			if c.IsSet("config") {
@@ -159,12 +157,31 @@ func main() {
 				cfg.BootstrapPeers = c.StringSlice("bootPeer")
 			}
 
+			if c.IsSet("logLevel") {
+				cfg.LogLevel = c.String("logLevel")
+			}
+
+			if c.IsSet("customProperties") {
+				var val map[string]interface{}
+				err := json.Unmarshal([]byte(c.String("customProperties")), &val)
+				if err != nil {
+					return err
+				}
+
+				cfg.CustomProperties = val
+			}
+
 			if len(cfg.TaskId) == 0 {
 				return errors.New("task id must be specific")
 			}
 
 			if len(cfg.Mysql) == 0 {
 				return errors.New("mysql must set")
+			}
+
+			err := logging.SetLogLevel("*", c.String("logLevel"))
+			if err != nil {
+				return err
 			}
 
 			return run(c.Context, &cfg)
@@ -205,7 +222,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	task, err := taskRepo.Get(pCtx, taskId)
+	task, err := taskRepo.Get(pCtx, &repo.GetTaskReq{ID: taskId})
 	if err != nil {
 		return err
 	}
@@ -231,14 +248,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		}
 	}()
 
-	initParams := &env.K8sInitParams{
-		Namespace:         cfg.NameSpace,
-		TestID:            string(task.TestId),
-		PrivateRegistry:   cfg.PrivateRegistry,
-		MysqlConnTemplate: cfg.Mysql,
-		TmpPath:           cfg.TmpPath,
-	}
-	initNodes := InitedNode{}
 	ctx, shutdown := CatchShutdown(pCtx, cfg.Timeout)
 	stop, err := fx_opt.New(ctx,
 		fx_opt.Override(new(types.Shutdown), shutdown),
@@ -246,22 +255,32 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 
 		// plugin
 		fx_opt.Override(new(*models.Task), task),
+		fx_opt.Override(new(*models.TestFlow), testflow),
 
 		//config
 		fx_opt.Override(new(*Config), cfg),
 		fx_opt.Override(new(types.Endpoint), types.Endpoint(cfg.Listen)),
-		fx_opt.Override(new(types.BootstrapPeers), types.BootstrapPeers(cfg.BootstrapPeers)),
 		fx_opt.Override(new(types.TestId), func(task *models.Task) types.TestId {
 			return task.TestId
 		}),
 
 		//database
 		fx_opt.Override(new(*mongo.Database), db),
+		fx_opt.Override(new(repo.IPluginService), pluginRepo),
 		fx_opt.Override(new(repo.ITaskRepo), taskRepo),
 		fx_opt.Override(new(repo.ITestFlowRepo), repo.NewTestFlowRepo),
 		//k8s
-		fx_opt.Override(new(*env.K8sEnvDeployer), func() (*env.K8sEnvDeployer, error) {
+		fx_opt.Override(new(*env.K8sEnvDeployer), func(initParams *env.K8sInitParams) (*env.K8sEnvDeployer, error) {
 			return env.NewK8sEnvDeployer(*initParams)
+		}),
+		fx_opt.Override(new(*env.K8sInitParams), func(task *models.Task, cfg *Config) *env.K8sInitParams {
+			return &env.K8sInitParams{
+				Namespace:         cfg.NameSpace,
+				TestID:            string(task.TestId),
+				PrivateRegistry:   cfg.PrivateRegistry,
+				MysqlConnTemplate: cfg.Mysql,
+				TmpPath:           cfg.TmpPath,
+			}
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), func(lc fx.Lifecycle, k8sEnv *env.K8sEnvDeployer) error {
 			cleaner.AddFunc(func() error {
@@ -275,10 +294,8 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		fx_opt.Override(new(*gin.Engine), gin.Default()),
 		fx_opt.Override(new(*runnerctl.APIController), runnerctl.NewAPIController),
 		fx_opt.Override(fx_opt.NextInvoke(), runnerctl.SetupAPI),
-
 		//exec testflow
-		DeployFLow(pCtx, initNodes, types.BootstrapPeers(cfg.BootstrapPeers), pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Nodes),
-		ExecFlow(pCtx, initNodes, types.BootstrapPeers(cfg.BootstrapPeers), pluginRepo, cfg.PluginStore, string(task.TestId), initParams, testflow.Cases),
+		fx_opt.Override(fx_opt.NextInvoke(), runGraph),
 	)
 	if err != nil {
 		return
@@ -314,7 +331,7 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*mo
 	if err != nil {
 		return nil, err
 	}
-	task, err := taskRep.Get(ctx, taskId)
+	task, err := taskRep.Get(ctx, &repo.GetTaskReq{ID: taskId})
 	if err != nil {
 		return nil, err
 	}
@@ -322,25 +339,6 @@ func getTestFLow(ctx context.Context, db *mongo.Database, taskIdStr string) (*mo
 	testFlow, err := testflowRepo.Get(ctx, &repo.GetTestFlowParams{ID: task.TestFlowId})
 	if err != nil {
 		return nil, err
-	}
-	//merge version
-	for _, node := range testFlow.Nodes {
-		version, ok := task.CommitMap[node.Name]
-		if !ok {
-			return nil, fmt.Errorf("not found version for deploy %s", node.Name)
-		}
-
-		codeVersionProp := plugin.FindCodeVersionProperties(node.Properties)
-		if codeVersionProp != nil {
-			codeVersionProp.Value = version
-		} else {
-			node.Properties = append(node.Properties, &types.Property{
-				Name:    plugin.CodeVersionPropName,
-				Type:    "string",
-				Value:   version,
-				Require: true,
-			})
-		}
 	}
 	return testFlow, nil
 }

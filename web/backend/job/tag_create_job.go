@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/hunjixin/brightbird/models"
+	"gopkg.in/yaml.v3"
 
 	"github.com/google/go-github/v51/github"
 	"github.com/google/uuid"
@@ -70,6 +71,12 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 		return primitive.NilObjectID, err
 	}
 
+	graph := &models.Graph{}
+	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
+	if err != nil {
+		return primitive.NilObjectID, err
+	}
+
 	for _, match := range job.TagCreateEventMatchs {
 		owner, repoName, err := toGitOwnerAndRepo(match.Repo)
 		if err != nil {
@@ -89,8 +96,8 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 				continue
 			}
 
-			for _, node := range testflow.Nodes {
-				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
+			for _, node := range graph.Pipeline {
+				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Key, node.Value.Version)
 				if err != nil {
 					return primitive.NilObjectID, err
 				}
@@ -123,6 +130,12 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, releaseEvent *git
 		return err
 	}
 
+	graph := &models.Graph{}
+	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
+	if err != nil {
+		return err
+	}
+
 	fullName := releaseEvent.GetRepo().GetFullName()
 	ref := releaseEvent.GetRelease().GetTagName()
 
@@ -137,8 +150,8 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, releaseEvent *git
 			}
 			//hit event
 			//remember last hint
-			for _, node := range testflow.Nodes {
-				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Name, node.Version)
+			for _, node := range graph.Pipeline {
+				plugin, err := tagCreateJob.pluginRepo.GetPlugin(ctx, node.Key, node.Value.Version)
 				if err != nil {
 					return err
 				}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
 	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
 )
 
@@ -13,35 +14,18 @@ func main() {
 }
 
 type DepParams struct {
-	Params sophongateway.Config `optional:"true"`
+	sophongateway.Config
 
-	Auth env.IDeployer `svcname:"SophonAuth"`
-
-	K8sEnv *env.K8sEnvDeployer
+	Auth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
-func Exec(ctx context.Context, depParams DepParams) (env.IDeployer, error) {
-	adminToken, err := depParams.Auth.Param("AdminToken")
-	if err != nil {
-		return nil, err
-	}
-
-	authEndpoint, err := depParams.Auth.SvcEndpoint()
-	if err != nil {
-		return nil, err
-	}
-
-	deployer, err := sophongateway.DeployerFromConfig(depParams.K8sEnv, sophongateway.Config{
-		AuthUrl:    authEndpoint.ToHTTP(),
-		AdminToken: adminToken.MustString(),
-	}, depParams.Params)
-	if err != nil {
-		return nil, err
-	}
-
-	err = deployer.Deploy(ctx)
-	if err != nil {
-		return nil, err
-	}
-	return deployer, nil
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*sophongateway.SophonGatewayReturn, error) {
+	return sophongateway.DeployFromConfig(ctx, k8sEnv, sophongateway.Config{
+		BaseConfig: depParams.BaseConfig,
+		VConfig: sophongateway.VConfig{
+			AuthUrl:    depParams.Auth.SvcEndpoint.ToHTTP(),
+			AdminToken: depParams.Auth.AdminToken,
+			Replicas:   depParams.Replicas,
+		},
+	})
 }

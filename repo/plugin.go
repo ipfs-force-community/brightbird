@@ -37,6 +37,15 @@ type GetPluginParams struct {
 	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
 }
 
+// GetPluginDefParams
+// swagger:parameters getPluginDefParams
+type GetPluginDefParams struct {
+	// name of plugin
+	Name string `form:"name" json:"name"`
+	// name of plugin
+	Version string `form:"version" json:"version"`
+}
+
 // AddLabelParams
 // swagger:parameters addLabelParams
 type AddLabelParams struct {
@@ -104,9 +113,9 @@ type IPluginService interface {
 	DeletePluginByVersion(context.Context, *DeletePluginParams) error
 	GetPluginDetail(context.Context, *GetPluginParams) (*models.PluginDetail, error)
 	ListPlugin(context.Context, *ListPluginParams) ([]*models.PluginDetail, error)
-	GetPlugin(context.Context, string, string) (*models.Plugin, error)
-	SavePlugins(context.Context, *models.Plugin) error
-	CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
+	GetPlugin(context.Context, string, string) (*models.PluginDef, error)
+	SavePlugins(context.Context, *models.PluginDef) error
+  CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
 }
 
 type PluginSvc struct {
@@ -202,7 +211,7 @@ func (p *PluginSvc) DeletePluginByVersion(ctx context.Context, params *DeletePlu
 		return err
 	}
 
-	if len(plugin.Plugins) == 0 {
+	if len(plugin.PluginDefs) == 0 {
 		_, err = p.pluginCol.DeleteOne(ctx, bson.M{"_id": params.ID})
 		if err != nil {
 			return err
@@ -212,7 +221,7 @@ func (p *PluginSvc) DeletePluginByVersion(ctx context.Context, params *DeletePlu
 	return nil
 }
 
-func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin) error {
+func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.PluginDef) error {
 	//do some check
 	pluginDetail := &models.PluginDetail{}
 	err := p.pluginCol.FindOne(ctx, bson.M{"name": pluginImport.Name}).Decode(pluginDetail)
@@ -226,7 +235,7 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 				PluginType:  pluginImport.PluginType,
 				Description: pluginImport.Description,
 				Labels:      []string{pluginImport.Name}, //set name as default label
-				Plugins:     []models.Plugin{*pluginImport},
+				PluginDefs:  []models.PluginDef{*pluginImport},
 				BaseTime: models.BaseTime{
 					CreateTime:   time.Now().Unix(),
 					ModifiedTime: time.Now().Unix(),
@@ -264,7 +273,7 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 	return err
 }
 
-func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*models.Plugin, error) {
+func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*models.PluginDef, error) {
 	plugin := &models.PluginDetail{}
 	err := p.pluginCol.FindOne(ctx, bson.M{"name": name}).Decode(plugin)
 	if err != nil {
@@ -273,7 +282,7 @@ func (p *PluginSvc) GetPlugin(ctx context.Context, name, version string) (*model
 		}
 		return nil, err
 	}
-	for _, p := range plugin.Plugins {
+	for _, p := range plugin.PluginDefs {
 		if p.Version == version {
 			return &p, nil
 		}

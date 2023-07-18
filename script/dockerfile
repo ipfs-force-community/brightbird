@@ -1,0 +1,5 @@
+FROM filvenus/venus-buildenv:v1.12.0
+
+ENV GITHUB_TOKEN=""
+ENV HTTPS_PROXY="http://192.168.200.34:7891"
+ENV HTTP_PROXY="http://192.168.200.34:7891"

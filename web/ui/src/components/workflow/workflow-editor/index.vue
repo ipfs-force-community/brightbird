@@ -13,13 +13,6 @@
         modal-class="node-config-panel-overlay"
         @closed="handleNodeConfigPanelClosed"
       />
-<!--      缓存面板-->
-<!--      <cache-panel-->
-<!--        modal-class="node-config-panel-overlay"-->
-<!--        v-model="cachePanelVisible"-->
-<!--        :workflow-data="workflowData"-->
-<!--        @closed="handleCachePanel"-->
-<!--      />-->
     </template>
     <div class="main">
 <!--      节点面板：显示流程中全部节点，允许用户从中选择一个节点进行编辑-->
@@ -46,7 +39,6 @@ import { IWorkflow } from './model/data/common';
 import { Graph, Node } from '@antv/x6';
 import registerCustomVueShape from './shape/custom-vue-shape';
 import { WorkflowValidator } from './model/workflow-validator';
-import { Case } from '@/api/dto/testflow';
 
 // 注册自定义x6元素
 registerCustomVueShape();
@@ -88,11 +80,11 @@ export default defineComponent({
       handleBack: () => {
         emit('back');
       },
-      handleSave: async (back: boolean, caseList: Node[], nodeList: Node[], graph: string) => {
+      handleSave: async (back: boolean, graph: string) => {
         // 必须克隆后发事件，否则外部的数据绑定会受影响
         emit('update:model-value', cloneDeep(workflowData.value));
 
-        emit('save', back, caseList, nodeList, graph);
+        emit('save', back, graph);
       },
       handleGraphCreated: (g: Graph) => {
         workflowValidator = new WorkflowValidator(g, proxy, workflowData.value);

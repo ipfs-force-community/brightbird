@@ -1,72 +1,64 @@
 package types
 
-// Property Property
-// swagger:model property
-type Property struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`
-	Description string `json:"description"`
-	Value       string `json:"value"` //easy for front page
-	Require     bool   `json:"require"`
-}
+import (
+	"encoding/json"
 
-// Property DependencyProperty
-// swagger:model svcProperty
-type DependencyProperty struct {
-	Name  string     `json:"name"`
-	Value string     `json:"value"`
-	Type  PluginType `json:"type"`
+	"gopkg.in/yaml.v3"
+)
 
-	SockPath    string `json:"sockPath"`
-	Description string `json:"description"`
-	Require     bool   `json:"require"`
-}
-
-// SharedPropertyInNode just use to get shared field between deploynode and testitem, no pratical usage
-type SharedPropertyInNode interface {
-	GetName() string
-	GetVersion() string
-	GetProperties() []*Property
-	GetDependencies() []*DependencyProperty
-	GetInstance() *DependencyProperty
-}
-
-type DeployNode struct {
+type ExecNode struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name string `json:"name"`
-	// the version for this test flow
-	// required: true
-	// min length: 3
-	Version      string                `json:"version"`
-	Properties   []*Property           `json:"properties"`
-	Dependencies []*DependencyProperty `json:"dependencies"`
-	Instance     *DependencyProperty   `json:"instance"`
-}
-
-func (n DeployNode) GetName() string                        { return n.Name }
-func (n DeployNode) GetVersion() string                     { return n.Version }
-func (n DeployNode) GetProperties() []*Property             { return n.Properties }
-func (n DeployNode) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n DeployNode) GetInstance() *DependencyProperty       { return n.Instance }
-
-type TestItem struct {
+	Name string `json:"name" yaml:"name"`
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name string `json:"name"`
+	InstanceName string `json:"instanceName" yaml:"instanceName"`
+
+	PluginType PluginType `json:"pluginType" yaml:"pluginType"`
 	// the version for this test flow
 	// required: true
 	// min length: 3
-	Version      string                `json:"version"`
-	Properties   []*Property           `json:"properties"`
-	Dependencies []*DependencyProperty `json:"dependencies"`
-	Instance     *DependencyProperty   `json:"Instance"`
+	Version string `json:"version" yaml:"version"`
+
+	Input  json.RawMessage `json:"input" yaml:"input"`
+	Output json.RawMessage `json:"output" yaml:"output"`
 }
 
-func (n TestItem) GetName() string                        { return n.Name }
-func (n TestItem) GetVersion() string                     { return n.Version }
-func (n TestItem) GetProperties() []*Property             { return n.Properties }
-func (n TestItem) GetDependencies() []*DependencyProperty { return n.Dependencies }
-func (n TestItem) GetInstance() *DependencyProperty       { return n.Instance }
+func (h *ExecNode) UnmarshalYAML(value *yaml.Node) error {
+	for i := 0; i < len(value.Content); i += 2 {
+		switch value.Content[i].Value {
+		case "name":
+			h.Name = value.Content[i+1].Value
+		case "instanceName":
+			h.InstanceName = value.Content[i+1].Value
+		case "pluginType":
+			h.PluginType = PluginType(value.Content[i+1].Value)
+		case "version":
+			h.Version = value.Content[i+1].Value
+		case "input":
+			var anyV interface{}
+			if err := value.Content[i+1].Decode(&anyV); err != nil {
+				return err
+			}
+			jsonRaw, err := json.Marshal(anyV)
+			if err != nil {
+				return err
+			}
+			h.Input = jsonRaw
+		case "output":
+			var anyV interface{}
+			if err := value.Content[i+1].Decode(&anyV); err != nil {
+				return err
+			}
+			jsonRaw, err := json.Marshal(anyV)
+			if err != nil {
+				return err
+			}
+			h.Output = jsonRaw
+		}
+	}
+
+	return nil
+}

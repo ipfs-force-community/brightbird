@@ -3,29 +3,34 @@ package dropletclient
 import (
 	"context"
 	"embed"
-	"errors"
 	"fmt"
 
 	types2 "github.com/hunjixin/brightbird/types"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/utils"
 	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/droplet/v2/config"
 	"github.com/pelletier/go-toml/v2"
-	appv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
 	env.BaseConfig
+	VConfig
+}
 
-	NodeUrl     string `json:"-"`
-	NodeToken   string `json:"-"`
-	WalletUrl   string `json:"-"`
-	WalletToken string `json:"-"`
+type VConfig struct {
+	NodeUrl     string `jsonschema:"-" json:"nodeUrl"`
+	WalletUrl   string `jsonschema:"-" json:"walletUrl"`
+	WalletToken string `jsonschema:"-" json:"walletToken"`
 
-	ClientAddr string `json:"clientAddr" description:"market client address"`
+	UserToken  string `json:"userToken" jsonschema:"clientAddr" title:"Client Address" description:"toke to connect daemon" require:"true" `
+	ClientAddr string `json:"clientAddr" jsonschema:"clientAddr" title:"Client Address" description:"pay for storage/retrieval" require:"true" `
+}
+
+type DropletClientDeployReturn struct { //nolint
+	VConfig
+	env.CommonDeployParams
 }
 
 type RenderParams struct {
@@ -50,154 +55,103 @@ var PluginInfo = types2.PluginInfo{
 	ImageTarget: "droplet-client",
 }
 
-var _ env.IDeployer = (*DropletClientDeployer)(nil)
-
-type DropletClientDeployer struct { //nolint
-	env *env.K8sEnvDeployer
-	cfg *Config
-
-	svcEndpoint types2.Endpoint
-
-	configMapName   string
-	statefulSetName string
-	svcName         string
-}
-
-func NewDropletClientDeployer(env *env.K8sEnvDeployer, nodeUrl, nodeToken, walletUrl, walletToken string, clientAddr address.Address) *DropletClientDeployer {
-	return &DropletClientDeployer{
-		env: env,
-		cfg: &Config{
-			NodeToken:   nodeToken,
-			NodeUrl:     nodeUrl,
-			WalletUrl:   walletUrl,
-			WalletToken: walletToken,
-			ClientAddr:  clientAddr.String(),
-		},
-	}
-}
-
-func DeployerFromConfig(env *env.K8sEnvDeployer, depCfg Config, frontCfg Config) (env.IDeployer, error) {
-	cfg, err := utils.MergeStructAndInterface(DefaultConfig(), depCfg, frontCfg)
-	if err != nil {
-		return nil, err
-	}
-	return &DropletClientDeployer{
-		env: env,
-		cfg: &cfg,
-	}, nil
-}
-
-func (deployer *DropletClientDeployer) InstanceName() (string, error) {
-	return deployer.cfg.InstanceName, nil
-}
-
-func (deployer *DropletClientDeployer) Pods(ctx context.Context) ([]corev1.Pod, error) {
-	return deployer.env.GetPodsByLabel(ctx, fmt.Sprintf("droplet-client-%s-pod", env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName)))
-}
-
-func (deployer *DropletClientDeployer) StatefulSet(ctx context.Context) (*appv1.StatefulSet, error) {
-	return deployer.env.GetStatefulSet(ctx, deployer.statefulSetName)
-}
-
-func (deployer *DropletClientDeployer) Svc(ctx context.Context) (*corev1.Service, error) {
-	return deployer.env.GetSvc(ctx, deployer.svcName)
-}
-
-func (deployer *DropletClientDeployer) SvcEndpoint() (types2.Endpoint, error) {
-	return deployer.svcEndpoint, nil
-}
-
-func (deployer *DropletClientDeployer) Param(key string) (env.Params, error) {
-	return env.Params{}, errors.New("no params")
-}
-
 //go:embed  droplet-client
 var f embed.FS
 
-func (deployer *DropletClientDeployer) Deploy(ctx context.Context) (err error) {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletClientDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       deployer.env.NameSpace(),
-		PrivateRegistry: deployer.env.PrivateRegistry(),
+		NameSpace:       k8sEnv.NameSpace(),
+		PrivateRegistry: k8sEnv.PrivateRegistry(),
 		Args:            nil,
-		UniqueId:        env.UniqueId(deployer.env.TestID(), deployer.cfg.InstanceName),
-		Config:          *deployer.cfg,
+		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:          cfg,
 	}
 	//create configmap
 	configMapCfg, err := f.Open("droplet-client/droplet-client-configmap.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	configMap, err := deployer.env.RunConfigMap(ctx, configMapCfg, renderParams)
+	configMap, err := k8sEnv.RunConfigMap(ctx, configMapCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-
-	deployer.configMapName = configMap.GetName()
 
 	//create deployment
 	deployCfg, err := f.Open("droplet-client/droplet-client-statefulset.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	statefulSet, err := deployer.env.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.statefulSetName = statefulSet.GetName()
 
 	//create service
 	svcCfg, err := f.Open("droplet-client/droplet-client-headless.yaml")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	svc, err := deployer.env.RunService(ctx, svcCfg, renderParams)
+	svc, err := k8sEnv.RunService(ctx, svcCfg, renderParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	deployer.svcName = svc.GetName()
 
-	deployer.svcEndpoint, err = deployer.env.WaitForServiceReady(ctx, deployer)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &DropletClientDeployReturn{
+		VConfig: cfg.VConfig,
+		CommonDeployParams: env.CommonDeployParams{
+			BaseConfig:      cfg.BaseConfig,
+			DeployName:      PluginInfo.Name,
+			StatefulSetName: statefulSet.GetName(),
+			ConfigMapName:   configMap.GetName(),
+			SVCName:         svc.GetName(),
+			SvcEndpoint:     svcEndpoint,
+		},
+	}, nil
 }
 
-func (deployer *DropletClientDeployer) GetConfig(ctx context.Context) (env.Params, error) {
-	cfgData, err := deployer.env.GetConfigMap(ctx, deployer.configMapName, "config.toml")
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketClientConfig, error) {
+	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
-		return env.Params{}, err
+		return config.MarketClientConfig{}, err
 	}
 
-	return env.ParamsFromVal(cfgData), nil
+	var cfg config.MarketClientConfig
+	err = toml.Unmarshal(cfgData, &cfg)
+	if err != nil {
+		return config.MarketClientConfig{}, err
+	}
+
+	return cfg, nil
 }
 
-func (deployer *DropletClientDeployer) Update(ctx context.Context, updateCfg interface{}) error {
-	if updateCfg != nil {
-		cfgData, err := toml.Marshal(updateCfg)
+func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DropletClientDeployReturn, updateCfg config.MarketClientConfig) error {
+	cfgData, err := toml.Marshal(updateCfg)
+	if err != nil {
+		return err
+	}
+	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	if err != nil {
+		return err
+	}
+
+	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	if err != nil {
+		return nil
+	}
+	for _, pod := range pods {
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-client/config.toml")
 		if err != nil {
 			return err
 		}
-		err = deployer.env.SetConfigMap(ctx, deployer.configMapName, "config.toml", cfgData)
-		if err != nil {
-			return err
-		}
-
-		pods, err := deployer.Pods(ctx)
-		if err != nil {
-			return nil
-		}
-		for _, pod := range pods {
-			_, err = deployer.env.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-client/config.toml")
-			if err != nil {
-				return err
-			}
-		}
 	}
 
-	err := deployer.env.UpdateStatefulSets(ctx, deployer.statefulSetName)
-	if err != nil {
-		return err
-	}
-	return nil
+	return k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-client-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

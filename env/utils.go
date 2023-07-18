@@ -5,14 +5,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"os"
 	"strings"
 	"text/template"
 
 	v1 "k8s.io/api/core/v1"
 )
-
-var Debug = os.Getenv("PRODUCTION") == "" //change to false for production environment
 
 func GetPodDNS(svc *v1.Service, pods ...v1.Pod) []string {
 	podDNS := make([]string, len(pods))

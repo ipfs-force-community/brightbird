@@ -7,10 +7,9 @@ import (
 
 // Plugin
 // swagger:model plugin
-type Plugin struct {
+type PluginDef struct {
 	types.PluginInfo `bson:",inline"`
-	Path             string                   `json:"path"`
-	Instance         types.DependencyProperty `json:"instance"`
+	Path             string `json:"path"`
 }
 
 // PluginDetail
@@ -21,6 +20,6 @@ type PluginDetail struct {
 	PluginType  types.PluginType   `json:"pluginType"`
 	Description string             `json:"description"`
 	Labels      []string           `json:"labels"`
-	Plugins     []Plugin           `json:"plugins"`
+	PluginDefs  []PluginDef        `json:"pluginDefs"`
 	BaseTime    `bson:",inline"`
 }
