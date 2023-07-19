@@ -13,12 +13,11 @@
       <div class="upload">
         <el-upload ref="unloadRef" :auto-upload="false" multiple @change="handleChange($event)">
           <template #trigger>
-            <el-button type="primary">选择文件</el-button>
+            <el-button type="primary" style="margin-right: 10px; box-shadow: none;">选择文件</el-button>
           </template>
-          <el-button style="margin-left: 10px" type="success" @click="submitUpload()">上传</el-button>
+          <el-button style="margin-right: 10px; margin-left: 10px;" type="success" @click="submitUpload()">上传</el-button>
         </el-upload>
-        <br>
-        <el-button @click="downloadZip">下载模版文件</el-button>
+        <el-button style="margin-left: 10px;" @click="downloadZip">下载模版文件</el-button>
       </div>
 
       <div class="title" style="display: flex; justify-content: space-between;">
