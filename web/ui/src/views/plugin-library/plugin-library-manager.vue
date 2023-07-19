@@ -17,6 +17,8 @@
           </template>
           <el-button style="margin-left: 10px" type="success" @click="submitUpload()">上传</el-button>
         </el-upload>
+        <br>
+        <el-button @click="downloadZip">下载模版文件</el-button>
       </div>
 
       <div class="title" style="display: flex; justify-content: space-between;">
@@ -91,6 +93,7 @@ import JmEmpty from '@/components/data/empty/index.vue';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ElMessageBox } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
+import { downloadPublicZip } from '@/api/plugin';
 
 import {
   onBeforeRouteUpdate,
@@ -137,6 +140,15 @@ export default defineComponent({
     const childRoute = ref<boolean>(false);
     changeView(childRoute, useRoute());
     onBeforeRouteUpdate(to => changeView(childRoute, to));
+
+    const downloadZip = async () => {
+      try {
+        await downloadPublicZip();
+      } catch(error) {
+        console.error('Failed to download zip file:', error);
+      }
+    };
+
     return {
       Delete,
       childRoute,
@@ -171,6 +183,7 @@ export default defineComponent({
           });
         }
       },
+      downloadZip,
     };
   },
 });

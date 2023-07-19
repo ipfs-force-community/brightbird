@@ -1,6 +1,6 @@
 import { App } from 'vue';
 import  ElementPlus from 'element-plus';
-import lang from 'element-plus/lib/locale/lang/zh-cn';
+import lang from 'element-plus/dist/locale/zh-cn.js';
 import 'dayjs/locale/zh-cn';
 // 设置element-plus自定义主题色样式
 import './theme/custom-element-plus/index.scss';

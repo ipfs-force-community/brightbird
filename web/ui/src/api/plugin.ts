@@ -125,3 +125,24 @@ export function uploadPlugin(files: File[]): Promise<void> {
     },
   });
 }
+
+/**
+ * Download the compressed 'public' folder
+ */
+export function downloadPublicZip(): Promise<any> {
+  return restProxy<any>({
+    url: `${baseUrl.plugin}/download`,
+    method: 'get',
+  }).then((response: any) => {
+    const blob = new Blob([response.data], { type: 'application/zip' });
+
+    // Create a download link and click it
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'public.zip'); // or any other default filename
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+}
