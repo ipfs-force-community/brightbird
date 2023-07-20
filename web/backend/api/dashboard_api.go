@@ -9,6 +9,7 @@ import (
 	"github.com/hunjixin/brightbird/models"
 	"github.com/hunjixin/brightbird/repo"
 	"github.com/hunjixin/brightbird/types"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo, 
@@ -87,6 +88,9 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 		for jobId, countArray := range testData {
 			job, err := jobRepo.Get(ctx, jobId)
 			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					continue
+				}
 				c.Error(err) //nolint
 				return
 			}
@@ -168,6 +172,9 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 		for jobId, value := range failTask {
 			job, err := jobRepo.Get(ctx, jobId)
 			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					continue
+				}
 				c.Error(err) //nolint
 				return
 			}
@@ -270,6 +277,9 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 		for jobId, countArray := range testData {
 			job, err := jobRepo.Get(ctx, jobId)
 			if err != nil {
+				if err == mongo.ErrNoDocuments {
+					continue
+				}
 				c.Error(err) //nolint
 				return
 			}

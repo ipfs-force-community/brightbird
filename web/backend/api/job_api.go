@@ -316,17 +316,11 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 				if err != nil {
 					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
 				}
-				err = taskRepo.Delete(ctx, task.ID)
-				if err != nil {
-					jobLogger.Warnf("delete task fail %v", err)
-				}
 			}
-		}
-
-		err = taskRepo.Delete(ctx, id)
-		if err != nil {
-			c.Error(err) //nolint
-			return
+			err = taskRepo.Delete(ctx, task.ID)
+			if err != nil {
+				jobLogger.Warnf("delete task fail %v", err)
+			}
 		}
 
 		c.Status(http.StatusOK)

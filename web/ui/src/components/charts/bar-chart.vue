@@ -10,11 +10,13 @@
     props: {
       jobNames: {
         type: Array,
-        required: true,
+        default: () => [],
+        required: false,
       },
       passRates: {
         type: Array,
-        required: true,
+        default: () => [],
+        required: false,
       },
     },
     mounted() {
@@ -39,12 +41,16 @@
             type: 'value',
             boundaryGap: [0, 0.01],
             axisLabel: {
+              show: true,
               formatter: '{value}%'
             }
           },
           yAxis: {
             type: 'category',
-            data: this.jobNames
+            data: this.jobNames,
+            axisLabel: {
+              show: true, // 显示y轴标签
+            },
           },
           series: [
             {

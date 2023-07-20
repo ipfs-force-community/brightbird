@@ -10,12 +10,14 @@ export default defineComponent({
   props: {
     testData: {
       type: Object as () => Map<string, number[]>,
-      required: true
+      default: () => new Map(), // 默认为空 Map
+      required: false,           // 将 required 属性设为 false
     },
     dateArray: {
       type: Array as () => string[],
-      required: true
-    }
+      default: () => [],         // 默认为空数组
+      required: false,           // 将 required 属性设为 false
+    },
   },
   mounted() {
     this.renderChart();
@@ -40,7 +42,13 @@ export default defineComponent({
           color: this.getRandomColor()
         },
         data: data,
-      }));
+          markLine: { // 添加 markLine
+            silent: true,
+            data: [
+              {yAxis: 0}
+            ]
+          },
+        }));
 
       const option = {
         title: {
@@ -73,7 +81,7 @@ export default defineComponent({
           {
             type: 'category',
             boundaryGap: false,
-            data: this.dateArray,
+            data: this.dateArray.length > 0 ? this.dateArray : [''], // 如果没有数据，就使用一个空字符串
           }
         ],
         yAxis: [
