@@ -1,29 +1,34 @@
 package main
 
 import (
-	// Import necessary packages
+	"context"
+
+	"github.com/hunjixin/brightbird/env/plugin"
+	"github.com/hunjixin/brightbird/types"
+	"github.com/hunjixin/brightbird/version"
+	"github.com/hunjixin/brightbird/env"
 )
 
 func main() {
-	// Setup plugin
 	plugin.SetupPluginFromStdin(Info, Exec)
 }
 
-// Plugin information
+// 插件信息
 var Info = types.PluginInfo{
-	Name:        "plugin_name",  // Replace with your plugin name
-	Version:     version.Version(),  // Replace with your plugin version
-	PluginType:  types.PluginType,  // Replace with your plugin type
-	Description: "plugin_description",  // Replace with your plugin description
+	Name:        "plugin_name",  // 替换为你的插件名称
+	Version:     version.Version(),
+	PluginType:  types.TestExec,
+	Description: "plugin_description",  // 替换为您的插件描述
 }
 
-// Execution parameters for your plugin
+// 在执行时需要使用的插件参数
 type TestCaseParams struct {
-    // Define your parameters here
+    // 定义需要使用的插件参数
 }
 
-// Execution function for your plugin
+// 插件的执行逻辑
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-    // Implement your execution logic here
+    // 编写你的代码逻辑
+	// 注意将单独的功能抽象为函数
     return nil
 }

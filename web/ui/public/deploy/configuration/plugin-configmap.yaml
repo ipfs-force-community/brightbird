@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{plugin-name}}-cfg-{{.UniqueId}}
+  namespace: default
+data:
+  {{config.toml}}: |
+    {{配置文件的内容}}

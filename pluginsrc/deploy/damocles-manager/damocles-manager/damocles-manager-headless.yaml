@@ -8,4 +8,4 @@ spec:
     app: venus-sector-manager-{{.UniqueId}}-pod
   ports:
     - protocol: TCP
-      port: 1789
+      port: 1789/root/brightbird/pluginsrc/deploy/damocles-manager/plugin

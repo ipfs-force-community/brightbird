@@ -5,24 +5,31 @@ import (
 
 	"github.com/hunjixin/brightbird/env"
 	"github.com/hunjixin/brightbird/env/plugin"
-	// Import the necessary deployment packages
+	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
+	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {
-	// Setup the plugin with the appropriate PluginInfo and Execution function
-	plugin.SetupPluginFromStdin(PluginInfo, Exec)
+	plugin.SetupPluginFromStdin(damoclesmanager.PluginInfo, Exec)
 }
 
+// DepParams 定义了依赖参数结构体
 type DepParams struct {
-	// Define the configuration parameters for the deployment
-	// Including any required service return types and additional parameters
+	damoclesmanager.Config
+
+	{{dependParam}} sophonauth.SophonAuthDeployReturn `json:"{{dependParam}}" jsonschema:"{{dependParam}}" title:"{{dependParam}}" require:"true" description:"{{dependParam-description}}"`
 }
 
-// Replace the return type and config type with the appropriate types for the deployment
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*ReturnType, error) {
-	// Deploy the service from the configuration
-	return DeployFromConfig(ctx, k8sEnv, Config{
+// Exec 函数用于执行部署操作
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesmanager.DamoclesManagerReturn, error) {
+	return damoclesmanager.DeployFromConfig(ctx, k8sEnv, damoclesmanager.Config{
 		BaseConfig: depParams.BaseConfig,
-		// Add additional configuration parameters as required
+		VConfig: damoclesmanager.VConfig{
+			{{dependParam}}: depParams.{{dependParam}},
+		},
 	})
 }
