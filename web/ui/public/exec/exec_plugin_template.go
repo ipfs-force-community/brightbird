@@ -1,3 +1,8 @@
+// 测试插件编写原则：
+// 1. 单一职责：每个插件尽量只测试一个单独的功能
+// 2. 最小化原则：每个测试插件功能最小化
+// 3. 参照模板：模板中{{}}标注的内容是需要手动填写的，其他框架部分无需修改
+
 package main
 
 import (
@@ -15,10 +20,10 @@ func main() {
 
 // 插件信息
 var Info = types.PluginInfo{
-	Name:        "plugin_name",  // 替换为你的插件名称
+	Name:        "{{plugin_name}}",  // 替换为你的插件名称
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "plugin_description",  // 替换为您的插件描述
+	Description: "{{plugin_description}}",  // 替换为您的插件描述
 }
 
 // 在执行时需要使用的插件参数
