@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartContainer" style="width: 100%; height: 100%;"></div>
+    <div ref="chartContainer" style="width: 100%; height: 150%;"></div>
   </template>
   
   <script lang="ts">
@@ -64,7 +64,7 @@
               },
               label: {
                 show: true,
-                position: 'inside',
+                position: 'outside',
                 formatter: '{c}%'
               }
             },
