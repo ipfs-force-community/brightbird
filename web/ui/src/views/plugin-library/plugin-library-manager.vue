@@ -112,23 +112,22 @@ export default defineComponent({
     const fileList = ref<File[]>([]);
 
     fetchDeployPlugins()
-      .then(res => {
-        deployPlugins.value.list = res;
-        deployPlugins.value.total = res.length;
-      })
-      .catch((err: Error) => {
-        proxy.$throw(err, proxy);
-      });
-
+    .then(res => {
+      deployPlugins.value.list = res || [];
+      deployPlugins.value.total = res ? res.length : 0;
+    })
+    .catch((err: Error) => {
+      proxy.$throw(err, proxy);
+    });
 
     fetchExecPlugins()
-      .then(res => {
-        execPlugins.value.list = res;
-        execPlugins.value.total = res.length;
-      })
-      .catch((err: Error) => {
-        proxy.$throw(err, proxy);
-      });
+    .then(res => {
+      execPlugins.value.list = res || [];
+      execPlugins.value.total = res ? res.length : 0;
+    })
+    .catch((err: Error) => {
+      proxy.$throw(err, proxy);
+    });
 
     function changeView(
       childRoute: Ref<boolean>,
