@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -115,7 +115,7 @@ type IPluginService interface {
 	ListPlugin(context.Context, *ListPluginParams) ([]*models.PluginDetail, error)
 	GetPlugin(context.Context, string, string) (*models.PluginDef, error)
 	SavePlugins(context.Context, *models.PluginDef) error
-  CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
+	CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
 }
 
 type PluginSvc struct {

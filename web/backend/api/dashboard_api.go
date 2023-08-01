@@ -6,13 +6,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo, 
+func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksRepo repo.ITaskRepo,
 	pluginRepo repo.IPluginService, jobRepo repo.IJobRepo) {
 	group := v1group.Group("/dashboard")
 
@@ -27,7 +27,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//
 	//
 	//     Responses:
-	//       200: taskCountResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/task-count", func(c *gin.Context) {
 		total, err := tasksRepo.CountAllAmount(ctx)
@@ -53,10 +53,10 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 		passRateFormatted := fmt.Sprintf("%.1f%%", passRate)
 
 		response := map[string]interface{}{
-			"total":  total,
-			"passed": passedAmount,
-			"failed":  failedAmount,
-			"passRate":  passRateFormatted,
+			"total":    total,
+			"passed":   passedAmount,
+			"failed":   failedAmount,
+			"passRate": passRateFormatted,
 		}
 
 		c.JSON(http.StatusOK, response)
@@ -75,8 +75,8 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//
 	//
 	//     Responses:
-	//       200: tasksAmountResp
-	//       500: serverError
+	//       200: myString   //todo fix correctstruct
+	//       500: apiError
 	group.GET("/test-data", func(c *gin.Context) {
 		testData, dateArray, err := tasksRepo.TaskAmountOfJobLast2Week(ctx)
 		if err != nil {
@@ -120,7 +120,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//
 	//
 	//     Responses:
-	//       200: todayPassRateRankingResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/today-pass-rate-ranking", func(c *gin.Context) {
 		jobIds, passRates, err := tasksRepo.JobPassRateTop3Today(ctx)
@@ -137,7 +137,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 				c.Error(err) //nolint
 				return
 			}
-		
+
 			jobNames = append(jobNames, job.Name)
 		}
 
@@ -159,7 +159,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//     Schemes: http, https
 	//
 	//     Responses:
-	//       200: ratioMapResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/failed-tasks", func(c *gin.Context) {
 		failTask, err := tasksRepo.JobFailureRatiobLast2Week(ctx)
@@ -198,7 +198,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//     Schemes: http, https
 	//
 	//     Responses:
-	//       200: passRateTrendsResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/pass-rate-trends", func(c *gin.Context) {
 		dateArray, passRateArray, err := tasksRepo.TasktPassRateLast30Days(ctx)
@@ -228,7 +228,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//
 	//
 	//     Responses:
-	//       200: countPluginsResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/count-plugins", func(c *gin.Context) {
 		deployerPluginType := types.Deploy
@@ -264,7 +264,7 @@ func RegisterDashboardRouter(ctx context.Context, v1group *V1RouterGroup, tasksR
 	//     Schemes: http, https
 	//
 	//     Responses:
-	//       200: successQuantityTrendsResp
+	//       200: myString   //todo fix correctstruct
 	//       500: apiError
 	group.GET("/success-quantity-trends", func(c *gin.Context) {
 		testData, dateArray, err := tasksRepo.JobPassRateLast30Days(ctx)

@@ -7,8 +7,8 @@ import (
 
 	v1 "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	corev1 "k8s.io/api/core/v1"
 )

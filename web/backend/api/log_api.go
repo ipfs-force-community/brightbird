@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/repo"
 	ordered_map "github.com/wk8/go-ordered-map"
 	"gopkg.in/yaml.v3"
 )
@@ -50,7 +50,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 		c.JSON(http.StatusOK, pods)
 	})
 
-	// swagger:route GET /logs/{podName} log podLogReq
+	// swagger:route GET /logs log podLogReq
 	//
 	// get all logs in pod.
 	//
@@ -85,7 +85,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 			Logs:    logs,
 		}
 		if strings.Contains(podReq.PodName, "test-runner") {
-			task, err := taskRepo.Get(ctx, &repo.GetTaskReq{TestId: &podReq.TestID})
+			task, err := taskRepo.Get(ctx, &repo.GetTaskReq{TestID: &podReq.TestID})
 			if err != nil {
 				c.Error(err) //nolint
 				return

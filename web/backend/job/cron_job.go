@@ -6,11 +6,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/google/uuid"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"

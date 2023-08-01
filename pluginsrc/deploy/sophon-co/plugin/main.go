@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	chainco "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-co"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	chainco "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-co"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 	corev1 "k8s.io/api/core/v1"
 )
 

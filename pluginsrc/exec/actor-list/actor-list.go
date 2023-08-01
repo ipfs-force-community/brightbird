@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"text/tabwriter"
 
-	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
-	"github.com/hunjixin/brightbird/types"
+	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
+	"github.com/ipfs-force-community/brightbird/types"
 
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	"github.com/ipfs-force-community/brightbird/version"
 )
 
 func main() {

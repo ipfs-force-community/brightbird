@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/version"
 )
 
 func RegisterCommonRouter(ctx context.Context, v1group *V1RouterGroup) {

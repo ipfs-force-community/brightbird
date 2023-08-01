@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/types"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/utils"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/utils"
+	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/auth"
 
 	"github.com/ipfs-force-community/sophon-auth/config"

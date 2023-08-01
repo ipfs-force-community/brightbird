@@ -8,14 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 	"gopkg.in/yaml.v3"
 
 	"github.com/google/go-github/v51/github"
 	"github.com/google/uuid"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/modules"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/web/backend/modules"
 	logging "github.com/ipfs/go-log/v2"
 	giturls "github.com/whilp/git-urls"
 	"go.mongodb.org/mongo-driver/bson/primitive"

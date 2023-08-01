@@ -5,13 +5,13 @@ import (
 	"fmt"
 
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	venuswallet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus-wallet"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 )
 
 func main() {

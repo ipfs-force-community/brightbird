@@ -3,14 +3,14 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
-	damoclesworker "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-worker"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	damoclesmanager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-manager"
+	damoclesworker "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-worker"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {

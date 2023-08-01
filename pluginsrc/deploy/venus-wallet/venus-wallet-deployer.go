@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/venus-wallet/config"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
 )

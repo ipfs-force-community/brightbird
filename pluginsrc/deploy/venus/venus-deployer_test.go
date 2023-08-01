@@ -4,7 +4,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hunjixin/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/stretchr/testify/assert"
 	appv1 "k8s.io/api/apps/v1"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"

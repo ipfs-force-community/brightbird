@@ -20,6 +20,7 @@ const (
 	TestExec PluginType = "Exec"
 )
 
+// fatal error: stack overflow
 type PluginInfo struct {
 	Name        string     `json:"name"`
 	Version     string     `json:"version"`
@@ -32,7 +33,10 @@ type PluginInfo struct {
 }
 
 type PluginParams struct {
-	InputSchema  Schema `json:"inputSchema"`
+	// swagger:ignore
+	// 由于Schema定义复杂， go-swagger无法处理循环递归类型的缘故暂时ignore这个类型，之后如果go-swagger能够应对这个问题或者有一个更好的Schema定义的时候可以考虑去掉这个注释
+	InputSchema Schema `json:"inputSchema"`
+	// swagger:ignore
 	OutputSchema Schema `json:"outputSchema"`
 }
 

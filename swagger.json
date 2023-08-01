@@ -39,16 +39,14 @@
         "tags": [
           "testflow"
         ],
-        "operationId": "changetestflow",
+        "operationId": "changeGroupRequest",
         "parameters": [
           {
-            "description": "params with group id and testflows",
-            "name": "changGroupRequest",
+            "description": "update to submit",
+            "name": "Body",
             "in": "body",
             "required": true,
             "schema": {
-              "description": "params with group id and testflows",
-              "type": "object",
               "$ref": "#/definitions/changeTestflowGroupRequest"
             }
           }
@@ -58,6 +56,90 @@
             "description": ""
           },
           "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/count-plugins": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Counts the number of plugins.",
+        "operationId": "countPluginsReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/download": {
+      "get": {
+        "produces": [
+          "application/zip"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "download"
+        ],
+        "summary": "Download a directory as a zip file.",
+        "operationId": "downloadParams",
+        "responses": {
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/failed-tasks": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "failed-tasks"
+        ],
+        "summary": "Lists the failed tasks.",
+        "operationId": "listFailedTasksReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -585,6 +667,54 @@
         }
       }
     },
+    "/logs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "log"
+        ],
+        "summary": "get all logs in pod.",
+        "operationId": "podLogReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "TestID",
+            "description": "testid of task",
+            "name": "testID",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "PodName",
+            "description": "pod name",
+            "name": "podLog",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "logResp",
+            "schema": {
+              "$ref": "#/definitions/logResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/logs/pods/{testid}": {
       "get": {
         "produces": [
@@ -624,7 +754,7 @@
         }
       }
     },
-    "/logs/{podName}": {
+    "/pass-rate-trends": {
       "get": {
         "produces": [
           "application/json"
@@ -634,27 +764,18 @@
           "https"
         ],
         "tags": [
-          "log"
+          "task"
         ],
-        "summary": "get all logs in pod.",
-        "operationId": "listLogsInPod",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "pod name",
-            "name": "podName",
-            "in": "path",
-            "required": true
-          }
-        ],
+        "summary": "Gets the pass rate trends for the last 30 days.",
+        "operationId": "passRateTrends",
         "responses": {
           "200": {
-            "description": "logResp",
+            "description": "  //todo fix correctstruct",
             "schema": {
-              "$ref": "#/definitions/logResp"
+              "$ref": "#/definitions/myString"
             }
           },
-          "503": {
+          "500": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -749,6 +870,36 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/def": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Get plugin by name and version.",
+        "operationId": "getPluginDef",
+        "responses": {
+          "200": {
+            "description": "pluginDetail",
+            "schema": {
+              "$ref": "#/definitions/pluginDetail"
+            }
           },
           "503": {
             "description": "apiError",
@@ -1003,8 +1154,39 @@
         }
       }
     },
+    "/success-quantity-trends": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "success-quantity-trends"
+        ],
+        "summary": "Retrieves the success quantity trends.",
+        "operationId": "successQuantityTrendsReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/task": {
       "get": {
+        "description": "Get task by condition",
         "produces": [
           "application/json"
         ],
@@ -1015,62 +1197,58 @@
         "tags": [
           "task"
         ],
-        "summary": "Lists all tasks.",
-        "operationId": "listTasksReq",
+        "operationId": "getTaskReq",
         "parameters": [
           {
             "type": "string",
-            "x-go-name": "JobID",
-            "description": "id of job",
-            "name": "jobId",
+            "x-go-name": "TestID",
+            "name": "testID",
             "in": "query"
           },
           {
-            "type": "array",
-            "items": {
-              "type": "integer",
-              "format": "int64"
-            },
-            "x-go-name": "State",
-            "description": "task state",
-            "name": "state",
+            "type": "string",
+            "name": "ID",
             "in": "query"
-          },
-          {
-            "type": "integer",
-            "format": "int64",
-            "x-go-name": "CreateTime",
-            "description": "createtime of task",
-            "name": "createTime",
-            "in": "query"
-          },
-          {
-            "type": "integer",
-            "format": "int64",
-            "x-go-name": "PageNum",
-            "description": "pageNum",
-            "name": "pageNum",
-            "in": "query",
-            "required": true
-          },
-          {
-            "type": "integer",
-            "format": "int64",
-            "x-go-name": "PageSize",
-            "description": "pageSize",
-            "name": "pageSize",
-            "in": "query",
-            "required": true
           }
         ],
         "responses": {
           "200": {
-            "description": "listTasksResp",
+            "description": "task",
             "schema": {
-              "$ref": "#/definitions/listTasksResp"
+              "$ref": "#/definitions/task"
             }
           },
           "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task-count": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Retrieves the Statistics of tasks.",
+        "operationId": "getTaskCount",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -1116,43 +1294,6 @@
       }
     },
     "/task/{id}": {
-      "get": {
-        "description": "Get task by id",
-        "produces": [
-          "application/json"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "task"
-        ],
-        "operationId": "getTask",
-        "parameters": [
-          {
-            "type": "string",
-            "description": "job id",
-            "name": "id",
-            "in": "path",
-            "required": true
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "task",
-            "schema": {
-              "$ref": "#/definitions/task"
-            }
-          },
-          "503": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      },
       "delete": {
         "description": "Delete task by id",
         "produces": [
@@ -1180,6 +1321,36 @@
             "description": ""
           },
           "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/test-data": {
+      "get": {
+        "description": "Lists the amount of tasks for a job in the last 2 weeks.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http"
+        ],
+        "tags": [
+          "test-data"
+        ],
+        "summary": "Lists test data.",
+        "operationId": "listTestData",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -1403,6 +1574,36 @@
             "description": ""
           },
           "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/today-pass-rate-ranking": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "summary": "Retrieves the top 3 job pass rates for today.",
+        "operationId": "todayPassRateRankingReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -1764,7 +1965,7 @@
           "x-go-name": "ModifiedTime"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "BoolConfigItem": {
       "description": "BoolConfigItem bool config item",
@@ -2507,46 +2708,7 @@
           "x-go-name": "CronExpression"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "DeployNode": {
-      "type": "object",
-      "required": [
-        "name",
-        "version"
-      ],
-      "properties": {
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/svcProperty"
-          },
-          "x-go-name": "Dependencies"
-        },
-        "instance": {
-          "$ref": "#/definitions/svcProperty"
-        },
-        "name": {
-          "description": "the name for this test flow",
-          "type": "string",
-          "minLength": 3,
-          "x-go-name": "Name"
-        },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/property"
-          },
-          "x-go-name": "Properties"
-        },
-        "version": {
-          "description": "the version for this test flow",
-          "type": "string",
-          "minLength": 3,
-          "x-go-name": "Version"
-        }
-      },
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "Error": {
       "description": "Error a model for all the error response coming from harbor",
@@ -3534,7 +3696,7 @@
           "x-go-name": "SourcePattern"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "PRMergedJobParams": {
       "type": "object",
@@ -3547,7 +3709,7 @@
           "x-go-name": "PRMergedEventMatchs"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "PasswordReq": {
       "description": "PasswordReq password req",
@@ -3636,15 +3798,9 @@
       "x-go-package": "github.com/mittwald/goharbor-client/v5/apiv2/model"
     },
     "PluginInfo": {
+      "description": "fatal error: stack overflow",
       "type": "object",
       "properties": {
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/svcProperty"
-          },
-          "x-go-name": "Dependencies"
-        },
         "description": {
           "type": "string",
           "x-go-name": "Description"
@@ -3661,13 +3817,6 @@
           "type": "string",
           "x-go-name": "PluginType"
         },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/property"
-          },
-          "x-go-name": "Properties"
-        },
         "repo": {
           "type": "string",
           "x-go-name": "Repo"
@@ -3677,27 +3826,11 @@
           "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
     "PluginParams": {
       "type": "object",
-      "properties": {
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/svcProperty"
-          },
-          "x-go-name": "Dependencies"
-        },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/property"
-          },
-          "x-go-name": "Properties"
-        }
-      },
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
     "PreheatPolicy": {
       "description": "PreheatPolicy preheat policy",
@@ -6142,6 +6275,10 @@
       },
       "x-go-package": "github.com/mittwald/goharbor-client/v5/apiv2/model"
     },
+    "StepState": {
+      "type": "string",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
+    },
     "Storage": {
       "description": "Storage storage",
       "type": "object",
@@ -6280,7 +6417,7 @@
           "x-go-name": "TagPattern"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "TagCreateJobParams": {
       "type": "object",
@@ -6293,7 +6430,7 @@
           "x-go-name": "TagCreateEventMatchs"
         }
       },
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "Task": {
       "description": "Task task",
@@ -6355,46 +6492,7 @@
     },
     "TestId": {
       "type": "string",
-      "x-go-package": "github.com/hunjixin/brightbird/types"
-    },
-    "TestItem": {
-      "type": "object",
-      "required": [
-        "name",
-        "version"
-      ],
-      "properties": {
-        "Instance": {
-          "$ref": "#/definitions/svcProperty"
-        },
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/svcProperty"
-          },
-          "x-go-name": "Dependencies"
-        },
-        "name": {
-          "description": "the name for this test flow",
-          "type": "string",
-          "minLength": 3,
-          "x-go-name": "Name"
-        },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/property"
-          },
-          "x-go-name": "Properties"
-        },
-        "version": {
-          "description": "the version for this test flow",
-          "type": "string",
-          "minLength": 3,
-          "x-go-name": "Version"
-        }
-      },
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
     "TriggerRetentionExecutionBody": {
       "description": "TriggerRetentionExecutionBody trigger retention execution body",
@@ -6943,17 +7041,23 @@
         }
       },
       "x-go-name": "APIError",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "changeTestflowGroupRequest": {
       "description": "ChangeTestflowGroupRequest",
       "type": "object",
+      "required": [
+        "groupId",
+        "testflowIds"
+      ],
       "properties": {
         "groupId": {
+          "description": "Group to change",
           "type": "string",
           "x-go-name": "GroupID"
         },
         "testflowIds": {
+          "description": "testflow id",
           "type": "array",
           "items": {
             "type": "string"
@@ -6962,7 +7066,7 @@
         }
       },
       "x-go-name": "ChangeTestflowGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "countGroupRequest": {
       "description": "CountGroupRequest",
@@ -6976,7 +7080,7 @@
         }
       },
       "x-go-name": "CountGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "group": {
       "description": "Group",
@@ -7017,7 +7121,7 @@
         }
       },
       "x-go-name": "Group",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "groupResp": {
       "description": "GroupResp",
@@ -7063,17 +7167,17 @@
         }
       },
       "x-go-name": "GroupResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "int64Arr": {
-      "description": "Int64Arrary",
+      "description": "Int64Array",
       "type": "array",
       "items": {
         "type": "integer",
         "format": "int64"
       },
-      "x-go-name": "Int64Arrary",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-name": "Int64Array",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "job": {
       "description": "Job",
@@ -7143,7 +7247,7 @@
         }
       },
       "x-go-name": "Job",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "jobDetailResp": {
       "description": "JobDetailResp",
@@ -7221,7 +7325,7 @@
         }
       },
       "x-go-name": "JobDetailResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "listGroupResp": {
       "description": "ListGroupResp",
@@ -7230,7 +7334,7 @@
         "$ref": "#/definitions/groupResp"
       },
       "x-go-name": "ListGroupResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "listJobResp": {
       "description": "ListJobResp",
@@ -7239,7 +7343,7 @@
         "$ref": "#/definitions/job"
       },
       "x-go-name": "ListJobResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "listTasksResp": {
       "description": "ListTasksResp",
@@ -7269,7 +7373,7 @@
         }
       },
       "x-go-name": "ListTasksResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "listTestFlowResp": {
       "description": "ListTestFlowResp",
@@ -7299,7 +7403,7 @@
         }
       },
       "x-go-name": "ListTestFlowResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "logListResp": {
       "description": "LogListResp",
@@ -7308,7 +7412,7 @@
         "type": "string"
       },
       "x-go-name": "LogListResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "logResp": {
       "description": "LogResp",
@@ -7334,31 +7438,24 @@
         }
       },
       "x-go-name": "LogResp",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "myString": {
-      "description": "MyString  repretation string",
+      "description": "MyString repretation string",
       "type": "string",
       "x-go-name": "MyString",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "objectId": {
       "description": "ObjectId",
       "type": "string",
       "x-go-name": "ObjectId",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "plugin": {
       "description": "Plugin",
       "type": "object",
       "properties": {
-        "dependencies": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/svcProperty"
-          },
-          "x-go-name": "Dependencies"
-        },
         "description": {
           "type": "string",
           "x-go-name": "Description"
@@ -7366,9 +7463,6 @@
         "imageTarget": {
           "type": "string",
           "x-go-name": "ImageTarget"
-        },
-        "instance": {
-          "$ref": "#/definitions/svcProperty"
         },
         "name": {
           "type": "string",
@@ -7382,13 +7476,6 @@
           "type": "string",
           "x-go-name": "PluginType"
         },
-        "properties": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/property"
-          },
-          "x-go-name": "Properties"
-        },
         "repo": {
           "type": "string",
           "x-go-name": "Repo"
@@ -7398,8 +7485,8 @@
           "x-go-name": "Version"
         }
       },
-      "x-go-name": "Plugin",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-name": "PluginDef",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "pluginDetail": {
       "description": "PluginDetail",
@@ -7436,53 +7523,29 @@
           "type": "string",
           "x-go-name": "Name"
         },
-        "pluginType": {
-          "type": "string",
-          "x-go-name": "PluginType"
-        },
-        "plugins": {
+        "pluginDefs": {
           "type": "array",
           "items": {
             "$ref": "#/definitions/plugin"
           },
-          "x-go-name": "Plugins"
+          "x-go-name": "PluginDefs"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
         }
       },
       "x-go-name": "PluginDetail",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "property": {
-      "description": "Property Property",
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
-        },
-        "name": {
-          "type": "string",
-          "x-go-name": "Name"
-        },
-        "require": {
-          "type": "boolean",
-          "x-go-name": "Require"
-        },
-        "type": {
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "type": "string",
-          "x-go-name": "Value"
-        }
-      },
-      "x-go-name": "Property",
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "stepLog": {
       "description": "StepLog",
       "type": "object",
       "properties": {
+        "instanceName": {
+          "type": "string",
+          "x-go-name": "InstanceName"
+        },
         "logs": {
           "type": "array",
           "items": {
@@ -7494,54 +7557,21 @@
           "type": "string",
           "x-go-name": "Name"
         },
-        "success": {
-          "type": "boolean",
-          "x-go-name": "IsSuccess"
+        "state": {
+          "$ref": "#/definitions/StepState"
         }
       },
       "x-go-name": "StepLog",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "stringArr": {
-      "description": "StringArrary",
+      "description": "StringArray",
       "type": "array",
       "items": {
         "type": "string"
       },
-      "x-go-name": "StringArrary",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
-    },
-    "svcProperty": {
-      "description": "Property DependencyProperty",
-      "type": "object",
-      "properties": {
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
-        },
-        "name": {
-          "type": "string",
-          "x-go-name": "Name"
-        },
-        "require": {
-          "type": "boolean",
-          "x-go-name": "Require"
-        },
-        "sockPath": {
-          "type": "string",
-          "x-go-name": "SockPath"
-        },
-        "type": {
-          "type": "string",
-          "x-go-name": "Type"
-        },
-        "value": {
-          "type": "string",
-          "x-go-name": "Value"
-        }
-      },
-      "x-go-name": "DependencyProperty",
-      "x-go-package": "github.com/hunjixin/brightbird/types"
+      "x-go-name": "StringArray",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "task": {
       "description": "Task",
@@ -7615,7 +7645,7 @@
         }
       },
       "x-go-name": "Task",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "testFlow": {
       "description": "TestFlow",
@@ -7624,13 +7654,6 @@
         "name"
       ],
       "properties": {
-        "cases": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/TestItem"
-          },
-          "x-go-name": "Cases"
-        },
         "createTime": {
           "description": "创建时间",
           "type": "string",
@@ -7664,17 +7687,10 @@
           "type": "string",
           "minLength": 3,
           "x-go-name": "Name"
-        },
-        "nodes": {
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/DeployNode"
-          },
-          "x-go-name": "Nodes"
         }
       },
       "x-go-name": "TestFlow",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "updateGroupRequest": {
       "description": "UpdateGroupRequest",
@@ -7694,7 +7710,7 @@
         }
       },
       "x-go-name": "UpdateGroupRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "updateJobRequest": {
       "description": "UpdateJobRequest",
@@ -7725,7 +7741,7 @@
         }
       },
       "x-go-name": "UpdateJobRequest",
-      "x-go-package": "github.com/hunjixin/brightbird/models"
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     }
   },
   "x-meta-array": [

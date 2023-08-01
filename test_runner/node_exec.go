@@ -14,11 +14,11 @@ import (
 
 	"github.com/swaggest/jsonschema-go"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/tidwall/gjson"
 	"gopkg.in/yaml.v3"

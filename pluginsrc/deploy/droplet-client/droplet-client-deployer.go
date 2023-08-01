@@ -5,10 +5,10 @@ import (
 	"embed"
 	"fmt"
 
-	types2 "github.com/hunjixin/brightbird/types"
+	types2 "github.com/ipfs-force-community/brightbird/types"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/droplet/v2/config"
 	"github.com/pelletier/go-toml/v2"
 	corev1 "k8s.io/api/core/v1"

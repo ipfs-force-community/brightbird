@@ -5,11 +5,11 @@ import (
 	"math"
 	"net/http"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/web/backend/job"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/web/backend/job"
 	logging "github.com/ipfs/go-log/v2"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

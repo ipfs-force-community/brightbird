@@ -8,14 +8,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 	"gopkg.in/yaml.v3"
 
 	errors2 "k8s.io/apimachinery/pkg/api/errors"
 
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/config"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -235,7 +235,7 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"NameSpace":       taskMgr.cfg.NameSpace,
 		"PrivateRegistry": string(taskMgr.privateRegistry),
-		"TestId":          string(task.TestId),
+		"TestID":          string(task.TestId),
 		"Args":            args,
 	})
 }

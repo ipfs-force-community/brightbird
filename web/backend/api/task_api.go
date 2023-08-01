@@ -4,11 +4,11 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/web/backend/job"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/web/backend/job"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -86,7 +86,7 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		req2 := &repo.GetTaskReq{TestId: req.TestId}
+		req2 := &repo.GetTaskReq{TestID: req.TestID}
 		if req.ID != nil {
 			req2.ID, err = primitive.ObjectIDFromHex(*req.ID)
 			if err != nil {

@@ -30,49 +30,11 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	ListLogsInPod(params *ListLogsInPodParams, opts ...ClientOption) (*ListLogsInPodOK, error)
-
 	ListPodsInTest(params *ListPodsInTestParams, opts ...ClientOption) (*ListPodsInTestOK, error)
 
+	PodLogReq(params *PodLogReqParams, opts ...ClientOption) (*PodLogReqOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
-}
-
-/*
-ListLogsInPod gets all logs in pod
-*/
-func (a *Client) ListLogsInPod(params *ListLogsInPodParams, opts ...ClientOption) (*ListLogsInPodOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListLogsInPodParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "listLogsInPod",
-		Method:             "GET",
-		PathPattern:        "/logs/{podName}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/xml"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &ListLogsInPodReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*ListLogsInPodOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listLogsInPod: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
 }
 
 /*
@@ -110,6 +72,44 @@ func (a *Client) ListPodsInTest(params *ListPodsInTestParams, opts ...ClientOpti
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for listPodsInTest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PodLogReq gets all logs in pod
+*/
+func (a *Client) PodLogReq(params *PodLogReqParams, opts ...ClientOption) (*PodLogReqOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPodLogReqParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "podLogReq",
+		Method:             "GET",
+		PathPattern:        "/logs",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &PodLogReqReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PodLogReqOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for podLogReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

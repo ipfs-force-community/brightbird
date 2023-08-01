@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	dropletmarket "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-market"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 )
 
 var Info = dropletmarket.PluginInfo

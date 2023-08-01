@@ -6,16 +6,16 @@ import (
 	"encoding/json"
 	"fmt"
 
-	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
-	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
+	venuswallet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus-wallet"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus/venus-shared/api/wallet"
 	vTypes "github.com/filecoin-project/venus/venus-shared/types"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 )
 
 func main() {

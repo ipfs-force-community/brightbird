@@ -9,13 +9,13 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/venus/venus-shared/api/messager"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
-	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
-	sophonminer "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-miner"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	damoclesmanager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-manager"
+	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
+	sophonminer "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-miner"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 	miner "github.com/ipfs-force-community/sophon-miner/api/client"
 )
 

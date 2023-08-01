@@ -6,12 +6,12 @@ import (
 	"math/rand"
 
 	"github.com/filecoin-project/go-address"
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	damoclesmanager "github.com/hunjixin/brightbird/pluginsrc/deploy/damocles-manager"
-	sophonmessager "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-messager"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	damoclesmanager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-manager"
+	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
 )
 
