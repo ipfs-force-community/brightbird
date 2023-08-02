@@ -30,5 +30,6 @@ linters-settings:
     min-occurrences: 6
 run:
   skip-dirs-use-default: false
-  skip-dirs: "(testing)"
+  skip-dirs:
+    - web/ui/public
   skip-files: "(.*_gen\\.go$)"

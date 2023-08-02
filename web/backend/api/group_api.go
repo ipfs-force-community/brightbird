@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/repo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

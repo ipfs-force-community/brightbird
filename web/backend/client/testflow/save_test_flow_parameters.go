@@ -15,7 +15,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 )
 
 // NewSaveTestFlowParams creates a new SaveTestFlowParams object,

@@ -3,7 +3,7 @@ package cmds
 import (
 	"fmt"
 
-	"github.com/hunjixin/brightbird/web/backend/config"
+	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 )

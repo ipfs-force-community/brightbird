@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 )
 
 // ListLogsInPodReader is a Reader for the ListLogsInPod structure.

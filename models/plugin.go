@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

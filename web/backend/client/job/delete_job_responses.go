@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 )
 
 // DeleteJobReader is a Reader for the DeleteJob structure.
@@ -36,7 +36,7 @@ func (o *DeleteJobReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /job/{id}] deleteJob", response, response.Code())
 	}
 }
 

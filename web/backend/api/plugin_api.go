@@ -12,11 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/hunjixin/brightbird/env/plugin"
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/utils"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/mholt/archiver/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -453,7 +453,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//     Deprecated: false
 	//
 	//     Responses:
-	//       200: fileResponse
 	//		 500: apiError
 	group.GET("/download", func(c *gin.Context) {
 		targetPath := "/root/brightbird/web/ui/public" // 需要打包的目标文件夹路径

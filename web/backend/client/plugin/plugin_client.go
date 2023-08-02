@@ -32,9 +32,13 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	AddLabelParams(params *AddLabelParamsParams, opts ...ClientOption) (*AddLabelParamsOK, error)
 
+	CountPluginsReq(params *CountPluginsReqParams, opts ...ClientOption) (*CountPluginsReqOK, error)
+
 	DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error)
 
 	DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOption) (*DeletePluginReqOK, error)
+
+	GetPluginDef(params *GetPluginDefParams, opts ...ClientOption) (*GetPluginDefOK, error)
 
 	GetPluginParams(params *GetPluginParamsParams, opts ...ClientOption) (*GetPluginParamsOK, error)
 
@@ -82,6 +86,44 @@ func (a *Client) AddLabelParams(params *AddLabelParamsParams, opts ...ClientOpti
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for addLabelParams: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+CountPluginsReq counts the number of plugins
+*/
+func (a *Client) CountPluginsReq(params *CountPluginsReqParams, opts ...ClientOption) (*CountPluginsReqOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCountPluginsReqParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "countPluginsReq",
+		Method:             "GET",
+		PathPattern:        "/count-plugins",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CountPluginsReqReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CountPluginsReqOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for countPluginsReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -158,6 +200,44 @@ func (a *Client) DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOp
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for deletePluginReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetPluginDef gets plugin by name and version
+*/
+func (a *Client) GetPluginDef(params *GetPluginDefParams, opts ...ClientOption) (*GetPluginDefOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewGetPluginDefParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "getPluginDef",
+		Method:             "GET",
+		PathPattern:        "/plugin/def",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &GetPluginDefReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*GetPluginDefOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for getPluginDef: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

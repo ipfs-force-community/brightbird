@@ -10,13 +10,18 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/hunjixin/brightbird/web/backend/client/group"
-	"github.com/hunjixin/brightbird/web/backend/client/job"
-	logops "github.com/hunjixin/brightbird/web/backend/client/log"
-	"github.com/hunjixin/brightbird/web/backend/client/plugin"
-	"github.com/hunjixin/brightbird/web/backend/client/task"
-	"github.com/hunjixin/brightbird/web/backend/client/testflow"
-	"github.com/hunjixin/brightbird/web/backend/client/version"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/download"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/failed_tasks"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/group"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/job"
+	logops "github.com/ipfs-force-community/brightbird/web/backend/client/log"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/plugin"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/success_quantity_trends"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/task"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/tasks"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/test_data"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/testflow"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/version"
 )
 
 // Default bright bird API HTTP client.
@@ -61,11 +66,16 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *BrightBird
 
 	cli := new(BrightBirdAPI)
 	cli.Transport = transport
+	cli.Download = download.New(transport, formats)
+	cli.FailedTasks = failed_tasks.New(transport, formats)
 	cli.Group = group.New(transport, formats)
 	cli.Job = job.New(transport, formats)
 	cli.Log = logops.New(transport, formats)
 	cli.Plugin = plugin.New(transport, formats)
+	cli.SuccessQuantityTrends = success_quantity_trends.New(transport, formats)
 	cli.Task = task.New(transport, formats)
+	cli.Tasks = tasks.New(transport, formats)
+	cli.TestData = test_data.New(transport, formats)
 	cli.Testflow = testflow.New(transport, formats)
 	cli.Version = version.New(transport, formats)
 	return cli
@@ -112,6 +122,10 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // BrightBirdAPI is a client for bright bird API
 type BrightBirdAPI struct {
+	Download download.ClientService
+
+	FailedTasks failed_tasks.ClientService
+
 	Group group.ClientService
 
 	Job job.ClientService
@@ -120,7 +134,13 @@ type BrightBirdAPI struct {
 
 	Plugin plugin.ClientService
 
+	SuccessQuantityTrends success_quantity_trends.ClientService
+
 	Task task.ClientService
+
+	Tasks tasks.ClientService
+
+	TestData test_data.ClientService
 
 	Testflow testflow.ClientService
 
@@ -132,11 +152,16 @@ type BrightBirdAPI struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *BrightBirdAPI) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
+	c.Download.SetTransport(transport)
+	c.FailedTasks.SetTransport(transport)
 	c.Group.SetTransport(transport)
 	c.Job.SetTransport(transport)
 	c.Log.SetTransport(transport)
 	c.Plugin.SetTransport(transport)
+	c.SuccessQuantityTrends.SetTransport(transport)
 	c.Task.SetTransport(transport)
+	c.Tasks.SetTransport(transport)
+	c.TestData.SetTransport(transport)
 	c.Testflow.SetTransport(transport)
 	c.Version.SetTransport(transport)
 }

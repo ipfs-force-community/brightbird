@@ -4,7 +4,7 @@ import (
 	"os"
 
 	"github.com/go-openapi/runtime"
-	"github.com/hunjixin/brightbird/web/backend/client/plugin"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/plugin"
 	"github.com/urfave/cli/v2"
 )
 

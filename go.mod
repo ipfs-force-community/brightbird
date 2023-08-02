@@ -1,4 +1,4 @@
-module github.com/hunjixin/brightbird
+module github.com/ipfs-force-community/brightbird
 
 go 1.18
 
@@ -39,6 +39,7 @@ require (
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/json-iterator/go v1.1.12
 	github.com/libp2p/go-libp2p v0.23.4
+	github.com/mholt/archiver/v3 v3.5.1
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1
 	github.com/mittwald/goharbor-client/v5 v5.3.1
 	github.com/multiformats/go-multiaddr v0.8.0
@@ -231,7 +232,6 @@ require (
 	github.com/mattn/go-isatty v0.0.19 // indirect
 	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
-	github.com/mholt/archiver/v3 v3.5.1 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
 	github.com/minio/sha256-simd v1.0.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect

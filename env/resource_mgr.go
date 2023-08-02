@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hunjixin/brightbird/utils"
+	"github.com/ipfs-force-community/brightbird/utils"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )

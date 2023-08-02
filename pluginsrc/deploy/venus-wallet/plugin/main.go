@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	venuswallet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus-wallet"
 )
 
 func main() {

@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/heroku/docker-registry-client/registry"
-	"github.com/hunjixin/brightbird/web/backend/config"
+	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/mittwald/goharbor-client/v5/apiv2"
 	cfg2 "github.com/mittwald/goharbor-client/v5/apiv2/pkg/config"

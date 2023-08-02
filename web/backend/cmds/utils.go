@@ -1,6 +1,6 @@
 package cmds
 
-import "github.com/hunjixin/brightbird/web/backend/client"
+import "github.com/ipfs-force-community/brightbird/web/backend/client"
 
 func DefaulAPI() *client.BrightBirdAPI {
 	return client.NewHTTPClientWithConfig(nil, &client.TransportConfig{

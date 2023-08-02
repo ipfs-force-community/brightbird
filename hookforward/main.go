@@ -9,7 +9,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/hunjixin/brightbird/hookforward/webhooklisten"
+	"github.com/ipfs-force-community/brightbird/hookforward/webhooklisten"
 	logging "github.com/ipfs/go-log/v2"
 )
 

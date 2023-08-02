@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	dropletclient "github.com/hunjixin/brightbird/pluginsrc/deploy/droplet-client"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
-	venuswallet "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	dropletclient "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-client"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
+	venuswallet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus-wallet"
 )
 
 func main() {

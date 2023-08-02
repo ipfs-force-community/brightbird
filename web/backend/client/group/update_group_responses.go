@@ -12,7 +12,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 )
 
 // UpdateGroupReader is a Reader for the UpdateGroup structure.
@@ -36,7 +36,7 @@ func (o *UpdateGroupReader) ReadResponse(response runtime.ClientResponse, consum
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("response status code does not match any response statuses defined for this endpoint in the swagger spec", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /group/{id}] updateGroup", response, response.Code())
 	}
 }
 

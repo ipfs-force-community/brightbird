@@ -9,13 +9,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/hunjixin/brightbird/models"
-	"github.com/hunjixin/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/repo"
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/web/backend/config"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	giturls "github.com/whilp/git-urls"
 	"golang.org/x/sync/errgroup"

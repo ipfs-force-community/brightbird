@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 )
 

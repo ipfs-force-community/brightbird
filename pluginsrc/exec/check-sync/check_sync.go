@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	venusutils "github.com/hunjixin/brightbird/env/venus_utils"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 )
 
 func main() {

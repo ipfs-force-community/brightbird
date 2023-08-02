@@ -4,7 +4,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// MyString  repretation string
+// MyString repretation string
 // swagger:model myString
 type MyString string
 
@@ -109,7 +109,7 @@ type ListTasksParams struct {
 // GetTaskReq
 // swagger:parameters getTaskReq
 type GetTaskReq struct {
-	TestId *string `form:"testid" json:"testID"`
+	TestID *string `form:"testID" json:"testID"`
 	ID     *string `form:"ID" json:"ID"`
 }
 
@@ -188,8 +188,26 @@ type ListTestFlowResp struct { //todo https://github.com/go-swagger/go-swagger/i
 // ChangeTestflowGroupRequest
 // swagger:model changeTestflowGroupRequest
 type ChangeTestflowGroupRequest struct {
-	GroupID     primitive.ObjectID   `json:"groupId"`
+	// Group to change
+	//
+	// required: true
+	// in: body
+	GroupID primitive.ObjectID `json:"groupId"`
+	// testflow id
+	//
+	// required: true
+	// in: body
 	TestflowIDs []primitive.ObjectID `json:"testflowIds"`
+}
+
+// ChangeGroupRequest
+// swagger:parameters changeGroupRequest
+type ChangeGroupRequest struct {
+	// update to submit
+	//
+	// required: true
+	// in: body
+	Body ChangeTestflowGroupRequest
 }
 
 // DeletePluginReq

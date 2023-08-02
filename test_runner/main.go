@@ -8,10 +8,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/repo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,11 +19,11 @@ import (
 
 	"github.com/BurntSushi/toml"
 
-	"github.com/hunjixin/brightbird/env"
-	fx_opt "github.com/hunjixin/brightbird/fx_opt"
-	"github.com/hunjixin/brightbird/test_runner/runnerctl"
-	"github.com/hunjixin/brightbird/types"
-	"github.com/hunjixin/brightbird/version"
+	"github.com/ipfs-force-community/brightbird/env"
+	fx_opt "github.com/ipfs-force-community/brightbird/fx_opt"
+	"github.com/ipfs-force-community/brightbird/test_runner/runnerctl"
+	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/urfave/cli/v2"
 	"go.uber.org/fx"

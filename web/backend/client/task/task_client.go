@@ -32,11 +32,13 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	DeleteTask(params *DeleteTaskParams, opts ...ClientOption) (*DeleteTaskOK, error)
 
-	GetTask(params *GetTaskParams, opts ...ClientOption) (*GetTaskOK, error)
+	GetTaskReq(params *GetTaskReqParams, opts ...ClientOption) (*GetTaskReqOK, error)
 
-	ListTasksReq(params *ListTasksReqParams, opts ...ClientOption) (*ListTasksReqOK, error)
+	PassRateTrends(params *PassRateTrendsParams, opts ...ClientOption) (*PassRateTrendsOK, error)
 
 	StopTask(params *StopTaskParams, opts ...ClientOption) (*StopTaskOK, error)
+
+	TodayPassRateRankingReq(params *TodayPassRateRankingReqParams, opts ...ClientOption) (*TodayPassRateRankingReqOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -80,60 +82,22 @@ func (a *Client) DeleteTask(params *DeleteTaskParams, opts ...ClientOption) (*De
 }
 
 /*
-GetTask Get task by id
+GetTaskReq Get task by condition
 */
-func (a *Client) GetTask(params *GetTaskParams, opts ...ClientOption) (*GetTaskOK, error) {
+func (a *Client) GetTaskReq(params *GetTaskReqParams, opts ...ClientOption) (*GetTaskReqOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewGetTaskParams()
+		params = NewGetTaskReqParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "getTask",
-		Method:             "GET",
-		PathPattern:        "/task/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json", "application/xml"},
-		Schemes:            []string{"http", "https"},
-		Params:             params,
-		Reader:             &GetTaskReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-	success, ok := result.(*GetTaskOK)
-	if ok {
-		return success, nil
-	}
-	// unexpected success response
-	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for getTask: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-ListTasksReq lists all tasks
-*/
-func (a *Client) ListTasksReq(params *ListTasksReqParams, opts ...ClientOption) (*ListTasksReqOK, error) {
-	// TODO: Validate the params before sending
-	if params == nil {
-		params = NewListTasksReqParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "listTasksReq",
+		ID:                 "getTaskReq",
 		Method:             "GET",
 		PathPattern:        "/task",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &ListTasksReqReader{formats: a.formats},
+		Reader:             &GetTaskReqReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -145,13 +109,51 @@ func (a *Client) ListTasksReq(params *ListTasksReqParams, opts ...ClientOption) 
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*ListTasksReqOK)
+	success, ok := result.(*GetTaskReqOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listTasksReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for getTaskReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PassRateTrends gets the pass rate trends for the last 30 days
+*/
+func (a *Client) PassRateTrends(params *PassRateTrendsParams, opts ...ClientOption) (*PassRateTrendsOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewPassRateTrendsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "passRateTrends",
+		Method:             "GET",
+		PathPattern:        "/pass-rate-trends",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &PassRateTrendsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*PassRateTrendsOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for passRateTrends: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -190,6 +192,44 @@ func (a *Client) StopTask(params *StopTaskParams, opts ...ClientOption) (*StopTa
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for stopTask: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+TodayPassRateRankingReq retrieves the top 3 job pass rates for today
+*/
+func (a *Client) TodayPassRateRankingReq(params *TodayPassRateRankingReqParams, opts ...ClientOption) (*TodayPassRateRankingReqOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewTodayPassRateRankingReqParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "todayPassRateRankingReq",
+		Method:             "GET",
+		PathPattern:        "/today-pass-rate-ranking",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &TodayPassRateRankingReqReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*TodayPassRateRankingReqOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for todayPassRateRankingReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/repo"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -230,7 +230,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route POST /changegroup testflow changetestflow
+	// swagger:route POST /changegroup testflow changeGroupRequest
 	//
 	// change testflow group id
 	//
@@ -242,14 +242,6 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 	//     Schemes: http, https
 	//
 	//     Deprecated: false
-	//
-	//     Parameters:
-	//       + name: changGroupRequest
-	//         in: body
-	//         description: params with group id and testflows
-	//         required: true
-	//         type: changeTestflowGroupRequest
-	//         allowEmpty:  false
 	//
 	//     Responses:
 	//       200:

@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
-	"github.com/hunjixin/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env"
 
 	"github.com/BurntSushi/toml"
 	walletCfg "github.com/filecoin-project/venus-wallet/config"

@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	venuswalletpro "github.com/hunjixin/brightbird/pluginsrc/deploy/venus-wallet-pro"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	venuswalletpro "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus-wallet-pro"
 )
 
 func main() {

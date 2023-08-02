@@ -30,7 +30,7 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	Changetestflow(params *ChangetestflowParams, opts ...ClientOption) (*ChangetestflowOK, error)
+	ChangeGroupRequest(params *ChangeGroupRequestParams, opts ...ClientOption) (*ChangeGroupRequestOK, error)
 
 	CountTestFlowRequest(params *CountTestFlowRequestParams, opts ...ClientOption) (*CountTestFlowRequestOK, error)
 
@@ -46,22 +46,22 @@ type ClientService interface {
 }
 
 /*
-Changetestflow change testflow group id
+ChangeGroupRequest change testflow group id
 */
-func (a *Client) Changetestflow(params *ChangetestflowParams, opts ...ClientOption) (*ChangetestflowOK, error) {
+func (a *Client) ChangeGroupRequest(params *ChangeGroupRequestParams, opts ...ClientOption) (*ChangeGroupRequestOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewChangetestflowParams()
+		params = NewChangeGroupRequestParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "changetestflow",
+		ID:                 "changeGroupRequest",
 		Method:             "POST",
 		PathPattern:        "/changegroup",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &ChangetestflowReader{formats: a.formats},
+		Reader:             &ChangeGroupRequestReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -73,13 +73,13 @@ func (a *Client) Changetestflow(params *ChangetestflowParams, opts ...ClientOpti
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*ChangetestflowOK)
+	success, ok := result.(*ChangeGroupRequestOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for changetestflow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for changeGroupRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
