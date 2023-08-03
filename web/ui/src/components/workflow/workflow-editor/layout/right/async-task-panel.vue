@@ -143,8 +143,8 @@ export default defineComponent({
               name: anode.instanceName,
               type:"object",
               index:-1,
-              defs: pluginDef.outputSchema.definitions,
-              schema: convertToSchema(pluginDef.outputSchema),
+              defs: pluginDef.outputSchema.definitions || {},
+              schema: convertToSchema(pluginDef.outputSchema) || {},
               isLeaf: false,
               children:[],
             });

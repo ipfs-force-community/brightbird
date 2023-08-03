@@ -65,6 +65,7 @@ export default defineComponent({
             if (props.property.default) {
                 //todo check object and arrary default value
                 refValue.value = props.property.default as string;
+                props.input[props.propName] = refValue.value;
             }
         }
 
@@ -158,7 +159,7 @@ export default defineComponent({
                     if (prop.type instanceof Array) {
                         treeProp.type = "array"
                         treeProp.index = 0;
-                        treeProp.schema = resolveSchema(prop.items)
+                        treeProp.schema = resolveSchema(prop)
                         treeProp.children = [{
                             name: "index",
                             index: 0,
