@@ -13,7 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/fluent/fluent-bit-go/output"
-	"github.com/hunjixin/brightbird/mongo_plugin/log"
+	"github.com/ipfs-force-community/brightbird/mongo_plugin/log"
 	"github.com/vmihailenco/msgpack/v5"
 
 	"go.mongodb.org/mongo-driver/mongo/options"

@@ -1,4 +1,4 @@
-ldflags=-X=github.com/hunjixin/brightbird/version.CurrentCommit=+git.$(subst -,.,$(shell git describe --always --match=NeVeRmAtCh --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null))
+ldflags=-X=github.com/ipfs-force-community/brightbird/version.CurrentCommit=+git.$(subst -,.,$(shell git describe --always --match=NeVeRmAtCh --dirty 2>/dev/null || git rev-parse --short HEAD 2>/dev/null))
 ifneq ($(strip $(LDFLAGS)),)
 	ldflags+=-extldflags=$(LDFLAGS)
 endif
@@ -8,8 +8,9 @@ COMPONENT=""
 GOFLAGS+=-ldflags=$(ldflags)
 
 gen-swagger:
+	swagger version
 	swagger generate spec -m -o ./swagger.json -w ./web/backend
-	swagger generate client -f ./swagger.json --skip-models  --existing-models=github.com/hunjixin/brightbird/models -c ./web/backend/client
+	swagger generate client -f ./swagger.json --skip-models  --existing-models=github.com/ipfs-force-community/brightbird/models -c ./web/backend/client
 
 SWAGGER_ARG=
 swagger-srv: gen-swagger

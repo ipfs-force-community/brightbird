@@ -3,15 +3,15 @@ package repo
 import (
 	"context"
 	"fmt"
-	"time"
 	"strings"
+	"time"
 
-	"github.com/hunjixin/brightbird/models"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/bsonx"
+	"github.com/ipfs-force-community/brightbird/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type ListTaskParams struct {
@@ -21,7 +21,7 @@ type ListTaskParams struct {
 }
 
 type GetTaskReq struct {
-	TestId *string            `form:"testid"`
+	TestID *string            `form:"testID"`
 	ID     primitive.ObjectID `form:"ID"`
 }
 
@@ -120,8 +120,8 @@ func (j *TaskRepo) Get(ctx context.Context, req *GetTaskReq) (*models.Task, erro
 		filter = append(filter, bson.E{Key: "_id", Value: req.ID})
 	}
 
-	if req.TestId != nil {
-		filter = append(filter, bson.E{Key: "testid", Value: *req.TestId})
+	if req.TestID != nil {
+		filter = append(filter, bson.E{Key: "testid", Value: *req.TestID})
 	}
 
 	tf := &models.Task{}
@@ -278,7 +278,7 @@ func (j *TaskRepo) TaskAmountOfJobLast2Week(ctx context.Context) (map[primitive.
 	if err != nil {
 		return nil, nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(ctx) //nolint
 
 	now := time.Now().UTC()
 	startDate := now.AddDate(0, 0, -14)
@@ -384,7 +384,7 @@ func (j *TaskRepo) JobPassRateTop3Today(ctx context.Context) ([]primitive.Object
 	if err != nil {
 		return nil, nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(ctx) //nolint
 
 	var jobIds []primitive.ObjectID
 	var passRates []string
@@ -435,7 +435,7 @@ func (j *TaskRepo) JobFailureRatiobLast2Week(ctx context.Context) (map[primitive
 	if err != nil {
 		return nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(ctx) //nolint
 
 	var results []bson.M
 	if err := cursor.All(ctx, &results); err != nil {
@@ -484,7 +484,7 @@ func (j *TaskRepo) TasktPassRateLast30Days(ctx context.Context) ([]string, []int
 	if err != nil {
 		return nil, nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(ctx) //nolint
 
 	dateArray := make([]string, 0)
 	now := time.Now().UTC()
@@ -565,7 +565,7 @@ func (j *TaskRepo) JobPassRateLast30Days(ctx context.Context) (map[primitive.Obj
 	if err != nil {
 		return nil, nil, err
 	}
-	defer cursor.Close(ctx)
+	defer cursor.Close(ctx) //nolint
 
 	now := time.Now().UTC()
 	startDate := now.AddDate(0, 0, -30)

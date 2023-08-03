@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/types"
 )
 
 type GlobalParams struct {

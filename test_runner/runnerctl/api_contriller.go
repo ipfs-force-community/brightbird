@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	"go.uber.org/fx"
 )

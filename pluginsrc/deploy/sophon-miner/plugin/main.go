@@ -3,12 +3,12 @@ package main
 import (
 	"context"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/env/plugin"
-	sophonauth "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-auth"
-	sophongateway "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-gateway"
-	sophonminer "github.com/hunjixin/brightbird/pluginsrc/deploy/sophon-miner"
-	"github.com/hunjixin/brightbird/pluginsrc/deploy/venus"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env/plugin"
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	sophongateway "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-gateway"
+	sophonminer "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-miner"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 )
 
 func main() {

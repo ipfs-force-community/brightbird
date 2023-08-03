@@ -10,8 +10,8 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/hunjixin/brightbird/env"
-	"github.com/hunjixin/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/sjson"

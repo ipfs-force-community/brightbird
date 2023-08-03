@@ -6,11 +6,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hunjixin/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/models"
 
 	"github.com/google/go-github/v51/github"
-	"github.com/hunjixin/brightbird/repo"
-	"github.com/hunjixin/brightbird/web/backend/modules"
+	"github.com/ipfs-force-community/brightbird/repo"
+	"github.com/ipfs-force-community/brightbird/web/backend/modules"
 	"github.com/robfig/cron/v3"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"

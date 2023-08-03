@@ -122,7 +122,6 @@ github.com/filecoin-project/specs-storage v0.4.1/go.mod h1:Z2eK6uMwAOSLjek6+sy0j
 github.com/filecoin-project/venus v1.11.0-rc1 h1:qJmvXFJGhf6Rdke4FCkXI3+bWYw89aH0U0svO7oOo+I=
 github.com/filecoin-project/venus v1.11.0-rc1/go.mod h1:g0C7MZJgZLpL4ZIv6TiPLXUXtDOrYsF6A/xMAbO3RxE=
 github.com/filecoin-project/venus v1.11.1/go.mod h1:H8A3djsrHKRWuKnJI/8Y6xZRudbV9V2x5NIP8/PVPfQ=
-github.com/filecoin-project/venus v1.12.0 h1:ukMOqu/Zx25a8v1mKQ2gcA9Eb54/wKp/Sv3okGnuPJU=
 github.com/filecoin-project/venus-auth v1.11.0 h1:9PBswWxc113vqaHABMcRyMm+1BtlJCwOFTPQJg/OVtQ=
 github.com/filecoin-project/venus-wallet v1.9.0 h1:q0Mg9QXPDGbz7vDEM/Vyc45w/PGWECodphs6OiG3Zm0=
 github.com/filecoin-project/venus-wallet v1.9.0/go.mod h1:3pYH414hJ3SDWnA9fDxbZ/PTZuiEPXCCjCznjNv3ZYk=
@@ -173,15 +172,10 @@ github.com/ipfs-force-community/go-jsonrpc v0.1.7-0.20230214070559-dbe74781184a/
 github.com/ipfs-force-community/sophon-auth v1.10.2-0.20230322095644-02a0689eea6c h1:Jpg78999feXioeKuL7fHIWWeGjAH34UNNXbZmXVB1us=
 github.com/ipfs-force-community/sophon-auth v1.10.2-0.20230322095644-02a0689eea6c/go.mod h1:aBfIfNxQkdcY8Rk5wrQn9qRtJpH4RTDdc10Ac+ferzs=
 github.com/ipfs-force-community/sophon-auth v1.12.0-rc1/go.mod h1:cGYCfjA/BDB/Km9P7Za6t1hmwpFlPKf8ho/CHmLG81Y=
-github.com/ipfs-force-community/sophon-auth v1.12.0 h1:nqjsA6bIv9Rd9+7lHxGDvNJ7gvt/M2yGSxymA6AoxXI=
 github.com/ipfs-force-community/sophon-gateway v1.12.0-rc2 h1:VtbOxpKTqhl7+WoTJ+BdJGKxczMSAjdNWYlQCNWoNns=
 github.com/ipfs-force-community/sophon-gateway v1.12.0-rc2/go.mod h1:F+f4qzx+uVMPftk/sv2JnNOFgxpl83l5zrb9UFtzcCM=
 github.com/ipfs-force-community/sophon-gateway v1.12.0 h1:5bT5Kh4Os8TQ9VFxR2fVAVUs2clcyq+ADCLcxe3bZF8=
 github.com/ipfs-force-community/sophon-gateway v1.12.0/go.mod h1:BEyAgworAAv1JVNKI1BA9NCcAy0OA1GrvxrtcBmn1sw=
-github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183 h1:kzF0IceJswwz5wGDRGgbt2hiNrZsEOurw/F1/67Nu/I=
-github.com/ipfs-force-community/sophon-messager v1.12.0 h1:bkNERt31g4Ff8Kaiuof2txkFJ3aNw/vFwxdHGIAbPXQ=
-github.com/ipfs-force-community/sophon-miner v1.12.0 h1:qTbaGu42yIflP6Z4XtWRLF1Xl7jQstrDWVRGFrOuovI=
-github.com/ipfs-force-community/venus-common-utils v0.0.0-20220217030526-e5e4c6bc14f7 h1:v/1/INcqm3kHLauWQYB63MwWJRWGz+3WEuUPp0jzIl8=
 github.com/ipfs-force-community/venus-gateway v1.11.0 h1:wcnmOtaYC39lz4Q02mDioFmWV9K2k8wRgNx7trIcHTY=
 github.com/ipfs/go-bitfield v1.1.0/go.mod h1:paqf1wjq/D2BBmzfTVFlJQ9IlFOZpg422HL0HqsGWHU=
 github.com/ipfs/go-bitswap v0.10.2/go.mod h1:+fZEvycxviZ7c+5KlKwTzLm0M28g2ukCPqiuLfJk4KA=
@@ -228,10 +222,9 @@ github.com/onsi/ginkgo/v2 v2.4.0/go.mod h1:iHkDK1fKGcBoEHT5W7YBq4RFWaQulw+caOMkA
 github.com/onsi/gomega v1.17.0/go.mod h1:HnhC7FXeEQY45zxNK3PPoIUhzk/80Xly9PcubAlGdZY=
 github.com/opencontainers/go-digest v1.0.0-rc1 h1:WzifXhOVOEOuFYOJAW6aQqW0TooG2iki3E3Ii+WN7gQ=
 github.com/pbnjay/memory v0.0.0-20210728143218-7b4eea64cf58 h1:onHthvaw9LFnH4t2DcNVpwGmV9E1BkGknEliJkfwQj0=
-github.com/pelletier/go-toml/v2 v2.0.1/go.mod h1:r9LEWfGN8R5k0VXJ+0BkIe7MYkRdwZOjgMj2KwnJFUo=
 github.com/pelletier/go-toml/v2 v2.0.5/go.mod h1:OMHamSCAODeSsVrwwvcJOaoN0LIUIaFVNZzmWyNfXas=
 github.com/pelletier/go-toml/v2 v2.0.6/go.mod h1:eumQOmlWiOPt5WriQQqoM5y18pDHwha2N+QD+EUNTek=
-github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e/go.mod h1:pJLUxLENpZxwdsKMEsNbx1VGcRFpLqf3715MtcvvzbA=
+github.com/pierrec/lz4 v2.0.5+incompatible h1:2xWsjqPFWcplujydGg4WmhC/6fZqK42wMM8aXeqhl0I=
 github.com/prometheus/client_golang v1.11.1/go.mod h1:Z6t4BnS23TR94PD6BsDNk8yVqroYurpAkEiz0P2BEV0=
 github.com/rivo/uniseg v0.1.0/go.mod h1:J6wj4VEh+S6ZtnVlnTBMWIodfgj8LQOQFoIToxlJtxc=
 github.com/robfig/cron v1.0.0 h1:slmQxIUH6U9ruw4XoJ7C2pyyx4yYeiHx8S9pNootHsM=
@@ -317,7 +310,6 @@ golang.org/x/sync v0.0.0-20220907140024-f12130a52804/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sys v0.0.0-20200814200057-3d37ad5750ed/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
 golang.org/x/sys v0.0.0-20210603125802-9665404d3644/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210616094352-59db8d763f22/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.0.0-20210806184541-e5e7981a1069/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210823070655-63515b42dcdf/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210908233432-aa78b53d3365/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.0.0-20210927094055-39ccf1dd6fa6/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

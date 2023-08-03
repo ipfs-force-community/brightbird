@@ -7,7 +7,7 @@ import (
 	"io/fs"
 	"path/filepath"
 
-	"github.com/hunjixin/brightbird/env"
+	"github.com/ipfs-force-community/brightbird/env"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	yaml_k8s "k8s.io/apimachinery/pkg/util/yaml"
