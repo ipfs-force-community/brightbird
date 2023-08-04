@@ -30,7 +30,7 @@ type TestCaseParams struct {
 	Auth sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 
 	UserName string `json:"userName" jsonschema:"userName" title:"UserName" require:"true" description:"token user name"`
-	Perm     string `json:"perm" jsonschema:"perm" title:"Perm" require:"true" description:"custom string in JWT payload" enum:"read,write,sign,admin"`
+	Perm     string `json:"perm" jsonschema:"perm" title:"Perm" require:"true" description:"custom string in JWT payload enum:read,write,sign,admin"`
 	Extra    string `json:"extra" jsonschema:"extra" title:"Extra" description:"addition information"`
 }
 
