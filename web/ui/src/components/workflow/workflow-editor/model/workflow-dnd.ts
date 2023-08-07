@@ -8,6 +8,7 @@ import { CustomX6NodeProxy } from './data/custom-x6-node-proxy';
 import { NodeTypeEnum } from './data/enumeration';
 import { AsyncTask } from './data/node/async-task';
 import { uuid } from '@antv/x6/es/util/string/uuid';
+import { getPluginByName } from '@/api/plugin';
 
 const { icon: { width, height }, textMaxHeight } = NODE;
 
@@ -37,23 +38,36 @@ export class WorkflowDnd {
         // 开始拖拽时初始化的节点，直接使用，无需克隆
         return sourceNode;
       },
-      getDropNode: (draggingNode: Node) => {
+      getDropNode: (draggingNode: Node, options: Addon.Dnd.GetDropNodeOptions) => {
         const { width, height } = draggingNode.getSize();
         draggingNode.resize(width, height - textMaxHeight);
-
+      
         // 结束拖拽时，必须克隆拖动的节点，因为拖动的节点和目标节点不在一个画布
         const targetNode = draggingNode.clone();
         const proxy = new CustomX6NodeProxy(targetNode);
         const _data = proxy.getData();
         const data = _data as AsyncTask;
-        data.setInstanceName(data.name +'-'+ uuid().slice(0, 8));
-        proxy.setData(data);
-        // 保证不偏移
-        setTimeout(() => {
-          const { x, y } = targetNode.getPosition();
-          targetNode.setPosition(x, y - textMaxHeight / 2);
-        });
-        return targetNode;
+        data.setInstanceName(data.name + '-' + uuid().slice(0, 8));
+      
+        getPluginByName(data.name)
+          .then((pluginDetail) => {
+            if (pluginDetail.pluginDefs && pluginDetail.pluginDefs.length > 0) {
+              data.version = pluginDetail.pluginDefs[0].version;
+            }
+      
+            proxy.setData(data);
+      
+            // 保证不偏移
+            setTimeout(() => {
+              const { x, y } = targetNode.getPosition();
+              targetNode.setPosition(x, y - textMaxHeight / 2);
+            });
+          })
+          .catch((error) => {
+            // Handle error
+          });
+      
+        return targetNode as Node<Node.Properties>;
       },
       validateNode: async (droppingNode: Node) => {
         const { mousePosition } = this.draggingListener;
