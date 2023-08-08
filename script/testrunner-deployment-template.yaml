@@ -2,11 +2,11 @@ apiVersion: v1
 kind: Pod
 metadata:
   namespace: {{.NameSpace}}
-  name: test-runner-{{.TestId}}
+  name: test-runner-{{.TestID}}
   labels:
     app: venus-testrunner-pod
     apptype: testrunner
-    testid: {{.TestId}}
+    testid: {{.TestID}}
 spec:
   restartPolicy: OnFailure
   initContainers:

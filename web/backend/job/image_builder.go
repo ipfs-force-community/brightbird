@@ -212,7 +212,7 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 	//check if images exit
 	hasImage, err := worker.dockerOp.CheckImageExit(ctx, fmt.Sprintf("filvenus/%s", plugin.ImageTarget), version)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("check image %w", err)
 	}
 
 	if !hasImage {
@@ -350,7 +350,7 @@ func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
 
 	builder.repo, _, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("update submoudle fail %w", err)
 	}
 
 	return nil
@@ -371,7 +371,7 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		//use head directly
 		masterHead, err := repo.Head()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("use repo head %w", err)
 		}
 		return masterHead.Hash().String(), nil
 	}
@@ -386,7 +386,7 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 		//resolve branch or tag
 		remotes, err := repo.Remotes()
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("get repo remote %w", err)
 		}
 
 		//detect remote   default Origin
@@ -419,7 +419,7 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 
 	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
 	if err != nil {
-		return err
+		return fmt.Errorf("get comit %w", err)
 	}
 
 	err = workTree.Checkout(&git.CheckoutOptions{
@@ -428,49 +428,12 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		Force:  true,
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("repo checkout %w", err)
 	}
 
 	builder.repo, workTree, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
 		return err
-	}
-
-	submodules, err := workTree.Submodules()
-	if err != nil {
-		return err
-	}
-
-	ffiVersion := ""
-	for _, module := range submodules {
-		if strings.Contains(module.Config().Name, "filecoin-ffi") {
-			status, err := module.Status()
-			if err != nil {
-				return err
-			}
-			ffiVersion = status.Expected.String()
-			break
-		}
-	}
-
-	if len(ffiVersion) > 0 {
-		ffiPath, err := builder.ffi.DownloadFFI(ctx, ffiVersion)
-		if err != nil {
-			return err
-		}
-
-		//not working because bug https://github.com/moby/moby/issues/17175
-		err = uncompressFFI(ffiPath, builder.repoPath+"/extern/filecoin-ffi")
-		if err != nil {
-			return err
-		}
-
-		flagF, err := os.Create(builder.repoPath + "/extern/filecoin-ffi/.install-filcrypto")
-		if err != nil {
-			return err
-		}
-		_ = flagF.Close()
-		log.Infof("%s use ffi file cache", builder.repoPath)
 	}
 
 	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy, "PRIVATE_REGISTRY="+builder.privateRegistry)
