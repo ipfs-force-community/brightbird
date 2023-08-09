@@ -8,7 +8,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
-	damoclesmanager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-manager"
+	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
@@ -28,7 +28,7 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Manager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager"  jsonschema:"DamoclesManager"  title:"Damocles Manager" require:"true" description:"manager return"`
+	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	//todo support set owner/worker/controller
 	WalletAddr address.Address `json:"walletAddr" jsonschema:"walletAddr" title:"Wallet Address" require:"true" description:"owner/worker address must be f3 address"`
 }
@@ -61,13 +61,12 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 }
 
 func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, walletAddr address.Address) (address.Address, error) {
-	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.Manager.InstanceName)
+	sophonMessagerPods, err := sophonmessager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
 	if err != nil {
 		return address.Undef, err
 	}
 	cmd := []string{
-		"./damocles-manager",
-		"util",
+		"./sophon-messager",
 		"miner",
 		"create",
 		"--sector-size=8MiB",
@@ -75,7 +74,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 	}
 	cmd = append(cmd, "--from="+walletAddr.String())
 
-	minerAddrStr, err := k8sEnv.ExecRemoteCmd(ctx, damoclesPods[0].GetName(), cmd...)
+	minerAddrStr, err := k8sEnv.ExecRemoteCmd(ctx, sophonMessagerPods[0].GetName(), cmd...)
 	if err != nil {
 		return address.Undef, fmt.Errorf("exec remote cmd failed: %w", err)
 	}
@@ -84,18 +83,17 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 }
 
 func GetMinerInfo(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, minerAddr address.Address) (string, error) {
-	damoclesPods, err := damoclesmanager.GetPods(ctx, k8sEnv, params.Manager.InstanceName)
+	sophonMessagerPods, err := sophonmessager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
 	if err != nil {
 		return "", err
 	}
 	getMinerCmd := []string{
-		"./damocles-manager",
-		"util",
+		"./sophon-messager",
 		"miner",
 		"info",
 		minerAddr.String(),
 	}
-	minerInfo, err := k8sEnv.ExecRemoteCmd(ctx, damoclesPods[0].GetName(), getMinerCmd...)
+	minerInfo, err := k8sEnv.ExecRemoteCmd(ctx, sophonMessagerPods[0].GetName(), getMinerCmd...)
 	if err != nil {
 		return "", fmt.Errorf("exec remote cmd failed: %w", err)
 	}
