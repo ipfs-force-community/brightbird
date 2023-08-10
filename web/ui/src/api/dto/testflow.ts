@@ -212,6 +212,7 @@ export interface PluginDetail {
   createTime: number;
   modifiedTime: number;
   icon: string;
+  isDeleting: boolean;
 }
 
 /**

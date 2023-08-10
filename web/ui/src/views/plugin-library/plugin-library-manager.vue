@@ -41,7 +41,11 @@
           </router-link>
 
           <div class="item-pos">
-            <el-button type="danger" :icon="Delete" @click="handleDelete(i.id)"
+            <el-button 
+              type="danger" 
+              :icon="Delete" 
+              :loading="i.isDeleting"
+              @click="handleDelete(i)"
               class="small-delete-button"></el-button>
           </div>
         </div>
@@ -67,8 +71,12 @@
           </div>
           </router-link>
           <div class="item-pos">
-            <el-button type="danger" :icon="Delete" @click="handleDelete(i.id)"
-              class="small-delete-button"></el-button>
+            <el-button 
+              type="danger" 
+              :icon="Delete" 
+              :loading="i.isDeleting"
+              @click="handleDelete(i)"
+            class="small-delete-button"></el-button>
           </div>
         </div>
       </div>
@@ -85,7 +93,7 @@ import {
 } from 'vue';
 import { INode } from '@/model/modules/plugin-library';
 import { Mutable } from '@/utils/lib';
-import { fetchDeployPlugins, fetchExecPlugins, uploadPlugin } from '@/api/plugin';
+import { fetchDeployPlugins, fetchExecPlugins, uploadPlugin, deletePluginAllVersion } from '@/api/plugin';
 import { PluginDetail } from '@/api/dto/testflow.js';
 import { ElButton, ElUpload } from 'element-plus';
 import JmEmpty from '@/components/data/empty/index.vue';
@@ -93,6 +101,7 @@ import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ElMessageBox } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import { downloadPublicZip } from '@/api/plugin';
+import { PluginTypeEnum } from '@/api/dto/enumeration';
 
 import {
   onBeforeRouteUpdate,
@@ -147,6 +156,27 @@ export default defineComponent({
       }
     };
 
+    const handleDelete = async (plugin: PluginDetail) => {
+      try {
+        plugin.isDeleting = true;
+
+        await deletePluginAllVersion(plugin.id);
+
+        if (plugin.pluginType === PluginTypeEnum.Deploy) {
+          deployPlugins.value.list = deployPlugins.value.list.filter(item => item.id !== plugin.id);
+          deployPlugins.value.total = deployPlugins.value.list.length;
+        } else if (plugin.pluginType === PluginTypeEnum.Exec) {
+          execPlugins.value.list = execPlugins.value.list.filter(item => item.id !== plugin.id);
+          execPlugins.value.total = execPlugins.value.list.length;
+        }
+
+      } catch (error) {
+        console.error('delete plugin failed:', error);
+      } finally {
+        plugin.isDeleting = false;
+      }
+    };
+
     return {
       Delete,
       childRoute,
@@ -154,11 +184,9 @@ export default defineComponent({
       deployPlugins,
       execPlugins,
       fileList,
+      handleDelete,
       handleChange: (fileArray: File) => {
         fileList.value.push(fileArray);
-      },
-      handleDelete: (pluginId: number) => {
-
       },
       submitUpload: async () => {
         try {

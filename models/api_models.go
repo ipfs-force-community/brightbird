@@ -210,9 +210,9 @@ type ChangeGroupRequest struct {
 	Body ChangeTestflowGroupRequest
 }
 
-// DeletePluginReq
-// swagger:parameters deletePluginReq
-type DeletePluginReq struct {
+// DeletePluginByVersionReq
+// swagger:parameters deletePluginByVersionReq
+type DeletePluginByVersionReq struct {
 	// id of plugin
 	//
 	// required: true
@@ -221,6 +221,15 @@ type DeletePluginReq struct {
 	//
 	// required: true
 	Version string `form:"version" json:"version" binding:"required"`
+}
+
+// DeletePluginReq
+// swagger:parameters deletePluginReq
+type DeletePluginReq struct {
+	// id of plugin
+	//
+	// required: true
+	ID string `form:"id" json:"id" binding:"required"`
 }
 
 // PodLogReq

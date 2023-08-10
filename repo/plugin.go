@@ -111,6 +111,7 @@ type IPluginService interface {
 	AddLabel(context.Context, string, string) error
 	DeleteLabel(context.Context, string, string) error
 	DeletePluginByVersion(context.Context, *DeletePluginParams) error
+	DeletePlugin(context.Context, primitive.ObjectID) error
 	GetPluginDetail(context.Context, *GetPluginParams) (*models.PluginDetail, error)
 	ListPlugin(context.Context, *ListPluginParams) ([]*models.PluginDetail, error)
 	GetPlugin(context.Context, string, string) (*models.PluginDef, error)
@@ -216,6 +217,15 @@ func (p *PluginSvc) DeletePluginByVersion(ctx context.Context, params *DeletePlu
 		if err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (p *PluginSvc) DeletePlugin(ctx context.Context, id primitive.ObjectID) error {
+	_, err := p.pluginCol.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return err
 	}
 
 	return nil

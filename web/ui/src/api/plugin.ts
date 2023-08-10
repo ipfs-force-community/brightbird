@@ -86,6 +86,16 @@ export function deletePlugin(id: string, version: string): Promise<void> {
 }
 
 /**
+ * 删除插件的全部版本
+ */
+export function deletePluginAllVersion(id: string): Promise<void> {
+  return restProxy<void>({
+    url: `${baseUrl.plugin}/all?id=${id}`,
+    method: 'delete',
+  });
+}
+
+/**
  * add labels
  */
 export function addPluginLabel(req: AddLabelReq): Promise<void> {

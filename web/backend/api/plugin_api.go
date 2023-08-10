@@ -226,7 +226,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//       200:
 	//		 503: apiError
 	group.DELETE("", func(c *gin.Context) {
-		req := &models.DeletePluginReq{}
+		req := &models.DeletePluginByVersionReq{}
 		err := c.ShouldBind(&req)
 		if err != nil {
 			c.Error(err) //nolint
@@ -262,10 +262,66 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			return
 		}
 
-		err = os.Remove(plugin.Path)
+		err = os.Remove(path.Join(string(pluginStore), plugin.Path))
 		if err != nil {
 			c.Error(err) //nolint
 			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
+	// swagger:route DELETE /plugin/all plugin deletePluginReq
+	//
+	// Delete plugin all version 
+	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Responses:
+	//       200:
+	//		 503: apiError
+	group.DELETE("all", func(c *gin.Context) {
+		req := &models.DeletePluginReq{}
+		err := c.ShouldBind(&req)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		pluginDetail, err := service.GetPluginDetail(ctx, &repo.GetPluginParams{
+			ID: &req.ID,
+		})
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+
+		pluginId, err := primitive.ObjectIDFromHex(req.ID)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		err = service.DeletePlugin(c, pluginId)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		for _, plugin := range pluginDetail.PluginDefs {
+			err = os.Remove(path.Join(string(pluginStore), plugin.Path))
+			if err != nil {
+				c.Error(err) //nolint
+				return
+			}
 		}
 
 		c.Status(http.StatusOK)
