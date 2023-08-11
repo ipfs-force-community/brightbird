@@ -121,19 +121,11 @@ export function delPluginLabel(req: DeleteLabelReq): Promise<void> {
 /**
  * 上传插件
  */
-export function uploadPlugin(files: File[]): Promise<void> {
-  const formData = new FormData();
-  for (let i = 0; i < files.length; i++) {
-    formData.append('plugins', files[i]);
-  }
-  
+export function uploadPlugin(formData: object): Promise<void> {
   return restProxy({
     url: `${baseUrl.plugin}/upload`,
     method: 'post',
     payload: formData,
-    headers: {
-      'Content-Type': 'multipart/form-data',
-    },
   });
 }
 

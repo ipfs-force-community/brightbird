@@ -118,7 +118,7 @@ export default defineComponent({
     const deployPlugins = ref<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
     const execPlugins = ref<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
 
-    const fileList = ref<File[]>([]);
+    const fileList: Ref<File[]> = ref([]);
 
     fetchDeployPlugins()
     .then(res => {
@@ -156,6 +156,11 @@ export default defineComponent({
       }
     };
 
+    const handleChange = (event: File[]) => {
+      fileList.value = fileList.value.concat(event);
+    };
+
+
     const handleDelete = async (plugin: PluginDetail) => {
       try {
         plugin.isDeleting = true;
@@ -177,6 +182,35 @@ export default defineComponent({
       }
     };
 
+    const submitUpload = async () => {
+      try {
+        if (fileList.value.length > 0) {
+          const formData = new FormData(); // 创建新的FormData对象
+
+          fileList.value.forEach((file, index) => {
+            formData.append('file', file); // 将每个文件添加到FormData对象中
+          });
+
+          await uploadPlugin(formData);
+
+          ElMessageBox.alert('上传成功', '提示', {
+            confirmButtonText: '确定',
+            type: 'success',
+          });
+        } else {
+          ElMessageBox.alert('文件列表为空，请先选择文件', '提示', {
+            confirmButtonText: '确定',
+            type: 'warning',
+          });
+        }
+      } catch (error) {
+        ElMessageBox.alert(`上传失败: ${error}`, '错误', {
+          confirmButtonText: '确定',
+          type: 'error',
+        });
+      }
+    };
+
     return {
       Delete,
       childRoute,
@@ -185,30 +219,8 @@ export default defineComponent({
       execPlugins,
       fileList,
       handleDelete,
-      handleChange: (fileArray: File) => {
-        fileList.value.push(fileArray);
-      },
-      submitUpload: async () => {
-        try {
-          if (fileList.value && fileList.value.length > 0) {
-            await uploadPlugin(fileList.value);
-            ElMessageBox.alert('上传成功', '提示', {
-              confirmButtonText: '确定',
-              type: 'success',
-            });
-          } else {
-            ElMessageBox.alert('文件列表为空，请先选择文件', '提示', {
-              confirmButtonText: '确定',
-              type: 'warning',
-            });
-          }
-        } catch (error) {
-          ElMessageBox.alert(`上传失败: ${error}`, '错误', {
-            confirmButtonText: '确定',
-            type: 'error',
-          });
-        }
-      },
+      handleChange,
+      submitUpload,
       downloadZip,
     };
   },
