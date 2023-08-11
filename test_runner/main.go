@@ -35,6 +35,7 @@ const RunnerEnd = "RUNNEREND"
 var log = logging.Logger("main")
 
 func main() {
+	time.Sleep(5*time.Second)
 	app := &cli.App{
 		Name:    "test runner",
 		Usage:   "Tools for running tests",
