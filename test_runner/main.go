@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	"github.com/ipfs-force-community/brightbird/models"
@@ -35,7 +36,7 @@ const RunnerEnd = "RUNNEREND"
 var log = logging.Logger("main")
 
 func main() {
-	time.Sleep(5*time.Second)
+	time.Sleep(15 * time.Second)
 	app := &cli.App{
 		Name:    "test runner",
 		Usage:   "Tools for running tests",
@@ -235,7 +236,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic when run testrunner %v", r)
+			err = fmt.Errorf("panic when run testrunner reason %v stack %s", r, string(debug.Stack()))
 		}
 		if err != nil {
 			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())
