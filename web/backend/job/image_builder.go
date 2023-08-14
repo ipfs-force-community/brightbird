@@ -431,11 +431,6 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		return fmt.Errorf("repo checkout %w", err)
 	}
 
-	builder.repo, workTree, err = updateSubmoduleByCmd(ctx, builder.repoPath)
-	if err != nil {
-		return err
-	}
-
 	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy, "PRIVATE_REGISTRY="+builder.privateRegistry)
 	if err != nil {
 		fmt.Println(err.Error())
