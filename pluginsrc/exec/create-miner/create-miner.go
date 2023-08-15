@@ -1,17 +1,34 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
-	"math/rand"
+	"strconv"
 
+	abiPower "github.com/filecoin-project/go-state-types/builtin/v12/power"
+
+	"github.com/docker/go-units"
 	"github.com/filecoin-project/go-address"
+	vTypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
+
 	logging "github.com/ipfs/go-log/v2"
+
+	"github.com/filecoin-project/venus/venus-shared/actors"
+	"github.com/filecoin-project/venus/venus-shared/actors/builtin/miner"
+	"github.com/filecoin-project/venus/venus-shared/actors/builtin/power"
+	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
+
+	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
+
+	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/filecoin-project/venus/venus-shared/api/messager"
 )
 
 var log = logging.Logger("add-miner")
@@ -28,6 +45,8 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
+	Venus    venus.VenusDeployReturn             `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
+	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	//todo support set owner/worker/controller
 	WalletAddr address.Address `json:"walletAddr" jsonschema:"walletAddr" title:"Wallet Address" require:"true" description:"owner/worker address must be f3 address"`
@@ -46,13 +65,6 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return nil, err
 	}
 
-	minerInfo, err := GetMinerInfo(ctx, k8sEnv, params, minerAddr)
-	if err != nil {
-		fmt.Printf("get miner info failed: %v\n", err)
-		return nil, err
-	}
-	log.Debug("miner Info is %v", minerInfo)
-
 	return &CreateMinerReturn{
 		Miner:  minerAddr,
 		Owner:  params.WalletAddr,
@@ -61,42 +73,120 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 }
 
 func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, walletAddr address.Address) (address.Address, error) {
-	sophonMessagerPods, err := sophonmessager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
+	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
 		return address.Undef, err
 	}
-	cmd := []string{
-		"./sophon-messager",
-		"miner",
-		"create",
-		"--sector-size=8MiB",
-		"--exid=" + string(rune(rand.Intn(100000))),
-	}
-	cmd = append(cmd, "--from="+walletAddr.String())
+	defer closer()
 
-	minerAddrStr, err := k8sEnv.ExecRemoteCmd(ctx, sophonMessagerPods[0].GetName(), cmd...)
+	messagerRPC, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
-		return address.Undef, fmt.Errorf("exec remote cmd failed: %w", err)
+		return address.Undef, err
+	}
+	defer closer()
+
+	ts, err := chainRPC.ChainHead(ctx)
+	if err != nil {
+		return address.Undef, fmt.Errorf("get chain head: %w", err)
 	}
 
-	return address.NewFromBytes(minerAddrStr)
+	tsk := ts.Key()
+
+	nv, err := chainRPC.StateNetworkVersion(ctx, tsk)
+	if err != nil {
+		return address.Undef, fmt.Errorf("get network version: %w", err)
+	}
+
+	sizeStr := "8MiB"
+	ssize, err := units.RAMInBytes(sizeStr)
+	if err != nil {
+		return address.Undef, fmt.Errorf("failed to parse sector size: %w", err)
+	}
+
+	sealProof, err := miner.SealProofTypeFromSectorSize(abi.SectorSize(ssize), nv)
+	if err != nil {
+		return address.Undef, fmt.Errorf("invalid sector size %d: %w", ssize, err)
+	}
+
+	fromStr := walletAddr.String()
+	from, err := ShouldAddress(fromStr, true, false)
+	if err != nil {
+		return address.Undef, fmt.Errorf("parse from addr %s: %w", fromStr, err)
+	}
+
+	actor, err := chainRPC.StateLookupID(ctx, from, tsk)
+	if err != nil {
+		return address.Undef, fmt.Errorf("lookup actor address: %w", err)
+	}
+
+	mlog := log.With("size", sizeStr, "from", fromStr, "actor", actor.String())
+	mlog.Info("constructing message")
+
+	owner := actor
+
+	worker := owner
+
+	var pid abi.PeerID
+	var multiaddrs []abi.Multiaddrs
+	postProof, err := sealProof.RegisteredWindowPoStProofByNetworkVersion(nv)
+	if err != nil {
+		return address.Undef, fmt.Errorf("invalid seal proof type %d: %w", sealProof, err)
+	}
+
+	serializeParams, err := actors.SerializeParams(&abiPower.CreateMinerParams{
+		Owner:               owner,
+		Worker:              worker,
+		WindowPoStProofType: postProof,
+		Peer:                pid,
+		Multiaddrs:          multiaddrs,
+	})
+
+	if err != nil {
+		return address.Undef, fmt.Errorf("serialize params: %w", err)
+	}
+
+	messagerId, err := messagerRPC.PushMessage(ctx, &vTypes.Message{
+		To:     power.Address,
+		From:   from,
+		Method: power.Methods.CreateMiner,
+		Params: serializeParams,
+	}, nil)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	result, err := messagerRPC.WaitMessage(ctx, messagerId, 5)
+	if err != nil {
+		return address.Undef, err
+	}
+
+	if result.Receipt.ExitCode != 0 {
+		return address.Undef, fmt.Errorf("message fail %d", result.Receipt.ExitCode)
+	}
+
+	r := &abiPower.CreateMinerReturn{}
+	err = r.UnmarshalCBOR(bytes.NewReader(result.Receipt.Return))
+	if err != nil {
+		return address.Undef, err
+	}
+
+	return r.IDAddress, nil
+
 }
 
-func GetMinerInfo(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams, minerAddr address.Address) (string, error) {
-	sophonMessagerPods, err := sophonmessager.GetPods(ctx, k8sEnv, params.Messager.InstanceName)
-	if err != nil {
-		return "", err
-	}
-	getMinerCmd := []string{
-		"./sophon-messager",
-		"miner",
-		"info",
-		minerAddr.String(),
-	}
-	minerInfo, err := k8sEnv.ExecRemoteCmd(ctx, sophonMessagerPods[0].GetName(), getMinerCmd...)
-	if err != nil {
-		return "", fmt.Errorf("exec remote cmd failed: %w", err)
+var ErrEmptyAddressString = fmt.Errorf("empty address string")
+
+func ShouldAddress(s string, checkEmpty bool, allowActor bool) (address.Address, error) {
+	if checkEmpty && s == "" {
+		return address.Undef, ErrEmptyAddressString
 	}
 
-	return string(minerInfo), nil
+	if allowActor {
+		id, err := strconv.ParseUint(s, 10, 64)
+		if err == nil {
+			return address.NewIDAddress(id)
+		}
+	}
+
+	return address.NewFromString(s)
 }

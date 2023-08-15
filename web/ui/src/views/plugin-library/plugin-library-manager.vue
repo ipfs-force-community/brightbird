@@ -11,12 +11,17 @@
       </div>
 
       <div class="upload">
-        <el-upload ref="unloadRef" :auto-upload="false" multiple @change="handleChange($event)">
+        <el-upload v-model:file-list="fileList" ref="unloadRef" :auto-upload="false" multiple>
           <template #trigger>
             <el-button type="primary" style="margin-right: 10px; box-shadow: none;">选择文件</el-button>
           </template>
-          <el-button style="margin-right: 10px; margin-left: 10px;" type="success" @click="submitUpload()">上传</el-button>
-        </el-upload>
+          <el-button 
+            style="margin-right: 10px; 
+            margin-left: 10px;" 
+            type="success" 
+            :loading="uploading"
+            @click="submitUpload()">上传</el-button>
+          </el-upload>
         <el-button style="margin-left: 10px;" @click="downloadZip">下载模版文件</el-button>
       </div>
 
@@ -102,6 +107,7 @@ import { ElMessageBox } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import { downloadPublicZip } from '@/api/plugin';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
+import type { UploadProps, UploadUserFile } from 'element-plus'
 
 import {
   onBeforeRouteUpdate,
@@ -118,7 +124,9 @@ export default defineComponent({
     const deployPlugins = ref<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
     const execPlugins = ref<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
 
-    const fileList: Ref<File[]> = ref([]);
+    const fileList: Ref<UploadUserFile[]> = ref([]);
+
+    const uploading = ref(false); 
 
     fetchDeployPlugins()
     .then(res => {
@@ -156,10 +164,6 @@ export default defineComponent({
       }
     };
 
-    const handleChange = (event: File[]) => {
-      fileList.value = fileList.value.concat(event);
-    };
-
 
     const handleDelete = async (plugin: PluginDetail) => {
       try {
@@ -184,14 +188,28 @@ export default defineComponent({
 
     const submitUpload = async () => {
       try {
+        uploading.value = true;
         if (fileList.value.length > 0) {
           const formData = new FormData(); // 创建新的FormData对象
 
           fileList.value.forEach((file, index) => {
-            formData.append('file', file); // 将每个文件添加到FormData对象中
+            formData.append('plugins', file.raw); // 将每个文件添加到FormData对象中
           });
 
           await uploadPlugin(formData);
+          
+          // 获取最新数据
+          fetchExecPlugins()
+            .then(res => {
+              execPlugins.value.list = res;
+              execPlugins.value.total = res.length;
+            });
+
+          fetchDeployPlugins()  
+            .then(res => {
+              deployPlugins.value.list = res;
+              deployPlugins.value.total = res.length;  
+            });
 
           ElMessageBox.alert('上传成功', '提示', {
             confirmButtonText: '确定',
@@ -208,6 +226,8 @@ export default defineComponent({
           confirmButtonText: '确定',
           type: 'error',
         });
+      } finally {
+        uploading.value = false;
       }
     };
 
@@ -218,8 +238,8 @@ export default defineComponent({
       deployPlugins,
       execPlugins,
       fileList,
+      uploading,
       handleDelete,
-      handleChange,
       submitUpload,
       downloadZip,
     };

@@ -26,6 +26,17 @@ var Info = types.PluginInfo{
 	Description: "{{plugin_description}}", // 替换为您的插件描述
 }
 
+// RenderParams 定义了渲染参数结构体
+type RenderParams struct {
+	Config
+
+	NameSpace       string
+	PrivateRegistry string
+	Args            []string
+
+	UniqueId string
+}
+
 // 在执行时需要使用的插件参数
 type TestCaseParams struct {
 	// 定义需要使用的插件参数
