@@ -2,7 +2,6 @@ import { AddLabelReq, DeleteLabelReq, PluginDef, PluginDetail } from '@/api/dto/
 import { restProxy } from '@/api/index';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { baseUrl } from '@/api/view-no-auth';
-import { da } from 'element-plus/es/locale';
 
 
 /**
@@ -126,6 +125,8 @@ export function uploadPlugin(formData: object): Promise<void> {
     url: `${baseUrl.plugin}/upload`,
     method: 'post',
     payload: formData,
+    payloadType:"file",
+    timeout: 100 * 1000,
   });
 }
 
