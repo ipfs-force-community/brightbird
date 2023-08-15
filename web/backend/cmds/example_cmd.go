@@ -10,7 +10,7 @@ import (
 
 var ExampleCmd = &cli.Command{
 	Name: "config",
-	Action: func(_ *cli.Context) error {
+	Action: func(cliCtx *cli.Context) error {
 		cfg := config.Config{}
 		data, err := toml.Marshal(cfg)
 		if err != nil {

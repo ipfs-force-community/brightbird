@@ -40,6 +40,14 @@ func main() {
 		Name:    "backend",
 		Usage:   "test plateform backend",
 		Version: version.Version(),
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "listen",
+				EnvVars: []string{"BRIGHTBIRT_BACKEND_LISTEN"},
+				Usage:   "listen api address",
+				Value:   "127.0.0.1:12356",
+			},
+		},
 		Commands: []*cli.Command{
 			cmds.ExampleCmd,
 			cmds.ImportPluginsCmds,
