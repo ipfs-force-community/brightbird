@@ -3,7 +3,6 @@ import { restProxy } from '@/api/index';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { baseUrl } from '@/api/view-no-auth';
 
-
 /**
  * 获取exec插件
  */
