@@ -1,8 +1,6 @@
 package job
 
 import (
-	"archive/tar"
-	"compress/gzip"
 	"context"
 	"fmt"
 	"io"
@@ -72,50 +70,4 @@ func (downloader ffiDownloader) DownloadFFI(ctx context.Context, releaseTag stri
 		return "", err
 	}
 	return filePath, nil
-}
-
-func uncompressFFI(tarPath string, dst string) error {
-	gzipStream, err := os.Open(tarPath)
-	if err != nil {
-		return err
-	}
-
-	uncompressedStream, err := gzip.NewReader(gzipStream)
-	if err != nil {
-		return err
-	}
-
-	tarReader := tar.NewReader(uncompressedStream)
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		}
-
-		if err != nil {
-			return err
-		}
-
-		switch header.Typeflag {
-		case tar.TypeReg:
-			_, fileName := path.Split(header.Name)
-			dstPath := path.Join(dst, fileName)
-			outFile, err := os.Create(dstPath)
-			if err != nil {
-				return err
-			}
-
-			if _, err := io.Copy(outFile, tarReader); err != nil {
-				return err
-			}
-			err = outFile.Close()
-			if err != nil {
-				return err
-			}
-		default:
-			return fmt.Errorf("extractTarGz: uknown type: %d in %s", header.Typeflag, header.Name)
-		}
-
-	}
-	return nil
 }

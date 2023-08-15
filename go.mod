@@ -30,7 +30,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
-	github.com/ipfs-force-community/droplet/v2 v2.8.1
+	github.com/ipfs-force-community/droplet/v2 v2.8.0
 	github.com/ipfs-force-community/sophon-auth v1.12.0
 	github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183
 	github.com/ipfs-force-community/sophon-messager v1.12.0
