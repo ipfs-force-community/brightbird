@@ -256,18 +256,20 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 		}
 		return err
 	}
-	//insert a version
-	count, err := p.pluginCol.CountDocuments(ctx, bson.M{"name": pluginImport.Name, "plugins": bson.M{"$elemMatch": bson.M{
-		"version": pluginImport.Version,
-	}}})
+
+	rmUpdate := bson.M{
+		"$pull": bson.M{
+			"plugins": bson.M{
+				"version": bson.M{
+					"$eq": pluginImport.Version,
+				},
+			},
+		},
+	}
+
+	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": pluginImport.Name}, rmUpdate)
 	if err != nil {
 		return err
-	}
-	if count > 0 {
-		return fmt.Errorf("plugin %s version %s already exit, please remove first", pluginImport.Name, pluginImport.Version)
-	}
-	if pluginImport.PluginType != pluginDetail.PluginType {
-		return fmt.Errorf("plugin type change")
 	}
 
 	update := bson.M{
