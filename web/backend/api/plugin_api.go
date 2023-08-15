@@ -273,7 +273,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 	// swagger:route DELETE /plugin/all plugin deletePluginReq
 	//
-	// Delete plugin all version 
+	// Delete plugin all version
 	//
 	//     Consumes:
 	//
@@ -302,7 +302,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			c.Error(err) //nolint
 			return
 		}
-
 
 		pluginId, err := primitive.ObjectIDFromHex(req.ID)
 		if err != nil {

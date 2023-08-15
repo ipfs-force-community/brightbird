@@ -958,8 +958,8 @@ github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod
 github.com/influxdata/influxdb1-client v0.0.0-20200827194710-b269163b24ab/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 h1:W9WBk7wlPfJLvMCdtV4zPulc4uCPrlywQOmbFOhgQNU=
 github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839/go.mod h1:xaLFMmpvUxqXtVkUJfg9QmT88cDaCJ3ZKgdZ78oO8Qo=
-github.com/ipfs-force-community/droplet/v2 v2.8.1 h1:oifgMO2ngpJEakSj1AFG/PtUmNISutLqkb+1XcHHo/8=
-github.com/ipfs-force-community/droplet/v2 v2.8.1/go.mod h1:YSqn7MKph5WhnJ8kZHvWmweGQ+62KGoKEp38GYe6HBk=
+github.com/ipfs-force-community/droplet/v2 v2.8.0 h1:nNOW/2i7Lexrj2JPM5wcQT+d51awaWgO7sgy4887SMI=
+github.com/ipfs-force-community/droplet/v2 v2.8.0/go.mod h1:NHSdahERn63Hs33G+TL/ujeTnsbH6UDHBr08gaXmfoQ=
 github.com/ipfs-force-community/metrics v1.0.0/go.mod h1:mn40SioMuKtjmRumHFy/fJ26Pn028XuDjUJE9dorjyw=
 github.com/ipfs-force-community/metrics v1.0.1-0.20211022060227-11142a08b729/go.mod h1:mn40SioMuKtjmRumHFy/fJ26Pn028XuDjUJE9dorjyw=
 github.com/ipfs-force-community/metrics v1.0.1-0.20230208073319-4c0e29b038e1 h1:J7e+IZJIZ7uJuGmnusQa8bxxAjCuE/3lVhlbm/cDLV0=
