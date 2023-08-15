@@ -8,7 +8,7 @@ require (
 	github.com/docker/go-units v0.5.0
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-fil-markets v1.25.2
-	github.com/filecoin-project/go-state-types v0.11.1
+	github.com/filecoin-project/go-state-types v0.12.0
 	github.com/filecoin-project/venus v1.12.0
 	github.com/filecoin-project/venus-wallet v1.11.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
@@ -233,7 +233,7 @@ require (
 	github.com/mattn/go-pointer v0.0.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/miekg/dns v1.1.50 // indirect
-	github.com/minio/sha256-simd v1.0.0 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
