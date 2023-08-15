@@ -14,7 +14,7 @@ var ImportPluginsCmds = &cli.Command{
 	ArgsUsage: "<dir to plugins/file to directory>",
 	Flags:     []cli.Flag{},
 	Action: func(cliCtx *cli.Context) error {
-		api := DefaulAPI()
+		api := DefaulAPI(cliCtx)
 		path := cliCtx.Args().Get(0)
 		st, err := os.Stat(path)
 		if err != nil {

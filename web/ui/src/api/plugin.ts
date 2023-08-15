@@ -2,9 +2,6 @@ import { AddLabelReq, DeleteLabelReq, PluginDef, PluginDetail } from '@/api/dto/
 import { restProxy } from '@/api/index';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { baseUrl } from '@/api/view-no-auth';
-import { da } from 'element-plus/es/locale';
-import { NIL } from 'uuid';
-
 
 /**
  * 获取exec插件
