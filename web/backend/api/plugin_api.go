@@ -498,8 +498,8 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 	//     Responses:
 	//		 500: apiError
 	group.GET("/download", func(c *gin.Context) {
-		targetPath := "/root/brightbird/web/ui/public" // 需要打包的目标文件夹路径
-		zipPath := "public.zip"                        // 打包后的 zip 文件名
+		targetPath := "web/ui/public" // 需要打包的目标文件夹路径
+		zipPath := "web/ui/public/public.zip"  // 打包后的 zip 文件名
 
 		// Check if the zip file already exists
 		if _, err := os.Stat(zipPath); err == nil {

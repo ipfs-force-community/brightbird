@@ -125,6 +125,8 @@ export default defineComponent({
     const execPlugins = ref<Mutable<INode<PluginDetail>>>({ total: 0, list: [] });
 
     const fileList: Ref<UploadUserFile[]> = ref([]);
+    const downloadUrl = `/public.zip`;
+
 
     const uploading = ref(false); 
 
@@ -162,6 +164,7 @@ export default defineComponent({
       } catch(error) {
         console.error('Failed to download zip file:', error);
       }
+      window.location.href = downloadUrl;
     };
 
 
