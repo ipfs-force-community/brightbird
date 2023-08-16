@@ -125,7 +125,7 @@ export function uploadPlugin(formData: object): Promise<void> {
     method: 'post',
     payload: formData,
     payloadType:"file",
-    timeout: 100 * 1000,
+    timeout: 200 * 1000,
   });
 }
 
