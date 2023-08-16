@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.sophon-miner\" ]||(mkdir -p /root/.sophon-miner && cp /root/config.tmp /root/.sophon-miner/config.toml);"]
           volumeMounts:
             - mountPath: /root
@@ -25,7 +25,7 @@ spec:
               subPath: "config.toml"
       containers:
         - name: sophon-miner-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-miner:{{.CodeVersion}}"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-miner:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 12308

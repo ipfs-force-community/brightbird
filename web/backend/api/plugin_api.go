@@ -455,12 +455,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				return
 			}
 
-			_, err = service.GetPlugin(c, pluginInfo.Name, pluginInfo.Version)
-			if err == nil {
-				c.Error(fmt.Errorf("plugin %s(%s) already exit", pluginInfo.Name, pluginInfo.Version)) //nolint
-				return
-			}
-
 			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
 				c.Error(err) //nolint
 				return

@@ -36,10 +36,10 @@ type DropletClientDeployReturn struct { //nolint
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
-	UniqueId        string
+	NameSpace string
+	Registry  string
+	Args      []string
+	UniqueId  string
 }
 
 func DefaultConfig() Config {
@@ -51,8 +51,11 @@ var PluginInfo = types2.PluginInfo{
 	Version:     version.Version(),
 	PluginType:  types2.Deploy,
 	Description: "",
-	Repo:        "https://github.com/ipfs-force-community/droplet.git",
-	ImageTarget: "droplet-client",
+	DeployPluginParams: types2.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/droplet.git",
+		ImageTarget: "droplet-client",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 }
 
 //go:embed  droplet-client
@@ -60,11 +63,11 @@ var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletClientDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		Args:            nil,
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
-		Config:          cfg,
+		NameSpace: k8sEnv.NameSpace(),
+		Registry:  k8sEnv.Registry(),
+		Args:      nil,
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:    cfg,
 	}
 	//create configmap
 	configMapCfg, err := f.Open("droplet-client/droplet-client-configmap.yaml")

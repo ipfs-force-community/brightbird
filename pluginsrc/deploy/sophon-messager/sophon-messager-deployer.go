@@ -40,18 +40,21 @@ type SophonMessagerReturn struct { //nolint
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
-	UniqueId        string
+	NameSpace string
+	Registry  string
+	Args      []string
+	UniqueId  string
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        "sophon-messager",
-	Version:     version.Version(),
-	PluginType:  types.Deploy,
-	Repo:        "https://github.com/ipfs-force-community/sophon-messager.git",
-	ImageTarget: "sophon-messager",
+	Name:       "sophon-messager",
+	Version:    version.Version(),
+	PluginType: types.Deploy,
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/sophon-messager.git",
+		ImageTarget: "sophon-messager",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 	Description: "",
 }
 
@@ -61,10 +64,10 @@ var f embed.FS
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonMessagerReturn, error) {
 	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-messager-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
-		Config:          cfg,
+		NameSpace: k8sEnv.NameSpace(),
+		Registry:  k8sEnv.Registry(),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:    cfg,
 	}
 
 	//create database

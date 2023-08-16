@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.damocles-worker\" ]||(mkdir -p /root/.damocles-worker && cp /root/config.tmp /root/.damocles-worker/damocles-worker.toml);"]
           volumeMounts:
             - mountPath: /root
@@ -28,7 +28,7 @@ spec:
               subPath: {{.NameSpace}}
       containers:
         - name: damocles-worker-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/damocles-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
           args: ["run"]
           ports:
             - containerPort: 1789

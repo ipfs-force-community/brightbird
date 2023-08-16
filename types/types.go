@@ -5,24 +5,12 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"reflect"
 	"syscall"
 )
-
-var ErrT = reflect.TypeOf((*error)(nil)).Elem()
-var CtxT = reflect.TypeOf((*context.Context)(nil)).Elem()
-var NilVal = reflect.ValueOf(nil)
-var NilError = reflect.Zero(reflect.TypeOf((*error)(nil)).Elem())
 
 type TestId string
 type PrivateRegistry string
 type PluginStore string
-
-type BootstrapPeers []string
-
-func PtrString(str string) *string {
-	return &str
-}
 
 func GetString(str *string) string {
 	if str == nil {

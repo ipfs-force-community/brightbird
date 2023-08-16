@@ -84,7 +84,7 @@ func main() {
 				Usage: "test  to running",
 			},
 			&cli.StringFlag{
-				Name:  "privReg",
+				Name:  "registry",
 				Usage: "use private registry",
 			},
 			&cli.StringFlag{
@@ -151,8 +151,8 @@ func main() {
 				cfg.Mysql = c.String("mysql")
 			}
 
-			if c.IsSet("privReg") {
-				cfg.PrivateRegistry = c.String("privReg")
+			if c.IsSet("registry") {
+				cfg.Registry = c.String("registry")
 			}
 
 			if c.IsSet("bootPeer") {
@@ -279,7 +279,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 			return &env.K8sInitParams{
 				Namespace:         cfg.NameSpace,
 				TestID:            string(task.TestId),
-				PrivateRegistry:   cfg.PrivateRegistry,
+				Registry:          cfg.Registry,
 				MysqlConnTemplate: cfg.Mysql,
 				TmpPath:           cfg.TmpPath,
 			}

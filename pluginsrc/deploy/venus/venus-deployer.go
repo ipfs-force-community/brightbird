@@ -30,9 +30,9 @@ type VConfig struct {
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
+	NameSpace string
+	Registry  string
+	Args      []string
 
 	UniqueId string
 }
@@ -42,21 +42,15 @@ type VenusDeployReturn struct { //nolint
 	env.CommonDeployParams
 }
 
-func DefaultConfig() Config {
-	return Config{
-		VConfig: VConfig{
-			Replicas: 1,
-			NetType:  "force",
-		},
-	}
-}
-
 var PluginInfo = types.PluginInfo{
-	Name:        "venus-daemon",
-	Version:     version.Version(),
-	PluginType:  types.Deploy,
-	Repo:        "https://github.com/filecoin-project/venus.git",
-	ImageTarget: "venus",
+	Name:       "venus-daemon",
+	Version:    version.Version(),
+	PluginType: types.Deploy,
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "https://github.com/filecoin-project/venus.git",
+		ImageTarget: "venus",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 	Description: "",
 }
 
@@ -65,11 +59,11 @@ var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineCfg Config) (*VenusDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName),
-		Args:            buildArgs(incomineCfg.BootstrapPeers, incomineCfg.NetType),
-		Config:          incomineCfg,
+		NameSpace: k8sEnv.NameSpace(),
+		Registry:  k8sEnv.Registry(),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName),
+		Args:      buildArgs(incomineCfg.BootstrapPeers, incomineCfg.NetType),
+		Config:    incomineCfg,
 	}
 
 	//create configmap

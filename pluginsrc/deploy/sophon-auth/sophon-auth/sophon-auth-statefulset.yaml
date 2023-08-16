@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.sophon-auth\" ]||(mkdir -p /root/.sophon-auth && cp /root/config.tmp /root/.sophon-auth/config.toml);"]
           volumeMounts:
             - mountPath: /root
@@ -25,7 +25,7 @@ spec:
               subPath: "config.toml"
       containers:
         - name: sophon-auth-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/sophon-auth:{{.CodeVersion}}"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-auth:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 8989

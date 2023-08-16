@@ -25,3 +25,33 @@ func Test_TransferToSSH(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "git@github.com:filecoin-project/venus-market.git", repoName)
 }
+
+func Test_execCmd(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		err := execCmd(".", "/bin/sh", "-c", "ls")
+		assert.Nil(t, err)
+	})
+	t.Run("fail", func(t *testing.T) {
+		err := execCmd(".", "/bin/sh", "-c", "gg")
+		assert.NotNil(t, err)
+	})
+
+	t.Run("multiple line", func(t *testing.T) {
+		sh := `
+ls
+echo "hel"
+`
+		err := execCmd(".", "/bin/sh", "-c", sh)
+		assert.Nil(t, err)
+	})
+
+	t.Run("multiple line fail", func(t *testing.T) {
+		sh := `
+ls
+echo "hel"
+exit(1)
+`
+		err := execCmd(".", "/bin/sh", "-c", sh)
+		assert.NotNil(t, err)
+	})
+}

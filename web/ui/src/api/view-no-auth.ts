@@ -1,10 +1,5 @@
 import { restProxy } from '@/api/index';
 import {
-  ITaskExecutionRecordVo,
-  ITaskParamVo,
-} from '@/api/dto/workflow-execution-record';
-import {
-  IProcessTemplateVo,
   ITestFlowDetail,
   IProjectQueryingDto,
   IChangeTestflowGroupDto,
@@ -95,18 +90,6 @@ export function changeTestflowGroup(dto: IChangeTestflowGroupDto): Promise<void>
   });
 }
 
-
-/**
- * 获取流程模版
- * @param dto
- */
-export function getProcessTemplate(dto: number): Promise<IProcessTemplateVo> {
-  return restProxy({
-    url: `${hubUrl}${baseHubUrl.processTemplate}/${dto}`,
-    method: 'get',
-  });
-}
-
 /**
  * 获取测试流详情
  * @param params
@@ -140,28 +123,6 @@ export async function saveTestFlow(dto: ITestFlowDetail): Promise<ITestFlowIdVo>
   return dto.id ? {
     id: dto.id,
   } : res;
-}
-
-/**
- * 获取任务实例列表
- * @param businessId
- */
-export function listTaskInstance(businessId: string): Promise<ITaskExecutionRecordVo[]> {
-  return restProxy<ITaskExecutionRecordVo[]>({
-    url: `${baseUrl.task}/${businessId}`,
-    method: 'get',
-  });
-}
-
-/**
- * 获取任务参数列表
- * @param taskId
- */
-export function listTaskParam(taskId: string): Promise<ITaskParamVo[]> {
-  return restProxy<ITaskParamVo[]>({
-    url: `${baseUrl.task}/${taskId}/parameters`,
-    method: 'get',
-  });
 }
 
 /**

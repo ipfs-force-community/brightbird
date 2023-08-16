@@ -32,18 +32,21 @@ type VenusWalletProDeployReturn struct { //nolint
 type RenderParams struct {
 	Config
 
-	PrivateRegistry string
-	Args            []string
+	Registry string
+	Args     []string
 
 	UniqueId string
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        "venus-wallet-pro",
-	Version:     version.Version(),
-	PluginType:  types.Deploy,
-	Repo:        "",
-	ImageTarget: "venus-wallet-pro",
+	Name:       "venus-wallet-pro",
+	Version:    version.Version(),
+	PluginType: types.Deploy,
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "",
+		ImageTarget: "venus-wallet-pro",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 	Description: "",
 }
 
@@ -52,9 +55,9 @@ var f embed.FS
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*VenusWalletProDeployReturn, error) {
 	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
-		Config:          cfg,
+		Registry: k8sEnv.Registry(),
+		UniqueId: env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:   cfg,
 	}
 	//create database
 	err := k8sEnv.ResourceMgr().EnsureDatabase(cfg.MysqlDSN)
