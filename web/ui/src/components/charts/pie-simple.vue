@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartContainer" style="width: 100%; height: 100%"></div>
+    <div ref="chartContainer" style="width: 100%; height: 100%; "></div>
   </template>
   
 <script lang="ts">
@@ -38,19 +38,21 @@ export default defineComponent({
       this.myChart = markRaw(echarts.init(chartContainer));
       const option = {
         title: {
-          text: '组件统计',
+          // text: '组件统计',
         },
         tooltip: {
           trigger: 'item',
         },
         legend: {
-          show: false,
+          show: true,
+          left: 'left',
+          orient: 'vertical',
         },
         series: [
           {
-            name: 'Access From',
             type: 'pie',
             radius: '50%',
+            bottom: -40,
             data: [
               { value: this.deployPlugin, name: '部署组件' },
               { value: this.execPlugin, name: '测试组件' },
@@ -64,7 +66,7 @@ export default defineComponent({
             },
             label: {
               show: true,
-              formatter: '{b}：{d}%', // 显示名称和占比
+              formatter: '{d}%', // 显示名称和占比
             },
           },
         ],

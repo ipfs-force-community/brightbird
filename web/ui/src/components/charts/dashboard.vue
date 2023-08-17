@@ -1,6 +1,6 @@
 <template>
     <div>
-        <el-row style="margin-top: 2vw;">
+        <el-row style="margin-top: 20px;">
             <el-col :span="1">
             </el-col>
             <el-col :span="3">
@@ -71,20 +71,20 @@
                     </el-col>
                 </el-row>
             </el-col>
-            <el-col :span="10" style="height: 6vw;">
+            <el-col :span="10" style="height: 200px;">
                 <BarChart v-if="isTodayPassRateReady" :job-names="todayPassRate.jobNames" :pass-rates="todayPassRate.passRates"/>
             </el-col>
         </el-row>
-        <el-row>
-            <el-col :span="14" style="height: 20vw;"> 
+        <el-row style="height: 250px;">
+            <el-col :span="14" style="height: ;"> 
                 <StackedAreaChart v-if="isTaskData2WeekReady && taskData2Week.dateArray" :testData="taskData2Week.testData" :dateArray="taskData2Week.dateArray"/>
             </el-col>
             <el-col :span="10">
                 <PieBorderRadius v-if="isFailureRatiobLast2WeekReady" :map="failureRatiobLast2Week?.failTask"/>
             </el-col>
         </el-row>
-        <el-row>
-            <el-col :span="8" style="height: 13vw;">
+        <el-row style="height: 200px;">
+            <el-col :span="8">
                 <LineGradient v-if="isTasktPassRateLast30DaysReady && tasktPassRateLast30Days.dateArray" :dateArray="tasktPassRateLast30Days.dateArray" 
                 :passRateArray="tasktPassRateLast30Days.passRateArray"/>
             </el-col>
@@ -131,6 +131,7 @@ export default defineComponent({
       passRate: '',
       total: 0,
     });
+
     const todayPassRate = ref<ITodayPassRateVo>({
       jobNames: [],
       passRates: [],
@@ -210,18 +211,18 @@ export default defineComponent({
   
   <style>
     .el-row {
-        margin-bottom: 100px;
+        margin-bottom: 40px;
     }
-    .el-row:last-child {
+    /* .el-row:last-child {
         margin-bottom: 0;
-    }
-    .el-col {
+    } */
+    /* .el-col {
         border-radius: 4px;
     }
     
     .grid-content {
         border-radius: 4px;
         min-height: px;
-    }
+    } */
   </style>
   

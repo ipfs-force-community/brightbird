@@ -1,5 +1,5 @@
 <template>
-    <div ref="chartContainer" style="width: 100%; height: 150%;"></div>
+    <div ref="chartContainer" style="width: 100%; height: 200px;"></div>
   </template>
   
 <script lang="ts">
@@ -38,6 +38,8 @@ export default defineComponent({
     renderChart() {
       const chartContainer = this.$refs.chartContainer as HTMLElement;
       this.myChart = markRaw(echarts.init(chartContainer));
+      const data = this.passRates;
+      
       const option = {
         // 将你提供的图表配置复制到这里
         title: {
@@ -56,24 +58,27 @@ export default defineComponent({
             show: true,
             formatter: '{value}%',
           },
+          max:100,
         },
         yAxis: {
           type: 'category',
           data: this.jobNames,
           axisLabel: {
-            show: true, // 显示y轴标签
+            show: true, 
           },
         },
         series: [
           {
             name: '',
             type: 'bar',
-            data: this.passRates,
+            data: data.reverse(),
             itemStyle: {
               // 设置柱子圆角
               barBorderRadius: [0, 10, 10, 0],
               color: 'rgb(64, 134, 255)',
+              
             },
+            barWidth:15,
             label: {
               show: true,
               position: 'outside',

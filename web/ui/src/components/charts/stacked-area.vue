@@ -78,11 +78,6 @@ export default defineComponent({
         legend: {
           show: false,
         },
-        toolbox: {
-          feature: {
-            saveAsImage: {},
-          },
-        },
         grid: {
           left: '3%',
           right: '4%',
@@ -93,7 +88,7 @@ export default defineComponent({
           {
             type: 'category',
             boundaryGap: false,
-            data: this.dateArray.length > 0 ? this.dateArray : [''], // 如果没有数据，就使用一个空字符串
+            data: this.dateArray.length > 0 ? this.dateArray : [''],
           },
         ],
         yAxis: [

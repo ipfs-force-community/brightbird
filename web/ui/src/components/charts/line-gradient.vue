@@ -47,6 +47,12 @@ export default defineComponent({
         yAxis: {
           type: 'value',
         },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true,
+        },
         series: [
           {
             data: this.passRateArray,

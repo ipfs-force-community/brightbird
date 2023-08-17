@@ -36,7 +36,6 @@ export default defineComponent({
       const option = {
         title: {
           text: '任务失败占比',
-          top: '30px',
           textStyle: {
             fontSize: 18,
             fontWeight: 'bold',
@@ -50,7 +49,6 @@ export default defineComponent({
         },
         series: [
           {
-            name: 'Access From',
             type: 'pie',
             radius: ['50%', '70%'],
             avoidLabelOverlap: false,
