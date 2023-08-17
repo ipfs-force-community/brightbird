@@ -3,10 +3,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, markRaw } from 'vue';
 import * as echarts from 'echarts';
-
 export default defineComponent({
+  data() {
+    return {
+      myChart:{} as echarts.ECharts,
+    };
+  },
   props: {
     testData: {
       type: Object as () => Map<string, number[]>,
@@ -21,83 +25,92 @@ export default defineComponent({
   },
   mounted() {
     this.renderChart();
+    window.addEventListener('resize', this.onResize);
+  },
+
+  beforeUnmount() {
+    window.removeEventListener('resize', this.onResize);
+
   },
   methods: {
+    onResize() {
+      this.myChart.resize();
+    },
     renderChart() {
       const chartContainer = this.$refs.chartContainer as HTMLElement;
-      const myChart = echarts.init(chartContainer);
-
+      this.myChart = markRaw(echarts.init(chartContainer));
       const seriesData = Object.entries(this.testData).map(([name, data]) => ({
         name,
         type: 'line',
         stack: 'Total',
         areaStyle: {
-          color: this.getRandomColor()
+          color: this.getRandomColor(),
         },
         emphasis: {
-          focus: 'series'
+          focus: 'series',
         },
         smooth: true,
         lineStyle: {
-          color: this.getRandomColor()
+          color: this.getRandomColor(),
         },
         data: data,
-          markLine: { // 添加 markLine
-            silent: true,
-            data: [
-              {yAxis: 0}
-            ]
-          },
-        }));
+        markLine: { 
+          silent: true,
+          data: [
+            { yAxis: 0 },
+          ],
+        },
+      }));
 
       const option = {
         title: {
-          text: '近2周 / 测试数据'
+          text: '近2周 / 测试数据',
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
             type: 'cross',
             label: {
-              backgroundColor: '#6a7985'
-            }
-          }
+              backgroundColor: '#6a7985',
+            },
+          },
         },
         legend: {
-          show: false
+          show: false,
         },
         toolbox: {
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
         grid: {
           left: '3%',
           right: '4%',
           bottom: '3%',
-          containLabel: true
+          containLabel: true,
         },
         xAxis: [
           {
             type: 'category',
             boundaryGap: false,
             data: this.dateArray.length > 0 ? this.dateArray : [''], // 如果没有数据，就使用一个空字符串
-          }
+          },
         ],
         yAxis: [
           {
-            type: 'value'
-          }
+            type: 'value',
+          },
         ],
-        series: seriesData
+        series: seriesData,
       };
-      myChart.setOption(option);
+      this.myChart.setOption(option);
+
     },
     getRandomColor() {
       const colors = ['rgb(240, 235, 246)', 'rgb(253, 247, 236)', 'rgb(226, 248, 252)', 'rgb(236, 243, 255)'];
       const randomIndex = Math.floor(Math.random() * colors.length);
       return colors[randomIndex];
-    }
+    },
   },
 });
 </script>

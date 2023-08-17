@@ -53,6 +53,7 @@ import SearchProject from '@/views/index/search-project.vue';
 import DashBoard from '@/components/charts/dashboard.vue';
 
 export default defineComponent({
+  // eslint-disable-next-line vue/no-unused-components
   components: { AllProject, SearchProject, BottomNav, DashBoard },
   props: {
     searchName: {

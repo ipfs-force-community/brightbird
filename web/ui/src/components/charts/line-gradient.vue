@@ -3,47 +3,59 @@
 </template>
 
 <script lang="ts">
-import { defineComponent } from 'vue';
+import { defineComponent, markRaw } from 'vue';
 import * as echarts from 'echarts';
 
 export default defineComponent({
+  data() {
+    return {
+      myChart:{} as echarts.ECharts,
+    };
+  },
   props: {
     dateArray: {
       type: Array,
-      required: true
+      required: true,
     },
     passRateArray: {
       type: Array,
-      required: true
-    }
+      required: true,
+    },
   },
   mounted() {
     this.renderChart();
+    window.addEventListener('resize', this.onResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.onResize);
   },
   methods: {
+    onResize() {
+      this.myChart.resize();
+    },
     renderChart() {
       const chartContainer = this.$refs.chartContainer as HTMLElement;
-      const myChart = echarts.init(chartContainer);
+      this.myChart = markRaw(echarts.init(chartContainer));
       const option = {
         title: {
-            text: '近 30 天通过率走势'
-          },
+          text: '近 30 天通过率走势',
+        },
         xAxis: {
           type: 'category',
-          data: this.dateArray
+          data: this.dateArray,
         },
         yAxis: {
-          type: 'value'
+          type: 'value',
         },
         series: [
           {
             data: this.passRateArray,
             type: 'line',
-            smooth: true
-          }
-        ]
+            smooth: true,
+          },
+        ],
       };
-      myChart.setOption(option);
+      this.myChart.setOption(option);
     },
   },
 });
