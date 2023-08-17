@@ -23,7 +23,6 @@ require (
 	github.com/go-openapi/strfmt v0.21.3
 	github.com/go-openapi/swag v0.22.3
 	github.com/go-sql-driver/mysql v1.6.0
-	github.com/google/go-github/v50 v50.2.0
 	github.com/google/go-github/v51 v51.0.0
 	github.com/google/uuid v1.3.0
 	github.com/hashicorp/go-multierror v1.1.1

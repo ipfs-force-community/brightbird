@@ -68,7 +68,7 @@ type K8sEnvDeployer struct {
 	namespace         string
 	hostIP            string
 	testID            string
-	privateRegistry   string
+	registry          string
 	mysqlConnTemplate string
 	k8sCfg            *rest.Config
 	dialCtx           func(ctx context.Context, network, address string) (net.Conn, error)
@@ -78,7 +78,7 @@ type K8sEnvDeployer struct {
 type K8sInitParams struct {
 	Namespace         string
 	TestID            string
-	PrivateRegistry   string
+	Registry          string
 	MysqlConnTemplate string
 	TmpPath           string
 }
@@ -126,7 +126,7 @@ func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
 		testID:            params.TestID,
 		hostIP:            url.Hostname(),
 		dialCtx:           dialCtx,
-		privateRegistry:   params.PrivateRegistry,
+		registry:          params.Registry,
 		mysqlConnTemplate: params.MysqlConnTemplate,
 		resourceMgr:       NewResourceMgr(k8sClient, params.Namespace, params.TmpPath, params.MysqlConnTemplate, params.TestID),
 	}, nil
@@ -147,9 +147,9 @@ func (env *K8sEnvDeployer) TestID() string {
 	return env.testID
 }
 
-// PrivateRegistry
-func (env *K8sEnvDeployer) PrivateRegistry() string {
-	return env.privateRegistry
+// Registry
+func (env *K8sEnvDeployer) Registry() string {
+	return env.registry
 }
 
 // NameSpace
@@ -173,14 +173,14 @@ func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
 
 func (env *K8sEnvDeployer) setPrivateRegistry(statefulSet *corev1.PodTemplateSpec) {
 	for _, c := range statefulSet.Spec.Containers {
-		if len(env.privateRegistry) > 0 {
-			c.Image = fmt.Sprintf("%s/%s", env.privateRegistry, c.Image)
+		if len(env.registry) > 0 {
+			c.Image = fmt.Sprintf("%s/%s", env.registry, c.Image)
 		}
 	}
 
 	for _, c := range statefulSet.Spec.InitContainers {
-		if len(env.privateRegistry) > 0 {
-			c.Image = fmt.Sprintf("%s/%s", env.privateRegistry, c.Image)
+		if len(env.registry) > 0 {
+			c.Image = fmt.Sprintf("%s/%s", env.registry, c.Image)
 		}
 	}
 }

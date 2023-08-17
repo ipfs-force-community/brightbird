@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.droplet-market\" ]||(mkdir -p /root/.droplet-market && cp /root/config.tmp /root/.droplet-market/config.toml);"]
           volumeMounts:
             - mountPath: /root
@@ -36,7 +36,7 @@ spec:
               subPath: {{.NameSpace}}
       containers:
         - name: droplet-market-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/droplet-market:{{.CodeVersion}}"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/droplet-market:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 41235

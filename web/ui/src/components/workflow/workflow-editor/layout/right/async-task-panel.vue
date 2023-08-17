@@ -55,7 +55,7 @@ import { defineComponent, getCurrentInstance, inject, onMounted, PropType, ref }
 import { AsyncTask } from '../../model/data/node/async-task';
 import { ParamTypeEnum } from '../../model/data/enumeration';
 import noParamImage from '../../svgs/no-param.svg';
-import { INodeDefVersionListVo } from '@/api/dto/node-definitions';
+import { INodeDefVersionListVo, PluginDef } from '@/api/dto/node-definitions';
 import ExpressionEditor from './form/expression-editor.vue';
 import { Graph, Node } from '@antv/x6';
 import JmEmpty from '@/components/data/empty/index.vue';
@@ -63,7 +63,6 @@ import JmForm from '@/components/form/form';
 import jmFormItem from '@/components/form/form-item';
 import JmInput from '@/components/form/input';
 import { getPluginByName, getPluginDef } from '@/api/plugin';
-import { PluginDef } from '@/api/dto/testflow';
 import PropertySelect from './property-select.vue'
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
 import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';

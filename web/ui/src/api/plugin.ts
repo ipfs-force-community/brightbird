@@ -1,4 +1,4 @@
-import { AddLabelReq, DeleteLabelReq, PluginDef, PluginDetail } from '@/api/dto/testflow';
+import { AddLabelReq, DeleteLabelReq, PluginDef, PluginDetail } from '@/api/dto/node-definitions';
 import { restProxy } from '@/api/index';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { baseUrl } from '@/api/view-no-auth';

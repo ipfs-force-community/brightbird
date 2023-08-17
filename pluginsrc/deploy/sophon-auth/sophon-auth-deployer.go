@@ -36,10 +36,10 @@ func DefaultConfig() Config {
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
-	UniqueId        string
+	NameSpace string
+	Registry  string
+	Args      []string
+	UniqueId  string
 }
 
 type SophonAuthDeployReturn struct { //nolint
@@ -50,11 +50,14 @@ type SophonAuthDeployReturn struct { //nolint
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:        "sophon-auth",
-	Version:     version.Version(),
-	PluginType:  types.Deploy,
-	Repo:        "https://github.com/ipfs-force-community/sophon-auth.git",
-	ImageTarget: "sophon-auth",
+	Name:       "sophon-auth",
+	Version:    version.Version(),
+	PluginType: types.Deploy,
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/sophon-auth.git",
+		ImageTarget: "sophon-auth",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 	Description: "",
 }
 
@@ -64,11 +67,11 @@ var f embed.FS
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonAuthDeployReturn, error) {
 	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		Args:            nil,
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
-		Config:          cfg,
+		NameSpace: k8sEnv.NameSpace(),
+		Registry:  k8sEnv.Registry(),
+		Args:      nil,
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:    cfg,
 	}
 
 	//create database

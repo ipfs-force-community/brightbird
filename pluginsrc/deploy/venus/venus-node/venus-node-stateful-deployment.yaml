@@ -16,7 +16,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.venus\" ]||(mkdir -p /root/.venus && cp /root/config.tmp /root/.venus/config.json);"]
           volumeMounts:
             - mountPath: /shared-dir
@@ -29,7 +29,7 @@ spec:
               subPath: "config.json"
       containers:
         - name: venus-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
           args: [{{join .Args ","}}]
           ports:
             - containerPort: 3453

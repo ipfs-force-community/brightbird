@@ -17,7 +17,7 @@ import (
 	"k8s.io/client-go/util/homedir"
 )
 
-// TestRunnerDeployer used to deploy test runner
+// TestRunnerDeployer used to deploy test scriptRunner
 type TestRunnerDeployer struct {
 	k8sClient *kubernetes.Clientset
 	namespace string
@@ -67,7 +67,7 @@ func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("runner config %s", string(data))
+	log.Infof("scriptRunner config %s", string(data))
 	deployment := &corev1.Pod{}
 	err = yaml_k8s.Unmarshal(data, deployment)
 	if err != nil {
@@ -75,12 +75,12 @@ func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.
 	}
 	name := deployment.Name
 	podClient := runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace)
-	log.Infof("Creating runner %s ...", name)
+	log.Infof("Creating scriptRunner %s ...", name)
 	_, err = podClient.Create(ctx, deployment, metav1.CreateOptions{})
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("Created runner %s.", name)
+	log.Infof("Created scriptRunner %s.", name)
 
 	pod, err := podClient.Get(ctx, deployment.Name, metav1.GetOptions{})
 	if err != nil {
@@ -113,7 +113,7 @@ func (runnerDeployer *TestRunnerDeployer) GetLogs(ctx context.Context, testId st
 }
 
 func (runnerDeployer *TestRunnerDeployer) RemoveFinishRunner(ctx context.Context) error {
-	//clean runner status.phase==Succeeded
+	//clean scriptRunner status.phase==Succeeded
 	return runnerDeployer.k8sClient.CoreV1().Pods(runnerDeployer.namespace).DeleteCollection(ctx, metav1.DeleteOptions{}, metav1.ListOptions{FieldSelector: "status.phase==Succeeded"})
 }
 

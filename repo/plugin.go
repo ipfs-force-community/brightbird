@@ -259,7 +259,7 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 
 	rmUpdate := bson.M{
 		"$pull": bson.M{
-			"plugins": bson.M{
+			"pluginDefs": bson.M{
 				"version": bson.M{
 					"$eq": pluginImport.Version,
 				},
@@ -278,7 +278,7 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 			"modifiedtime": time.Now().Unix(),
 		},
 		"$push": bson.M{
-			"plugins": pluginImport,
+			"pluginDefs": pluginImport,
 		},
 	}
 	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": pluginImport.Name}, update)
@@ -308,7 +308,7 @@ func (p *PluginSvc) AddLabel(ctx context.Context, name string, newLabel string) 
 		return err
 	}
 	if count > 0 {
-		return fmt.Errorf("plugin %s label %s already exit, please remove first", name, newLabel)
+		return fmt.Errorf("plugin %s label %s already exit", name, newLabel)
 	}
 
 	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": name}, bson.M{"$push": bson.M{

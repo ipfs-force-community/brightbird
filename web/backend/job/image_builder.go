@@ -43,17 +43,15 @@ type IBuilderWorkerProvider interface {
 type BuildWorkerProvider struct {
 	proxy           string
 	dockerOp        IDockerOperation
-	ffi             FFIDownloader
 	privateRegistry types.PrivateRegistry
 	pluginRepo      repo.IPluginService
 }
 
-func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, ffi FFIDownloader, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
+func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
 	return &BuildWorkerProvider{
 		pluginRepo:      pluginRepo,
 		dockerOp:        dockerOp,
 		proxy:           proxy,
-		ffi:             ffi,
 		privateRegistry: privateRegistry,
 	}
 }
@@ -64,7 +62,6 @@ func (provider *BuildWorkerProvider) CreateBuildWorker(ctx context.Context, logg
 		cfg:             builderCfg,
 		proxy:           provider.proxy,
 		buildMap:        map[string]IIMageBuilder{},
-		ffi:             provider.ffi,
 		privateRegistry: provider.privateRegistry,
 		logger:          logger,
 		pluginRepo:      provider.pluginRepo,
@@ -159,7 +156,6 @@ type BuildWorker struct {
 	pluginRepo      repo.IPluginService
 	dockerOp        IDockerOperation
 	buildMap        map[string]IIMageBuilder
-	ffi             FFIDownloader
 	privateRegistry types.PrivateRegistry
 
 	cfg    config.BuildWorkerConfig
@@ -187,13 +183,12 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 	builder, ok := worker.buildMap[plugin.Repo]
 	if !ok {
 		worker.logger.Infof("target %s not found and create a new builder", buildTask.Name)
-		builder = &VenusImageBuilder{
-			proxy:           worker.proxy,
-			codeSpace:       worker.cfg.BuildSpace,
-			ffi:             worker.ffi,
-			privateRegistry: string(worker.privateRegistry),
+		builder = &DefaultImageBuilder{
+			proxy:     worker.proxy,
+			codeSpace: worker.cfg.BuildSpace,
+			registry:  string(worker.privateRegistry),
 		}
-		err := builder.InitRepo(context.Background(), plugin.Repo)
+		builder, err = NewDefaultImageBuilder(context.Background(), worker.proxy, worker.cfg.BuildSpace, string(worker.privateRegistry), plugin.Repo)
 		if err != nil {
 			worker.logger.Errorf("init builder for %s failed %v", buildTask.Name, err)
 			return "", err
@@ -217,7 +212,7 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 
 	if !hasImage {
 		worker.logger.Infof("try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
-		err := builder.Build(ctx, version)
+		err := builder.Build(ctx, plugin.BuildScript, version)
 		if err != nil {
 			worker.logger.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
 			return "", err
@@ -230,49 +225,57 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 }
 
 type IIMageBuilder interface {
-	InitRepo(ctx context.Context, repo string) error
 	FetchCommit(ctx context.Context, commit string) (string, error)
-	Build(ctx context.Context, commit string) error
+	Build(ctx context.Context, script, commit string) error
 }
 
-type VenusImageBuilder struct {
+type DefaultImageBuilder struct {
 	proxy     string
 	codeSpace string
-	repoPath  string
+	registry  string
 
-	repo *git.Repository
-	ffi  FFIDownloader
-
-	privateRegistry string
+	repo         *git.Repository
+	scriptRunner *BuildScriptRunner
+	repoPath     string
 }
 
-// InitRepo do something once for cache
-func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) error {
+// NewVenusImageBuilder create new ImageBuilder
+func NewDefaultImageBuilder(ctx context.Context, proxy, codeSpace, registry, repoUrl string) (*DefaultImageBuilder, error) {
 	repoName, err := getRepoNameFromUrl(repoUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	builder.repoPath = path.Join(builder.codeSpace, repoName)
+	builder := &DefaultImageBuilder{
+		proxy:     proxy,
+		codeSpace: codeSpace,
+		repoPath:  path.Join(codeSpace, repoName),
+		scriptRunner: &BuildScriptRunner{
+			PwdDir:   path.Join(codeSpace, repoName),
+			Proxy:    proxy,
+			Registry: registry,
+		},
+	}
+
 	_, err = os.Stat(builder.repoPath)
 	if err != nil && !os.IsNotExist(err) {
-		return err
+		return nil, err
 	}
 
 	builder.repo, err = git.PlainOpen(builder.repoPath)
 	if err == nil {
-		return nil
+		return builder, nil
 	}
 
 	log.Warnf("open git repo %s fail, clean and clone (%s) again %v", repoUrl, builder.repoPath, err)
 	err = os.RemoveAll(builder.repoPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	sshFormat, err := toSSHFormat(repoUrl)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	_, err = git.PlainCloneContext(ctx, builder.repoPath, false, &git.CloneOptions{
@@ -283,15 +286,15 @@ func (builder *VenusImageBuilder) InitRepo(ctx context.Context, repoUrl string) 
 	})
 	if err != nil && err != git.ErrRepositoryAlreadyExists {
 		_ = os.RemoveAll(builder.repoPath) //clean fail repo
-		return err
+		return nil, err
 	}
 
 	//check again
 	builder.repo, err = git.PlainOpen(builder.repoPath)
-	return err
+	return builder, err
 }
 
-func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
+func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 	workTree, err := builder.repo.Worktree()
 	if err != nil {
 		return err
@@ -356,7 +359,7 @@ func (builder *VenusImageBuilder) updateRepo(ctx context.Context) error {
 	return nil
 }
 
-func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string) (string, error) {
+func (builder *DefaultImageBuilder) FetchCommit(ctx context.Context, commit string) (string, error) {
 	err := builder.updateRepo(ctx)
 	if err != nil {
 		return "", err
@@ -401,7 +404,7 @@ func (builder *VenusImageBuilder) FetchCommit(ctx context.Context, commit string
 }
 
 // Build exec build image once
-func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) error {
+func (builder *DefaultImageBuilder) Build(ctx context.Context, script string, commit string) error {
 	err := builder.updateRepo(ctx)
 	if err != nil {
 		return err
@@ -431,17 +434,15 @@ func (builder *VenusImageBuilder) Build(ctx context.Context, commit string) erro
 		return fmt.Errorf("repo checkout %w", err)
 	}
 
-	err = execMakefile(builder.repoPath, "make", "docker-push", "TAG="+commit, "BUILD_DOCKER_PROXY="+builder.proxy, "PRIVATE_REGISTRY="+builder.privateRegistry)
-	if err != nil {
-		fmt.Println(err.Error())
-		return err
-	}
-	return nil
+	return builder.scriptRunner.BuildScriptRunner(ctx, BuildParams{
+		Script: script,
+		Commit: commit,
+	})
 }
 
 // have bug https://github.com/go-git/go-git/issues/511
 func updateSubmoduleByCmd(ctx context.Context, dir string) (*git.Repository, *git.Worktree, error) {
-	err := execMakefile(dir, "git", "submodule", "update", "--init", "--recursive")
+	err := execCmd(dir, "git", "submodule", "update", "--init", "--recursive")
 	if err != nil {
 		return nil, nil, err
 	}
@@ -479,7 +480,7 @@ func toSSHFormat(repoUrl string) (string, error) {
 	return fmt.Sprintf("git@github.com:%s", schema.Path[1:]), nil
 }
 
-func execMakefile(dir string, name string, arg ...string) error {
+func execCmd(dir string, name string, arg ...string) error {
 	cmd := exec.Command(name, arg...)
 	cmd.Dir = dir
 	cmd.Env = os.Environ()

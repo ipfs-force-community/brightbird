@@ -36,7 +36,7 @@ type RenderParams struct {
 	Config
 
 	NameSpace       string
-	PrivateRegistry string
+	Registry string
 	Args            []string
 
 	UniqueId string
@@ -52,8 +52,10 @@ var PluginInfo = types.PluginInfo{
 	Name:        "{{plugin-name}}",
 	Version:     version.Version(),
 	PluginType:  types.Deploy,
-	Repo:        "{{plugin-github-url}}",
-	ImageTarget: "{{plugin-name}}",
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "{{plugin-github-url}}",
+		ImageTarget: "{{plugin-name}}",
+	},
 	Description: "{{plugin-description}}",
 }
 
@@ -64,7 +66,7 @@ var f embed.FS
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DamoclesManagerReturn, error) {
 	renderParams := RenderParams{
 		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
+		Registry: 		 k8sEnv.Registry(),
 		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:          cfg,
 	}

@@ -15,7 +15,7 @@ spec:
     spec:
       initContainers:
         - name: init-myservice
-          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
           command: ['sh', '-c', "[ -d \"/root/.venus_wallet_pro\" ]||(mkdir -p /root/.venus_wallet_pro && cp /root/config.tmp /root/.venus_wallet_pro/config.toml);"]
           volumeMounts:
             - mountPath: /root
@@ -25,7 +25,7 @@ spec:
               subPath: "config.toml"
       containers:
         - name: venus-wallet-pro-{{.UniqueId}}
-          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/venus-wallet-pro:{{.CodeVersion}}"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/venus-wallet-pro:{{.CodeVersion}}"
           args: ["run"]
           ports:
             - containerPort: 5678

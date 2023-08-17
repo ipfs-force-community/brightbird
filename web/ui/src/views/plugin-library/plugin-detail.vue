@@ -43,20 +43,29 @@
         </el-col>
       </el-row>
 
-      <el-row class="row-t">
-        <el-col :span="2">
-          <el-text class="mx-1">描述:</el-text>
-        </el-col>
-        <el-col :span="22">
-          <el-text v-html="(pluginDetail?.description || '无').replace(/\n/g, '<br/>')" />
-        </el-col>
-      </el-row>
-
       <el-tabs type="card">
         <el-tab-pane v-for="p in pluginDetail?.pluginDefs" :label="p.version">
+          <el-row class="row-t">
+            <el-col :span="2">
+              <el-text class="mx-1">描述:</el-text>
+            </el-col>
+            <el-col :span="22">
+              <el-text v-html="(pluginDetail?.description || '无').replace(/\n/g, '<br/>')" />
+            </el-col>
+          </el-row>
+
+          <el-row class="row-t">
+            <el-col :span="2">
+              <el-text class="mx-1">编译脚本:</el-text>
+            </el-col>
+            <el-col :span="22">
+              <textarea class="script" v-model="p.buildScript" />
+            </el-col>
+          </el-row>
+
           <el-row>
             <el-col :span="12">
-              <el-card class="box-card">
+              <el-card shadow="never">
                 <template #header>
                   <el-text>输入参数</el-text>
                 </template>
@@ -64,7 +73,7 @@
               </el-card>
             </el-col>
             <el-col :span="12">
-              <el-card class="box-card">
+              <el-card shadow="never">
                 <template #header>
                   <el-text>输出参数</el-text>
                 </template>
@@ -80,7 +89,7 @@
 </template>
 
 <script lang="ts">
-import { PluginDetail } from '@/api/dto/testflow';
+import { PluginDetail } from '@/api/dto/node-definitions';
 import { getPluginByName, deletePlugin } from '@/api/plugin';
 import { defineComponent, getCurrentInstance, inject, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -174,7 +183,10 @@ export default defineComponent({
       display: block;
     }
 
-    .box-card {
+    .script {
+      height: 100px;
+      width: 100%;
+      font-size: 15px;
     }
 
     .row-t {

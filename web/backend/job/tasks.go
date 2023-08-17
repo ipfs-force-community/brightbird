@@ -67,7 +67,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			//try to remove finish testrunner
 			err := taskMgr.testRunner.RemoveFinishRunner(ctx)
 			if err != nil {
-				taskLog.Errorf("clean finish runner %v", err)
+				taskLog.Errorf("clean finish scriptRunner %v", err)
 				continue
 			}
 			//check running task state
@@ -109,7 +109,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 						}
 					}
 				}
-				//success state update by runner self
+				//success state update by scriptRunner self
 			}
 
 			// start init task
@@ -219,7 +219,7 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--privReg=%s", "--taskId=%s", --customProperties, %s`,
+	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --customProperties, %s`,
 		taskMgr.cfg.NameSpace,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
@@ -233,9 +233,9 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		args += fmt.Sprintf(` , "--bootPeer=%s" `, p)
 	}
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
-		"NameSpace":       taskMgr.cfg.NameSpace,
-		"PrivateRegistry": string(taskMgr.privateRegistry),
-		"TestID":          string(task.TestId),
-		"Args":            args,
+		"NameSpace": taskMgr.cfg.NameSpace,
+		"Registry":  string(taskMgr.privateRegistry),
+		"TestID":    string(task.TestId),
+		"Args":      args,
 	})
 }

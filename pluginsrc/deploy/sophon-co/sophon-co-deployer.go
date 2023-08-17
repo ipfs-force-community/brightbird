@@ -32,9 +32,9 @@ type SophonCoDeployReturn struct { //nolint
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
+	NameSpace string
+	Registry  string
+	Args      []string
 
 	UniqueId string
 }
@@ -44,8 +44,11 @@ var PluginInfo = types2.PluginInfo{
 	Version:     version.Version(),
 	PluginType:  types2.Deploy,
 	Description: "",
-	Repo:        "https://github.com/ipfs-force-community/sophon-co.git",
-	ImageTarget: "sophon-co",
+	DeployPluginParams: types2.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/sophon-co.git",
+		ImageTarget: "sophon-co",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 }
 
 //go:embed  sophon-co
@@ -116,11 +119,11 @@ func buildRenderParams(k8sEnv *env.K8sEnvDeployer, cfg Config) RenderParams {
 	args = append(args, cfg.AdminToken+":"+cfg.AuthUrl)
 
 	return RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		Config:          cfg,
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		Args:            args,
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		NameSpace: k8sEnv.NameSpace(),
+		Config:    cfg,
+		Registry:  k8sEnv.Registry(),
+		Args:      args,
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 	}
 }
 

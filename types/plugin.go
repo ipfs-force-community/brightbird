@@ -26,10 +26,15 @@ type PluginInfo struct {
 	Version     string     `json:"version"`
 	PluginType  PluginType `json:"pluginType"`
 	Description string     `json:"description"`
-	Repo        string     `json:"repo"`
-	ImageTarget string     `json:"imageTarget"`
 
-	PluginParams `bson:",inline"`
+	DeployPluginParams `bson:",inline"`
+	PluginParams       `bson:",inline"`
+}
+
+type DeployPluginParams struct {
+	Repo        string `json:"repo"`
+	ImageTarget string `json:"imageTarget"`
+	BuildScript string `json:"buildScript"`
 }
 
 type PluginParams struct {

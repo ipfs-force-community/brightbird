@@ -214,7 +214,6 @@ func run(pCtx context.Context, cfg config.Config) error {
 		}),
 
 		// build
-		fx_opt.Override(new(job.FFIDownloader), NewFFIDownloader(cfg)),
 		fx_opt.Override(new(job.IDockerOperation), NewDockerRegistry(cfg)),
 		fx_opt.Override(new(job.IBuilderWorkerProvider), NewBuilderWorkerProvidor(cfg)),
 		fx_opt.Override(new(*job.ImageBuilderMgr), NewBuilderMgr(cfg)),
