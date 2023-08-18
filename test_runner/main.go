@@ -67,10 +67,6 @@ func main() {
 				Name:  "dbName",
 				Value: "testplateform",
 			},
-			&cli.StringFlag{
-				Name:  "tmpPath",
-				Value: "",
-			},
 			&cli.IntFlag{
 				Name:  "timeout",
 				Value: 0,
@@ -130,10 +126,6 @@ func main() {
 
 			if c.IsSet("dbName") {
 				cfg.DBName = c.String("dbName")
-			}
-
-			if c.IsSet("tmpPath") {
-				cfg.TmpPath = c.String("tmpPath")
 			}
 
 			if c.IsSet("mongoUrl") {
@@ -270,7 +262,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 				TestID:            string(task.TestId),
 				Registry:          cfg.Registry,
 				MysqlConnTemplate: cfg.Mysql,
-				TmpPath:           cfg.TmpPath,
 			}
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), func(lc fx.Lifecycle, k8sEnv *env.K8sEnvDeployer) error {

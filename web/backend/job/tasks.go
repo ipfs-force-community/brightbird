@@ -234,7 +234,7 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
+	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
 		taskMgr.cfg.NameSpace,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,

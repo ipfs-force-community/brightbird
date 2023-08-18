@@ -5,7 +5,6 @@ import "github.com/ipfs-force-community/brightbird/env"
 type Config struct {
 	NameSpace   string
 	PluginStore string
-	TmpPath     string
 
 	Timeout int
 	Listen  string
