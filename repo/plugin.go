@@ -259,10 +259,8 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 
 	rmUpdate := bson.M{
 		"$pull": bson.M{
-			"pluginDefs": bson.M{
-				"version": bson.M{
-					"$eq": pluginImport.Version,
-				},
+			"plugindefs": bson.M{
+				"version": pluginImport.Version,
 			},
 		},
 	}
@@ -278,7 +276,7 @@ func (p *PluginSvc) SavePlugins(ctx context.Context, pluginImport *models.Plugin
 			"modifiedtime": time.Now().Unix(),
 		},
 		"$push": bson.M{
-			"pluginDefs": pluginImport,
+			"plugindefs": pluginImport,
 		},
 	}
 	_, err = p.pluginCol.UpdateOne(ctx, bson.M{"name": pluginImport.Name}, update)
