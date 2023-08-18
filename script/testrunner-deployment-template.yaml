@@ -12,7 +12,7 @@ spec:
   initContainers:
   containers:
     - name: venus-testrunner
-      image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/testrunner:li"
+      image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/testrunner:zsk"
       imagePullPolicy: Always
       args: [{{.Args}}]
       env:
