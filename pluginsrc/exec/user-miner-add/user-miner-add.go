@@ -79,7 +79,10 @@ func getMinerFromGateway(ctx context.Context, params TestCaseParams) error {
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("全部的miner列表:")
 	for _, miner := range minerList {
+		fmt.Println(miner)
 		if miner == params.Miner {
 			return nil
 		}

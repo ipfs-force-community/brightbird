@@ -22,7 +22,7 @@
             :loading="uploading"
             @click="submitUpload()">上传</el-button>
           </el-upload>
-        <el-button style="margin-left: 10px;" @click="downloadZip">下载模版文件</el-button>
+        <el-button style="margin-left: 10px;" @click="openTemplateUrl">查看模版文件</el-button>
       </div>
 
       <div class="title" style="display: flex; justify-content: space-between;">
@@ -158,15 +158,9 @@ export default defineComponent({
     changeView(childRoute, useRoute());
     onBeforeRouteUpdate(to => changeView(childRoute, to));
 
-    const downloadZip = async () => {
-      try {
-        await downloadPublicZip();
-      } catch(error) {
-        console.error('Failed to download zip file:', error);
-      }
-      window.location.href = downloadUrl;
+    const openTemplateUrl = () => {
+      window.open('https://github.com/ipfs-force-community/brightbird/templates', '_blank');
     };
-
 
     const handleDelete = async (plugin: PluginDetail) => {
       try {
@@ -244,7 +238,7 @@ export default defineComponent({
       uploading,
       handleDelete,
       submitUpload,
-      downloadZip,
+      openTemplateUrl,
     };
   },
 });
