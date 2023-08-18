@@ -31,13 +31,11 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-
 	listenAddress, err := actorList(ctx, params)
 	if err != nil {
 		return fmt.Errorf("list actor err:%w", err)
 	}
 	fmt.Printf("market net listen is: %v\n", listenAddress)
-
 	return nil
 }
 

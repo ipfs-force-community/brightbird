@@ -236,7 +236,11 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic when run testrunner reason %v stack %s", r, string(debug.Stack()))
+			reason := fmt.Sprintf("%v", r)
+			if val, ok := r.(error); ok {
+				reason = val.Error()
+			}
+			err = fmt.Errorf("panic when run testrunner reason %s stack %s", reason, string(debug.Stack()))
 		}
 		if err != nil {
 			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())

@@ -34,14 +34,10 @@ type TestCaseParams struct {
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
 	mAddr, err := actorUpsert(ctx, params)
-	if err != nil {
-		return fmt.Errorf("market net listen err: %w", err)
-	}
+	plugin.Assert.NotNil(err, "market net listen")
 
 	err = actorDelete(ctx, params, mAddr)
-	if err != nil {
-		return fmt.Errorf("delete actor err: %w", err)
-	}
+	plugin.Assert.NotNil(err, "delete actor ")
 
 	id, err := actorList(ctx, params, mAddr)
 	if id == "" {
