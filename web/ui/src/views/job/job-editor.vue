@@ -51,7 +51,7 @@
 
       <div v-show="jobType == JobEnum.TagCreated">
         <el-text >tag匹配:</el-text>
-        <div class="form-inter version" v-for="match in editorForm.tagCreateEventMatchs">
+        <div class="form-inter version" v-for="match in editorForm.tagCreateEventMatches">
           <el-row>
             <el-col :span="4">
               {{ getRepoName(match.repo) }}
@@ -65,7 +65,7 @@
 
       <div v-show="jobType == JobEnum.PRMerged">
         <el-text >分支匹配:</el-text>
-        <div class="form-inter version" v-for="match in editorForm.prMergedEventMatchs">
+        <div class="form-inter version" v-for="match in editorForm.prMergedEventMatches">
           <el-row>
           <el-col :span="4">
             {{ getRepoName(match.repo) }}
@@ -129,8 +129,8 @@ export default defineComponent({
 
       // cron
       cronExpression: '',
-      prMergedEventMatchs: [],
-      tagCreateEventMatchs: [],
+      prMergedEventMatches: [],
+      tagCreateEventMatches: [],
     });
     const editorRule = ref<object>({
       name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }],
@@ -216,7 +216,7 @@ export default defineComponent({
         if (!valid) {
           return;
         }
-        const { name, description, testFlowId, versions, cronExpression, prMergedEventMatchs, tagCreateEventMatchs } = editorForm.value;
+        const { name, description, testFlowId, versions, cronExpression, prMergedEventMatches, tagCreateEventMatches } = editorForm.value;
         try {
           loading.value = true;
           await updateJob(props.id, {
@@ -225,8 +225,8 @@ export default defineComponent({
             description: description,
             versions: versions,
             cronExpression: cronExpression,
-            prMergedEventMatchs: prMergedEventMatchs,
-            tagCreateEventMatchs: tagCreateEventMatchs,
+            prMergedEventMatches: prMergedEventMatches,
+            tagCreateEventMatches: tagCreateEventMatches,
           });
           proxy.$success('项目分组修改成功');
           emit('completed');

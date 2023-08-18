@@ -1,13 +1,14 @@
 package main
 
+import "github.com/ipfs-force-community/brightbird/env"
+
 type Config struct {
 	NameSpace   string
 	PluginStore string
 	TmpPath     string
 
-	BootstrapPeers []string
-	Timeout        int
-	Listen         string
+	Timeout int
+	Listen  string
 
 	MongoURL string
 	DBName   string
@@ -17,6 +18,5 @@ type Config struct {
 	TaskId   string
 	Registry string
 
-	LogLevel         string
-	CustomProperties map[string]interface{}
+	GlobalParams env.GlobalParams
 }

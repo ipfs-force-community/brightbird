@@ -46,9 +46,6 @@ func main() {
 				Name:  "config",
 				Value: "",
 			},
-			&cli.StringSliceFlag{
-				Name: "bootPeer",
-			},
 			&cli.StringFlag{
 				Name:  "plugins",
 				Value: "",
@@ -92,11 +89,7 @@ func main() {
 				Value: "0.0.0.0:5682",
 			},
 			&cli.StringFlag{
-				Name:  "logLevel",
-				Value: "INFO",
-			},
-			&cli.StringFlag{
-				Name:  "customProperties",
+				Name:  "globalParams",
 				Value: "{}",
 			},
 		},
@@ -155,22 +148,14 @@ func main() {
 				cfg.Registry = c.String("registry")
 			}
 
-			if c.IsSet("bootPeer") {
-				cfg.BootstrapPeers = c.StringSlice("bootPeer")
-			}
-
-			if c.IsSet("logLevel") {
-				cfg.LogLevel = c.String("logLevel")
-			}
-
-			if c.IsSet("customProperties") {
-				var val map[string]interface{}
-				err := json.Unmarshal([]byte(c.String("customProperties")), &val)
+			if c.IsSet("globalParams") {
+				var val env.GlobalParams
+				err := json.Unmarshal([]byte(c.String("globalParams")), &val)
 				if err != nil {
 					return err
 				}
 
-				cfg.CustomProperties = val
+				cfg.GlobalParams = val
 			}
 
 			if len(cfg.TaskId) == 0 {

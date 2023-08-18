@@ -36,7 +36,7 @@ func (o *DeletePluginReqReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /plugin] deletePluginReq", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /plugin/all] deletePluginReq", response, response.Code())
 	}
 }
 
@@ -84,11 +84,11 @@ func (o *DeletePluginReqOK) Code() int {
 }
 
 func (o *DeletePluginReqOK) Error() string {
-	return fmt.Sprintf("[DELETE /plugin][%d] deletePluginReqOK ", 200)
+	return fmt.Sprintf("[DELETE /plugin/all][%d] deletePluginReqOK ", 200)
 }
 
 func (o *DeletePluginReqOK) String() string {
-	return fmt.Sprintf("[DELETE /plugin][%d] deletePluginReqOK ", 200)
+	return fmt.Sprintf("[DELETE /plugin/all][%d] deletePluginReqOK ", 200)
 }
 
 func (o *DeletePluginReqOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -141,11 +141,11 @@ func (o *DeletePluginReqServiceUnavailable) Code() int {
 }
 
 func (o *DeletePluginReqServiceUnavailable) Error() string {
-	return fmt.Sprintf("[DELETE /plugin][%d] deletePluginReqServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[DELETE /plugin/all][%d] deletePluginReqServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *DeletePluginReqServiceUnavailable) String() string {
-	return fmt.Sprintf("[DELETE /plugin][%d] deletePluginReqServiceUnavailable  %+v", 503, o.Payload)
+	return fmt.Sprintf("[DELETE /plugin/all][%d] deletePluginReqServiceUnavailable  %+v", 503, o.Payload)
 }
 
 func (o *DeletePluginReqServiceUnavailable) GetPayload() *models.APIError {

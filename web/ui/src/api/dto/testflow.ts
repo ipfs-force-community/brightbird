@@ -13,6 +13,13 @@ export interface Node
     output: string;
   }> { }
 
+export interface GlobalProperty
+    extends Readonly<{
+        name: string;
+        type: string;
+        value: string;
+  }> { }
+
 /**
  * 保存项目dto
  */
@@ -24,6 +31,7 @@ export interface ITestFlowDetail
     modifiedTime: string;
     groupId: string;
     graph: string;
+    globalProperties: GlobalProperty;
     description: string;
   }> { }
 

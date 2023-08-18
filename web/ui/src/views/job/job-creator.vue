@@ -61,7 +61,7 @@
 
         <div v-show="createForm.jobType == JobEnum.TagCreated">
           <el-text>tag匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.tagCreateEventMatchs">
+          <div class="form-inter version" v-for="match in createForm.tagCreateEventMatches">
             <el-row>
               <el-col :span="6">
                 {{ getRepoName(match.repo) }}
@@ -75,7 +75,7 @@
 
         <div v-show="createForm.jobType == JobEnum.PRMerged">
           <el-text>分支匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.prMergedEventMatchs">
+          <div class="form-inter version" v-for="match in createForm.prMergedEventMatches">
             <el-row>
               <el-col :span="7">
                 {{ getRepoName(match.repo) }}
@@ -137,8 +137,8 @@ export default defineComponent({
       description: '',
       versions: {},
       cronExpression: '',
-      prMergedEventMatchs: [],
-      tagCreateEventMatchs: [],
+      prMergedEventMatches: [],
+      tagCreateEventMatches: [],
     });
     const editorRule = ref<object>({
       name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
@@ -263,14 +263,14 @@ export default defineComponent({
         });
 
         if (createForm.value.jobType == JobEnum.TagCreated) {
-          createForm.value.tagCreateEventMatchs = [];
-          [...repos].map(repoName => createForm.value.tagCreateEventMatchs.push({
+          createForm.value.tagCreateEventMatches = [];
+          [...repos].map(repoName => createForm.value.tagCreateEventMatches.push({
             repo: repoName,
             tagPattern: 'tag/.+',
           }));
         } else if (createForm.value.jobType == JobEnum.PRMerged) {
-          createForm.value.prMergedEventMatchs = [];
-          [...repos].map(repoName => createForm.value.prMergedEventMatchs.push({
+          createForm.value.prMergedEventMatches = [];
+          [...repos].map(repoName => createForm.value.prMergedEventMatches.push({
             repo: repoName,
             sourcePattern: 'feat\/.+|fix\/.+',
             basePattern: 'master|main',
