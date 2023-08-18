@@ -17,7 +17,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/repo"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
-	"github.com/mholt/archiver/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

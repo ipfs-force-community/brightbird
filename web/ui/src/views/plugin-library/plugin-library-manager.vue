@@ -160,7 +160,7 @@ export default defineComponent({
 
     const openTemplateUrl = () => {
       window.open('https://github.com/ipfs-force-community/brightbird/templates', '_blank');
-    };
+    }
 
     const handleDelete = async (plugin: PluginDetail) => {
       try {
