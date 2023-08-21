@@ -9,6 +9,8 @@ import { NodeTypeEnum } from './data/enumeration';
 import { AsyncTask } from './data/node/async-task';
 import { uuid } from '@antv/x6/es/util/string/uuid';
 import { getPluginByName } from '@/api/plugin';
+import { JSONSchema } from 'json-schema-to-typescript';
+import { Try } from 'json-schema-to-typescript/dist/src/utils';
 
 const { icon: { width, height }, textMaxHeight } = NODE;
 
@@ -50,20 +52,26 @@ export class WorkflowDnd {
         data.setInstanceName(data.name + '-' + uuid().slice(0, 8));
       
         getPluginByName(data.name)
-          .then((pluginDetail) => {
+          .then(pluginDetail => {
             if (pluginDetail.pluginDefs && pluginDetail.pluginDefs.length > 0) {
-              data.version = pluginDetail.pluginDefs[0].version;
+              const properties = this.convertToSchema(pluginDetail.pluginDefs[0]?.inputSchema).properties; 
+              if (properties) {
+                for (const key in properties) {
+                  if (Object.prototype.hasOwnProperty.call(properties, key)) {
+                    const element = properties[key];
+                    data.input[key] = element.default;
+                  }
+                }
+              }
             }
-      
             proxy.setData(data);
-      
             // 保证不偏移
             setTimeout(() => {
               const { x, y } = targetNode.getPosition();
               targetNode.setPosition(x, y - textMaxHeight / 2);
             });
           })
-          .catch((error) => {
+          .catch(error => {
             // Handle error
           });
       
@@ -100,6 +108,13 @@ export class WorkflowDnd {
         return true;
       },
     });
+  }
+
+
+  convertToSchema(input: any):JSONSchema {
+    return Try<JSONSchema>(
+      () => input,
+      () => { throw new TypeError('Error parsing JSON');});
   }
 
   drag(data: IWorkflowNode, event: MouseEvent) {
