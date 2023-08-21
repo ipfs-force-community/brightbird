@@ -31,5 +31,6 @@ linters-settings:
 run:
   skip-dirs-use-default: false
   skip-dirs:
+    - templates
     - web/ui/public
   skip-files: "(.*_gen\\.go$)"
