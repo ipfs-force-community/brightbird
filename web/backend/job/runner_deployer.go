@@ -62,6 +62,7 @@ func NewTestRunnerDeployer(namespace string, mysql string) (*TestRunnerDeployer,
 
 func (runnerDeployer *TestRunnerDeployer) ApplyRunner(ctx context.Context, f fs.File, args any) (*corev1.Pod, error) {
 	data, err := env.QuickRender(f, args)
+
 	if err != nil {
 		return nil, err
 	}

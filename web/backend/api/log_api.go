@@ -11,7 +11,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/models"
 	"github.com/ipfs-force-community/brightbird/repo"
 	ordered_map "github.com/wk8/go-ordered-map"
-	"gopkg.in/yaml.v3"
 )
 
 func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo repo.ILogRepo, testflowRepo repo.ITestFlowRepo, taskRepo repo.ITaskRepo) {
@@ -103,18 +102,6 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 }
 
 func getRunnerLog(ctx context.Context, testflowRepo repo.ITestFlowRepo, task *models.Task, logs []string) ([]*models.StepLog, error) {
-	testflow, err := testflowRepo.Get(ctx, &repo.GetTestFlowParams{
-		ID: task.TestFlowId,
-	})
-	if err != nil {
-		return nil, err
-	}
-	graph := &models.Graph{}
-	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
-	if err != nil {
-		return nil, err
-	}
-
 	const preName = "testrunner prepare"
 	const postName = "testrunner post"
 	stepLogs := ordered_map.New()
@@ -123,10 +110,10 @@ func getRunnerLog(ctx context.Context, testflowRepo repo.ITestFlowRepo, task *mo
 		InstanceName: preName,
 		State:        models.StepNotRunning,
 	})
-	for _, pipe := range graph.Pipeline {
-		stepLogs.Set(pipe.Key, &models.StepLog{
-			Name:         pipe.Key,
-			InstanceName: pipe.Value.Name,
+	for _, pipe := range task.Pipeline {
+		stepLogs.Set(pipe.InstanceName, &models.StepLog{
+			Name:         pipe.Name,
+			InstanceName: pipe.InstanceName,
 			State:        models.StepNotRunning,
 		})
 	}

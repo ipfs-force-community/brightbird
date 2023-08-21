@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ipfs-force-community/brightbird/models"
+	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -15,9 +16,10 @@ import (
 )
 
 type ListTaskParams struct {
-	JobID      primitive.ObjectID `form:"jobId"`
-	State      []models.State     `form:"state"`
-	CreateTime *int64             `form:"createtime"`
+	JobID primitive.ObjectID `form:"jobId"`
+	State []models.State     `form:"state"`
+
+	CreateTime *int64 `form:"createtime"`
 }
 
 type GetTaskReq struct {
@@ -28,6 +30,7 @@ type GetTaskReq struct {
 type ITaskRepo interface {
 	List(context.Context, models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error)
 	UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
+	UpdatePipeline(ctx context.Context, id primitive.ObjectID, pipeline []*types.ExecNode) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state models.State, msg ...string) error
 	UpdatePodRunning(ctx context.Context, id primitive.ObjectID, name string) error
 	Get(context.Context, *GetTaskReq) (*models.Task, error)
@@ -213,6 +216,19 @@ func (j *TaskRepo) UpdateCommitMap(ctx context.Context, id primitive.ObjectID, v
 	update := bson.M{
 		"$set": bson.M{
 			"commitmap": versionMap,
+		},
+	}
+	_, err := j.taskCol.UpdateByID(ctx, id, update)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (j *TaskRepo) UpdatePipeline(ctx context.Context, id primitive.ObjectID, pipeline []*types.ExecNode) error {
+	update := bson.M{
+		"$set": bson.M{
+			"pipeline": pipeline,
 		},
 	}
 	_, err := j.taskCol.UpdateByID(ctx, id, update)
