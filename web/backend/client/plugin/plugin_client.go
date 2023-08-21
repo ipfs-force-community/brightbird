@@ -36,6 +36,8 @@ type ClientService interface {
 
 	DeleteLabelParams(params *DeleteLabelParamsParams, opts ...ClientOption) (*DeleteLabelParamsOK, error)
 
+	DeletePluginByVersionReq(params *DeletePluginByVersionReqParams, opts ...ClientOption) (*DeletePluginByVersionReqOK, error)
+
 	DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOption) (*DeletePluginReqOK, error)
 
 	GetPluginDef(params *GetPluginDefParams, opts ...ClientOption) (*GetPluginDefOK, error)
@@ -166,7 +168,45 @@ func (a *Client) DeleteLabelParams(params *DeleteLabelParamsParams, opts ...Clie
 }
 
 /*
-DeletePluginReq Delete plugin by id and specific version
+DeletePluginByVersionReq Delete plugin by id and specific version
+*/
+func (a *Client) DeletePluginByVersionReq(params *DeletePluginByVersionReqParams, opts ...ClientOption) (*DeletePluginByVersionReqOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewDeletePluginByVersionReqParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "deletePluginByVersionReq",
+		Method:             "DELETE",
+		PathPattern:        "/plugin",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &DeletePluginByVersionReqReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*DeletePluginByVersionReqOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for deletePluginByVersionReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+DeletePluginReq Delete plugin all version
 */
 func (a *Client) DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOption) (*DeletePluginReqOK, error) {
 	// TODO: Validate the params before sending
@@ -176,7 +216,7 @@ func (a *Client) DeletePluginReq(params *DeletePluginReqParams, opts ...ClientOp
 	op := &runtime.ClientOperation{
 		ID:                 "deletePluginReq",
 		Method:             "DELETE",
-		PathPattern:        "/plugin",
+		PathPattern:        "/plugin/all",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},

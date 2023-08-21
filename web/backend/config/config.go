@@ -4,7 +4,6 @@ type Config struct {
 	StaticRoot   string
 	NameSpace    string
 	PluginStore  string
-	LogPath      string
 	RunnerConfig string
 
 	BootstrapPeers []string

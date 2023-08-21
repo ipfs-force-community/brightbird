@@ -46,9 +46,6 @@ func main() {
 				Name:  "config",
 				Value: "",
 			},
-			&cli.StringSliceFlag{
-				Name: "bootPeer",
-			},
 			&cli.StringFlag{
 				Name:  "plugins",
 				Value: "",
@@ -70,10 +67,6 @@ func main() {
 				Name:  "dbName",
 				Value: "testplateform",
 			},
-			&cli.StringFlag{
-				Name:  "tmpPath",
-				Value: "",
-			},
 			&cli.IntFlag{
 				Name:  "timeout",
 				Value: 0,
@@ -92,11 +85,7 @@ func main() {
 				Value: "0.0.0.0:5682",
 			},
 			&cli.StringFlag{
-				Name:  "logLevel",
-				Value: "INFO",
-			},
-			&cli.StringFlag{
-				Name:  "customProperties",
+				Name:  "globalParams",
 				Value: "{}",
 			},
 		},
@@ -139,10 +128,6 @@ func main() {
 				cfg.DBName = c.String("dbName")
 			}
 
-			if c.IsSet("tmpPath") {
-				cfg.TmpPath = c.String("tmpPath")
-			}
-
 			if c.IsSet("mongoUrl") {
 				cfg.MongoURL = c.String("mongoUrl")
 			}
@@ -155,22 +140,14 @@ func main() {
 				cfg.Registry = c.String("registry")
 			}
 
-			if c.IsSet("bootPeer") {
-				cfg.BootstrapPeers = c.StringSlice("bootPeer")
-			}
-
-			if c.IsSet("logLevel") {
-				cfg.LogLevel = c.String("logLevel")
-			}
-
-			if c.IsSet("customProperties") {
-				var val map[string]interface{}
-				err := json.Unmarshal([]byte(c.String("customProperties")), &val)
+			if c.IsSet("globalParams") {
+				var val env.GlobalParams
+				err := json.Unmarshal([]byte(c.String("globalParams")), &val)
 				if err != nil {
 					return err
 				}
 
-				cfg.CustomProperties = val
+				cfg.GlobalParams = val
 			}
 
 			if len(cfg.TaskId) == 0 {
@@ -285,7 +262,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 				TestID:            string(task.TestId),
 				Registry:          cfg.Registry,
 				MysqlConnTemplate: cfg.Mysql,
-				TmpPath:           cfg.TmpPath,
 			}
 		}),
 		fx_opt.Override(fx_opt.NextInvoke(), func(lc fx.Lifecycle, k8sEnv *env.K8sEnvDeployer) error {

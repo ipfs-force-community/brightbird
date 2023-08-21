@@ -32,11 +32,8 @@ func runGraph(ctx context.Context, cfg *Config, pluginRepo repo.IPluginService, 
 	}
 
 	envCtx := &env.EnvContext{
-		Global: env.GlobalParams{
-			LogLevel:         cfg.LogLevel,
-			CustomProperties: cfg.CustomProperties,
-		},
-		Nodes: make(map[string]*env.NodeContext),
+		Global: cfg.GlobalParams,
+		Nodes:  make(map[string]*env.NodeContext),
 	}
 	for _, pip := range graph.Pipeline {
 		deployPlugin, err := pluginRepo.GetPlugin(ctx, pip.Value.Name, pip.Value.Version)
