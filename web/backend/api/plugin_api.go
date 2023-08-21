@@ -17,7 +17,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/repo"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
-	"github.com/mholt/archiver/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -480,49 +479,5 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			}
 		}
 		c.Status(http.StatusOK)
-	})
-
-	// swagger:route GET /download download downloadParams
-	//
-	// Download a directory as a zip file.
-	//
-	//     Consumes:
-	//
-	//     Produces:
-	//     - application/zip
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//     Responses:
-	//		 500: apiError
-	group.GET("/download", func(c *gin.Context) {
-		targetPath := "/root/brightbird/web/ui/public" // 需要打包的目标文件夹路径
-		zipPath := "public.zip"                        // 打包后的 zip 文件名
-
-		// Check if the zip file already exists
-		if _, err := os.Stat(zipPath); err == nil {
-			// If the zip file exists, remove it
-			err = os.Remove(zipPath)
-			if err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-				return
-			}
-		} else if !os.IsNotExist(err) {
-			// If there was an error other than the file not existing, return the error
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		err := archiver.Archive([]string{targetPath}, zipPath)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		c.Header("Content-Disposition", `attachment; filename="`+filepath.Base(zipPath)+`"`)
-		c.Header("Content-Type", "application/zip")
-		c.File(zipPath)
 	})
 }
