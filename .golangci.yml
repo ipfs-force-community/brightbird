@@ -33,4 +33,5 @@ run:
   skip-dirs:
     - templates
     - web/ui/public
+    - dist
   skip-files: "(.*_gen\\.go$)"

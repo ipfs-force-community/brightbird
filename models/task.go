@@ -55,8 +55,9 @@ type Task struct {
 	TestId          types.TestId       `json:"testId"`
 	State           State              `json:"state"`
 	Logs            []string           `json:"logs"`
+	Pipeline        []*types.ExecNode  `json:"pipeline"`        // save a copu of testflow pipeline
 	InheritVersions map[string]string  `json:"inheritVersions"` // save a copy of task flow, but task flow update version information in this running
-	CommitMap       map[string]string  `json:"versions"`        // save a copy of task flow, but task flow update version information in this running
+	CommitMap       map[string]string  `json:"versions"`        // save a copy of task's commit of each deploy component in testflow
 	BaseTime        `bson:",inline"`
 }
 
