@@ -14,8 +14,8 @@ type Config struct {
 
 	Mysql string
 
-	TaskId          string
-	PrivateRegistry string
+	TaskId   string
+	Registry string
 
 	LogLevel         string
 	CustomProperties map[string]interface{}

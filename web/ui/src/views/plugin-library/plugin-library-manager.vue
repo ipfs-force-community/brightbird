@@ -99,7 +99,7 @@ import {
 import { INode } from '@/model/modules/plugin-library';
 import { Mutable } from '@/utils/lib';
 import { fetchDeployPlugins, fetchExecPlugins, uploadPlugin, deletePluginAllVersion } from '@/api/plugin';
-import { PluginDetail } from '@/api/dto/testflow.js';
+import { PluginDetail } from '@/api/dto/node-definitions.js';
 import { ElButton, ElUpload } from 'element-plus';
 import JmEmpty from '@/components/data/empty/index.vue';
 import JmTextViewer from '@/components/text-viewer/index.vue';

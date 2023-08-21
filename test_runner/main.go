@@ -84,7 +84,7 @@ func main() {
 				Usage: "test  to running",
 			},
 			&cli.StringFlag{
-				Name:  "privReg",
+				Name:  "registry",
 				Usage: "use private registry",
 			},
 			&cli.StringFlag{
@@ -151,8 +151,8 @@ func main() {
 				cfg.Mysql = c.String("mysql")
 			}
 
-			if c.IsSet("privReg") {
-				cfg.PrivateRegistry = c.String("privReg")
+			if c.IsSet("registry") {
+				cfg.Registry = c.String("registry")
 			}
 
 			if c.IsSet("bootPeer") {
@@ -236,7 +236,11 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 	cleaner := Cleaner{}
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic when run testrunner reason %v stack %s", r, string(debug.Stack()))
+			reason := fmt.Sprintf("%v", r)
+			if val, ok := r.(error); ok {
+				reason = val.Error()
+			}
+			err = fmt.Errorf("panic when run testrunner reason %s stack %s", reason, string(debug.Stack()))
 		}
 		if err != nil {
 			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())
@@ -279,7 +283,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 			return &env.K8sInitParams{
 				Namespace:         cfg.NameSpace,
 				TestID:            string(task.TestId),
-				PrivateRegistry:   cfg.PrivateRegistry,
+				Registry:          cfg.Registry,
 				MysqlConnTemplate: cfg.Mysql,
 				TmpPath:           cfg.TmpPath,
 			}

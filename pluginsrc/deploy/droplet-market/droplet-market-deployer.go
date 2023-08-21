@@ -36,9 +36,9 @@ type DropletMarketDeployReturn struct { //nolint
 type RenderParams struct {
 	Config
 
-	NameSpace       string
-	PrivateRegistry string
-	Args            []string
+	NameSpace string
+	Registry  string
+	Args      []string
 
 	UniqueId string
 	MysqlDSN string
@@ -49,11 +49,14 @@ func DefaultConfig() Config {
 }
 
 var PluginInfo = types2.PluginInfo{
-	Name:        "droplet-market",
-	Version:     version.Version(),
-	PluginType:  types2.Deploy,
-	Repo:        "https://github.com/ipfs-force-community/droplet.git",
-	ImageTarget: "droplet-market",
+	Name:       "droplet",
+	Version:    version.Version(),
+	PluginType: types2.Deploy,
+	DeployPluginParams: types2.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/droplet.git",
+		ImageTarget: "droplet",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
 	Description: "",
 }
 
@@ -62,13 +65,17 @@ var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletMarketDeployReturn, error) {
 	renderParams := RenderParams{
-		NameSpace:       k8sEnv.NameSpace(),
-		PrivateRegistry: k8sEnv.PrivateRegistry(),
-		UniqueId:        env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
-		Config:          cfg,
+		NameSpace: k8sEnv.NameSpace(),
+		Registry:  k8sEnv.Registry(),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		Config:    cfg,
 	}
 	if cfg.UseMysql {
 		renderParams.MysqlDSN = k8sEnv.FormatMysqlConnection("droplet-market-" + renderParams.UniqueId)
+		err := k8sEnv.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
+		if err != nil {
+			return nil, err
+		}
 	}
 	//create configmap
 	configMapCfg, err := f.Open("droplet-market/droplet-market-configmap.yaml")
