@@ -3,6 +3,7 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/ipfs-force-community/brightbird/models"
@@ -36,6 +37,7 @@ type ITestFlowRepo interface {
 	List(ctx context.Context, req models.PageReq[ListTestFlowParams]) (*models.PageResp[models.TestFlow], error)
 	Save(context.Context, models.TestFlow) (primitive.ObjectID, error)
 	Count(ctx context.Context, params *CountTestFlowParams) (int64, error)
+	Copy(ctx context.Context, id primitive.ObjectID, name string) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	ChangeTestflowGroup(ctx context.Context, params ChangeTestflowGroup) error
 }
@@ -168,6 +170,27 @@ func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error 
 		return err
 	}
 	return nil
+}
+
+func (c *TestFlowRepo) Copy(ctx context.Context, id primitive.ObjectID, name string) error {
+	tf := &models.TestFlow{}
+	err := c.caseCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
+	if err != nil {
+		return err
+	}
+
+	if tf.Name == name {
+		return fmt.Errorf("name %s was already exit", name)
+	}
+
+	tf.Graph = strings.Replace(tf.Graph, fmt.Sprintf("name: %s\n", tf.Name), fmt.Sprintf("name: %s\n", name), 1) //todo https://github.com/go-yaml/yaml/issues/698
+	tf.ID = primitive.NewObjectID()
+	tf.Name = name
+	tf.CreateTime = time.Now().Unix()
+	tf.ModifiedTime = time.Now().Unix()
+
+	_, err = c.caseCol.InsertOne(ctx, tf)
+	return err
 }
 
 func (c *TestFlowRepo) ChangeTestflowGroup(ctx context.Context, params ChangeTestflowGroup) error {

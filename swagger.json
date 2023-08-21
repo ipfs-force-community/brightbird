@@ -1480,6 +1480,46 @@
         }
       }
     },
+    "/testflow/copy": {
+      "post": {
+        "description": "Copy a current testflow with new name",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "copyTestflow",
+        "parameters": [
+          {
+            "description": "parameters for copy test flow",
+            "name": "copyTestflow",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "parameters for copy test flow",
+              "type": "object",
+              "$ref": "#/definitions/copyTestflow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/testflow/count": {
       "get": {
         "description": "Count testflow numbers in group",
@@ -1727,6 +1767,47 @@
       },
       "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
+    "ExecNode": {
+      "type": "object",
+      "required": [
+        "name",
+        "instanceName",
+        "version"
+      ],
+      "properties": {
+        "input": {
+          "type": "object",
+          "x-go-name": "Input"
+        },
+        "instanceName": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "InstanceName"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        },
+        "output": {
+          "type": "object",
+          "x-go-name": "Output"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
+        },
+        "version": {
+          "description": "the version for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/types"
+    },
     "GlobalParams": {
       "type": "object",
       "properties": {
@@ -1900,6 +1981,22 @@
         }
       },
       "x-go-name": "ChangeTestflowGroupRequest",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
+    },
+    "copyTestflow": {
+      "description": "CopyTestflow",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "CopyTestflow",
       "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "countGroupRequest": {
@@ -2458,6 +2555,13 @@
         "name": {
           "type": "string",
           "x-go-name": "Name"
+        },
+        "pipeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecNode"
+          },
+          "x-go-name": "Pipeline"
         },
         "podName": {
           "type": "string",

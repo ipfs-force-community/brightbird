@@ -10,6 +10,7 @@ GOFLAGS+=-ldflags=$(ldflags)
 gen-swagger:
 	swagger version
 	swagger generate spec -m -o ./swagger.json -w ./web/backend -x github.com/mittwald/goharbor-client/v5
+	rm  -rf web/backend/client
 	swagger generate client -f ./swagger.json --skip-models  --existing-models=github.com/ipfs-force-community/brightbird/models -c ./web/backend/client
 
 SWAGGER_ARG=
