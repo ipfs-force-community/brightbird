@@ -41,13 +41,13 @@ type Pipelines []PipelineItem
 
 func (h *Pipelines) UnmarshalYAML(value *yaml.Node) error {
 	for i := 0; i < len(value.Content); i += 2 {
-		var pipline PipelineItem
-		if err := value.Content[i+1].Decode(&pipline.Value); err != nil {
+		var pipeline PipelineItem
+		if err := value.Content[i+1].Decode(&pipeline.Value); err != nil {
 			return err
 		}
-		pipline.Key = value.Content[i].Value
+		pipeline.Key = value.Content[i].Value
 
-		*h = append(*h, pipline)
+		*h = append(*h, pipeline)
 	}
 
 	return nil

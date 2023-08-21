@@ -193,9 +193,20 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	if err != nil {
 		return nil, err
 	}
+
 	//confirm version and build image.
 	taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
 	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
+	if err != nil {
+		return nil, err
+	}
+
+	var pipelines []*types.ExecNode
+	for _, node := range graph.Pipeline {
+		pipelines = append(pipelines, node.Value)
+	}
+	//save testflow as task params
+	err = taskMgr.taskRepo.UpdatePipeline(ctx, task.ID, pipelines)
 	if err != nil {
 		return nil, err
 	}
