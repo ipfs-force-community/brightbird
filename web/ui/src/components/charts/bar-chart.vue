@@ -71,7 +71,7 @@ export default defineComponent({
           {
             name: '',
             type: 'bar',
-            data: data.reverse(),
+            data: data?.reverse(),
             itemStyle: {
               // 设置柱子圆角
               barBorderRadius: [0, 10, 10, 0],
