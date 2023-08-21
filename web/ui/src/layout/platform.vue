@@ -165,6 +165,7 @@ export default defineComponent({
 .platform {
   margin: 0 auto;
   height: 100vh;
+  overflow: auto;
 
   .header {
     position: fixed;
@@ -181,20 +182,12 @@ export default defineComponent({
     .el-header {
       width: 100%;
       max-width: @main-max-width;
-      margin: 0 auto;
+      margin: 0 0;
     }
 
     .path-nav {
       display: flex;
       align-items: center;
-    }
-
-    .main {
-      height: calc(100vh - 125px);
-    }
-
-    .main2 {
-      height: calc(100vh - 65px);
     }
 
     .main,
