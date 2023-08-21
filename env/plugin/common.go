@@ -24,11 +24,6 @@ type InitParams struct {
 	env.K8sInitParams
 
 	env.EnvContext
-
-	//current
-	//CodeVersion    string          //todo allow config as tag commit id brance
-	//InstanceName   string          //plugin instance name
-	//PropertiesJson json.RawMessage // get params form this fields
 }
 
 func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {

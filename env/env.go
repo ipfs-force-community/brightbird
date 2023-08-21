@@ -80,7 +80,6 @@ type K8sInitParams struct {
 	TestID            string
 	Registry          string
 	MysqlConnTemplate string
-	TmpPath           string
 }
 
 // NewK8sEnvDeployer create a new test environment
@@ -128,7 +127,7 @@ func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
 		dialCtx:           dialCtx,
 		registry:          params.Registry,
 		mysqlConnTemplate: params.MysqlConnTemplate,
-		resourceMgr:       NewResourceMgr(k8sClient, params.Namespace, params.TmpPath, params.MysqlConnTemplate, params.TestID),
+		resourceMgr:       NewResourceMgr(k8sClient, params.Namespace, params.MysqlConnTemplate, params.TestID),
 	}, nil
 }
 

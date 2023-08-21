@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/ipfs-force-community/brightbird/env"
+
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -25,12 +27,13 @@ const (
 // Job
 // swagger:model job
 type Job struct {
-	ID          primitive.ObjectID `bson:"_id" json:"id"`
-	TestFlowId  primitive.ObjectID `json:"testFlowId"`
-	Name        string             `json:"name"`
-	JobType     JobType            `json:"jobType"`
-	ExecCount   int                `json:"execCount"`
-	Description string             `json:"description"`
+	ID           primitive.ObjectID `bson:"_id" json:"id"`
+	TestFlowId   primitive.ObjectID `json:"testFlowId"`
+	Name         string             `json:"name"`
+	JobType      JobType            `json:"jobType"`
+	ExecCount    int                `json:"execCount"`
+	Description  string             `json:"description"`
+	GlobalParams env.GlobalParams   `json:"globalParams"` //override value for params
 
 	Versions map[string]string `json:"versions"` // save a version setting for user job specific
 	//cron job params
@@ -47,7 +50,7 @@ func (job Job) CheckParams() error {
 		_, err := cron.ParseStandard(job.CronExpression)
 		return err
 	case PRMergedJobType:
-		for _, match := range job.PRMergedJobParams.PRMergedEventMatchs {
+		for _, match := range job.PRMergedJobParams.PRMergedEventMatches {
 			if len(match.BasePattern) == 0 || len(match.SourcePattern) == 0 {
 				return errors.New("pr merged job must have dest and source branch")
 			}
@@ -63,7 +66,7 @@ func (job Job) CheckParams() error {
 		}
 
 	case TagCreatedJobType:
-		for _, match := range job.TagCreateEventMatchs {
+		for _, match := range job.TagCreateEventMatches {
 			if len(match.TagPattern) == 0 {
 				return errors.New("tag create event must have a name")
 			}
@@ -84,7 +87,7 @@ type CronJobParams struct {
 }
 
 type PRMergedJobParams struct {
-	PRMergedEventMatchs []PRMergedEventMatch `json:"prMergedEventMatchs"`
+	PRMergedEventMatches []PRMergedEventMatch `json:"prMergedEventMatches"`
 }
 
 type PRMergedEventMatch struct {
@@ -94,7 +97,7 @@ type PRMergedEventMatch struct {
 }
 
 type TagCreateJobParams struct {
-	TagCreateEventMatchs []TagCreateEventMatch `json:"tagCreateEventMatchs"`
+	TagCreateEventMatches []TagCreateEventMatch `json:"tagCreateEventMatches"`
 }
 
 type TagCreateEventMatch struct {

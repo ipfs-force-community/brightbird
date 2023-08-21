@@ -92,7 +92,7 @@ func (prMerged *PRMergedJob) execTag(ctx context.Context, pushEvent *github.Pull
 	fullName := pushEvent.GetRepo().GetFullName()
 
 	var matched bool
-	for _, match := range job.PRMergedEventMatchs {
+	for _, match := range job.PRMergedEventMatches {
 		if strings.Contains(match.Repo, fullName) {
 			sourceMatched, err := regexp.MatchString(match.SourcePattern, types.GetString(pushEvent.GetPullRequest().Head.Ref))
 			if err != nil {

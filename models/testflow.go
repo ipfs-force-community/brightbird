@@ -13,21 +13,29 @@ type TestFlow struct {
 	// the name for this test flow
 	// required: true
 	// min length: 3
-	Name        string             `json:"name"`
-	GroupId     primitive.ObjectID `json:"groupId" bson:"groupid"` //provent mongo use Id to id
-	Graph       string             `json:"graph"`
-	Description string             `json:"description"`
+	Name    string             `json:"name"`
+	GroupId primitive.ObjectID `json:"groupId" bson:"groupid"` //provent mongo use Id to id
+	Graph   string             `json:"graph"`
 
-	BaseTime `bson:",inline"`
+	GlobalProperties []GlobalProperty `json:"globalProperties"`
+
+	Description string `json:"description"`
+	BaseTime    `bson:",inline"`
+}
+
+type GlobalProperty struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"` //json value type
+	Value string `json:"value"`
 }
 
 type Graph struct {
 	Name     string    `yaml:"name"`
 	Pipeline Pipelines `yaml:"pipeline"`
-	Rawdata  string    `yaml:"raw-data"`
+	RawData  string    `yaml:"raw-data"`
 }
 
-// MapSlice encodes and decodes as a YAML map.
+// Pipelines encodes and decodes as a YAML map.
 // The order of keys is preserved when encoding and decoding.
 type Pipelines []PipelineItem
 

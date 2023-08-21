@@ -8,6 +8,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/imdario/mergo"
+	"github.com/ipfs-force-community/brightbird/env"
+
 	"github.com/ipfs-force-community/brightbird/models"
 	"gopkg.in/yaml.v3"
 
@@ -179,19 +182,19 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
-	testFlow, err := taskMgr.testFlowRepo.Get(ctx, &repo.GetTestFlowParams{ID: job.TestFlowId})
+	testflow, err := taskMgr.testFlowRepo.Get(ctx, &repo.GetTestFlowParams{ID: job.TestFlowId})
 	if err != nil {
 		taskLog.Errorf("get test flow failed %v", err)
 		return nil, err
 	}
 
 	graph := &models.Graph{}
-	err = yaml.Unmarshal([]byte(testFlow.Graph), graph)
+	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
 	if err != nil {
 		return nil, err
 	}
 	//confirm version and build image.
-	taskLog.Infof("start to build image for testflow %s job %s", testFlow.Name, job.Name)
+	taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
 	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
 	if err != nil {
 		return nil, err
@@ -209,29 +212,40 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
-	customPropertyBytes, err := json.Marshal(taskMgr.cfg.CustomProperties)
+	var defaultGlobal = env.GlobalParams{
+		LogLevel:         "DEBUG",
+		CustomProperties: taskMgr.cfg.CustomProperties,
+	}
+
+	//append job global params
+	err = mergo.Merge(&defaultGlobal, job.GlobalParams)
 	if err != nil {
 		return nil, err
 	}
 
-	customPropertyBytes, err = yaml.Marshal(string(customPropertyBytes))
+	//yaml escape character
+	globalParamsBytes, err := json.Marshal(defaultGlobal)
+	if err != nil {
+		return nil, err
+	}
+
+	globalParamsBytes, err = yaml.Marshal(string(globalParamsBytes))
 	if err != nil {
 		return nil, err
 	}
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--logLevel=DEBUG", "--plugins=/shared-dir/plugins", "--tmpPath=/shared-dir/tmp", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --customProperties, %s`,
+	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
 		taskMgr.cfg.NameSpace,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
 		taskMgr.cfg.Mysql,
 		taskMgr.privateRegistry,
 		task.ID.Hex(),
-		string(customPropertyBytes),
+		string(globalParamsBytes),
 	)
 
-	for _, p := range taskMgr.cfg.BootstrapPeers {
-		args += fmt.Sprintf(` , "--bootPeer=%s" `, p)
-	}
+	fmt.Println(args)
+
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"NameSpace": taskMgr.cfg.NameSpace,
 		"Registry":  string(taskMgr.privateRegistry),

@@ -208,7 +208,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	// swagger:route DELETE /plugin plugin deletePluginReq
+	// swagger:route DELETE /plugin plugin deletePluginByVersionReq
 	//
 	// Delete plugin by id and specific version
 	//

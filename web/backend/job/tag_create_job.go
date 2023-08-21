@@ -77,7 +77,7 @@ func (tagCreateJob *TagCreateJob) RunImmediately(ctx context.Context) (primitive
 		return primitive.NilObjectID, err
 	}
 
-	for _, match := range job.TagCreateEventMatchs {
+	for _, match := range job.TagCreateEventMatches {
 		owner, repoName, err := toGitOwnerAndRepo(match.Repo)
 		if err != nil {
 			return primitive.NilObjectID, err
@@ -139,7 +139,7 @@ func (tagCreateJob *TagCreateJob) execTag(ctx context.Context, releaseEvent *git
 	fullName := releaseEvent.GetRepo().GetFullName()
 	ref := releaseEvent.GetRelease().GetTagName()
 
-	for _, match := range job.TagCreateEventMatchs {
+	for _, match := range job.TagCreateEventMatches {
 		if strings.Contains(match.Repo, fullName) {
 			matched, err := regexp.MatchString(match.TagPattern, ref)
 			if err != nil {

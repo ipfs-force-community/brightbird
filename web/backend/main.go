@@ -210,7 +210,7 @@ func run(pCtx context.Context, cfg config.Config) error {
 		}),
 		//k8s env
 		fx_opt.Override(new(*job.TestRunnerDeployer), func() (*job.TestRunnerDeployer, error) {
-			return job.NewTestRunnerDeployer(cfg.NameSpace, cfg.Mysql, cfg.LogPath)
+			return job.NewTestRunnerDeployer(cfg.NameSpace, cfg.Mysql)
 		}),
 
 		// build
