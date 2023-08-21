@@ -1,7 +1,7 @@
-.idea/
 .vscode/
 *.so
 config.toml
 __debug_bin
 dist
 node_modules
+templates
