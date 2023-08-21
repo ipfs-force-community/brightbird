@@ -31,7 +31,7 @@
       </div>
 
       <div class="content">
-        <jm-empty v-if="execPlugins.list.length === 0" />
+        <jm-empty v-if="execPlugins.list?.length === 0" />
         <div v-else v-for="(i, idx) in execPlugins.list" :key="idx" class="item">
           <router-link :to="{ path: `/plugin/detail/${i.name}` }">
             <div class="item-t">
@@ -107,7 +107,7 @@ import { ElMessageBox } from 'element-plus';
 import { Delete } from '@element-plus/icons-vue';
 import { downloadPublicZip } from '@/api/plugin';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
-import type { UploadProps, UploadUserFile } from 'element-plus'
+import type { UploadProps, UploadUserFile } from 'element-plus';
 
 import {
   onBeforeRouteUpdate,
@@ -127,26 +127,25 @@ export default defineComponent({
     const fileList: Ref<UploadUserFile[]> = ref([]);
     const downloadUrl = `/public.zip`;
 
-
     const uploading = ref(false); 
 
     fetchDeployPlugins()
-    .then(res => {
-      deployPlugins.value.list = res || [];
-      deployPlugins.value.total = res ? res.length : 0;
-    })
-    .catch((err: Error) => {
-      proxy.$throw(err, proxy);
-    });
+      .then(res => {
+        deployPlugins.value.list = res || [];
+        deployPlugins.value.total = res ? res.length : 0;
+      })
+      .catch((err: Error) => {
+        proxy.$throw(err, proxy);
+      });
 
     fetchExecPlugins()
-    .then(res => {
-      execPlugins.value.list = res || [];
-      execPlugins.value.total = res ? res.length : 0;
-    })
-    .catch((err: Error) => {
-      proxy.$throw(err, proxy);
-    });
+      .then(res => {
+        execPlugins.value.list = res || [];
+        execPlugins.value.total = res ? res.length : 0;
+      })
+      .catch((err: Error) => {
+        proxy.$throw(err, proxy);
+      });
 
     function changeView(
       childRoute: Ref<boolean>,
@@ -190,7 +189,7 @@ export default defineComponent({
           const formData = new FormData(); // 创建新的FormData对象
 
           fileList.value.forEach((file, index) => {
-            formData.append('plugins', file.raw); // 将每个文件添加到FormData对象中
+            formData.append('plugins', file.raw!); // 将每个文件添加到FormData对象中
           });
 
           await uploadPlugin(formData);
@@ -198,14 +197,14 @@ export default defineComponent({
           // 获取最新数据
           fetchExecPlugins()
             .then(res => {
-              execPlugins.value.list = res;
-              execPlugins.value.total = res.length;
+              execPlugins.value.list = res || [];
+              execPlugins.value.total = res ? res.length : 0;
             });
 
           fetchDeployPlugins()  
             .then(res => {
-              deployPlugins.value.list = res;
-              deployPlugins.value.total = res.length;  
+              deployPlugins.value.list = res || [];
+              deployPlugins.value.total = res ? res.length : 0;
             });
 
           ElMessageBox.alert('上传成功', '提示', {
@@ -225,6 +224,7 @@ export default defineComponent({
         });
       } finally {
         uploading.value = false;
+        fileList.value = [];
       }
     };
 
