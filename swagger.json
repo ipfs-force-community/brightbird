@@ -94,30 +94,6 @@
         }
       }
     },
-    "/download": {
-      "get": {
-        "produces": [
-          "application/zip"
-        ],
-        "schemes": [
-          "http",
-          "https"
-        ],
-        "tags": [
-          "download"
-        ],
-        "summary": "Download a directory as a zip file.",
-        "operationId": "downloadParams",
-        "responses": {
-          "500": {
-            "description": "apiError",
-            "schema": {
-              "$ref": "#/definitions/apiError"
-            }
-          }
-        }
-      }
-    },
     "/failed-tasks": {
       "get": {
         "produces": [
@@ -1809,18 +1785,9 @@
       "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
     "GlobalParams": {
+      "description": "logLevel",
       "type": "object",
-      "properties": {
-        "customProperties": {
-          "type": "object",
-          "additionalProperties": {},
-          "x-go-name": "CustomProperties"
-        },
-        "logLevel": {
-          "type": "string",
-          "x-go-name": "LogLevel"
-        }
-      },
+      "additionalProperties": {},
       "x-go-package": "github.com/ipfs-force-community/brightbird/env"
     },
     "GlobalProperty": {
