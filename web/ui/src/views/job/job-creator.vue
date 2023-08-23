@@ -23,13 +23,11 @@
       </jm-form-item>
 
 
-
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
           placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
         <div class="tips">描述信息不超过 256个字符</div>
       </jm-form-item>
-
 
 
       <jm-form-item label="类型" prop="jobType">
@@ -46,7 +44,7 @@
       <div>
         <div v-show="createForm.jobType == JobEnum.CronJob">
           <el-text>版本设置:</el-text>
-          <div class="form-inter version" v-for="(version, component) in createForm.versions">
+          <div class="form-inter version" v-for="(version, component) in createForm.versions" :key="component">
             <el-row>
               <el-col :span="6">
                 {{ component }}
@@ -61,7 +59,7 @@
 
         <div v-show="createForm.jobType == JobEnum.TagCreated">
           <el-text>tag匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.tagCreateEventMatches">
+          <div class="form-inter version" v-for="match,index in createForm.tagCreateEventMatches" :key="index">
             <el-row>
               <el-col :span="6">
                 {{ getRepoName(match.repo) }}
@@ -75,7 +73,7 @@
 
         <div v-show="createForm.jobType == JobEnum.PRMerged">
           <el-text>分支匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.prMergedEventMatches">
+          <div class="form-inter version" v-for="match,index in createForm.prMergedEventMatches" :key="index">
             <el-row>
               <el-col :span="7">
                 {{ getRepoName(match.repo) }}
@@ -109,10 +107,10 @@ import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/vie
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
-import { JobEnum, PluginTypeEnum} from '@/api/dto/enumeration';
+import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
-import { ElCol, ElRow } from 'element-plus';
+import { ElCol, ElRow, FormRules } from 'element-plus';
 import yaml from 'yaml';
 
 export default defineComponent({
@@ -140,7 +138,7 @@ export default defineComponent({
       prMergedEventMatches: [],
       tagCreateEventMatches: [],
     });
-    const editorRule = ref<object>({
+    const editorRule = ref<FormRules<IJobCreateVo>>({
       name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
       testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
       jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
@@ -207,8 +205,8 @@ export default defineComponent({
       let versions: any = {};
       const { pipeline } = yaml.parse(testflow.graph);
       Object.values(pipeline).forEach((f: any) => {
-        if (f.pluginType == PluginTypeEnum.Exec) {
-          return
+        if (f.pluginType === PluginTypeEnum.Exec) {
+          return;
         }
         versions[f.name] = '';
       });
@@ -250,7 +248,7 @@ export default defineComponent({
             if (nodeInUse.has(p.name + p.version)) {
               pluginMap.set(p.name, p);
             }
-          })
+          });
 
         });
 
@@ -262,13 +260,13 @@ export default defineComponent({
           }
         });
 
-        if (createForm.value.jobType == JobEnum.TagCreated) {
+        if (createForm.value.jobType === JobEnum.TagCreated) {
           createForm.value.tagCreateEventMatches = [];
           [...repos].map(repoName => createForm.value.tagCreateEventMatches.push({
             repo: repoName,
             tagPattern: 'tag/.+',
           }));
-        } else if (createForm.value.jobType == JobEnum.PRMerged) {
+        } else if (createForm.value.jobType === JobEnum.PRMerged) {
           createForm.value.prMergedEventMatches = [];
           [...repos].map(repoName => createForm.value.prMergedEventMatches.push({
             repo: repoName,
@@ -294,7 +292,7 @@ export default defineComponent({
       }
     };
     const onSelectTf = async () => {
-      const selTf = testflows.value?.find(a => a.id == createForm.value.testFlowId);
+      const selTf = testflows.value?.find(a => a.id === createForm.value.testFlowId);
       if (selTf) {
         refreshSelect(selTf);
       }
