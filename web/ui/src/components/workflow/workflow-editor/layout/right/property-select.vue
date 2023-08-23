@@ -1,6 +1,12 @@
 <template>
-    <el-input v-model="refValue" :placeholder="property.description ? property.description : '请输入' + property.name"
-        @focus="inputFocus" @input="showTree = false" @blur="setPropValue" />
+    <el-input v-if="props.propName == 'script'" type="textarea" v-model="refValue"
+        :placeholder="property.description ? property.description : '请输入' + property.name" @focus="inputFocus"
+        @input="showTree = false" @blur="setPropValue" />
+
+    <el-input v-else v-model="refValue"
+        :placeholder="property.description ? property.description : '请输入' + property.name" @focus="inputFocus"
+        @input="showTree = false" @blur="setPropValue" />
+
     <el-tree v-show="showTree" :data="treeData" :props="defaultProps" :load="loadNode" lazy>
         <template #default="{ node, data }">
             <span class="custom-tree-node">
@@ -189,6 +195,7 @@ export default defineComponent({
             resolve(treeData)
         }
         return {
+            props,
             defaultProps,
             refValue,
             showTree,

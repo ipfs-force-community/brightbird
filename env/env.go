@@ -76,10 +76,10 @@ type K8sEnvDeployer struct {
 }
 
 type K8sInitParams struct {
-	Namespace         string
-	TestID            string
-	Registry          string
-	MysqlConnTemplate string
+	Namespace         string `json:"namespace"`
+	TestID            string `json:"testID"`
+	Registry          string `json:"registry"`
+	MysqlConnTemplate string `json:"mysqlConnTemplate"`
 }
 
 // NewK8sEnvDeployer create a new test environment

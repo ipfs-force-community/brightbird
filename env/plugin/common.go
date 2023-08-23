@@ -2,19 +2,22 @@ package plugin
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"reflect"
 	"regexp"
 
+	container "github.com/golobby/container/v3"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/modern-go/reflect2"
 	"github.com/tidwall/gjson"
-	"github.com/tidwall/sjson"
 )
 
 var log = logging.Logger("plugin_setup")
@@ -62,7 +65,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 			os.Exit(1)
 			return
 		}
-		writeResult(string(result)) //NOTE never remove this print code!!!!!, println for testrunner to read
+		writeResult(string(result))
 		return
 	}
 
@@ -132,12 +135,26 @@ func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *I
 	depParmasT := fnT.In(2)
 	paramsV := reflect.New(depParmasT)
 
-	input, err = sjson.SetBytes(input, "global", incomingParams.Global)
+	err = json.Unmarshal(input, paramsV.Interface())
 	if err != nil {
 		return err
 	}
 
-	err = json.Unmarshal(input, paramsV.Interface())
+	err = container.Singleton(func() *env.GlobalParams {
+		return &incomingParams.Global
+	})
+	if err != nil {
+		return err
+	}
+
+	err = container.Singleton(func() *InitParams {
+		return incomingParams
+	})
+	if err != nil {
+		return err
+	}
+
+	err = container.Fill(paramsV.Interface())
 	if err != nil {
 		return err
 	}
@@ -155,59 +172,40 @@ func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *I
 			return results[1].Interface().(error)
 		}
 
-		jsonBytes, err := json.Marshal(results[0].Interface())
-		if err != nil {
-			return err
-		}
+		if !reflect2.IsNil(results[0].Interface()) {
+			jsonBytes, err := json.Marshal(results[0].Interface())
+			if err != nil {
+				return err
+			}
 
-		nodeCtx.OutPut = jsonBytes
+			nodeCtx.OutPut = jsonBytes //override output
+		}
 	}
 
 	jsonBytes, err := json.Marshal(incomingParams)
 	if err != nil {
 		return err
 	}
-	writeResult(string(jsonBytes))
+	writeResult(string(jsonBytes)) //must return this value
 	return nil
 }
 
 func GetPluginInfo(path string) (*types.PluginInfo, error) {
-	r, w, err := os.Pipe()
+	stdOut := bytes.NewBuffer(nil)
+
+	cmd := exec.Command(path, "info")
+	cmd.Env = os.Environ()
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = io.MultiWriter(os.Stdout, stdOut)
+	cmd.Stderr = os.Stderr
+
+	err := cmd.Run()
 	if err != nil {
 		return nil, err
-	}
-
-	process, err := os.StartProcess(path, []string{path, "info"}, &os.ProcAttr{
-		Files: []*os.File{os.Stdin, w, os.Stderr},
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	st, err := process.Wait()
-	if err != nil {
-		return nil, err
-	}
-
-	if st.ExitCode() != 0 {
-		return nil, fmt.Errorf("get detail of plugin %s fail exitcode %d", path, st.ExitCode())
-	}
-
-	w.Close() //nolint
-	bufR := bufio.NewReader(io.TeeReader(r, os.Stdout))
-	var lastLine string
-	for {
-		thisLine, err := bufR.ReadString('\n')
-		if err != nil {
-			if err == io.EOF {
-				break
-			}
-		}
-		lastLine = thisLine
 	}
 
 	info := &types.PluginInfo{}
-	err = json.Unmarshal([]byte(lastLine), info)
+	err = json.Unmarshal(stdOut.Bytes(), info)
 	if err != nil {
 		return nil, err
 	}

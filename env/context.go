@@ -37,14 +37,14 @@ func (global GlobalParams) GetStringProperty(key string) (string, error) {
 }
 
 type NodeContext struct {
-	Input  json.RawMessage
-	OutPut json.RawMessage
+	Input  json.RawMessage `json:"input"`
+	OutPut json.RawMessage `json:"output"`
 }
 
 type EnvContext struct { //nolint
-	Global         GlobalParams
-	Nodes          map[string]*NodeContext
-	CurrentContext string
+	Global         GlobalParams            `json:"global"`
+	Nodes          map[string]*NodeContext `json:"nodes"`
+	CurrentContext string                  `json:"currentContext"`
 }
 
 func (envCtx EnvContext) Current() *NodeContext {

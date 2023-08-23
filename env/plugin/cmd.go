@@ -46,3 +46,24 @@ func ReadCMD(line string) (string, string, bool) {
 	}
 	return cmd, val, true
 }
+
+func GetLastJSON(text string) string {
+	text = strings.Trim(text, "\n \t")
+	if text[len(text)-1] != '}' {
+		return ""
+	}
+
+	isClose := 0
+	for i := len(text) - 1; i >= 0; i-- {
+		switch text[i] {
+		case '}':
+			isClose++
+		case '{':
+			isClose--
+		}
+		if isClose == 0 {
+			return text[i:]
+		}
+	}
+	return ""
+}

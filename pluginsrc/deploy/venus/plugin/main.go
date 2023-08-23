@@ -16,7 +16,7 @@ func main() {
 type DepParams struct {
 	venus.Config
 
-	Global env.GlobalParams                  `jsonschema:"-" json:"global"`
+	Global *env.GlobalParams                 `jsonschema:"-" container:"type"`
 	Auth   sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
