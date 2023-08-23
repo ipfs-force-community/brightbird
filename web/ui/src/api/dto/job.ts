@@ -31,12 +31,6 @@ extends Readonly<{
   n: number;
 }> { }
 
-export interface GlobalParams
-    extends Readonly<{
-        logLevel: string;
-        customProperties:{ [key: string]: any };
-    }> { }
-
 export interface IJobVo extends Readonly<{
     id: string;
     testFlowId: string;
@@ -44,7 +38,7 @@ export interface IJobVo extends Readonly<{
     jobType: JobEnum;
     description: string;
     versions: Map<string, string>;
-    globalParams: GlobalParams;
+    globalParams: { [key: string]: any };
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
