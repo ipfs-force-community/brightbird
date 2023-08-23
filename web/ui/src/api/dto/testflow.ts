@@ -31,7 +31,7 @@ export interface ITestFlowDetail
     modifiedTime: string;
     groupId: string;
     graph: string;
-    globalProperties: GlobalProperty;
+    globalProperties?: GlobalProperty[];
     description: string;
   }> { }
 
@@ -46,7 +46,6 @@ export interface ICountTestFlowParam
     groupId?: string;
     name?: string;
   }> { }
-
 
 
 /**
