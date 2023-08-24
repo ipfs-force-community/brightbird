@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
-	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
@@ -60,32 +59,5 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	fmt.Printf("%s user:%s miner:%s success.\n", opStr, params.UserName, params.Miner)
 
-	err = getMinerFromGateway(ctx, params)
-	if err != nil {
-		return err
-	}
-
 	return nil
-}
-
-func getMinerFromGateway(ctx context.Context, params TestCaseParams) error {
-	api, closer, err := v2API.DialIGatewayRPC(ctx, params.Gateway.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
-	if err != nil {
-		return err
-	}
-	defer closer()
-
-	minerList, err := api.ListConnectedMiners(ctx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("全部的miner列表:")
-	for _, miner := range minerList {
-		fmt.Println(miner)
-		if miner == params.Miner {
-			return nil
-		}
-	}
-	return fmt.Errorf("miner %s not found", params.Miner)
 }

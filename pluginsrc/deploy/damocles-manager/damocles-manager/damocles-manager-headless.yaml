@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: venus-sector-manager-{{.UniqueId}}-svc
+  name: damocles-manager-{{.UniqueId}}-svc
 spec:
   clusterIP: None
   selector:
-    app: venus-sector-manager-{{.UniqueId}}-pod
+    app: damocles-manager-{{.UniqueId}}
   ports:
     - protocol: TCP
       port: 1789

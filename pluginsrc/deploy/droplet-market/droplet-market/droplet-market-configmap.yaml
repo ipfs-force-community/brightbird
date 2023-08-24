@@ -45,7 +45,7 @@ data:
     [[PieceStorage.Fs]]
       Name = "local"
       ReadOnly = false
-      Path = "/root/piece-{{.UniqueId}}"
+      Path = "/shared-dir/m-piece/piece"
      
 
     [DAGStore]

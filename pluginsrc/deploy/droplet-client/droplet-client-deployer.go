@@ -24,7 +24,7 @@ type VConfig struct {
 	WalletUrl   string `jsonschema:"-" json:"walletUrl"`
 	WalletToken string `jsonschema:"-" json:"walletToken"`
 
-	UserToken  string `json:"userToken" jsonschema:"clientAddr" title:"Client Address" description:"toke to connect daemon" require:"true" `
+	UserToken  string `json:"userToken" jsonschema:"userToken" title:"User Token" description:"user token" require:"true" `
 	ClientAddr string `json:"clientAddr" jsonschema:"clientAddr" title:"Client Address" description:"pay for storage/retrieval" require:"true" `
 }
 

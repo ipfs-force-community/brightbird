@@ -19,14 +19,14 @@ type Config struct {
 }
 
 type VConfig struct {
-	NodeUrl     string `jsonschema:"-"`
-	MessagerUrl string `jsonschema:"-"`
-	MarketUrl   string `jsonschema:"-"`
-	GatewayUrl  string `jsonschema:"-"`
-	AuthUrl     string `jsonschema:"-"`
+	NodeUrl      string `jsonschema:"-"`
+	MessagerUrl  string `jsonschema:"-"`
+	MarketUrl    string `jsonschema:"-"`
+	GatewayUrl   string `jsonschema:"-"`
+	AuthUrl      string `jsonschema:"-"`
+	MinerAddress string `jsonschema:"-"`
 
 	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" `
-	MinerAddress        address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 	UserToken           string          `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true" `
 }
 
@@ -56,6 +56,7 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
+//go:embed damocles-manager
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DamoclesManagerReturn, error) {

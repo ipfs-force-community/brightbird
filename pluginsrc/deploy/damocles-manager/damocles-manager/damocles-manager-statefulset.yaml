@@ -26,10 +26,19 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
+        - name: init-storage
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', 'mkdir -p /root/storage1']
+          volumeMounts:
+            - mountPath: /root/storage1
+              name: storage1
       containers:
         - name: damocles-manager-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-manager:{{.CodeVersion}}"
-          args: ["run"]
+          args: ['daemon', 'run', '--poster', '--miner', '--listen', '0.0.0.0:1789']
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
           ports:
             - containerPort: 1789
               protocol: TCP
@@ -42,6 +51,8 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
+            - mountPath: /root/storage1
+              name: storage1
       volumes:
         - name: sector-manager-cfg
           configMap:
@@ -50,13 +61,15 @@ spec:
               - key: sector-manager.cfg
                 path: sector-manager.cfg
         - name: shared-dir-v
-            persistentVolumeClaim:
-              claimName: shared-dir
+          persistentVolumeClaim:
+            claimName: shared-dir
+        - name: storage1
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
-        name: damocles-receive-pvc # name+podname
+        name: damocles-pvc # name+podname
         labels:
-          app: damocles-receive-{{.UniqueId}}-pvc
+          app: damocles-{{.UniqueId}}-pvc
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: "nfs-client"

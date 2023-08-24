@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 
+	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	damoclesmanager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/damocles-manager"
@@ -27,19 +28,21 @@ type DepParams struct {
 	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 
 	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+
+	MinerAddress address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesmanager.DamoclesManagerReturn, error) {
 	return damoclesmanager.DeployFromConfig(ctx, k8sEnv, damoclesmanager.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: damoclesmanager.VConfig{
-			NodeUrl:             depParams.Auth.SvcEndpoint.ToMultiAddr(),
+			NodeUrl:             depParams.Venus.SvcEndpoint.ToMultiAddr(),
 			MessagerUrl:         depParams.Messager.SvcEndpoint.ToMultiAddr(),
 			MarketUrl:           depParams.DropletMarket.SvcEndpoint.ToMultiAddr(),
 			GatewayUrl:          depParams.Gateway.SvcEndpoint.ToMultiAddr(),
 			AuthUrl:             depParams.Auth.SvcEndpoint.ToHTTP(),
 			UserToken:           depParams.UserToken,
-			MinerAddress:        depParams.MinerAddress,
+			MinerAddress:        depParams.MinerAddress.String()[2:],
 			SenderWalletAddress: depParams.SenderWalletAddress,
 		},
 	})

@@ -11,12 +11,12 @@ data:
     Messager = "{{.MessagerUrl}}"
     Market = "{{.MarketUrl}}"
     Gateway = ["{{.GatewayUrl}}"]
-    Token = "{{.AuthToken}}"
+    Token = "{{.UserToken}}"
     #ChainEventInterval = "1m0s"
     
     [[Common.PieceStores]]
     Name = "local"
-    Path = "/shared-dir/m-piece/piece-{{.UniqueId}}"
+    Path = "/shared-dir/m-piece/piece"
     #Plugin = ""
     #PluginName = "s3store"
     [Common.PieceStores.Meta]
@@ -24,7 +24,7 @@ data:
     
     [[Common.PersistStores]]
     Name = "storage"
-    Path = "/storage-nfs-4/{{.UniqueId}}/{{.MinerAddress}}"
+    Path = "/root/storage1"
     Strict = false
     ReadOnly = false
     Weight = 0
@@ -51,7 +51,7 @@ data:
     [Miners.Sector]
     InitNumber = 0
     MinNumber = 0
-    MaxNumber = 1000000
+    MaxNumber = 1000
     Enabled = true
     EnableDeals = true
     LifetimeDays = 540
