@@ -6,11 +6,10 @@ type Config struct {
 	PluginStore  string
 	RunnerConfig string
 
-	BootstrapPeers []string
-	MongoURL       string
-	DBName         string
-	Listen         string
-	LogLevel       string
+	MongoURL string
+	DBName   string
+	Listen   string
+	LogLevel string
 
 	WebhookURL string
 	Mysql      string

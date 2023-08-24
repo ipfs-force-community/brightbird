@@ -19,6 +19,9 @@ type Config struct {
 }
 
 type VConfig struct {
+	PieceStores   []string `jsonschema:"-"`
+	PersistStores []string `jsonschema:"-"`
+
 	NodeUrl      string `jsonschema:"-"`
 	MessagerUrl  string `jsonschema:"-"`
 	MarketUrl    string `jsonschema:"-"`

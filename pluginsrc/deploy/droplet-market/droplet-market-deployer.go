@@ -22,10 +22,11 @@ type VConfig struct {
 	UserToken string `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true"`
 	UseMysql  bool   `json:"useMysql" jsonschema:"useMysql" title:"UserMysql" require:"true" description:"true or false"`
 
-	NodeUrl     string `jsonschema:"-"`
-	GatewayUrl  string `jsonschema:"-"`
-	MessagerUrl string `jsonschema:"-"`
-	AuthUrl     string `jsonschema:"-"`
+	PieceStores []string `jsonschema:"-"`
+	NodeUrl     string   `jsonschema:"-"`
+	GatewayUrl  string   `jsonschema:"-"`
+	MessagerUrl string   `jsonschema:"-"`
+	AuthUrl     string   `jsonschema:"-"`
 }
 
 type DropletMarketDeployReturn struct { //nolint
@@ -35,10 +36,10 @@ type DropletMarketDeployReturn struct { //nolint
 
 type RenderParams struct {
 	Config
-
-	NameSpace string
-	Registry  string
-	Args      []string
+	PieceStores []string
+	NameSpace   string
+	Registry    string
+	Args        []string
 
 	UniqueId string
 	MysqlDSN string
@@ -77,6 +78,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 			return nil, err
 		}
 	}
+
 	//create configmap
 	configMapCfg, err := f.Open("droplet-market/droplet-market-configmap.yaml")
 	if err != nil {

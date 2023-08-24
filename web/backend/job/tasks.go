@@ -226,6 +226,12 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	var defaultGlobal = make(env.GlobalParams)
 	defaultGlobal["logLevel"] = "DEBUG"
 
+	//append global config
+	err = mergo.Merge(&defaultGlobal, env.GlobalParams(taskMgr.cfg.CustomProperties))
+	if err != nil {
+		return nil, err
+	}
+
 	//append job global params
 	err = mergo.Merge(&defaultGlobal, job.GlobalParams)
 	if err != nil {

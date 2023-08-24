@@ -1,0 +1,13 @@
+kind: mk
+apiVersion: v1
+metadata:
+  name: pvc-{{.Unique}}
+  namespace: {{.Namespace}}
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Delete
+  resources:
+    requests:
+      storage: 1Gi

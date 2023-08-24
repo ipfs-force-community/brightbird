@@ -94,13 +94,18 @@ func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []
 		if node.Value.PluginType != types.Deploy {
 			continue
 		}
+
+		plugin, err := mgr.pluginRepo.GetPlugin(ctx, node.Value.Name, node.Value.Version)
+		if err != nil {
+			return nil, fmt.Errorf("get plugin %w", err)
+		}
+
+		if !plugin.Buildable() {
+			continue
+		}
+
 		nodeCpy := *node.Value //copy
 		g.Go(func() error {
-			plugin, err := mgr.pluginRepo.GetPlugin(ctx, nodeCpy.Name, nodeCpy.Version)
-			if err != nil {
-				return err
-			}
-
 			result := make(chan BuildResult, 1)
 			mgr.taskCh <- &BuildTask{
 				Name:    nodeCpy.Name,
