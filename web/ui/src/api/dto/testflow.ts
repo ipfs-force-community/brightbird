@@ -13,11 +13,11 @@ export interface Node
     output: string;
   }> { }
 
-export interface GlobalProperty
+export interface GlobalProperty 
     extends Readonly<{
-        name: string;
-        type: string;
-        value: string;
+  name: string;
+  type: string;
+  value: string;
   }> { }
 
 /**

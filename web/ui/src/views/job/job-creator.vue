@@ -87,6 +87,26 @@
             </el-row>
           </div>
         </div>
+        <div v-show="createForm.globalProperties" class="global-properties-title">
+          <div>字段名</div>
+          <div>类型</div>
+          <div>字段名</div>
+        </div>
+        <div class="global-properties-body">
+          <template v-for="item,index in createForm.globalProperties" :key="index">
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'" >
+            <ElInput disabled v-model="item.name"></ElInput>
+            </ElFormItem>
+            <ElSelect  v-model="item.type">
+                <ElOption label="string" value="0"></ElOption>
+                <ElOption label="number" value="1"></ElOption>
+                <ElOption label="json" value="2"></ElOption>
+            </ElSelect>
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
+              <ElInput  v-model="item.value"></ElInput>
+            </ElFormItem>
+          </template>
+        </div>
       </div>
     </jm-form>
 
@@ -110,12 +130,12 @@ import { Mutable } from '@/utils/lib';
 import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
-import { ElCol, ElRow, FormRules } from 'element-plus';
+import { ElCol, ElFormItem, ElInput, ElOption, ElRow, ElSelect, FormRules } from 'element-plus';
 import yaml from 'yaml';
 
 export default defineComponent({
   emits: ['completed'],
-  components: { ElRow, ElCol },
+  components: { ElRow, ElCol, ElInput, ElFormItem, ElSelect, ElOption },
   setup(_, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
@@ -142,6 +162,29 @@ export default defineComponent({
       name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
       testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
       jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
+      globalProperties: [
+        { required: true, message: '不能为空', trigger: 'blur' },
+        {
+          validator(rule, value, callback, source, options) {
+            const key = Number(rule.fullField?.replace('.value', '').replace('globalProperties.', ''));
+            const type = (createForm.value.globalProperties ?? [])[key].type;       
+            if (type === '1' && Number.isNaN(Number(value))) {
+              callback(new Error('请输入number 类型'));
+              return;
+            }
+            if (type === '2') {
+              try {
+                JSON.parse(value);
+              } catch (error) {
+                callback(new Error('请输入json类型'));
+              }
+              return;
+            }
+          },
+          trigger: 'blur',
+        },
+    
+      ],
     });
 
     const loading = ref<boolean>(false);
@@ -157,6 +200,9 @@ export default defineComponent({
 
         loading.value = true;
         try {
+          createForm.value.globalParams =  Object.fromEntries( (createForm.value.globalProperties ?? []).map(item => {
+            return [item.name, item.value];
+          })) ;
           await createJob(createForm.value);
           proxy.$success('Job创建成功');
           emit('completed');
@@ -212,6 +258,7 @@ export default defineComponent({
       });
       // use for cron
       createForm.value.versions = versions;
+      createForm.value.globalProperties = testflow.globalProperties ?? [];
     };
     const changeGroup = async () => {
       testflowsLoading.value = true;
@@ -249,7 +296,6 @@ export default defineComponent({
               pluginMap.set(p.name, p);
             }
           });
-
         });
 
         const repos = new Set<string>();
@@ -365,4 +411,16 @@ export default defineComponent({
 
 .invadateName ::v-deep input {
   border-color: #f56c6c;
-}</style>
+}
+
+.global-properties-title {
+  padding: 20px 0px;
+}
+.global-properties-title,.global-properties-body {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  grid-column-gap: 20px;
+  grid-row-gap: 5px;
+}
+
+</style>

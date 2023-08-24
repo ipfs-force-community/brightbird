@@ -10,7 +10,7 @@
       }}</el-descriptions-item>
       <el-descriptions-item label-class-name="label-col" label="类型">{{ jobDetail?.jobType || '无' }}</el-descriptions-item>
       <el-descriptions-item label-class-name="label-col" label="执行计划" v-show="jobDetail?.jobType == JobEnum.CronJob"> 
-      <el-text class = "next" v-for="t in next"> {{ t.toLocaleString() }} </el-text>
+      <el-text class = "next" v-for="t,index in next" :key="index"> {{ t.toLocaleString() }} </el-text>
       </el-descriptions-item>
     </el-descriptions>
     <div class="content">
@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts">
-import { getJobDetail , nextNTime} from '@/api/job';
+import { getJobDetail, nextNTime } from '@/api/job';
 import { getTaskInJob } from '@/api/tasks';
 import {  defineComponent, getCurrentInstance, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
@@ -44,7 +44,7 @@ import { ITaskVo } from '@/api/dto/tasks';
 
 import { StateEnum } from '@/components/load-more/enumeration';
 import TaskItem from '@/views/common/task-item.vue';
-import { TaskStateEnum , JobEnum} from '@/api/dto/enumeration';
+import { TaskStateEnum, JobEnum } from '@/api/dto/enumeration';
 import { getTask } from '@/api/tasks';
 
 export default defineComponent({
@@ -90,13 +90,13 @@ export default defineComponent({
         pageData.value.pages = queryTask.pages;
         pageData.value.tasks.push(...queryTask.list);
         initialized.value = true;
-        if (queryTask.pages == 1) {
+        if (queryTask.pages === 1) {
           loadState.value = StateEnum.NO_MORE;
         } else {
           loadState.value = StateEnum.MORE;
         }
-        const nextN = await nextNTime({id:props.id,n:3})
-        next.value = nextN.map(a=>new Date(a*1000))
+        const nextN = await nextNTime({ id:props.id, n:3 });
+        next.value = nextN.map(a=>new Date(a*1000));
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -114,7 +114,7 @@ export default defineComponent({
           pageData.value.tasks.push(...queryTask.list);
           pageData.value.total = queryTask.total;
           pageData.value.pages = queryTask.pages;
-          if (pageData.value.pageNum == pageData.value.pages) {
+          if (pageData.value.pageNum === pageData.value.pages) {
             loadState.value = StateEnum.NO_MORE;
           }
         }
@@ -129,8 +129,8 @@ export default defineComponent({
     setInterval(async () => {
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
-          if (pageData.value.tasks[i].state != TaskStateEnum.Error && pageData.value.tasks[i].state != TaskStateEnum.Successful) {
-            pageData.value.tasks[i] = await getTask({ID:pageData.value.tasks[i].id});
+          if (pageData.value.tasks[i].state !== TaskStateEnum.Error && pageData.value.tasks[i].state !== TaskStateEnum.Successful) {
+            pageData.value.tasks[i] = await getTask({ ID:pageData.value.tasks[i].id });
           }
         }
       } catch (err) {
