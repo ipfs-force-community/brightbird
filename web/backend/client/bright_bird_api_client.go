@@ -10,7 +10,6 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/ipfs-force-community/brightbird/web/backend/client/download"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/failed_tasks"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/group"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/job"
@@ -66,7 +65,6 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *BrightBird
 
 	cli := new(BrightBirdAPI)
 	cli.Transport = transport
-	cli.Download = download.New(transport, formats)
 	cli.FailedTasks = failed_tasks.New(transport, formats)
 	cli.Group = group.New(transport, formats)
 	cli.Job = job.New(transport, formats)
@@ -122,8 +120,6 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 
 // BrightBirdAPI is a client for bright bird API
 type BrightBirdAPI struct {
-	Download download.ClientService
-
 	FailedTasks failed_tasks.ClientService
 
 	Group group.ClientService
@@ -152,7 +148,6 @@ type BrightBirdAPI struct {
 // SetTransport changes the transport on the client and all its subresources
 func (c *BrightBirdAPI) SetTransport(transport runtime.ClientTransport) {
 	c.Transport = transport
-	c.Download.SetTransport(transport)
 	c.FailedTasks.SetTransport(transport)
 	c.Group.SetTransport(transport)
 	c.Job.SetTransport(transport)

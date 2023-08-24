@@ -32,6 +32,8 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	ChangeGroupRequest(params *ChangeGroupRequestParams, opts ...ClientOption) (*ChangeGroupRequestOK, error)
 
+	CopyTestflow(params *CopyTestflowParams, opts ...ClientOption) (*CopyTestflowOK, error)
+
 	CountTestFlowRequest(params *CountTestFlowRequestParams, opts ...ClientOption) (*CountTestFlowRequestOK, error)
 
 	DeleteTestFlow(params *DeleteTestFlowParams, opts ...ClientOption) (*DeleteTestFlowOK, error)
@@ -80,6 +82,44 @@ func (a *Client) ChangeGroupRequest(params *ChangeGroupRequestParams, opts ...Cl
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for changeGroupRequest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+CopyTestflow Copy a current testflow with new name
+*/
+func (a *Client) CopyTestflow(params *CopyTestflowParams, opts ...ClientOption) (*CopyTestflowOK, error) {
+	// TODO: Validate the params before sending
+	if params == nil {
+		params = NewCopyTestflowParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "copyTestflow",
+		Method:             "POST",
+		PathPattern:        "/testflow/copy",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json", "application/xml"},
+		Schemes:            []string{"http", "https"},
+		Params:             params,
+		Reader:             &CopyTestflowReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+	success, ok := result.(*CopyTestflowOK)
+	if ok {
+		return success, nil
+	}
+	// unexpected success response
+	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for copyTestflow: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

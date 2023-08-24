@@ -192,6 +192,46 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 		c.String(http.StatusOK, id.Hex())
 	})
 
+	// swagger:route POST /testflow/copy testflow copyTestflow
+	//
+	// Copy a current testflow with new name
+	//
+	//     Consumes:
+	//
+	//     Produces:
+	//     - application/json
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Parameters:
+	//       + name: copyTestflow
+	//         in: body
+	//         description: parameters for copy test flow
+	//         required: true
+	//         type: copyTestflow
+	//         allowEmpty:  false
+	//
+	//     Responses:
+	//       200:
+	//		 503: apiError
+	group.POST("copy", func(c *gin.Context) {
+		var copyTestflow models.CopyTestflow
+		if err := c.ShouldBindJSON(&copyTestflow); err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		err := service.Copy(ctx, copyTestflow.ID, copyTestflow.Name)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		c.Status(http.StatusOK)
+	})
+
 	// swagger:route DELETE /testflow/{id} testflow deleteTestFlow
 	//
 	// Delete test flow by id

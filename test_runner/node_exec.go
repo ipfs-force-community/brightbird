@@ -1,13 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path"
 	"strconv"
 	"strings"
@@ -78,34 +78,8 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	if err != nil {
 		return err
 	}
-
-	stdOutR, stdOutW, err := os.Pipe()
-	if err != nil {
-		return err
-	}
-
-	stdErrR, stdErrW, err := os.Pipe()
-	if err != nil {
-		return err
-	}
-
-	outR := bufio.NewReader(io.TeeReader(stdOutR, os.Stdout))
-	readLastLine := make(chan string)
-	go func() {
-		var lastLine string
-		for {
-			thisLine, err := outR.ReadString('\n')
-			if err != nil {
-				if err == io.EOF {
-					readLastLine <- lastLine
-					break
-				}
-				log.Errorf("read stdout fail %w", err)
-				return
-			}
-			lastLine = thisLine
-		}
-	}()
+	stdOut := bytes.NewBuffer(nil)
+	stdErr := bytes.NewBuffer(nil)
 
 	//write init params
 	initParams := plugin.InitParams{
@@ -120,13 +94,11 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	log.Debugf("invoke plugin %s params %s", pip.InstanceName, string(initData))
 
 	plugin.RespStart(pip.InstanceName)
-	process, err := os.StartProcess(pluginPath, []string{pluginPath}, &os.ProcAttr{
-		Env:   os.Environ(),
-		Files: []*os.File{stdInR, stdOutW, stdErrW},
-	})
-	if err != nil {
-		return err
-	}
+	cmd := exec.Command(pluginPath)
+	cmd.Env = os.Environ()
+	cmd.Stdin = stdInR
+	cmd.Stdout = io.MultiWriter(os.Stdout, stdOut)
+	cmd.Stderr = io.MultiWriter(os.Stderr, stdErr)
 
 	_, err = stdInW.Write(initData)
 	if err != nil {
@@ -137,39 +109,20 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		return err
 	}
 
-	st, err := process.Wait()
+	err = cmd.Run()
 	if err != nil {
-		return err
+		return fmt.Errorf("exec plugin %s fail err(%v) stderr(%s)", pip.InstanceName, err, stdErr.String())
 	}
 
-	stdOutW.Close() //nolint
-	stdInW.Close()  //nolint
-	stdErrW.Close() //nolint
+	stdInW.Close() //nolint
 
-	if !st.Success() {
-		r := bufio.NewReader(io.TeeReader(stdErrR, os.Stderr))
-		var lastErr string
-		for {
-			thisLine, err := r.ReadString('\n')
-			if err != nil {
-				if err == io.EOF {
-					break
-				}
-				return err
-			}
-			lastErr = thisLine
-		}
-		return fmt.Errorf("node exit with status %d  %s", st.ExitCode(), lastErr)
-	}
+	result := plugin.GetLastJSON(stdOut.String())
 
-	lastline := <-readLastLine
 	newCtx := &env.EnvContext{}
-	err = json.Unmarshal([]byte(lastline), newCtx)
+	err = json.Unmarshal([]byte(result), newCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("plugin %s result is not json format result(%s)", pip.InstanceName, result)
 	}
-
-	log.Debugf("invoke result %s params %s", pip.InstanceName, lastline)
 
 	plugin.RespSuccess("")
 	*envCtx = *newCtx //override value

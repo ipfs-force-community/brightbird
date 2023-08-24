@@ -32,12 +32,6 @@ extends Readonly<{
   n: number;
 }> { }
 
-export interface GlobalParams
-    extends Readonly<{
-        logLevel: string;
-        customProperties:{ [key: string]: any };
-    }> { }
-
 export interface IJobVo extends Readonly<{
     id: string;
     testFlowId: string;

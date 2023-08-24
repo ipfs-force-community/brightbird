@@ -270,3 +270,10 @@ type LogResp struct {
 	Steps   []*StepLog `json:"steps"`
 	Logs    []string   `json:"logs"`
 }
+
+// CopyTestflow
+// swagger:model copyTestflow
+type CopyTestflow struct {
+	ID   primitive.ObjectID `json:"id" form:"id"`
+	Name string             `json:"name" form:"name"`
+}

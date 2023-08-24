@@ -7,13 +7,11 @@ import (
 	"github.com/ipfs-force-community/brightbird/types"
 )
 
-type GlobalParams struct {
-	LogLevel         string                 `json:"logLevel"`
-	CustomProperties map[string]interface{} `json:"customProperties"`
-}
+// logLevel
+type GlobalParams map[string]interface{}
 
 func (global GlobalParams) GetProperty(key string, val interface{}) error {
-	property, ok := global.CustomProperties[key]
+	property, ok := global[key]
 	if !ok {
 		return fmt.Errorf("key %s not found", key)
 	}
@@ -25,15 +23,28 @@ func (global GlobalParams) GetProperty(key string, val interface{}) error {
 	return json.Unmarshal(data, val)
 }
 
+func (global GlobalParams) GetStringProperty(key string) (string, error) {
+	propertyVal, ok := global[key]
+	if !ok {
+		return "", fmt.Errorf("key %s not found", key)
+	}
+
+	val, ok := propertyVal.(string)
+	if !ok {
+		return "", fmt.Errorf("value %v is not string", propertyVal)
+	}
+	return val, nil
+}
+
 type NodeContext struct {
-	Input  json.RawMessage
-	OutPut json.RawMessage
+	Input  json.RawMessage `json:"input"`
+	OutPut json.RawMessage `json:"output"`
 }
 
 type EnvContext struct { //nolint
-	Global         GlobalParams
-	Nodes          map[string]*NodeContext
-	CurrentContext string
+	Global         GlobalParams            `json:"global"`
+	Nodes          map[string]*NodeContext `json:"nodes"`
+	CurrentContext string                  `json:"currentContext"`
 }
 
 func (envCtx EnvContext) Current() *NodeContext {
