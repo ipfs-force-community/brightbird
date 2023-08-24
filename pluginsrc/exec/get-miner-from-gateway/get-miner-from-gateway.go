@@ -20,10 +20,10 @@ func main() {
 }
 
 var Info = types.PluginInfo{
-	Name:        "user-miner-add",
+	Name:        "get-miner-from-gateway",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "user miner add",
+	Description: "get-miner-from-gateway",
 }
 
 type TestCaseParams struct {
