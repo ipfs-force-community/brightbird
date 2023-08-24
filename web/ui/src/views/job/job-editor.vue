@@ -173,6 +173,7 @@ export default defineComponent({
               }
               return;
             }
+            return true;
           },
           trigger: 'blur',
         },

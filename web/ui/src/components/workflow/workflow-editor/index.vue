@@ -42,6 +42,7 @@ import registerCustomVueShape from './shape/custom-vue-shape';
 import { WorkflowValidator } from './model/workflow-validator';
 import EnvironmentPanel from './layout/right/environment-panel.vue';
 import { GlobalProperty } from '@/api/dto/testflow';
+
 // 注册自定义x6元素
 registerCustomVueShape();
 
@@ -58,6 +59,14 @@ export default defineComponent({
   setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     const workflowData = ref<IWorkflow>(cloneDeep(props.modelValue));
+
+    if (workflowData.value.globalProperties === undefined) {
+      workflowData.value.globalProperties = [JSON.parse(JSON.stringify({
+        name: 'logLevel',
+        type: '0',
+        value:'INFO',
+      }))];
+    }
     const graph = ref<Graph>();
     const nodeConfigPanelVisible = ref<boolean>(false);
     const environmentPanelVisible = ref<boolean>(false);
