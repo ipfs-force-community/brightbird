@@ -51,7 +51,7 @@ data:
     [Miners.Sector]
     InitNumber = 0
     MinNumber = 0
-    MaxNumber = 1000000
+    MaxNumber = 1000
     Enabled = true
     EnableDeals = true
     LifetimeDays = 540
