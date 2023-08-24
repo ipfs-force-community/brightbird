@@ -2,7 +2,7 @@
   <div class="jm-workflow-editor">
     <template v-if="graph">
 <!--      工具栏-->
-      <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" :project-panel-visible="projectPanelVisible" />
+      <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" @open-environment="onOpenEnvironment" :project-panel-visible="projectPanelVisible" />
 <!--      节点配置面板：选中某个节点时，显示该节点的配置面板，允许用户进行配置-->
       <node-config-panel
         v-if="selectedNodeId"
@@ -13,6 +13,7 @@
         modal-class="node-config-panel-overlay"
         @closed="handleNodeConfigPanelClosed"
       />
+      <environment-panel v-if="environmentPanelVisible" v-model="environmentPanelVisible" v-model:workflow-data="workflowData" ></environment-panel>
     </template>
     <div class="main">
 <!--      节点面板：显示流程中全部节点，允许用户从中选择一个节点进行编辑-->
@@ -39,13 +40,15 @@ import { IWorkflow } from './model/data/common';
 import { Graph, Node } from '@antv/x6';
 import registerCustomVueShape from './shape/custom-vue-shape';
 import { WorkflowValidator } from './model/workflow-validator';
+import EnvironmentPanel from './layout/right/environment-panel.vue';
+import { GlobalProperty } from '@/api/dto/testflow';
 
 // 注册自定义x6元素
 registerCustomVueShape();
 
 export default defineComponent({
   name: 'jm-workflow-editor',
-  components: { Toolbar, NodePanel, NodeConfigPanel, GraphPanel },
+  components: { Toolbar, NodePanel, NodeConfigPanel, GraphPanel, EnvironmentPanel },
   props: {
     modelValue: {
       type: Object as PropType<IWorkflow>,
@@ -56,8 +59,18 @@ export default defineComponent({
   setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     const workflowData = ref<IWorkflow>(cloneDeep(props.modelValue));
+
+    if (workflowData.value.globalProperties === undefined) {
+      workflowData.value.globalProperties = [JSON.parse(JSON.stringify({
+        name: 'logLevel',
+        type: '0',
+        value:'INFO',
+      }))];
+    }
     const graph = ref<Graph>();
     const nodeConfigPanelVisible = ref<boolean>(false);
+    const environmentPanelVisible = ref<boolean>(false);
+
     const selectedNodeId = ref<string>('');
     const nodeWaringClicked = ref<boolean>(false);
     let workflowValidator: WorkflowValidator;
@@ -77,14 +90,17 @@ export default defineComponent({
       selectedNodeId,
       nodeWaringClicked,
       projectPanelVisible,
+      environmentPanelVisible,
       handleBack: () => {
         emit('back');
       },
       handleSave: async (back: boolean, graph: string) => {
         // 必须克隆后发事件，否则外部的数据绑定会受影响
         emit('update:model-value', cloneDeep(workflowData.value));
-
         emit('save', back, graph);
+      },
+      onOpenEnvironment: () => {
+        environmentPanelVisible.value = true;
       },
       handleGraphCreated: (g: Graph) => {
         workflowValidator = new WorkflowValidator(g, proxy, workflowData.value);

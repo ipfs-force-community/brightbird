@@ -1,4 +1,5 @@
 import { JobEnum } from './enumeration';
+import { GlobalProperty } from './testflow';
 
 export interface IJobIdVo
   extends Readonly<{
@@ -38,13 +39,15 @@ export interface IJobVo extends Readonly<{
     jobType: JobEnum;
     description: string;
     versions: Map<string, string>;
-    globalParams: { [key: string]: any };
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
 
     createTime:string;
-    modifiedTime:string;
+    modifiedTime: string;
+    globalProperties?: GlobalProperty[];
+    globalParams?: { [key: string]: any };
+
   }> {
   }
   
@@ -78,6 +81,8 @@ export interface IJobCreateVo extends Readonly<{
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
+    globalProperties?: GlobalProperty[];
+    globalParams?: { [key: string]: any };
     }> {
 }
 
@@ -90,5 +95,7 @@ export interface IJobUpdateVo extends Readonly<{
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
+    globalProperties?: GlobalProperty[];
+    globalParams?: { [key: string]: any };
     }> {
 }

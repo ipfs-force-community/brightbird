@@ -54,6 +54,7 @@ export default defineComponent({
             modifiedTime: fetchedData.modifiedTime,
             graph: fetchedData.graph,
             data: rawData,
+            globalProperties: fetchedData.globalProperties,
           };
         } catch (err) {
           proxy.$throw(err, proxy);
@@ -81,6 +82,7 @@ export default defineComponent({
           graph: graph,
           id: editMode ? props.id : '',
           description: workflow.value.description || '',
+          globalProperties: workflow.value.globalProperties,
         });
 
         if (!back) {
