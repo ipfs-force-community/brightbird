@@ -18,6 +18,7 @@
         </jm-tooltip>
       </div>
       <div class="operations">
+        <ElButton class="env" @click="environment()">环境变量</ElButton>
         <jm-button class="save-return" @click="save(true)" @keypress.enter.prevent>保存并返回</jm-button>
         <jm-button type="primary" @click="save(false)" @keypress.enter.prevent>保存</jm-button>
       </div>
@@ -36,9 +37,10 @@ import { IWorkflow } from '../../model/data/common';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import { cloneDeep } from 'lodash';
 import { compare } from '../../model/util/object';
+import { ElButton } from 'element-plus';
 
 export default defineComponent({
-  components: { ProjectPanel },
+  components: { ProjectPanel, ElButton },
   props: {
     workflowData: {
       type: Object as PropType<IWorkflow>,
@@ -49,7 +51,7 @@ export default defineComponent({
       default: false,
     },
   },
-  emits: ['back', 'save', 'open-cache-panel'],
+  emits: ['back', 'save', 'open-cache-panel', 'openEnvironment'],
   setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     let workflowBackUp = cloneDeep(props.workflowData);
@@ -160,6 +162,9 @@ export default defineComponent({
           proxy.$error(message);
         }
       },
+      environment: () => {
+        emit('openEnvironment');
+      },
       cacheIconVisible,
       tooltipVisible,
       options,
@@ -224,6 +229,7 @@ export default defineComponent({
     display: flex;
     justify-content: right;
     align-items: center;
+    column-gap: 15px;
 
     .tools {
       display: flex;
@@ -339,7 +345,7 @@ export default defineComponent({
     }
 
     .operations {
-      .save-return {
+     .env,.save-return {
         background: #f5f5f5;
         border-radius: 2px;
         color: #082340;

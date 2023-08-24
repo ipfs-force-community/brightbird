@@ -13,11 +13,11 @@ export interface Node
     output: string;
   }> { }
 
-export interface GlobalProperty
+export interface GlobalProperty 
     extends Readonly<{
-        name: string;
-        type: string;
-        value: string;
+  name: string;
+  type: string;
+  value: string;
   }> { }
 
 /**
@@ -31,7 +31,7 @@ export interface ITestFlowDetail
     modifiedTime: string;
     groupId: string;
     graph: string;
-    globalProperties: GlobalProperty;
+    globalProperties?: GlobalProperty[];
     description: string;
   }> { }
 
@@ -46,7 +46,6 @@ export interface ICountTestFlowParam
     groupId?: string;
     name?: string;
   }> { }
-
 
 
 /**

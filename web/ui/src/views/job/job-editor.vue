@@ -37,7 +37,7 @@
 
       <div v-show="jobType == JobEnum.CronJob">
         <el-text >版本设置:</el-text>
-        <div class="form-inter version"  v-for="(version, component) in editorForm.versions">
+        <div class="form-inter version"  v-for="(version, component) in editorForm.versions" :key="component">
           <el-row>
             <el-col :span="4">
               {{ component }}
@@ -51,7 +51,7 @@
 
       <div v-show="jobType == JobEnum.TagCreated">
         <el-text >tag匹配:</el-text>
-        <div class="form-inter version" v-for="match in editorForm.tagCreateEventMatches">
+        <div class="form-inter version" v-for="match,index in editorForm.tagCreateEventMatches" :key="index">
           <el-row>
             <el-col :span="4">
               {{ getRepoName(match.repo) }}
@@ -65,7 +65,7 @@
 
       <div v-show="jobType == JobEnum.PRMerged">
         <el-text >分支匹配:</el-text>
-        <div class="form-inter version" v-for="match in editorForm.prMergedEventMatches">
+        <div class="form-inter version" v-for="match,index in editorForm.prMergedEventMatches" :key="index">
           <el-row>
           <el-col :span="4">
             {{ getRepoName(match.repo) }}
@@ -80,6 +80,26 @@
         </div>
       </div>
 
+      <div v-show="editorForm.globalProperties" class="global-properties-title">
+          <div>字段名</div>
+          <div>类型</div>
+          <div>字段名</div>
+        </div>
+        <div class="global-properties-body">
+          <template v-for="item,index in editorForm.globalProperties" :key="index">
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'">
+            <ElInput  disabled v-model="item.name"></ElInput>
+            </ElFormItem>
+            <ElSelect  v-model="item.type">
+                <ElOption label="string" value="0"></ElOption>
+                <ElOption label="number" value="1"></ElOption>
+                <ElOption label="json" value="2"></ElOption>
+            </ElSelect>
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
+              <ElInput  v-model="item.value"></ElInput>
+            </ElFormItem>
+          </template>
+        </div>
     </jm-form>
     <template #footer>
       <span>
@@ -107,8 +127,9 @@ import { ITestFlowDetail } from '@/api/dto/testflow';
 import { Mutable } from '@/utils/lib';
 import { START_PAGE_NUM } from '@/utils/constants';
 import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
-import { ElCol, ElRow } from 'element-plus';
-import yaml from 'yaml'
+import { ElCol, ElRow, FormRules } from 'element-plus';
+import yaml from 'yaml';
+import { GlobalProperty } from '@/api/dto/testflow';
 
 export default defineComponent({
   emits: ['completed'],
@@ -132,17 +153,65 @@ export default defineComponent({
       prMergedEventMatches: [],
       tagCreateEventMatches: [],
     });
-    const editorRule = ref<object>({
+    const editorRule = ref<FormRules<IJobUpdateVo>>({
       name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }],
+      globalProperties: [
+        { required: true, message: '不能为空', trigger: 'blur' },
+        {
+          validator(rule, value, callback) {
+            const key = Number(rule.fullField?.replace('.value', '').replace('globalProperties.', ''));
+            const type = (editorForm.value.globalProperties ?? [])[key].type;       
+            if (type === '1' && Number.isNaN(Number(value))) {
+              callback(new Error('请输入number 类型'));
+              return;
+            }
+            if (type === '2') {
+              try {
+                JSON.parse(value);
+              } catch (error) {
+                callback(new Error('请输入json类型'));
+              }
+              return;
+            }
+            return true;
+          },
+          trigger: 'blur',
+        },
+    
+      ],
     });
-
+    
     const loading = ref<boolean>(false);
     const fetchJob = async () => {
       loading.value = true;
       try {
         const job = await getJob(props.id);
         editorForm.value = job;
+        const gps = Object.entries( editorForm.value.globalParams ?? {});
+        const globalProperties =  gps.map(value => {
+          let type = '0';
+          if (!Number.isNaN(Number([value[1]]))) {
+            // number 类型
+            type = '1';
+          }
+          else {
+            try {
+              JSON.parse(value[1]);
+              type = '2';
+            // json
+            } catch (error) {
+              console.log('+=======', error);
+            }
+          }
+
+          return JSON.parse(JSON.stringify({
+            name: value[0],
+            type: type,
+            value:value[1],
+          })) as GlobalProperty; 
+        });
         jobType.value = job.jobType;
+        editorForm.value.globalProperties = globalProperties;
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -175,12 +244,13 @@ export default defineComponent({
       let versions: any = {};
       const { pipeline } = yaml.parse(testflow.graph);
       Object.values(pipeline).forEach((f: any) => {
-        if (f.pluginType == PluginTypeEnum.Exec) {
-          return
+        if (f.pluginType === PluginTypeEnum.Exec) {
+          return;
         }
         versions[f.name] = '';
       });
       editorForm.value.versions = versions;
+      editorForm.value.globalProperties = testflow.globalProperties ?? [];
     };
 
     const changeGroup = async () => {
@@ -205,7 +275,7 @@ export default defineComponent({
     };
 
     const onSelectTf = async () => {
-      const selTf = testflows.value?.find(a => a.id == editorForm.value.testFlowId);
+      const selTf = testflows.value?.find(a => a.id === editorForm.value.testFlowId);
       if (selTf) {
         refreshSelect(selTf);
       }
@@ -216,7 +286,10 @@ export default defineComponent({
         if (!valid) {
           return;
         }
-        const { name, description, testFlowId, versions, cronExpression, prMergedEventMatches, tagCreateEventMatches } = editorForm.value;
+        const { name, description, testFlowId, versions, cronExpression, prMergedEventMatches, tagCreateEventMatches, globalProperties } = editorForm.value;
+        const globalParams =  Object.fromEntries( (globalProperties ?? []).map(item => {
+          return [item.name, item.value];
+        }));
         try {
           loading.value = true;
           await updateJob(props.id, {
@@ -227,6 +300,7 @@ export default defineComponent({
             cronExpression: cronExpression,
             prMergedEventMatches: prMergedEventMatches,
             tagCreateEventMatches: tagCreateEventMatches,
+            globalParams: globalParams,
           });
           proxy.$success('项目分组修改成功');
           emit('completed');
@@ -312,5 +386,14 @@ export default defineComponent({
   margin-left: 24px;
 }
 
+.global-properties-title {
+  padding: 20px 0px;
+}
+.global-properties-title,.global-properties-body {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  grid-column-gap: 20px;
+  grid-row-gap: 5px;
+}
 
 </style>

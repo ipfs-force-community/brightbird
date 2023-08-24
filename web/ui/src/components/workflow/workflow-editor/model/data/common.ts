@@ -2,6 +2,7 @@ import { RuleItem } from 'async-validator';
 import { NodeTypeEnum } from './enumeration';
 import { ISelectableParam } from '../../../workflow-expression-editor/model/data';
 import { JSONSchema } from 'json-schema-to-typescript';
+import { GlobalProperty } from '@/api/dto/testflow';
 
 type TriggerValue = 'blur' | 'change';
 
@@ -54,6 +55,8 @@ export interface IWorkflow {
   graph?: string;
   description?: string;
   data: string;
+  globalProperties?: GlobalProperty[];
+
 }
 
 

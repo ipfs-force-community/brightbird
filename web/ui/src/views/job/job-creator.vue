@@ -23,13 +23,11 @@
       </jm-form-item>
 
 
-
       <jm-form-item label="描述" prop="description">
         <jm-input type="textarea" v-model="createForm.description" clearable maxlength="256" show-word-limit
           placeholder="请输入描述" :autosize="{ minRows: 6, maxRows: 10 }" />
         <div class="tips">描述信息不超过 256个字符</div>
       </jm-form-item>
-
 
 
       <jm-form-item label="类型" prop="jobType">
@@ -46,7 +44,7 @@
       <div>
         <div v-show="createForm.jobType == JobEnum.CronJob">
           <el-text>版本设置:</el-text>
-          <div class="form-inter version" v-for="(version, component) in createForm.versions">
+          <div class="form-inter version" v-for="(version, component) in createForm.versions" :key="component">
             <el-row>
               <el-col :span="6">
                 {{ component }}
@@ -61,7 +59,7 @@
 
         <div v-show="createForm.jobType == JobEnum.TagCreated">
           <el-text>tag匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.tagCreateEventMatches">
+          <div class="form-inter version" v-for="match,index in createForm.tagCreateEventMatches" :key="index">
             <el-row>
               <el-col :span="6">
                 {{ getRepoName(match.repo) }}
@@ -75,7 +73,7 @@
 
         <div v-show="createForm.jobType == JobEnum.PRMerged">
           <el-text>分支匹配:</el-text>
-          <div class="form-inter version" v-for="match in createForm.prMergedEventMatches">
+          <div class="form-inter version" v-for="match,index in createForm.prMergedEventMatches" :key="index">
             <el-row>
               <el-col :span="7">
                 {{ getRepoName(match.repo) }}
@@ -88,6 +86,26 @@
               </el-col>
             </el-row>
           </div>
+        </div>
+        <div v-show="createForm.globalProperties" class="global-properties-title">
+          <div>字段名</div>
+          <div>类型</div>
+          <div>字段名</div>
+        </div>
+        <div class="global-properties-body">
+          <template v-for="item,index in createForm.globalProperties" :key="index">
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'" >
+            <ElInput disabled v-model="item.name"></ElInput>
+            </ElFormItem>
+            <ElSelect  v-model="item.type">
+                <ElOption label="string" value="0"></ElOption>
+                <ElOption label="number" value="1"></ElOption>
+                <ElOption label="json" value="2"></ElOption>
+            </ElSelect>
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
+              <ElInput  v-model="item.value"></ElInput>
+            </ElFormItem>
+          </template>
         </div>
       </div>
     </jm-form>
@@ -109,15 +127,15 @@ import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/vie
 import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
-import { JobEnum, PluginTypeEnum} from '@/api/dto/enumeration';
+import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
-import { ElCol, ElRow } from 'element-plus';
+import { ElCol, ElFormItem, ElInput, ElOption, ElRow, ElSelect, FormRules } from 'element-plus';
 import yaml from 'yaml';
 
 export default defineComponent({
   emits: ['completed'],
-  components: { ElRow, ElCol },
+  components: { ElRow, ElCol, ElInput, ElFormItem, ElSelect, ElOption },
   setup(_, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
     const dialogVisible = ref<boolean>(true);
@@ -140,10 +158,34 @@ export default defineComponent({
       prMergedEventMatches: [],
       tagCreateEventMatches: [],
     });
-    const editorRule = ref<object>({
+    const editorRule = ref<FormRules<IJobCreateVo>>({
       name: [{ required: true, message: 'job名称不能为空', trigger: 'blur' }],
       testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
       jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
+      globalProperties: [
+        { required: true, message: '不能为空', trigger: 'blur' },
+        {
+          validator(rule, value, callback, source, options) {
+            const key = Number(rule.fullField?.replace('.value', '').replace('globalProperties.', ''));
+            const type = (createForm.value.globalProperties ?? [])[key].type;       
+            if (type === '1' && Number.isNaN(Number(value))) {
+              callback(new Error('请输入number 类型'));
+              return;
+            }
+            if (type === '2') {
+              try {
+                JSON.parse(value);
+              } catch (error) {
+                callback(new Error('请输入json类型'));
+              }
+              return;
+            }
+            return true;
+          },
+          trigger: 'blur',
+        },
+    
+      ],
     });
 
     const loading = ref<boolean>(false);
@@ -159,6 +201,9 @@ export default defineComponent({
 
         loading.value = true;
         try {
+          createForm.value.globalParams =  Object.fromEntries( (createForm.value.globalProperties ?? []).map(item => {
+            return [item.name, item.value];
+          })) ;
           await createJob(createForm.value);
           proxy.$success('Job创建成功');
           emit('completed');
@@ -207,13 +252,14 @@ export default defineComponent({
       let versions: any = {};
       const { pipeline } = yaml.parse(testflow.graph);
       Object.values(pipeline).forEach((f: any) => {
-        if (f.pluginType == PluginTypeEnum.Exec) {
-          return
+        if (f.pluginType === PluginTypeEnum.Exec) {
+          return;
         }
         versions[f.name] = '';
       });
       // use for cron
       createForm.value.versions = versions;
+      createForm.value.globalProperties = testflow.globalProperties ?? [];
     };
     const changeGroup = async () => {
       testflowsLoading.value = true;
@@ -250,8 +296,7 @@ export default defineComponent({
             if (nodeInUse.has(p.name + p.version)) {
               pluginMap.set(p.name, p);
             }
-          })
-
+          });
         });
 
         const repos = new Set<string>();
@@ -262,13 +307,13 @@ export default defineComponent({
           }
         });
 
-        if (createForm.value.jobType == JobEnum.TagCreated) {
+        if (createForm.value.jobType === JobEnum.TagCreated) {
           createForm.value.tagCreateEventMatches = [];
           [...repos].map(repoName => createForm.value.tagCreateEventMatches.push({
             repo: repoName,
             tagPattern: 'tag/.+',
           }));
-        } else if (createForm.value.jobType == JobEnum.PRMerged) {
+        } else if (createForm.value.jobType === JobEnum.PRMerged) {
           createForm.value.prMergedEventMatches = [];
           [...repos].map(repoName => createForm.value.prMergedEventMatches.push({
             repo: repoName,
@@ -294,7 +339,7 @@ export default defineComponent({
       }
     };
     const onSelectTf = async () => {
-      const selTf = testflows.value?.find(a => a.id == createForm.value.testFlowId);
+      const selTf = testflows.value?.find(a => a.id === createForm.value.testFlowId);
       if (selTf) {
         refreshSelect(selTf);
       }
@@ -367,4 +412,16 @@ export default defineComponent({
 
 .invadateName ::v-deep input {
   border-color: #f56c6c;
-}</style>
+}
+
+.global-properties-title {
+  padding: 20px 0px;
+}
+.global-properties-title,.global-properties-body {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  grid-column-gap: 20px;
+  grid-row-gap: 5px;
+}
+
+</style>

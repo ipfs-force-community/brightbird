@@ -63,11 +63,11 @@ import JmForm from '@/components/form/form';
 import jmFormItem from '@/components/form/form-item';
 import JmInput from '@/components/form/input';
 import { getPluginByName, getPluginDef } from '@/api/plugin';
-import PropertySelect from './property-select.vue'
+import PropertySelect from './property-select.vue';
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
 import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import JmSelect from '@/components/form/select';
-import {Try} from "json-schema-to-typescript/dist/src/utils";
+import { Try } from 'json-schema-to-typescript/dist/src/utils';
 import { JSONSchema } from 'json-schema-to-typescript';
 import { schema } from '@antv/g2plot';
 
@@ -94,7 +94,7 @@ export default defineComponent({
     const instanceName = props.nodeData.getInstanceName();
     const nodeNames: TreeProp[] = [];
 
-    console.log(nodeNames)
+    console.log(nodeNames);
     // 版本列表
     const plugins = new Map<string, PluginDef>();
     const versionList = ref<INodeDefVersionListVo>({ versions: [] });
@@ -111,8 +111,8 @@ export default defineComponent({
     const convertToSchema = (input: any):JSONSchema =>{
       return Try<JSONSchema>(
         () => input,
-        () => { throw new TypeError(`Error parsing JSON`)});
-    }
+        () => { throw new TypeError('Error parsing JSON');});
+    };
     const changeVersion = async () => {
       try {
         versionLoading.value = true;
@@ -130,17 +130,17 @@ export default defineComponent({
 
     const prepareNodeParams = async () => {
       try {
-        //prepare plugin paramsters
-        const nodes = graph.getNodes()
+        // prepare plugin paramsters
+        const nodes = graph.getNodes();
         for (var i = 0; i < nodes.length; i++) {
           const proxy = new CustomX6NodeProxy(nodes[i]);
           const nodeData = proxy.getData(graph);
-          const anode = nodeData as AsyncTask
+          const anode = nodeData as AsyncTask;
           if (anode.instanceName != instanceName) {
-            const pluginDef = await getPluginDef(anode.name, anode.version)
+            const pluginDef = await getPluginDef(anode.name, anode.version);
             nodeNames.push({
               name: anode.instanceName,
-              type:"object",
+              type:'object',
               index:-1,
               defs: pluginDef.outputSchema.definitions || {},
               schema: convertToSchema(pluginDef.outputSchema) || {},
@@ -155,7 +155,7 @@ export default defineComponent({
         versionLoading.value = false;
         failureVisible.value = true;
       }
-    }
+    };
 
     const loadVersionOrDefault = async () => {
       if (form.value.version) {
@@ -169,7 +169,7 @@ export default defineComponent({
         });
 
         if (!pluginDetail.pluginDefs || pluginDetail.pluginDefs.length == 0) {
-          return
+          return;
         }
 
         if (form.value.version) {
@@ -186,10 +186,10 @@ export default defineComponent({
         versionLoading.value = false;
 
       }
-    }
+    };
     onMounted(async () => {
-      await prepareNodeParams()
-      await loadVersionOrDefault()
+      await prepareNodeParams();
+      await loadVersionOrDefault();
       // 等待异步数据请求结束才代码form创建成功（解决第一次点击警告按钮打开drawer没有表单验证）
       emit('form-created', formRef.value);
     });
