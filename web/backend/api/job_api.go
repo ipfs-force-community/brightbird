@@ -233,6 +233,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		job.Description = params.Description
 		job.CronJobParams = params.CronJobParams
 		job.Versions = params.Versions
+		job.GlobalProperties = params.GlobalProperties
 
 		err = job.CheckParams()
 		if err != nil {

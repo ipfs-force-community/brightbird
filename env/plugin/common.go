@@ -103,7 +103,7 @@ func SetupPluginFromStdin(info types.PluginInfo, constructor interface{}) {
 }
 
 func runPlugin(info types.PluginInfo, constructor interface{}, incomingParams *InitParams) error {
-	logLevel, err := incomingParams.Global.GetStringProperty("logLevel")
+	logLevel, err := incomingParams.Global.GetProperty("logLevel")
 	if err != nil {
 		return err
 	}

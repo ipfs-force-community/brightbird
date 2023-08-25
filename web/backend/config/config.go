@@ -6,11 +6,10 @@ type Config struct {
 	PluginStore  string
 	RunnerConfig string
 
-	BootstrapPeers []string
-	MongoURL       string
-	DBName         string
-	Listen         string
-	LogLevel       string
+	MongoURL string
+	DBName   string
+	Listen   string
+	LogLevel string
 
 	WebhookURL string
 	Mysql      string
@@ -23,7 +22,7 @@ type Config struct {
 
 	BuildWorkers []BuildWorkerConfig
 
-	CustomProperties map[string]interface{}
+	CustomProperties map[string]string
 }
 
 type BuildWorkerConfig struct {

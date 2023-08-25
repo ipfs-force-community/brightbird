@@ -25,7 +25,6 @@ type TestFlow struct {
 
 type GlobalProperty struct {
 	Name  string `json:"name"`
-	Type  string `json:"type"` //json value type
 	Value string `json:"value"`
 }
 

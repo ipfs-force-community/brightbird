@@ -3,35 +3,41 @@ package env
 import (
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
 
 	"github.com/ipfs-force-community/brightbird/types"
 )
 
 // logLevel
-type GlobalParams map[string]interface{}
+type GlobalParams map[string]string
 
-func (global GlobalParams) GetProperty(key string, val interface{}) error {
+func (global GlobalParams) GetJSONProperty(key string, val interface{}) error {
 	property, ok := global[key]
 	if !ok {
 		return fmt.Errorf("key %s not found", key)
 	}
 
-	data, err := json.Marshal(property)
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(data, val)
+	return json.Unmarshal([]byte(property), val)
 }
 
-func (global GlobalParams) GetStringProperty(key string) (string, error) {
+func (global GlobalParams) GetProperty(key string) (string, error) {
 	propertyVal, ok := global[key]
 	if !ok {
 		return "", fmt.Errorf("key %s not found", key)
 	}
+	return propertyVal, nil
+}
 
-	val, ok := propertyVal.(string)
+func (global GlobalParams) GetNumberProperty(key string) (float64, error) {
+	propertyVal, ok := global[key]
 	if !ok {
-		return "", fmt.Errorf("value %v is not string", propertyVal)
+		return math.NaN(), fmt.Errorf("key %s not found", key)
+	}
+
+	val, err := strconv.ParseFloat(propertyVal, 64)
+	if err != nil {
+		return math.NaN(), fmt.Errorf("value %v is not json number %w", propertyVal, err)
 	}
 	return val, nil
 }

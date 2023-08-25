@@ -33,8 +33,12 @@ type PluginInfo struct {
 
 type DeployPluginParams struct {
 	Repo        string `json:"repo"`
-	ImageTarget string `json:"imageTarget"`
+	ImageTarget string `json:"imageTarget"` //use to check image already exit
 	BuildScript string `json:"buildScript"`
+}
+
+func (dpp DeployPluginParams) Buildable() bool {
+	return len(dpp.Repo) > 0 && len(dpp.BuildScript) > 0
 }
 
 type PluginParams struct {

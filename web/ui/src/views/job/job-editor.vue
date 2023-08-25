@@ -27,7 +27,7 @@
       </jm-form-item>
 
       <jm-form-item class="jobtype" label="类型:" prop="jobType">
-        <span>{{jobType}}</span>
+        <span>{{ jobType }}</span>
       </jm-form-item>
 
       <jm-form-item label="cron表达式" v-show="jobType === JobEnum.CronJob" prop="cronExpression">
@@ -36,8 +36,8 @@
 
 
       <div v-show="jobType == JobEnum.CronJob">
-        <el-text >版本设置:</el-text>
-        <div class="form-inter version"  v-for="(version, component) in editorForm.versions" :key="component">
+        <el-text>版本设置:</el-text>
+        <div class="form-inter version" v-for="(version, component) in editorForm.versions" :key="component">
           <el-row>
             <el-col :span="4">
               {{ component }}
@@ -50,8 +50,8 @@
       </div>
 
       <div v-show="jobType == JobEnum.TagCreated">
-        <el-text >tag匹配:</el-text>
-        <div class="form-inter version" v-for="match,index in editorForm.tagCreateEventMatches" :key="index">
+        <el-text>tag匹配:</el-text>
+        <div class="form-inter version" v-for="match, index in editorForm.tagCreateEventMatches" :key="index">
           <el-row>
             <el-col :span="4">
               {{ getRepoName(match.repo) }}
@@ -64,42 +64,36 @@
       </div>
 
       <div v-show="jobType == JobEnum.PRMerged">
-        <el-text >分支匹配:</el-text>
-        <div class="form-inter version" v-for="match,index in editorForm.prMergedEventMatches" :key="index">
+        <el-text>分支匹配:</el-text>
+        <div class="form-inter version" v-for="match, index in editorForm.prMergedEventMatches" :key="index">
           <el-row>
-          <el-col :span="4">
-            {{ getRepoName(match.repo) }}
-          </el-col>
-          <el-col :span="8">
-            <jm-input :content=match.basePattern v-model="match.basePattern" />
-          </el-col>
-          <el-col :span="8">
-            <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
-          </el-col>
-        </el-row>
+            <el-col :span="4">
+              {{ getRepoName(match.repo) }}
+            </el-col>
+            <el-col :span="8">
+              <jm-input :content=match.basePattern v-model="match.basePattern" />
+            </el-col>
+            <el-col :span="8">
+              <jm-input :content=match.sourcePattern v-model="match.sourcePattern" />
+            </el-col>
+          </el-row>
         </div>
       </div>
 
       <div v-show="editorForm.globalProperties" class="global-properties-title">
-          <div>字段名</div>
-          <div>类型</div>
-          <div>字段名</div>
-        </div>
-        <div class="global-properties-body">
-          <template v-for="item,index in editorForm.globalProperties" :key="index">
-            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'">
-            <ElInput  disabled v-model="item.name"></ElInput>
-            </ElFormItem>
-            <ElSelect  v-model="item.type">
-                <ElOption label="string" value="0"></ElOption>
-                <ElOption label="number" value="1"></ElOption>
-                <ElOption label="json" value="2"></ElOption>
-            </ElSelect>
-            <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
-              <ElInput  v-model="item.value"></ElInput>
-            </ElFormItem>
-          </template>
-        </div>
+        <div>字段名</div>
+        <div>字段名</div>
+      </div>
+      <div class="global-properties-body">
+        <template v-for="item, index in editorForm.globalProperties" :key="index">
+          <ElFormItem label="" :prop="'globalProperties.' + index + '.name'">
+            <ElInput disabled v-model="item.name"></ElInput>
+          </ElFormItem>
+          <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
+            <ElInput v-model="item.value"></ElInput>
+          </ElFormItem>
+        </template>
+      </div>
     </jm-form>
     <template #footer>
       <span>
@@ -154,63 +148,30 @@ export default defineComponent({
       tagCreateEventMatches: [],
     });
     const editorRule = ref<FormRules<IJobUpdateVo>>({
-      name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }],
-      globalProperties: [
-        { required: true, message: '不能为空', trigger: 'blur' },
-        {
-          validator(rule, value, callback) {
-            const key = Number(rule.fullField?.replace('.value', '').replace('globalProperties.', ''));
-            const type = (editorForm.value.globalProperties ?? [])[key].type;       
-            if (type === '1' && Number.isNaN(Number(value))) {
-              callback(new Error('请输入number 类型'));
-              return;
-            }
-            if (type === '2') {
-              try {
-                JSON.parse(value);
-              } catch (error) {
-                callback(new Error('请输入json类型'));
-              }
-              return;
-            }
-            return true;
-          },
-          trigger: 'blur',
-        },
-    
-      ],
+      name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }]
     });
-    
+
     const loading = ref<boolean>(false);
     const fetchJob = async () => {
       loading.value = true;
       try {
         const job = await getJob(props.id);
         editorForm.value = job;
-        const gps = Object.entries( editorForm.value.globalParams ?? {});
-        const globalProperties =  gps.map(value => {
-          let type = '0';
-          if (!Number.isNaN(Number([value[1]]))) {
-            // number 类型
-            type = '1';
-          }
-          else {
-            try {
-              JSON.parse(value[1]);
-              type = '2';
-            // json
-            } catch (error) {
-              console.log('+=======', error);
-            }
-          }
-
-          return JSON.parse(JSON.stringify({
-            name: value[0],
-            type: type,
-            value:value[1],
-          })) as GlobalProperty; 
-        });
         jobType.value = job.jobType;
+
+        const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId });
+        let globalMapsSet = new Set();
+        testflow.globalProperties?.map(val => {
+          globalMapsSet.add(val.name);
+        })
+
+        //1. remove removed property  2. add new property
+        const gps = editorForm.value.globalProperties??[];
+        gps.push(...testflow.globalProperties ?? []);
+        const globalProperties = gps.filter(a => globalMapsSet.has(a.name)).filter(
+          (property, index, self) => index === self.findIndex(p => p.name === property.name)
+        ); 
+
         editorForm.value.globalProperties = globalProperties;
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -287,9 +248,6 @@ export default defineComponent({
           return;
         }
         const { name, description, testFlowId, versions, cronExpression, prMergedEventMatches, tagCreateEventMatches, globalProperties } = editorForm.value;
-        const globalParams =  Object.fromEntries( (globalProperties ?? []).map(item => {
-          return [item.name, item.value];
-        }));
         try {
           loading.value = true;
           await updateJob(props.id, {
@@ -300,7 +258,7 @@ export default defineComponent({
             cronExpression: cronExpression,
             prMergedEventMatches: prMergedEventMatches,
             tagCreateEventMatches: tagCreateEventMatches,
-            globalParams: globalParams,
+            globalProperties: globalProperties,
           });
           proxy.$success('项目分组修改成功');
           emit('completed');
@@ -389,11 +347,12 @@ export default defineComponent({
 .global-properties-title {
   padding: 20px 0px;
 }
-.global-properties-title,.global-properties-body {
+
+.global-properties-title,
+.global-properties-body {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-column-gap: 20px;
   grid-row-gap: 5px;
 }
-
 </style>

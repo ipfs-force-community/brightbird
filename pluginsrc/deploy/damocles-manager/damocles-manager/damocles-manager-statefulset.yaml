@@ -51,8 +51,14 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
-            - mountPath: /root/storage1
-              name: storage1
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: piece-{{$value}}
+{{ end }}
+{{ range $index, $value := .PersistStores }}
+            - mountPath: /persist/{{$value}}
+              name: storage-{{$value}}
+{{ end }}
       volumes:
         - name: sector-manager-cfg
           configMap:
@@ -61,10 +67,18 @@ spec:
               - key: sector-manager.cfg
                 path: sector-manager.cfg
         - name: shared-dir-v
+            persistentVolumeClaim:
+              claimName: shared-dir
+{{ range $index, $value := .PieceStores }}
+        - name: piece-{{$value}}
           persistentVolumeClaim:
-            claimName: shared-dir
-        - name: storage1
-          emptyDir: {}
+            claimName: {{$value}}
+{{ end }}
+{{ range $index, $value := .PersistStores }}
+        - name: storage-{{$value}}
+          persistentVolumeClaim:
+            claimName: {{$value}}
+{{ end }}
   volumeClaimTemplates:
     - metadata:
         name: damocles-pvc # name+podname

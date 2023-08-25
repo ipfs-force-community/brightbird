@@ -226,10 +226,20 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	var defaultGlobal = make(env.GlobalParams)
 	defaultGlobal["logLevel"] = "DEBUG"
 
-	//append job global params
-	err = mergo.Merge(&defaultGlobal, job.GlobalParams)
+	//append global config
+	err = mergo.Merge(&defaultGlobal, env.GlobalParams(taskMgr.cfg.CustomProperties))
 	if err != nil {
 		return nil, err
+	}
+
+	//append testflow params
+	for _, value := range testflow.GlobalProperties {
+		defaultGlobal[value.Name] = value.Value
+	}
+
+	//append job global params
+	for _, value := range job.GlobalProperties {
+		defaultGlobal[value.Name] = value.Value
 	}
 
 	//yaml escape character

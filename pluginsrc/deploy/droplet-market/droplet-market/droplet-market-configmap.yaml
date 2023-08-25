@@ -42,10 +42,12 @@ data:
       ConnMaxLifeTime = "1m"
       Debug = false
 
+{{ range $index, $value := .PieceStores }}
     [[PieceStorage.Fs]]
-      Name = "local"
+      Name = "{{$value}}"
       ReadOnly = false
-      Path = "/shared-dir/m-piece/piece"
+      Path = "/piece/{{$value}}"
+{{ end }}
      
 
     [DAGStore]

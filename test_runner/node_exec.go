@@ -43,10 +43,12 @@ func runGraph(ctx context.Context, cfg *Config, pluginRepo repo.IPluginService, 
 
 		var codeVersion string
 		if deployPlugin.PluginType == types.Deploy {
-			var ok bool
-			codeVersion, ok = task.CommitMap[pip.Value.Name]
-			if !ok {
-				return fmt.Errorf("not found version for deploy %s", pip.Value.Name)
+			if deployPlugin.Buildable() {
+				var ok bool
+				codeVersion, ok = task.CommitMap[pip.Value.Name]
+				if !ok {
+					return fmt.Errorf("not found version for deploy %s", pip.Value.Name)
+				}
 			}
 		}
 

@@ -127,7 +127,7 @@ func getRunnerLog(ctx context.Context, testflowRepo repo.ITestFlowRepo, task *mo
 	var lines []string
 	isFirst := true
 	isClose := false
-	var currentName string
+	currentName := preName
 	isRunnerCompleted := false
 	for _, log := range logs {
 		if !isRunnerCompleted {

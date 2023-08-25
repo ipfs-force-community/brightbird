@@ -26,13 +26,6 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
-        - name: create-piece-dir
-          image: busybox:1.28
-          command: [ 'sh', '-c', "mkdir -p /root/piece-{{.UniqueId}}" ]
-          volumeMounts:
-            - mountPath: /shared-dir
-              name: shared-dir-v
-              subPath: {{.NameSpace}}
       containers:
         - name: droplet-market-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/droplet:{{.CodeVersion}}"
@@ -45,6 +38,10 @@ spec:
           volumeMounts:
             - mountPath: /root
               name: droplet-market-pvc
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: {{$value}}
+{{ end }}
             - name: marketcfg
               mountPath: "/root/config.tmp"
               subPath: "config.toml"
@@ -61,6 +58,12 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: shared-dir
+{{ range $index, $value := .PieceStores }}
+        - name: {{$value}}
+          persistentVolumeClaim:
+            claimName: {{$value}}
+{{ end }}
+
   volumeClaimTemplates:
     - metadata:
         name: droplet-market-pvc # name+podname

@@ -319,6 +319,37 @@ func (env *K8sEnvDeployer) WaitPodReady(ctx context.Context, podName string) err
 }
 
 // RunDeployment deploy k8s's deployment from specific yaml config
+func (env *K8sEnvDeployer) CreatePvc(ctx context.Context, f fs.File, args any) (*corev1.PersistentVolumeClaim, error) {
+	data, err := QuickRender(f, args)
+	if err != nil {
+		return nil, fmt.Errorf("render pvc fail %w", err)
+	}
+
+	pvc := &corev1.PersistentVolumeClaim{}
+	err = yaml_k8s.Unmarshal(data, pvc)
+	if err != nil {
+		fmt.Println(string(data))
+		return nil, fmt.Errorf("unmarshal to pvc fail %w", err)
+	}
+	env.setCommonLabels(&pvc.ObjectMeta)
+
+	cfgData, err := yaml.Marshal(pvc)
+	if err != nil {
+		return nil, err
+	}
+
+	name := pvc.Name
+	log.Debugf("pvc(%s) yaml config %s", pvc.GetName(), string(cfgData))
+	pvc, err = env.k8sClient.CoreV1().PersistentVolumeClaims(env.namespace).Create(ctx, pvc, metav1.CreateOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("create pvc %s fail", name)
+	}
+
+	log.Infof("Created pvc %s.", name)
+	return pvc, nil
+}
+
+// RunDeployment deploy k8s's deployment from specific yaml config
 func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args any) (*appv1.StatefulSet, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {

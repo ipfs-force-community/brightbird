@@ -59,7 +59,7 @@
 
         <div v-show="createForm.jobType == JobEnum.TagCreated">
           <el-text>tag匹配:</el-text>
-          <div class="form-inter version" v-for="match,index in createForm.tagCreateEventMatches" :key="index">
+          <div class="form-inter version" v-for="match, index in createForm.tagCreateEventMatches" :key="index">
             <el-row>
               <el-col :span="6">
                 {{ getRepoName(match.repo) }}
@@ -73,7 +73,7 @@
 
         <div v-show="createForm.jobType == JobEnum.PRMerged">
           <el-text>分支匹配:</el-text>
-          <div class="form-inter version" v-for="match,index in createForm.prMergedEventMatches" :key="index">
+          <div class="form-inter version" v-for="match, index in createForm.prMergedEventMatches" :key="index">
             <el-row>
               <el-col :span="7">
                 {{ getRepoName(match.repo) }}
@@ -89,21 +89,15 @@
         </div>
         <div v-show="createForm.globalProperties" class="global-properties-title">
           <div>字段名</div>
-          <div>类型</div>
           <div>字段名</div>
         </div>
         <div class="global-properties-body">
-          <template v-for="item,index in createForm.globalProperties" :key="index">
-            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'" >
-            <ElInput disabled v-model="item.name"></ElInput>
+          <template v-for="item, index in createForm.globalProperties" :key="index">
+            <ElFormItem label="" :prop="'globalProperties.' + index + '.name'">
+              <ElInput disabled v-model="item.name"></ElInput>
             </ElFormItem>
-            <ElSelect  v-model="item.type">
-                <ElOption label="string" value="0"></ElOption>
-                <ElOption label="number" value="1"></ElOption>
-                <ElOption label="json" value="2"></ElOption>
-            </ElSelect>
             <ElFormItem label="" :prop="'globalProperties.' + index + '.value'" :rules="editorRule.globalProperties">
-              <ElInput  v-model="item.value"></ElInput>
+              <ElInput v-model="item.value"></ElInput>
             </ElFormItem>
           </template>
         </div>
@@ -128,8 +122,9 @@ import { START_PAGE_NUM } from '@/utils/constants';
 import { IJobCreateVo } from '@/api/dto/job';
 import { Mutable } from '@/utils/lib';
 import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
+import { PluginDef } from '@/api/dto/node-definitions';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { ITestFlowDetail, Plugin } from '@/api/dto/testflow';
+import { ITestFlowDetail } from '@/api/dto/testflow';
 import { ElCol, ElFormItem, ElInput, ElOption, ElRow, ElSelect, FormRules } from 'element-plus';
 import yaml from 'yaml';
 
@@ -163,28 +158,7 @@ export default defineComponent({
       testFlowId: [{ required: true, message: '需要选择测试流', trigger: 'blur' }],
       jobType: [{ required: true, message: '选择job类型', trigger: 'blur' }],
       globalProperties: [
-        { required: true, message: '不能为空', trigger: 'blur' },
-        {
-          validator(rule, value, callback, source, options) {
-            const key = Number(rule.fullField?.replace('.value', '').replace('globalProperties.', ''));
-            const type = (createForm.value.globalProperties ?? [])[key].type;       
-            if (type === '1' && Number.isNaN(Number(value))) {
-              callback(new Error('请输入number 类型'));
-              return;
-            }
-            if (type === '2') {
-              try {
-                JSON.parse(value);
-              } catch (error) {
-                callback(new Error('请输入json类型'));
-              }
-              return;
-            }
-            return true;
-          },
-          trigger: 'blur',
-        },
-    
+        { required: true, message: '不能为空', trigger: 'blur' }
       ],
     });
 
@@ -201,9 +175,6 @@ export default defineComponent({
 
         loading.value = true;
         try {
-          createForm.value.globalParams =  Object.fromEntries( (createForm.value.globalProperties ?? []).map(item => {
-            return [item.name, item.value];
-          })) ;
           await createJob(createForm.value);
           proxy.$success('Job创建成功');
           emit('completed');
@@ -288,9 +259,9 @@ export default defineComponent({
         const nodeInUse = new Set<string>();
         const testflow = await fetchTestFlowDetail({ id: createForm.value.testFlowId });
         const { pipeline } = yaml.parse(testflow.graph);
-        Object.values(pipeline).forEach((a:any) => nodeInUse.add(a.name + a.version));
+        Object.values(pipeline).forEach((a: any) => nodeInUse.add(a.name + a.version));
         // fetch plugins
-        const pluginMap = new Map<string, Plugin>();
+        const pluginMap = new Map<string, PluginDef>();
         (await fetchDeployPlugins()).map(a => {
           a.pluginDefs?.map(p => {
             if (nodeInUse.has(p.name + p.version)) {
@@ -417,11 +388,12 @@ export default defineComponent({
 .global-properties-title {
   padding: 20px 0px;
 }
-.global-properties-title,.global-properties-body {
+
+.global-properties-title,
+.global-properties-body {
   display: grid;
-  grid-template-columns: repeat(3,1fr);
+  grid-template-columns: repeat(2, 1fr);
   grid-column-gap: 20px;
   grid-row-gap: 5px;
 }
-
 </style>

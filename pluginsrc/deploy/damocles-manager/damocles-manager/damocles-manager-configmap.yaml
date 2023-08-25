@@ -14,24 +14,29 @@ data:
     Token = "{{.UserToken}}"
     #ChainEventInterval = "1m0s"
     
+{{ range $index, $value := .PieceStores }}
     [[Common.PieceStores]]
-    Name = "local"
-    Path = "/shared-dir/m-piece/piece"
+    Name = "{{$value}}"
+    Path = "/piece/{{$value}}"
     #Plugin = ""
     #PluginName = "s3store"
     [Common.PieceStores.Meta]
     #SomeKey = "SomeValue"
-    
-    [[Common.PersistStores]]
-    Name = "storage"
-    Path = "/root/storage1"
+{{ end }}
+
+{{ range $index, $value := .PersistStores }}
+   [[Common.PersistStores]]
+    Name = "{{$value}}"
+    Path = "/persist/{{$value}}"
     Strict = false
     ReadOnly = false
     Weight = 0
-    AllowMiners = [{{.MinerAddress}}]
+    AllowMiners = []
     #DenyMiners = [3, 4]
     #Plugin = ""
     #PluginName = "s3store"
+{{ end }}
+
     [Common.PersistStores.Meta]
     #SomeKey = "SomeValue"
 
