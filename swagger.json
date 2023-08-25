@@ -1784,22 +1784,12 @@
       },
       "x-go-package": "github.com/ipfs-force-community/brightbird/types"
     },
-    "GlobalParams": {
-      "description": "logLevel",
-      "type": "object",
-      "additionalProperties": {},
-      "x-go-package": "github.com/ipfs-force-community/brightbird/env"
-    },
     "GlobalProperty": {
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
           "x-go-name": "Name"
-        },
-        "type": {
-          "type": "string",
-          "x-go-name": "Type"
         },
         "value": {
           "type": "string",
@@ -2100,8 +2090,12 @@
           "format": "int64",
           "x-go-name": "ExecCount"
         },
-        "globalParams": {
-          "$ref": "#/definitions/GlobalParams"
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
         },
         "id": {
           "type": "string",
@@ -2173,8 +2167,12 @@
           "format": "int64",
           "x-go-name": "ExecCount"
         },
-        "globalParams": {
-          "$ref": "#/definitions/GlobalParams"
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
         },
         "groupName": {
           "type": "string",
@@ -2645,6 +2643,13 @@
         "description": {
           "type": "string",
           "x-go-name": "Description"
+        },
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
         },
         "name": {
           "type": "string",

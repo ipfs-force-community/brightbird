@@ -27,7 +27,7 @@ var PluginInfo = types.PluginInfo{
 	Description:        "",
 }
 
-type PvcReturn struct {
+type PvcReturn struct { //nolint
 	Name string `json:"name" jsonschema:"name" title:"PVC UniqueName" require:"true" description:"pvc's unique name"`
 }
 

@@ -52,7 +52,8 @@ type UpdateJobRequest struct {
 	Description string             `json:"description"`
 	//cron job params
 	CronJobParams
-	Versions map[string]string `json:"versions"`
+	Versions         map[string]string `json:"versions"`
+	GlobalProperties []GlobalProperty  `json:"globalProperties"`
 }
 
 // JobDetailResp

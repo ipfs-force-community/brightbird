@@ -146,7 +146,6 @@ func main() {
 				if err != nil {
 					return err
 				}
-
 				cfg.GlobalParams = val
 			}
 
@@ -158,7 +157,12 @@ func main() {
 				return errors.New("mysql must set")
 			}
 
-			err := logging.SetLogLevel("*", c.String("logLevel"))
+			logLevel, err := cfg.GlobalParams.GetProperty("logLevel")
+			if err != nil {
+				return err
+			}
+
+			err = logging.SetLogLevel("*", logLevel)
 			if err != nil {
 				return err
 			}

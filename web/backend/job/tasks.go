@@ -232,10 +232,14 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
+	//append testflow params
+	for _, value := range testflow.GlobalProperties {
+		defaultGlobal[value.Name] = value.Value
+	}
+
 	//append job global params
-	err = mergo.Merge(&defaultGlobal, job.GlobalParams)
-	if err != nil {
-		return nil, err
+	for _, value := range job.GlobalProperties {
+		defaultGlobal[value.Name] = value.Value
 	}
 
 	//yaml escape character

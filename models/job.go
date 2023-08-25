@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/ipfs-force-community/brightbird/env"
-
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -27,13 +25,13 @@ const (
 // Job
 // swagger:model job
 type Job struct {
-	ID           primitive.ObjectID `bson:"_id" json:"id"`
-	TestFlowId   primitive.ObjectID `json:"testFlowId"`
-	Name         string             `json:"name"`
-	JobType      JobType            `json:"jobType"`
-	ExecCount    int                `json:"execCount"`
-	Description  string             `json:"description"`
-	GlobalParams env.GlobalParams   `json:"globalParams"` //override value for params
+	ID               primitive.ObjectID `bson:"_id" json:"id"`
+	TestFlowId       primitive.ObjectID `json:"testFlowId"`
+	Name             string             `json:"name"`
+	JobType          JobType            `json:"jobType"`
+	ExecCount        int                `json:"execCount"`
+	Description      string             `json:"description"`
+	GlobalProperties []GlobalProperty   `json:"globalProperties"` //override value for params
 
 	Versions map[string]string `json:"versions"` // save a version setting for user job specific
 	//cron job params

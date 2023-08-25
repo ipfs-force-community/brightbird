@@ -22,7 +22,7 @@ type Config struct {
 
 	BuildWorkers []BuildWorkerConfig
 
-	CustomProperties map[string]interface{}
+	CustomProperties map[string]string
 }
 
 type BuildWorkerConfig struct {

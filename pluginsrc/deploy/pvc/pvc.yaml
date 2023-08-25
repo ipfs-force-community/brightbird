@@ -1,8 +1,8 @@
 kind: mk
 apiVersion: v1
 metadata:
-  name: pvc-{{.Unique}}
-  namespace: {{.Namespace}}
+  name: pvc-{{.UniqueId}}
+  namespace: {{.NameSpace}}
 spec:
   storageClassName: nfs-client
   accessModes:

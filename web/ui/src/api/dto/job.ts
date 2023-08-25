@@ -46,7 +46,7 @@ export interface IJobVo extends Readonly<{
     createTime:string;
     modifiedTime: string;
     globalProperties?: GlobalProperty[];
-    globalParams?: { [key: string]: any };
+    globalParams?: { [key: string]: string };
 
   }> {
   }
@@ -82,7 +82,6 @@ export interface IJobCreateVo extends Readonly<{
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
     globalProperties?: GlobalProperty[];
-    globalParams?: { [key: string]: any };
     }> {
 }
 
@@ -96,6 +95,5 @@ export interface IJobUpdateVo extends Readonly<{
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
     globalProperties?: GlobalProperty[];
-    globalParams?: { [key: string]: any };
     }> {
 }

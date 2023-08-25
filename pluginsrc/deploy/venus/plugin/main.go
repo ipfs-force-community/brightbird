@@ -22,7 +22,7 @@ type DepParams struct {
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*venus.VenusDeployReturn, error) {
 	var bootstrapPeers []string
-	err := depParams.Global.GetProperty("BootstrapPeer", &bootstrapPeers)
+	err := depParams.Global.GetJSONProperty("BootstrapPeer", &bootstrapPeers)
 	if err != nil {
 		return nil, err
 	}

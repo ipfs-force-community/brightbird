@@ -40,9 +40,6 @@ export interface IWorkflowNode {
   toDsl(): object;
 }
 
-export interface IGlobal {
-  concurrent: number | boolean;
-}
 
 /**
  * 工作流数据

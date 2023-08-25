@@ -9,7 +9,6 @@
         <div class="title">
           <div></div>
           <div>字段名</div>
-          <div>类型</div>
           <div>值</div>
         </div>
           <div class="form">
@@ -20,13 +19,6 @@
               :rules="rules.name"
               >
                 <ElInput size="small" v-model="item.name"></ElInput>
-              </ElFormItem>
-              <ElFormItem>
-                <ElSelect  v-model="item.type">
-                <ElOption label="string" value="0"></ElOption>
-                <ElOption label="number" value="1"></ElOption>
-                <ElOption label="json" value="2"></ElOption>
-               </ElSelect>
               </ElFormItem>
                 <ElFormItem
                 :prop="[`${index}`,'value']"
@@ -78,19 +70,9 @@ export default {
         {
           validator(rule, value, callback) {
             const key = Number(rule.fullField?.replace('.value', '').replace('.', ''));
-            const type = (globalProperties.value)[key].type;       
-            if (type === '1' && Number.isNaN(Number(value))) {
-              callback(new Error('请输入number 类型'));
-              return;
-            }
-            if (type === '2') {
-              try {
-                JSON.parse(value);
-              } catch (error) {
-                callback(new Error('请输入json类型'));
-              }
-              return;
-            }
+           // const type = (globalProperties.value)[key].type;       
+            // callback(new Error('请输入number 类型'));
+            //check duplicate
             return true;
           },
           trigger: 'blur',
@@ -108,7 +90,6 @@ export default {
       rules,
       visible,
       onConfirm: () => {
-        console.log(globalProperties.value['0']['value']);
         formRef.value?.validate((valid: boolean) => {
           if (valid) {
             const wd = cloneDeep(props.workflowData);
@@ -125,7 +106,6 @@ export default {
       onAdd: () =>  {
         globalProperties.value?.push({
           name: '',
-          type: '0',
           value:'',
         });
       },
@@ -150,7 +130,7 @@ export default {
     
     .title ,.form {
       display: grid;
-      grid-template-columns: 20px repeat(3,1fr);
+      grid-template-columns: 20px repeat(2,1fr);
       grid-column-gap: 30px;
       align-items: flex-start;
     }
