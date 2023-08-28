@@ -123,6 +123,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			return
 		}
 
+		// TODO:添加根据标签查询的条件
 		output, err := service.ListPlugin(c, req)
 		if err != nil {
 			c.Error(err) //nolint
@@ -325,6 +326,11 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
+	type PluginLabels struct {
+		Name 	string  `json:"name" form:"name"`
+		Label 	[]string `json:"labels" form:"labels"`
+	}
+
 	// UploadPluginFilesParams contains the uploaded file data
 	// swagger:parameters uploadPluginFilesParams
 	type UploadPluginFilesParams struct {
@@ -334,6 +340,9 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		//
 		// swagger:file
 		PluginFiles []*multipart.FileHeader `json:"plugins" form:"plugins"`
+
+		PluginLabels  []*PluginLabels `json:"pluginLabels" form:"pluginLabels"`
+
 	}
 
 	// uploadPlugin swagger:route POST /plugin/upload plugin uploadPluginFilesParams
@@ -399,6 +408,16 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			if err != nil {
 				c.Error(err) //nolint
 				return
+			}
+		}
+
+		for _, pluginLabel := range params.PluginLabels {
+			for _, label := range pluginLabel.Label {
+				err = service.AddLabel(c, pluginLabel.Name, label)
+				if err != nil {
+					c.Error(err) //nolint
+					return
+				}
 			}
 		}
 
@@ -478,6 +497,29 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 				return
 			}
 		}
+		c.Status(http.StatusOK)
+	})
+
+	
+	group.GET("label/all", func(c *gin.Context) {
+		// req := &repo.GetAllLabelParams{}
+		// err := c.ShouldBindQuery(req)
+		// if err != nil {
+		// 	c.Error(err) //nolint
+		// 	return
+		// }
+
+		// if req.Name == nil && req.Label == nil {
+		// 	c.Error(errors.New("no params")) //nolint
+		// 	return
+		// }
+
+		err := service.GetAllLabel(c)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
 		c.Status(http.StatusOK)
 	})
 }

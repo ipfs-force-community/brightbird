@@ -24,6 +24,8 @@ type ListPluginParams struct {
 	Name *string `form:"name" json:"name"`
 	// plugin type
 	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
+
+	Label *string 
 }
 
 // GetPluginParams
@@ -117,6 +119,7 @@ type IPluginService interface {
 	GetPlugin(context.Context, string, string) (*models.PluginDef, error)
 	SavePlugins(context.Context, *models.PluginDef) error
 	CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
+	GetAllLabel(ctx context.Context) ([]string)
 }
 
 type PluginSvc struct {
@@ -339,4 +342,43 @@ func (p *PluginSvc) CountPlugin(ctx context.Context, pluginType *types.PluginTyp
 		return -1, err
 	}
 	return count, nil
+}
+
+func (p *PluginSvc) GetAllLabel(ctx context.Context) ([]string, error) {
+	pipeline := []bson.M{
+		{
+			"$unwind": "$labels",
+		},
+		{
+			"$group": bson.M{
+			"_id": nil,
+			"allLabels": bson.M{
+				"$addToSet": "$labels",
+			},
+			},
+		},
+	}
+		
+	cursor, err := p.pluginCol.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx) //nolint
+
+	var results []bson.M
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err
+	}
+
+	var labels []string
+	if len(results) > 0 {
+		if allLabels, ok := results[0]["allLabels"].([]interface{}); ok {
+			for _, label := range allLabels {
+				if strLabel, ok := label.(string); ok {
+					labels = append(labels, strLabel)
+				}
+			}
+		}
+	}
+	return labels, nil
 }
