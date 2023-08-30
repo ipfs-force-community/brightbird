@@ -35,7 +35,7 @@ var ImportPluginsCmds = &cli.Command{
 				return err
 			}
 
-			params.SetPluginFiles(runtime.NamedReader("plugins", reader))
+			params.SetPluginFile(runtime.NamedReader("plugin", reader))
 			_, err = api.Plugin.UploadPluginFilesParams(params)
 			if err != nil {
 				return err

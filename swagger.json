@@ -23,7 +23,7 @@
     },
     "version": "0.0.1"
   },
-  "host": "192.168.200.103:12356",
+  "host": "192.168.200.128:12356",
   "basePath": "/api/v1",
   "paths": {
     "/changegroup": {
@@ -1047,6 +1047,38 @@
         }
       }
     },
+    "/plugin/label-all": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "list",
+          "all"
+        ],
+        "summary": "list all label.",
+        "operationId": "label",
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
     "/plugin/list": {
       "get": {
         "produces": [
@@ -1074,6 +1106,11 @@
             "x-go-name": "PluginType",
             "description": "plugin type",
             "name": "pluginType",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "Label",
             "in": "query"
           }
         ],
@@ -1109,9 +1146,19 @@
         "parameters": [
           {
             "type": "file",
-            "x-go-name": "PluginFiles",
+            "x-go-name": "PluginFile",
             "description": "Plugin file.",
-            "name": "plugins",
+            "name": "plugin",
+            "in": "formData"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Labels",
+            "description": "PluginLabels Plugin Labels",
+            "name": "labels",
             "in": "formData"
           }
         ],
@@ -2442,6 +2489,25 @@
         }
       },
       "x-go-name": "PluginDetail",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
+    },
+    "pluginLabel": {
+      "description": "PluginLabels plugin's Labels",
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Label"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "PluginLabel",
       "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "stepLog": {

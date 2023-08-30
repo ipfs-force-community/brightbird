@@ -119,7 +119,7 @@ type IPluginService interface {
 	GetPlugin(context.Context, string, string) (*models.PluginDef, error)
 	SavePlugins(context.Context, *models.PluginDef) error
 	CountPlugin(ctx context.Context, pluginType *types.PluginType) (int64, error)
-	GetAllLabel(ctx context.Context) ([]string)
+	GetAllLabel(ctx context.Context) ([]string, error)
 }
 
 type PluginSvc struct {
@@ -351,10 +351,8 @@ func (p *PluginSvc) GetAllLabel(ctx context.Context) ([]string, error) {
 		},
 		{
 			"$group": bson.M{
-			"_id": nil,
-			"allLabels": bson.M{
-				"$addToSet": "$labels",
-			},
+				"_id": "$labels",
+				"count": bson.M{"$sum": 1}, 
 			},
 		},
 	}
@@ -372,11 +370,9 @@ func (p *PluginSvc) GetAllLabel(ctx context.Context) ([]string, error) {
 
 	var labels []string
 	if len(results) > 0 {
-		if allLabels, ok := results[0]["allLabels"].([]interface{}); ok {
-			for _, label := range allLabels {
-				if strLabel, ok := label.(string); ok {
-					labels = append(labels, strLabel)
-				}
+		for _, label := range results {
+			if strLabel, ok := label["_id"].(string); ok {
+				labels = append(labels, strLabel)
 			}
 		}
 	}

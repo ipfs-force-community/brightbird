@@ -61,6 +61,9 @@ ListPluginParamsParams contains all the parameters to send to the API endpoint
 */
 type ListPluginParamsParams struct {
 
+	// Label.
+	Label *string
+
 	/* Name.
 
 	   name of plugin
@@ -126,6 +129,17 @@ func (o *ListPluginParamsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithLabel adds the label to the list plugin params params
+func (o *ListPluginParamsParams) WithLabel(label *string) *ListPluginParamsParams {
+	o.SetLabel(label)
+	return o
+}
+
+// SetLabel adds the label to the list plugin params params
+func (o *ListPluginParamsParams) SetLabel(label *string) {
+	o.Label = label
+}
+
 // WithName adds the name to the list plugin params params
 func (o *ListPluginParamsParams) WithName(name *string) *ListPluginParamsParams {
 	o.SetName(name)
@@ -155,6 +169,23 @@ func (o *ListPluginParamsParams) WriteToRequest(r runtime.ClientRequest, reg str
 		return err
 	}
 	var res []error
+
+	if o.Label != nil {
+
+		// query param Label
+		var qrLabel string
+
+		if o.Label != nil {
+			qrLabel = *o.Label
+		}
+		qLabel := qrLabel
+		if qLabel != "" {
+
+			if err := r.SetQueryParam("Label", qLabel); err != nil {
+				return err
+			}
+		}
+	}
 
 	if o.Name != nil {
 

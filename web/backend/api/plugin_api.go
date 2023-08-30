@@ -311,7 +311,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 		err = service.DeletePlugin(c, pluginId)
 		if err != nil {
-			c.Error(err) //nolint
+			c.Error(err) //nolintlist all label
 			return
 		}
 
@@ -326,11 +326,6 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	type PluginLabels struct {
-		Name 	string  `json:"name" form:"name"`
-		Label 	[]string `json:"labels" form:"labels"`
-	}
-
 	// UploadPluginFilesParams contains the uploaded file data
 	// swagger:parameters uploadPluginFilesParams
 	type UploadPluginFilesParams struct {
@@ -339,10 +334,14 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		// in: formData
 		//
 		// swagger:file
-		PluginFiles []*multipart.FileHeader `json:"plugins" form:"plugins"`
+		PluginFile *multipart.FileHeader `json:"plugin" form:"plugin"`
 
-		PluginLabels  []*PluginLabels `json:"pluginLabels" form:"pluginLabels"`
-
+		// PluginLabels Plugin Labels
+		//
+		// in: formData
+		//
+		// require: true
+		Labels []string `json:"labels" form:"labels"`
 	}
 
 	// uploadPlugin swagger:route POST /plugin/upload plugin uploadPluginFilesParams
@@ -366,61 +365,55 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 			return
 		}
 
-		for _, fileHeader := range params.PluginFiles {
-			// The file is received, so let's save it
-			tmpPath := path.Join(os.TempDir(), uuid.NewString())
-			if err := c.SaveUploadedFile(fileHeader, tmpPath); err != nil {
-				c.Error(err) //nolint
-				return
-			}
+		tmpPath := path.Join(os.TempDir(), uuid.NewString())
+		if err := c.SaveUploadedFile(params.PluginFile, tmpPath); err != nil {
+			c.Error(err) //nolint
+			return
+		}
 
-			err = os.Chmod(tmpPath, 0750)
-			if err != nil {
-				c.Error(err) //nolint
-				return
-			}
+		err = os.Chmod(tmpPath, 0750)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
 
-			pluginInfo, err := plugin.GetPluginInfo(tmpPath)
-			if err != nil {
-				c.Error(err) //nolint
-				return
-			}
+		pluginInfo, err := plugin.GetPluginInfo(tmpPath)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
 
-			if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
-				c.Error(err) //nolint
-				return
-			}
+		if err != nil && !errors.Is(err, repo.ErrPluginNotFound) {
+			c.Error(err) //nolint
+			return
+		}
 
-			// copy plugin to plugin store
-			fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
-			err = utils.CopyFile(tmpPath, filepath.Join(string(pluginStore), fname))
-			if err != nil {
-				c.Error(err) //nolint
-				return
-			}
+		// copy plugin to plugin store
+		fname := fmt.Sprintf("%s_%s_%s", pluginInfo.PluginType, pluginInfo.Name, pluginInfo.Version)
+		err = utils.CopyFile(tmpPath, filepath.Join(string(pluginStore), fname))
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
 
-			plugin := &models.PluginDef{
-				PluginInfo: *pluginInfo,
-				Path:       fname,
-			}
+		plugin := &models.PluginDef{
+			PluginInfo: *pluginInfo,
+			Path:       fname,
+		}
 
-			err = service.SavePlugins(c, plugin)
+		err = service.SavePlugins(c, plugin)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		for _, label := range params.Labels {
+			err = service.AddLabel(c, pluginInfo.Name, label)
 			if err != nil {
 				c.Error(err) //nolint
 				return
 			}
 		}
-
-		for _, pluginLabel := range params.PluginLabels {
-			for _, label := range pluginLabel.Label {
-				err = service.AddLabel(c, pluginLabel.Name, label)
-				if err != nil {
-					c.Error(err) //nolint
-					return
-				}
-			}
-		}
-
 		c.Status(http.StatusOK)
 	})
 
@@ -500,26 +493,31 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		c.Status(http.StatusOK)
 	})
 
-	
-	group.GET("label/all", func(c *gin.Context) {
-		// req := &repo.GetAllLabelParams{}
-		// err := c.ShouldBindQuery(req)
-		// if err != nil {
-		// 	c.Error(err) //nolint
-		// 	return
-		// }
-
-		// if req.Name == nil && req.Label == nil {
-		// 	c.Error(errors.New("no params")) //nolint
-		// 	return
-		// }
-
-		err := service.GetAllLabel(c)
+	// swagger:route Get /plugin/label-all list all label
+	//
+	// list all label.
+	//
+	//     Consumes:
+	//     - application/json
+	//
+	//     Produces:
+	//     - application/json
+	//     - application/text
+	//
+	//     Schemes: http, https
+	//
+	//     Deprecated: false
+	//
+	//     Responses:
+	//       200:
+	//		 503: apiError
+	group.GET("label-all", func(c *gin.Context) {
+		labels, err := service.GetAllLabel(c)
 		if err != nil {
 			c.Error(err) //nolint
 			return
 		}
 
-		c.Status(http.StatusOK)
+		c.JSON(http.StatusOK, labels)
 	})
 }

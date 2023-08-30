@@ -278,3 +278,10 @@ type CopyTestflow struct {
 	ID   primitive.ObjectID `json:"id" form:"id"`
 	Name string             `json:"name" form:"name"`
 }
+
+// PluginLabels plugin's Labels
+// swagger:model pluginLabel
+type PluginLabel struct {
+	Name  string   `json:"name" form:"name"`
+	Label []string `json:"labels" form:"labels"`
+}

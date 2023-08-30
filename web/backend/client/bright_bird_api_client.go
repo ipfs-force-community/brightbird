@@ -13,6 +13,7 @@ import (
 	"github.com/ipfs-force-community/brightbird/web/backend/client/failed_tasks"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/group"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/job"
+	"github.com/ipfs-force-community/brightbird/web/backend/client/list"
 	logops "github.com/ipfs-force-community/brightbird/web/backend/client/log"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/plugin"
 	"github.com/ipfs-force-community/brightbird/web/backend/client/success_quantity_trends"
@@ -29,7 +30,7 @@ var Default = NewHTTPClient(nil)
 const (
 	// DefaultHost is the default Host
 	// found in Meta (info) section of spec file
-	DefaultHost string = "192.168.200.103:12356"
+	DefaultHost string = "192.168.200.128:12356"
 	// DefaultBasePath is the default BasePath
 	// found in Meta (info) section of spec file
 	DefaultBasePath string = "/api/v1"
@@ -68,6 +69,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *BrightBird
 	cli.FailedTasks = failed_tasks.New(transport, formats)
 	cli.Group = group.New(transport, formats)
 	cli.Job = job.New(transport, formats)
+	cli.List = list.New(transport, formats)
 	cli.Log = logops.New(transport, formats)
 	cli.Plugin = plugin.New(transport, formats)
 	cli.SuccessQuantityTrends = success_quantity_trends.New(transport, formats)
@@ -126,6 +128,8 @@ type BrightBirdAPI struct {
 
 	Job job.ClientService
 
+	List list.ClientService
+
 	Log logops.ClientService
 
 	Plugin plugin.ClientService
@@ -151,6 +155,7 @@ func (c *BrightBirdAPI) SetTransport(transport runtime.ClientTransport) {
 	c.FailedTasks.SetTransport(transport)
 	c.Group.SetTransport(transport)
 	c.Job.SetTransport(transport)
+	c.List.SetTransport(transport)
 	c.Log.SetTransport(transport)
 	c.Plugin.SetTransport(transport)
 	c.SuccessQuantityTrends.SetTransport(transport)

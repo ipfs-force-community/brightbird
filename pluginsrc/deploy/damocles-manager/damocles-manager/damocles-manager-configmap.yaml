@@ -13,7 +13,6 @@ data:
     Gateway = ["{{.GatewayUrl}}"]
     Token = "{{.UserToken}}"
     #ChainEventInterval = "1m0s"
-    
 {{ range $index, $value := .PieceStores }}
     [[Common.PieceStores]]
     Name = "{{$value}}"
@@ -23,9 +22,8 @@ data:
     [Common.PieceStores.Meta]
     #SomeKey = "SomeValue"
 {{ end }}
-
 {{ range $index, $value := .PersistStores }}
-   [[Common.PersistStores]]
+    [[Common.PersistStores]]
     Name = "{{$value}}"
     Path = "/persist/{{$value}}"
     Strict = false
@@ -36,7 +34,6 @@ data:
     #Plugin = ""
     #PluginName = "s3store"
 {{ end }}
-
     [Common.PersistStores.Meta]
     #SomeKey = "SomeValue"
 
