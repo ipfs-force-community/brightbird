@@ -562,7 +562,7 @@ LOOP:
 
 	log.Infof("use cluster ip %s", endpoint)
 
-	err = env.WaitForAPIReady(ctx, endpoint)
+	// err = env.WaitForAPIReady(ctx, endpoint)
 	if err != nil {
 		return "", err
 	}
