@@ -311,7 +311,7 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 
 		err = service.DeletePlugin(c, pluginId)
 		if err != nil {
-			c.Error(err) //nolintlist all label
+			c.Error(err) //nolint
 			return
 		}
 
