@@ -5,7 +5,7 @@ metadata:
 spec:
   clusterIP: None
   selector:
-    app: damocles-manager-{{.UniqueId}}
+    app: damocles-manager-{{.UniqueId}}-pod
   ports:
     - protocol: TCP
       port: 1789

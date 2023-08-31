@@ -48,6 +48,8 @@ spec:
             - name: sector-manager-cfg
               mountPath: "/root/sector-manager.tmp"
               subPath: "sector-manager.cfg"
+            - mountPath: /root/storage1
+              name: storage1
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
@@ -66,9 +68,11 @@ spec:
             items:
               - key: sector-manager.cfg
                 path: sector-manager.cfg
+        - name: storage1
+          emptyDir: {}
         - name: shared-dir-v
-            persistentVolumeClaim:
-              claimName: shared-dir
+          persistentVolumeClaim:
+            claimName: shared-dir
 {{ range $index, $value := .PieceStores }}
         - name: piece-{{$value}}
           persistentVolumeClaim:

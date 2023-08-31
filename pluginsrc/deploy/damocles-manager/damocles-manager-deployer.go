@@ -26,7 +26,6 @@ type VConfig struct {
 	MessagerUrl  string `jsonschema:"-"`
 	MarketUrl    string `jsonschema:"-"`
 	GatewayUrl   string `jsonschema:"-"`
-	AuthUrl      string `jsonschema:"-"`
 	MinerAddress string `jsonschema:"-"`
 
 	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" `
@@ -54,7 +53,30 @@ var PluginInfo = types.PluginInfo{
 	DeployPluginParams: types.DeployPluginParams{
 		Repo:        "https://github.com/ipfs-force-community/damocles.git",
 		ImageTarget: "damocles-manager",
-		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+		BuildScript: `sed -i "2 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" Dockerfile.manager
+		sed -i "17 i\RUN go env -w GOPROXY=https://goproxy.cn,direct" Dockerfile.manager
+		sed -i '7 i\ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"' Dockerfile.manager
+		sed -i '8 i\ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"' Dockerfile.manager
+		sed -i "s/https:\/\/sh.rustup.rs/https:\/\/rsproxy.cn\/rustup-init.sh/g" Dockerfile.manager
+		
+		cat > config << EOF
+		[source.crates-io]
+		replace-with = 'rsproxy'
+		[source.rsproxy]
+		registry = "https://rsproxy.cn/crates.io-index"
+		[source.rsproxy-sparse]
+		registry = "sparse+https://rsproxy.cn/index/"
+		[registries.rsproxy]
+		index = "https://rsproxy.cn/crates.io-index"
+		[net]
+		git-fetch-with-cli = true
+		EOF
+		
+		sed -i "12 i\COPY config /root/.cargo/config" Dockerfile.manager
+		
+		sed -i "4 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
+		sed -i "27 i\COPY config /root/.cargo/config" damocles-worker/Dockerfile
+		make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
 }

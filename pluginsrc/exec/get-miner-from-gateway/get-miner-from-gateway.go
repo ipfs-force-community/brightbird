@@ -23,7 +23,7 @@ var Info = types.PluginInfo{
 	Name:        "get-miner-from-gateway",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "get-miner-from-gateway",
+	Description: "从gateway检查能否获取到期望的miner",
 }
 
 type TestCaseParams struct {

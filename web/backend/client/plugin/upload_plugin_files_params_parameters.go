@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewUploadPluginFilesParamsParams creates a new UploadPluginFilesParamsParams object,
@@ -61,11 +62,17 @@ UploadPluginFilesParamsParams contains all the parameters to send to the API end
 */
 type UploadPluginFilesParamsParams struct {
 
-	/* Plugins.
+	/* Labels.
+
+	   PluginLabels Plugin Labels
+	*/
+	Labels []string
+
+	/* Plugin.
 
 	   Plugin file.
 	*/
-	PluginFiles runtime.NamedReadCloser
+	PluginFile runtime.NamedReadCloser
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,15 +127,26 @@ func (o *UploadPluginFilesParamsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithPluginFiles adds the plugins to the upload plugin files params params
-func (o *UploadPluginFilesParamsParams) WithPluginFiles(plugins runtime.NamedReadCloser) *UploadPluginFilesParamsParams {
-	o.SetPluginFiles(plugins)
+// WithLabels adds the labels to the upload plugin files params params
+func (o *UploadPluginFilesParamsParams) WithLabels(labels []string) *UploadPluginFilesParamsParams {
+	o.SetLabels(labels)
 	return o
 }
 
-// SetPluginFiles adds the plugins to the upload plugin files params params
-func (o *UploadPluginFilesParamsParams) SetPluginFiles(plugins runtime.NamedReadCloser) {
-	o.PluginFiles = plugins
+// SetLabels adds the labels to the upload plugin files params params
+func (o *UploadPluginFilesParamsParams) SetLabels(labels []string) {
+	o.Labels = labels
+}
+
+// WithPluginFile adds the plugin to the upload plugin files params params
+func (o *UploadPluginFilesParamsParams) WithPluginFile(plugin runtime.NamedReadCloser) *UploadPluginFilesParamsParams {
+	o.SetPluginFile(plugin)
+	return o
+}
+
+// SetPluginFile adds the plugin to the upload plugin files params params
+func (o *UploadPluginFilesParamsParams) SetPluginFile(plugin runtime.NamedReadCloser) {
+	o.PluginFile = plugin
 }
 
 // WriteToRequest writes these params to a swagger request
@@ -139,11 +157,22 @@ func (o *UploadPluginFilesParamsParams) WriteToRequest(r runtime.ClientRequest, 
 	}
 	var res []error
 
-	if o.PluginFiles != nil {
+	if o.Labels != nil {
 
-		if o.PluginFiles != nil {
-			// form file param plugins
-			if err := r.SetFileParam("plugins", o.PluginFiles); err != nil {
+		// binding items for labels
+		joinedLabels := o.bindParamLabels(reg)
+
+		// form array param labels
+		if err := r.SetFormParam("labels", joinedLabels...); err != nil {
+			return err
+		}
+	}
+
+	if o.PluginFile != nil {
+
+		if o.PluginFile != nil {
+			// form file param plugin
+			if err := r.SetFileParam("plugin", o.PluginFile); err != nil {
 				return err
 			}
 		}
@@ -153,4 +182,21 @@ func (o *UploadPluginFilesParamsParams) WriteToRequest(r runtime.ClientRequest, 
 		return errors.CompositeValidationError(res...)
 	}
 	return nil
+}
+
+// bindParamUploadPluginFilesParams binds the parameter labels
+func (o *UploadPluginFilesParamsParams) bindParamLabels(formats strfmt.Registry) []string {
+	labelsIR := o.Labels
+
+	var labelsIC []string
+	for _, labelsIIR := range labelsIR { // explode []string
+
+		labelsIIV := labelsIIR // string as string
+		labelsIC = append(labelsIC, labelsIIV)
+	}
+
+	// items.CollectionFormat: ""
+	labelsIS := swag.JoinByFormat(labelsIC, "")
+
+	return labelsIS
 }

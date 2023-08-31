@@ -13,85 +13,57 @@ data:
     name = "filedrive"
     rpc_server.host = "0.0.0.0"
     rpc_server.port = 17891
-    local_pieces_dir = "/pstore/"
+    local_pieces_dir = "/shared-dir/m-piece/piece"
 
     [sector_manager]
-    # /ip4/192.168.200.158/tcp/1789
     rpc_client.addr = "{{.DamoclesManagerUrl}"
     rpc_client.headers = { User-Agent = "jsonrpc-core-client" }
     piece_token = "{{.MarketToken}}"
     [sealing]
     allowed_miners = [{{.MinerAddress}}]
-    allowed_sizes = ["2KiB"]
+    allowed_sizes = ["8MiB"]
     enable_deals = true
     disable_cc = false
-    max_deals = 1
+    max_deals = 6
     min_deal_space = "2kiB"
-    max_retries = 3
+    max_retries = 6
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test1"
+    location = "/shared-dir/{{.MinersAddress}}/test1"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test2"
+    location = "/shared-dir/{{.MinersAddress}}/test2"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test3"
+    location = "/shared-dir/{{.MinersAddress}}/test3"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test4"
+    location = "/shared-dir/{{.MinersAddress}}/test4"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test5"
+    location = "/shared-dir/{{.MinersAddress}}/test5"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test6"
+    location = "/shared-dir/{{.MinersAddress}}/test6"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test7"
+    location = "/shared-dir/{{.MinersAddress}}/test7"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test8"
+    location = "/shared-dir/{{.MinersAddress}}/test8"
+    plan = "snapup"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test9"
+    location = "/shared-dir/{{.MinersAddress}}/test9"
+    plan = "rebuild"
 
     [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test10"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test11"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test12"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test13"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test14"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test15"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test16"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test17"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test18"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test19"
-
-    [[sealing_thread]]
-    location = "/mnt/mount/k8s/{{.MinersAddress}}/test20"
+    location = "/shared-dir/{{.MinersAddress}}/test10"
+    plan = "unseal"
 
     [[attached]]
     name = "storage"
-    location = "/storage-nfs-4/{{.TestID}}/{{.MinerAddress}}"
+    location = "/shared-dir/{{.TestID}}/{{.MinerAddress}}"
     [attached_selection]
     # enable_space_weighted = false
 
@@ -100,61 +72,27 @@ data:
     pc1 = 10
     pc2 = 1
     c2 = 1
-    # c2 = 999
     tree_d = 1
-
-    # [processors.ext_locks]
-    # gpu = 1
-
-
-    [[processors.add_pieces]]
-    # cgroup.cpuset = "0-9"
-    concurrent = 10
+    snap_encode = 1
+    snap_prove = 1
 
     [processors.static_tree_d]
-    # 2k
-    2KiB = "./tree_d_all_zero_8388608"
+    8MiB = "/shared-dir/filecoin-proof-parameters/tree_d_all_zero_8388608"
 
     [[processors.pc1]]
-    # bin="/root/wenjie/force-ext-processors"
-    # args = ["processor", "pc1", "--huge_mem_path_32g", "/mnt/huge", "--huge_mem_page_count_32g", "10"]
-    # numa_preferred = 0
-    # cgroup.cpuset = "0-38"
-    # envs = { FORCE_SECTOR_SIZE="34359738368", FIL_PROOFS_HUGEPAGE_START_INDEX="0", FIL_PROOFS_CORE_START_INDEX="0", FIL_PROOFS_USE_MULTICORE_SDR="1", FIL_PROOFS_MULTICORE_SDR_PRODUCERS="1", FORCE_HUGE_PAGE="1" }
-    envs = {"RUST_LOG"="info"}
-    concurrent = 5
-
-    [[processors.pc1]]
-    # bin="/root/wenjie/force-ext-processors"
-    # args = ["processor", "pc1", "--huge_mem_path_32g", z"/mnt/huge", "--huge_mem_page_count_32g", "10"]
-    # numa_preferred = 1
-    # cgroup.cpuset = "48-86"
-    # envs = { FORCE_SECTOR_SIZE="34359738368", FIL_PROOFS_HUGEPAGE_START_INDEX="10",FIL_PROOFS_CORE_START_INDEX="24",  FIL_PROOFS_USE_MULTICORE_SDR="1", FIL_PROOFS_MULTICORE_SDR_PRODUCERS="1", FORCE_HUGE_PAGE="1" }
-    concurrent = 5
-    envs = {"RUST_LOG"="info"}
+    concurrent = 10
     
     [[processors.pc2]]
-    # bin="/root/wenjie/force-ext-processors"
-    # locks = ["gpu"]
-    # cgroup.cpuset = "16-23"
     concurrent = 1
-    # envs = { FIL_PROOFS_USE_GPU_COLUMN_BUILDER="1", FIL_PROOFS_USE_GPU_TREE_BUILDER="1", CUDA_VISIBLE_DEVICES="0",BELLMAN_CUSTOM_GPU="NVIDIA GeForce RTX 3080:8704",FIL_PROOFS_MAX_GPU_COLUMN_BATCH_SIZE="4000000",FIL_PROOFS_MAX_GPU_TREE_BATCH_SIZE="4000000" }
-    envs = {"RUST_LOG"="info"}
     
     [[processors.c2]]
-    # bin="/root/wenjie/force-ext-processors"
-    # bin="/root/damocles/dist/bin/cluster_c2_plugin"
-    # bin="/root/wenjie/cluster_c2_plugin_ty"
-    # args = ["processor", "c2", "--sector_size", "32GiB"]
-    # args = ["run", "--gpuproxy-url", "http://192.168.200.25:18888", "--log-level", "trace"]
-    # locks = ["gpu"]
-    # cgroup.cpuset = "2,5,8,11,14,17,20,23,26,29,32,35,37,50,53,56,59,62,65,68,71,74,77,80,83,86,43-47,87-95"
     concurrent = 1
-    # envs = { BELLMAN_LOAD_SHM="1", BELLMAN_USE_MAP_BUFFER="1", BELLMAN_CIRCUIT_N="1", BELLMAN_PROOF_N="1", CUDA_VISIBLE_DEVICES="0",BELLMAN_CUSTOM_GPU="NVIDIA GeForce RTX 3080:8704" }
-    envs = {"RUST_LOG"="info"}
-    # weight = 99
     
     [[processors.tree_d]]
-    # cgroup.cpuset = "93-95,2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34,48, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80, 82, 84, 86"
-    # cgroup.cpuset = "87-95,2,5,8,11,14,17,20,23,26,29,32,35,37,50,53,56,59,62,65,68,71,74,77,80,83,86"
+    concurrent = 1
+
+    [[processors.snap_encode]]
+    concurrent = 1
+
+    [[processors.snap_prove]]
     concurrent = 1

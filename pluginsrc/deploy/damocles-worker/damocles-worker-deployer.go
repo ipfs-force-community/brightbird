@@ -5,7 +5,6 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
@@ -21,9 +20,8 @@ type Config struct {
 
 type VConfig struct {
 	DamoclesManagerURL string `jsonschema:"-" json:"damoclesManagerURL" title:"DamoclesManagerURL"  require:"true" `
-
-	MarketToken  string          `json:"marketToken" jsonschema:"marketToken" title:"Market Token"  require:"true" `
-	MinerAddress address.Address `json:"minerAddress" jsonschema:"minerAddress" title:"Miner Address"  require:"true" `
+	MarketToken        string `json:"marketToken" jsonschema:"marketToken" title:"Market Token"  require:"true" `
+	MinerAddress       string `jsonschema:"-"`
 }
 
 type DropletMarketDeployReturn struct {
