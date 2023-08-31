@@ -26,7 +26,6 @@ type VConfig struct {
 	MessagerUrl  string `jsonschema:"-"`
 	MarketUrl    string `jsonschema:"-"`
 	GatewayUrl   string `jsonschema:"-"`
-	AuthUrl      string `jsonschema:"-"`
 	MinerAddress string `jsonschema:"-"`
 
 	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" `

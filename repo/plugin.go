@@ -25,7 +25,7 @@ type ListPluginParams struct {
 	// plugin type
 	PluginType *types.PluginType `form:"pluginType" json:"pluginType"`
 
-	Label *string 
+	Label *string
 }
 
 // GetPluginParams
@@ -351,12 +351,12 @@ func (p *PluginSvc) GetAllLabel(ctx context.Context) ([]string, error) {
 		},
 		{
 			"$group": bson.M{
-				"_id": "$labels",
-				"count": bson.M{"$sum": 1}, 
+				"_id":   "$labels",
+				"count": bson.M{"$sum": 1},
 			},
 		},
 	}
-		
+
 	cursor, err := p.pluginCol.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, err

@@ -27,7 +27,6 @@ func TestDeployFromConfig(t *testing.T) {
 				MessagerUrl:  "/ip4/192.168.1.1",
 				MarketUrl:    "/ip4/192.168.1.1",
 				GatewayUrl:   "/ip4/192.168.1.1",
-				AuthUrl:      "/ip4/192.168.1.1",
 				MinerAddress: "f0100",
 
 				SenderWalletAddress: address.NewForTestGetter()(),
