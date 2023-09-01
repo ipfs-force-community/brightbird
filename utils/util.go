@@ -49,3 +49,16 @@ func ToMultiAddr(endpoint string) string {
 
 	return fmt.Sprintf("/dsn/%s/tcp/%s", ipOrDsn, port)
 }
+
+func HasDupItemInArrary(arr []string) bool {
+	filter := make(map[string]bool)
+	for _, v := range arr {
+		_, ok := filter[v]
+		if !ok {
+			filter[v] = true
+			continue
+		}
+		return true
+	}
+	return false
+}

@@ -8,6 +8,7 @@ import (
 	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
+	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
@@ -43,7 +44,8 @@ type RenderParams struct {
 	Registry  string
 	Args      []string
 
-	UniqueId string
+	UniqueId      string
+	MountStorages []string // distinct with PieceStores and PersistStores
 }
 
 var PluginInfo = types.PluginInfo{
@@ -91,6 +93,32 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:    cfg,
 	}
+
+	if utils.HasDupItemInArrary(renderParams.PieceStores) {
+		return nil, fmt.Errorf("piece storage has same pvc %s", renderParams.PieceStores)
+	}
+
+	if utils.HasDupItemInArrary(renderParams.PersistStores) {
+		return nil, fmt.Errorf("piece storage has same pvc %s", renderParams.PersistStores)
+	}
+
+	pvcFilter := make(map[string]bool)
+	mountStorages := []string{}
+	for _, name := range renderParams.PieceStores {
+		_, ok := pvcFilter[name]
+		if !ok {
+			pvcFilter[name] = true
+			mountStorages = append(mountStorages, name)
+		}
+	}
+	for _, name := range renderParams.PersistStores {
+		_, ok := pvcFilter[name]
+		if !ok {
+			pvcFilter[name] = true
+			mountStorages = append(mountStorages, name)
+		}
+	}
+	renderParams.MountStorages = mountStorages
 
 	// create configMap
 	configMapFs, err := f.Open("damocles-manager/damocles-manager-configmap.yaml")

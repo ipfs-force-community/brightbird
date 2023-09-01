@@ -55,11 +55,11 @@ spec:
               subPath: {{.NameSpace}}
 {{ range $index, $value := .PieceStores }}
             - mountPath: /piece/{{$value}}
-              name: piece-{{$value}}
+              name: {{$value}}
 {{ end }}
 {{ range $index, $value := .PersistStores }}
             - mountPath: /persist/{{$value}}
-              name: storage-{{$value}}
+              name: {{$value}}
 {{ end }}
       volumes:
         - name: sector-manager-cfg
@@ -73,13 +73,8 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: shared-dir
-{{ range $index, $value := .PieceStores }}
-        - name: piece-{{$value}}
-          persistentVolumeClaim:
-            claimName: {{$value}}
-{{ end }}
-{{ range $index, $value := .PersistStores }}
-        - name: storage-{{$value}}
+{{ range $index, $value := .MountStorages }}
+        - name: {{$value}}
           persistentVolumeClaim:
             claimName: {{$value}}
 {{ end }}
