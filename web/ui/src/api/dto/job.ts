@@ -38,7 +38,7 @@ export interface IJobVo extends Readonly<{
     name: string;
     jobType: JobEnum;
     description: string;
-    versions: Map<string, string>;
+    versions: { [key: string]: string };
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
     tagCreateEventMatches: ITagCreateEventMatch[];
@@ -76,7 +76,7 @@ export interface IJobCreateVo extends Readonly<{
     name: string;
     jobType: JobEnum;
     description: string;
-    versions: any;
+    versions: { [key: string]: string };
 
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
@@ -89,7 +89,7 @@ export interface IJobUpdateVo extends Readonly<{
     name: string;
     testFlowId: string;
     description: string;
-    versions:  any;
+    versions:  { [key: string]: string };
    
     cronExpression: string;
     prMergedEventMatches: IPRMergedEventMatch[];
