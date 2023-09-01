@@ -19,9 +19,10 @@ type Config struct {
 }
 
 type VConfig struct {
-	DamoclesManagerURL string `jsonschema:"-" json:"damoclesManagerURL" title:"DamoclesManagerURL"  require:"true" `
-	MarketToken        string `json:"marketToken" jsonschema:"marketToken" title:"Market Token"  require:"true" `
-	MinerAddress       string `jsonschema:"-"`
+	PieceStores        []string `jsonschema:"-"`
+	DamoclesManagerUrl string   `jsonschema:"-"`
+	UserToken          string   `json:"userToken" jsonschema:"userToken" title:"User Token"  require:"true" `
+	MinerAddress       string   `jsonschema:"-"`
 }
 
 type DropletMarketDeployReturn struct {
@@ -36,7 +37,7 @@ type RenderParams struct {
 	Registry  string
 	Args      []string
 
-	TestID string
+	UniqueId string
 }
 
 var PluginInfo = types.PluginInfo{
@@ -51,13 +52,14 @@ var PluginInfo = types.PluginInfo{
 	Description: "",
 }
 
+//go:embed  damocles-worker
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletMarketDeployReturn, error) {
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		TestID:    k8sEnv.TestID(),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:    cfg,
 	}
 

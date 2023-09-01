@@ -24,7 +24,7 @@ data:
 {{ end }}
 {{ range $index, $value := .PersistStores }}
     [[Common.PersistStores]]
-    Name = "{{$value}}"
+    Name = "storage"
     Path = "/persist/{{$value}}"
     Strict = false
     ReadOnly = false

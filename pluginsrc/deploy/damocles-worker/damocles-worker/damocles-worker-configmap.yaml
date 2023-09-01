@@ -3,22 +3,19 @@ kind: ConfigMap
 metadata:
   name: damocles-worker-cfg-{{.UniqueId}}
 data:
-{{- range $i := until 20 }}
-  test{{$i}}: |
-    - name: /mnt/mount/k8s/{{.miner}}/test{{$i}}
-     path: /data/test{{$i}}
-{{- end }}
   damocles-worker.toml: |
     [worker]
     name = "filedrive"
     rpc_server.host = "0.0.0.0"
     rpc_server.port = 17891
-    local_pieces_dir = "/shared-dir/m-piece/piece"
+{{ range $index, $value := .PieceStores }}
+    local_pieces_dir = "/piece/{{$value}}"
+{{ end }}
 
     [sector_manager]
-    rpc_client.addr = "{{.DamoclesManagerUrl}"
+    rpc_client.addr = "{{.DamoclesManagerUrl}}"
     rpc_client.headers = { User-Agent = "jsonrpc-core-client" }
-    piece_token = "{{.MarketToken}}"
+    piece_token = "{{.UserToken}}"
     [sealing]
     allowed_miners = [{{.MinerAddress}}]
     allowed_sizes = ["8MiB"]
@@ -29,41 +26,101 @@ data:
     max_retries = 6
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test1"
+    location = "/root/test1"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test2"
+    location = "/root/test2"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test3"
+    location = "/root/test3"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test4"
+    location = "/root/test4"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test5"
+    location = "/root/test5"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test6"
+    location = "/root/test6"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test7"
+    location = "/root/test7"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test8"
+    location = "/root/test8"
     plan = "snapup"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test9"
+    location = "/root/test9"
     plan = "rebuild"
 
     [[sealing_thread]]
-    location = "/shared-dir/{{.MinersAddress}}/test10"
+    location = "/root/test10"
     plan = "unseal"
+
+    [[sealing_thread]]
+    location = "/root/test11"
+
+    [[sealing_thread]]
+    location = "/root/test12"
+
+    [[sealing_thread]]
+    location = "/root/test13"
+
+    [[sealing_thread]]
+    location = "/root/test14"
+
+    [[sealing_thread]]
+    location = "/root/test15"
+
+    [[sealing_thread]]
+    location = "/root/test16"
+
+    [[sealing_thread]]
+    location = "/root/test17"
+
+    [[sealing_thread]]
+    location = "/root/test18"
+
+    [[sealing_thread]]
+    location = "/root/test19"
+
+    [[sealing_thread]]
+    location = "/root/test20"
+
+    [[sealing_thread]]
+    location = "/root/test21"
+
+    [[sealing_thread]]
+    location = "/root/test22"
+
+    [[sealing_thread]]
+    location = "/root/test23"
+
+    [[sealing_thread]]
+    location = "/root/test24"
+
+    [[sealing_thread]]
+    location = "/root/test25"
+
+    [[sealing_thread]]
+    location = "/root/test26"
+
+    [[sealing_thread]]
+    location = "/root/test27"
+
+    [[sealing_thread]]
+    location = "/root/test28"
+
+    [[sealing_thread]]
+    location = "/root/test29"
+
+    [[sealing_thread]]
+    location = "/root/test30"
 
     [[attached]]
     name = "storage"
-    location = "/shared-dir/{{.TestID}}/{{.MinerAddress}}"
+    location = "/shared-dir/{{.UniqueId}}/{{.MinerAddress}}"
     [attached_selection]
     # enable_space_weighted = false
 
