@@ -112,7 +112,7 @@ import {
   SetupContext,
   onMounted,
 } from 'vue';
-
+import { fetchDeployPlugins } from '@/api/plugin';
 import { fetchTestFlowDetail, listTestflowGroup, queryTestFlow } from '@/api/view-no-auth';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { IJobUpdateVo, IPRMergedEventMatch } from '@/api/dto/job';
@@ -123,6 +123,7 @@ import { START_PAGE_NUM } from '@/utils/constants';
 import { JobEnum, PluginTypeEnum } from '@/api/dto/enumeration';
 import { ElCol, ElRow, FormRules } from 'element-plus';
 import yaml from 'yaml';
+import { PluginDef } from '@/api/dto/node-definitions';
 import { GlobalProperty } from '@/api/dto/testflow';
 
 export default defineComponent({
@@ -140,7 +141,7 @@ export default defineComponent({
       testFlowId: '',
       name: '',
       description: '',
-      versions: { 'a': 'b' },
+      versions: {},
 
       // cron
       cronExpression: '',
@@ -160,19 +161,74 @@ export default defineComponent({
         jobType.value = job.jobType;
 
         const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId });
+        //update global properties
         let globalMapsSet = new Set();
         testflow.globalProperties?.map(val => {
           globalMapsSet.add(val.name);
         })
 
         //1. remove removed property  2. add new property
-        const gps = editorForm.value.globalProperties??[];
+        const gps = editorForm.value.globalProperties ?? [];
         gps.push(...testflow.globalProperties ?? []);
         const globalProperties = gps.filter(a => globalMapsSet.has(a.name)).filter(
           (property, index, self) => index === self.findIndex(p => p.name === property.name)
-        ); 
-
+        );
         editorForm.value.globalProperties = globalProperties;
+
+        //update commitmap
+        const nodeInUse = new Set<string>();
+        const { pipeline } = yaml.parse(testflow.graph);
+        Object.values(pipeline).forEach((a: any) => nodeInUse.add(a.name + a.version));
+
+        const pluginMap = new Map<string, PluginDef>();
+        (await fetchDeployPlugins()).map(a => {
+          a.pluginDefs?.map(p => {
+            if (nodeInUse.has(p.name + p.version)) {
+              pluginMap.set(p.name, p);
+            }
+          });
+        });
+
+        const toDelte: string[] = [];
+        const toAdd: string[] = [];
+        Object.entries(editorForm.value.versions).map(([k, v]) => {
+          if (!pluginMap.has(k)) {
+            toDelte.push(k);
+            return
+          }
+        });
+
+        pluginMap.forEach((v, k) => {
+          if (!editorForm.value.versions.hasOwnProperty(k)) {
+            toAdd.push(k);
+          }
+        });
+
+        toDelte.forEach(v => {
+          delete (editorForm.value.versions[v])
+          if (jobType.value === JobEnum.TagCreated) {
+            editorForm.value.tagCreateEventMatches = editorForm.value.tagCreateEventMatches.filter(a => a.repo != v);
+          } else if (jobType.value === JobEnum.PRMerged) {
+            editorForm.value.prMergedEventMatches = editorForm.value.prMergedEventMatches.filter(a => a.repo != v);
+          }
+        })
+
+        toAdd.forEach(v => {
+          editorForm.value.versions[v] = '';
+          const repoName = pluginMap.get(v)?.repo ?? '';
+          if (jobType.value === JobEnum.TagCreated) {
+            editorForm.value.tagCreateEventMatches.push({
+              repo: repoName,
+              tagPattern: 'tag/.+',
+            });
+          } else if (jobType.value === JobEnum.PRMerged) {
+            editorForm.value.prMergedEventMatches.push({
+              repo: repoName,
+              sourcePattern: 'feat\/.+|fix\/.+',
+              basePattern: 'master|main',
+            });
+          }
+        })
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
