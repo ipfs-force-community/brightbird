@@ -333,6 +333,8 @@ func RegisterDeployRouter(ctx context.Context, pluginStore types.PluginStore, v1
 		//
 		// in: formData
 		//
+		// require: true
+		//
 		// swagger:file
 		PluginFile *multipart.FileHeader `json:"plugin" form:"plugin"`
 

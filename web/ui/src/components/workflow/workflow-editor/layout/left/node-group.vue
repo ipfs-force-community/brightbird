@@ -18,7 +18,10 @@
             v-for="item in nodes"
             :key="item.getName()"
             :node-data="item"
-            @mousedown="(e) => drag(item, e)"/>
+            @mouseup="(e)=> onMouseUpEvent(item,e)"
+            @mousedown="(e) => onMouseDownEvent(item,e)"
+            @mousemove="(e)=>onMouseMoveEvent(item,e)"
+            />
         </div>
         <!-- 显示更多 -->
         <div class="load-more">
@@ -39,7 +42,7 @@ import { WorkflowDnd } from '../../model/workflow-dnd';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 
 export default defineComponent({
-  emits: ['getNodeCount'],
+  emits: ['getNodeCount', 'onNodeClick'],
   props: {
     type: {
       type: String as PropType<PluginTypeEnum>,
@@ -74,6 +77,12 @@ export default defineComponent({
     const collapsed = ref<boolean>(true);
     const nodes = ref<IWorkflowNode[]>([]);
     const keyWord = ref<string>(props.keyword);
+    const mousePosition = ref();
+    mousePosition.value = {
+      'clientX': 0,
+      'clientY':0,
+    };
+
     const getWorkflowDnd = inject('getWorkflowDnd') as () => WorkflowDnd;
     const workflowNode = new WorkflowNode();
     // 当前为第几页，默认第一页
@@ -149,7 +158,35 @@ export default defineComponent({
       // 搜索后将currentPage初始化
       currentPage.value = 1;
     });
+
+    const onMouseDownEvent = (item: IWorkflowNode, e: MouseEvent) => {
+      mousePosition.value['clientX'] = e.clientX;
+      mousePosition.value['clientY'] = e.clientY;
+      getWorkflowDnd().callback(() => {
+        mousePosition.value['clientX'] = 0;
+        mousePosition.value['clientY'] = 0;
+      });
+    };
+    const onMouseUpEvent = (item: IWorkflowNode, e: MouseEvent) => {
+      console.log(item, e);
+      if (mousePosition.value['clientX'] === e.clientX && mousePosition.value['clientY'] === e.clientY) {
+        emit('onNodeClick', item);
+      }
+      mousePosition.value['clientX'] = 0;
+      mousePosition.value['clientY'] = 0;
+    };
+
+    const onMouseMoveEvent = (item: IWorkflowNode, e: MouseEvent) => { 
+      if (mousePosition.value['clientX'] !== 0 && mousePosition.value['clientY'] !== 0) {
+        getWorkflowDnd().drag(item, e);
+      }
+    };
+
     return {
+      onMouseMoveEvent,
+      onMouseUpEvent,
+      onMouseDownEvent,
+      mousePosition,
       initialPageSize,
       isShow,
       groupName,
