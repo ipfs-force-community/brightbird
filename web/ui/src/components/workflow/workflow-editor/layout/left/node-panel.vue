@@ -65,7 +65,7 @@
     </div>
   </div>
   <ElDrawer v-if="visible" v-model="visible" size="60%">
-      <PluginDetail :name="pluginNode?.getName()">
+      <PluginDetail @on-upload-success="onDeletePluginSuccess" :name="pluginNode?.getName()">
       </PluginDetail>
   </ElDrawer>
  </div>
@@ -127,7 +127,7 @@ export default defineComponent({
         if (fileList.value.length > 0) {
           const formData = new FormData(); 
           fileList.value.forEach(file => {
-            if (file.raw) formData.append('plugins', file.raw);
+            if (file.raw) formData.append('plugin', file.raw);
             
           });
 
@@ -138,7 +138,7 @@ export default defineComponent({
           await nodeGroup1.value.loadNodes(tempKeyword.value, false);
           await nodeGroup2.value.loadNodes(tempKeyword.value, false);
           fileList.value = [];
-
+          isUploadCancel.value = true;
           ElMessageBox.alert('上传成功', '提示', {
             confirmButtonText: '确定',
             type: 'success',
@@ -172,6 +172,16 @@ export default defineComponent({
 
     const onFileListDelete = (idx:number)=>{
       fileList.value.splice(idx, 1);
+    };
+
+    const onDeletePluginSuccess = async ()=>{
+      visible.value = false;
+      await nodeGroup1.value.loadNodes(tempKeyword.value, false);
+      await nodeGroup2.value.loadNodes(tempKeyword.value, false);
+      ElMessageBox.alert('删除成功', '提示', {
+        confirmButtonText: '确定',
+        type: 'success',
+      });
     };
     // 确定容器宽度
     onMounted(() => {
@@ -207,6 +217,7 @@ export default defineComponent({
       onUploadChange,
       onNodeClick,
       onFileListDelete,
+      onDeletePluginSuccess,
       collapse: () => {
         collapsed.value = container.value!.clientWidth > 0;
       },

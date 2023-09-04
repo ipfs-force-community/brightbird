@@ -111,7 +111,7 @@ import { IRootState } from '@/model';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import PluginLabel from './plugin-label.vue';
 import VueJsonPretty from 'vue-json-pretty';
-import { ElButton, ElDialog } from 'element-plus';
+import { ElButton, ElDialog, ElMessageBox } from 'element-plus';
 
 export default defineComponent({
   props: {
@@ -125,7 +125,8 @@ export default defineComponent({
     ElButton,
     ElDialog,
   },
-  setup(props) {
+  emits:['onUploadSuccess'],
+  setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
     const store = useStore();
@@ -166,10 +167,13 @@ export default defineComponent({
       try {
         deletePluginLoading.value = true;
         await deletePluginAllVersion(pluginDetail.value?.id);
-
+        emit('onUploadSuccess');
       } catch (error) {
         console.error('delete plugin failed:', error);
-
+        ElMessageBox.alert(`删除失败: ${error}`, '错误', {
+          confirmButtonText: '确定',
+          type: 'error',
+        });
       } finally {
         deletePluginLoading.value = false;
       }
