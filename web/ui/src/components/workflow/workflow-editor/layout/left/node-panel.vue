@@ -8,16 +8,26 @@
           <i class="jm-icon-button-search"></i>
         </template>
       </jm-input>
-      <ElUpload :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="true">➕</ElUpload>
+      <ElUpload :disabled="fileList.length > 0" :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="false">
+      <div :class="{'upload':true,'disabled':fileList.length > 0}">+</div>
+      </ElUpload>
     </div>
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
         <node-group
           ref="nodeGroup1"
-          :type="PluginTypeEnum.Deploy" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="PluginTypeEnum.Deploy" 
+          :keyword="tempKeyword"
+           @get-node-count="getNodeCount"
+           @on-node-click="onNodeClick"
+           />
         <node-group
         ref="nodeGroup2"
-          :type="PluginTypeEnum.Exec" :keyword="tempKeyword" @get-node-count="getNodeCount"/>
+          :type="PluginTypeEnum.Exec" 
+          :keyword="tempKeyword"
+           @get-node-count="getNodeCount"
+           @on-node-click="onNodeClick"
+           />
       </div>
       <div class="empty" v-if="nodeCount<=0">
         <jm-empty description="没有搜到相关结果" :image="noDataImage">
@@ -25,17 +35,26 @@
       </div>
     </jm-scrollbar>
   </div>
-  <div v-if="!isUploadCancel" class="jm-workflow-add-plugin-panel">
+  <div
+   v-loading="uploading" 
+   v-if="!isUploadCancel" 
+   class="jm-workflow-add-plugin-panel">
     <div class="item-wrap">
       <div :class="{'file-item-wrap':true}" v-for=" item,index in fileList" :key="index">
       <div :style="{width: '400px'}">
         <div :class="{'file-item':true}">
         <div class="name">{{ item.name }}</div>
-        <div :class="{'close':true}"></div>
+        <div @click="onFileListDelete(index)" :class="{'close':true}"></div>
        </div>
       </div>
        <div>
-        <ElSelect class="tag-select" size="small">
+        <ElSelect v-model="selectLabels" class="tag-select" size="small" multiple>
+          <ElOption 
+          v-for="(item,index) in labels"
+           :key="index" 
+           :label="item" 
+           :value="item"
+           />
         </ElSelect>
        </div>
       </div>
@@ -45,6 +64,10 @@
       <ElButton type="primary" @click="onUpload">上传</ElButton>
     </div>
   </div>
+  <ElDrawer v-if="visible" v-model="visible" size="60%">
+      <PluginDetail :name="pluginNode?.getName()">
+      </PluginDetail>
+  </ElDrawer>
  </div>
 </template>
 
@@ -56,15 +79,22 @@ import { WorkflowValidator } from '../../model/workflow-validator';
 import NodeGroup from './node-group.vue';
 import noDataImage from '../../svgs/no-data.svg';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
-import { ElButton, ElMessageBox, ElSelect, ElUpload, UploadUserFile } from 'element-plus';
-import { uploadPlugin } from '@/api/plugin';
-
+import { ElButton, ElDrawer, ElMessageBox, ElOption, ElSelect, ElUpload, UploadUserFile } from 'element-plus';
+import { fetchLabel, uploadPlugin } from '@/api/plugin';
+import { IWorkflowNode } from '../../model/data/common';
+import  PluginDetail  from '@/views/plugin-library/plugin-detail.vue';
 export default defineComponent({
-  components: { NodeGroup, ElButton, ElUpload, ElSelect },
+  components: { NodeGroup, ElButton, ElUpload, ElSelect, ElDrawer, PluginDetail, ElOption },
   emits: ['node-selected'],
   setup(props, { emit }) {
     const fileList: Ref<UploadUserFile[]> = ref([]);
     const isUploadCancel: Ref<boolean> = ref(true);
+    const visible =  ref<boolean>(false);
+    const pluginNode = ref<IWorkflowNode>();
+    const uploading =  ref<boolean>(false);
+    const labels = ref<string[]>([]);
+    const selectLabels = ref<string[]>([]);
+
 
     const nodeGroup1: Ref<any> = ref();
     const nodeGroup2: Ref<any> = ref();
@@ -87,20 +117,27 @@ export default defineComponent({
       // 如果node-group中都找不到节点拖拽面板不展示
       nodeCount.value += count;
     };
+    const loadLabels = async ()=>{
+      const res =  await fetchLabel();
+      labels.value = res;
+    };
     const onUpload = async() => {
-      console.log(fileList.value.length);
-
       try {
-        // uploading.value = true;
+        uploading.value = true;
         if (fileList.value.length > 0) {
           const formData = new FormData(); 
           fileList.value.forEach(file => {
             if (file.raw) formData.append('plugins', file.raw);
             
           });
+
+          selectLabels.value.forEach(value=>{
+            formData.append('labels', value);
+          });
           await uploadPlugin(formData);
           await nodeGroup1.value.loadNodes(tempKeyword.value, false);
           await nodeGroup2.value.loadNodes(tempKeyword.value, false);
+          fileList.value = [];
 
           ElMessageBox.alert('上传成功', '提示', {
             confirmButtonText: '确定',
@@ -118,8 +155,7 @@ export default defineComponent({
           type: 'error',
         });
       } finally {
-        // uploading.value = false;
-        fileList.value = [];
+        uploading.value = false;
       }
     };
     const onUploadCancel = () => {
@@ -129,6 +165,14 @@ export default defineComponent({
     const onUploadChange = () => {
       isUploadCancel.value = false;
     };
+    const onNodeClick = (item: IWorkflowNode) => {
+      pluginNode.value = item;
+      visible.value = true;
+    };
+
+    const onFileListDelete = (idx:number)=>{
+      fileList.value.splice(idx, 1);
+    };
     // 确定容器宽度
     onMounted(() => {
       // 初始化dnd
@@ -137,14 +181,21 @@ export default defineComponent({
         getWorkflowValidator(),
         container.value! as HTMLElement,
         (nodeId: string) => emit('node-selected', nodeId));
+
+      loadLabels();
     });
     return {
+      selectLabels,
+      labels,
+      uploading,
+      visible,
       nodeGroup1,
       nodeGroup2,
       isUploadCancel,
       fileList,
       noDataImage,
       nodeCount,
+      pluginNode,
       getNodeCount,
       PluginTypeEnum,
       collapsed,
@@ -154,6 +205,8 @@ export default defineComponent({
       onUpload,
       onUploadCancel,
       onUploadChange,
+      onNodeClick,
+      onFileListDelete,
       collapse: () => {
         collapsed.value = container.value!.clientWidth > 0;
       },
@@ -178,19 +231,19 @@ export default defineComponent({
 
 .jm-workflow-editor-node-panel-wrap {
   position: absolute;
-  display: grid;
-  grid-template-columns: @node-panel-width calc(100vw - @node-panel-width);
-  z-index: 2;
-  height: calc(100% - @node-panel-top);
   top: @node-panel-top;
+  bottom: 0;
   left: 0;
-
+  z-index: 2;
+  display: grid;
+  height: calc(100% - @node-panel-top);
   transition: grid-template-columns 0.3s ease-in-out;
+
+  grid-template-columns: @node-panel-width calc(100vw - @node-panel-width);
 
   &.collapsed {
     grid-template-columns: 0px 100vw;
   }
-
 }
 
 .jm-workflow-editor-node-panel-wrap.uploadCancel {
@@ -202,12 +255,13 @@ export default defineComponent({
 
 .jm-workflow-editor-node-panel {
   position: relative;
-  // 折叠动画
-  transition: width 0.3s ease-in-out;
+  overflow-y: auto;
   width: @node-panel-width;
+  height: 100%;
   border: 1px solid #E6EBF2;
   background: #FFFFFF;
-  height: 100%;
+  // 折叠动画
+  transition: width 0.3s ease-in-out;
 
   .search {
     display: flex;
@@ -221,10 +275,10 @@ export default defineComponent({
   &.collapsed {
     width: 0;
     .collapse-btn {
+      right: calc(-@collapse-btn-width * 2 / 2);
+      border-radius: 50% 0 0 50%;
       // 反转
       transform: scaleX(-1);
-      border-radius: 50% 0 0 50%;
-      right: calc(-@collapse-btn-width * 2 / 2);
 
       &::before {
         margin-left: 5.5px;
@@ -237,24 +291,23 @@ export default defineComponent({
   }
 
   .collapse-btn {
+    position: absolute;
+    top: 78px;
+    right: calc(-@collapse-btn-width / 2);
+    z-index: 3;
     display: flex;
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
-    border: 1px solid #EBEEFB;
-    z-index: 3;
-    position: absolute;
-    top: 78px;
-    right: calc(-@collapse-btn-width / 2);
-
     width: @collapse-btn-width;
     height: 36px;
-    line-height: 36px;
-    text-align: center;
-    color: #6B7B8D;
-    font-size: 16px;
-    background-color: #FFFFFF;
+    border: 1px solid #EBEEFB;
     border-radius: 50%;
+    background-color: #FFFFFF;
+    color: #6B7B8D;
+    text-align: center;
+    font-size: 16px;
+    line-height: 36px;
     cursor: pointer;
 
     &::before {
@@ -265,29 +318,28 @@ export default defineComponent({
   .search {
     position: absolute;
     top: 0;
-    width: 100%;
-    transition: opacity 0.3s ease-in-out;
-    padding: 30px 0 30px;
+    z-index: 2;
     display: flex;
     justify-content: center;
-    z-index: 2;
+    padding: 30px 0 30px;
+    width: 100%;
+    border-bottom: 1px solid #EBEEFB;
     background-color: #FFFFFF;
+    transition: opacity 0.3s ease-in-out;
 
     ::v-deep(.el-input) {
       width: calc(100% - 40px);
     }
 
-    border-bottom: 1px solid #EBEEFB;
-
     .jm-icon-button-search {
-      font-size: 16px;
       color: #7B8C9C;
+      font-size: 16px;
     }
   }
 
   ::v-deep(.el-scrollbar) {
-    height: calc(100% - 97px);
     margin-top: 97px;
+    height: calc(100% - 97px);
   }
 
   .groups {
@@ -295,28 +347,30 @@ export default defineComponent({
   }
 
   .empty {
-    font-size: 14px;
-    text-align: center;
     margin-top: 20px;
+    text-align: center;
+    font-size: 14px;
 
     .submit-issue {
-      cursor: pointer;
       color: @primary-color;
+      cursor: pointer;
     }
   }
 }
 
 .jm-workflow-add-plugin-panel {
-  background: white;
-  margin: 0px 20px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  row-gap: 10px;
+  margin: 0px 20px;
   padding: 20px;
+  background: white;
+
+  row-gap: 10px;
   .item-wrap {
     display: flex;
     flex-direction: column;
+
     row-gap: 10px;
     .file-item-wrap {
       display: flex;
@@ -325,12 +379,12 @@ export default defineComponent({
       display: flex;
       align-items: center;
       justify-content: flex-start;
-      font-size: 12px;
-      white-space: nowrap;
-      height: 100%;
       // background: yellowgreen;
       width: min-content;
+      height: 100%;
       border-radius: 2px;
+      white-space: nowrap;
+      font-size: 12px;
 
       .close {
         display: none;
@@ -341,7 +395,6 @@ export default defineComponent({
           display: block;
         }
       }
-
       .close {
         width: 15px;
         height: 15px;
@@ -352,15 +405,40 @@ export default defineComponent({
       }
     }
 
-     :deep(.el-input--small) {
-        height: 24px;
+    :deep(.el-input--small) {
+        // height: 24px;
         width: 150px;
+        .disabled {
+          cursor: not-allowed;
+        }
       }
     }
-  }
 
+    // :deep(.el-loading-spinnerbefore){
+    //   font-size: 20px;
+    // }  
+  }
+  
   .file-item:hover {
     background: #f5f5f5;
   }
 }
+
+:deep(.upload.disabled) {
+      cursor: not-allowed !important;
+}
+::v-deep(.el-loading-spinner) {
+        &::before {
+          display: inline-block;
+          color: @primary-color;
+          content: '\e806';
+          font-size: 30px !important;
+          font-family: 'jm-icon-button';
+          animation: rotating 2s linear infinite;
+        }
+
+        .circular {
+          display: none;
+        }
+    }
 </style>

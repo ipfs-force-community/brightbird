@@ -33,7 +33,7 @@ export function fetchDeployPlugins(): Promise<PluginDetail[]> {
  * 根据name获取插件
  * @param name
  */
-export function getPluginByName(name: string): Promise<PluginDetail> {
+export function getPluginByName(name?: string): Promise<PluginDetail> {
   return restProxy<PluginDetail>({
     url: `${baseUrl.plugin}`,
     method: 'get',
@@ -87,7 +87,7 @@ export function deletePlugin(id: string, version: string): Promise<void> {
 /**
  * 删除插件的全部版本
  */
-export function deletePluginAllVersion(id: string): Promise<void> {
+export function deletePluginAllVersion(id?: string): Promise<void> {
   return restProxy<void>({
     url: `${baseUrl.plugin}/all?id=${id}`,
     method: 'delete',
@@ -124,7 +124,7 @@ export function uploadPlugin(formData: object): Promise<void> {
     url: `${baseUrl.plugin}/upload`,
     method: 'post',
     payload: formData,
-    payloadType:"file",
+    payloadType:'file',
     timeout: 200 * 1000,
   });
 }
@@ -136,5 +136,16 @@ export function downloadPublicZip(): Promise<void> {
   return restProxy({
     url: `${baseUrl.plugin}/download`,
     method: 'get',
+  });
+}
+
+/**
+ *  获取插件标签
+ * @returns 
+ */
+export function fetchLabel():Promise<string[]> {
+  return restProxy({
+    url:`${baseUrl.plugin}/label-all`,
+    method:'GET',
   });
 }

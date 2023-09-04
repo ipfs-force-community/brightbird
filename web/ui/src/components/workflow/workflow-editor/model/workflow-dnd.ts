@@ -21,15 +21,17 @@ interface IDraggingListener {
 
 export class WorkflowDnd {
   private readonly graph: Graph;
-  private readonly dnd: Addon.Dnd;
+  readonly dnd: Addon.Dnd;
   private readonly draggingListener: IDraggingListener = {
     mousePosition: { x: -1, y: -1 },
   }
 
+  private _callback?:()=>void
   constructor(graph: Graph,
     workflowValidator: WorkflowValidator,
     nodeContainer: HTMLElement,
     clickNodeWarningCallback: ClickNodeWarningCallbackFnType) {
+    this._callback = undefined;
     this.graph = graph;
     this.dnd = new Addon.Dnd({
       target: graph,
@@ -49,8 +51,7 @@ export class WorkflowDnd {
         const proxy = new CustomX6NodeProxy(targetNode);
         const _data = proxy.getData();
         const data = _data as AsyncTask;
-        data.setInstanceName(data.name + '-' + uuid().slice(0, 8));
-      
+        data.setInstanceName(data.name + '-' + uuid().slice(0, 8));      
         getPluginByName(data.name)
           .then(pluginDetail => {
             if (pluginDetail.pluginDefs && pluginDetail.pluginDefs.length > 0) {
@@ -74,7 +75,7 @@ export class WorkflowDnd {
           .catch(error => {
             // Handle error
           });
-      
+        if (this._callback) this._callback();
         return targetNode as Node<Node.Properties>;
       },
       validateNode: async (droppingNode: Node) => {
@@ -110,7 +111,10 @@ export class WorkflowDnd {
     });
   }
 
-
+  
+  callback(p:() => void):void {  
+    this._callback = p;
+  }
   convertToSchema(input: any):JSONSchema {
     return Try<JSONSchema>(
       () => input,
