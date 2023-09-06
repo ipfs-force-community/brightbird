@@ -8,9 +8,16 @@
           <i class="jm-icon-button-search"></i>
         </template>
       </jm-input>
-      <!-- <ElUpload :disabled="fileList.length > 0" :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="false">
-      <div :class="{'upload':true,'disabled':fileList.length > 0}">+</div>
-      </ElUpload> -->
+    </div>
+    <div class="tags">
+      <ElSelect v-model="selectLabels" class="tag-select"  multiple>
+          <ElOption 
+          v-for="(item,index) in labels"
+           :key="index" 
+           :label="item" 
+           :value="item"
+           />
+        </ElSelect>
     </div>
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
@@ -18,6 +25,7 @@
           ref="nodeGroup1"
           :type="PluginTypeEnum.Deploy" 
           :keyword="tempKeyword"
+          :tags="selectLabels"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -25,6 +33,7 @@
         ref="nodeGroup2"
           :type="PluginTypeEnum.Exec" 
           :keyword="tempKeyword"
+          :tags="selectLabels"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -293,10 +302,6 @@ export default defineComponent({
   .search {
     display: flex;
     align-items: center;
-
-    &>:last-child {
-      margin-left: 10px;
-    }
   }
 
   &.collapsed {
@@ -364,8 +369,14 @@ export default defineComponent({
     }
   }
 
+  .tags {
+    margin-top: 130px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
   ::v-deep(.el-scrollbar) {
-    margin-top: 97px;
+    margin-top: 10px;
     height: calc(100% - 97px);
   }
 
