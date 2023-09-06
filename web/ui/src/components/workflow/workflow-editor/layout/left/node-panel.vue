@@ -379,6 +379,10 @@ export default defineComponent({
   }
 }
 
+.jm-workflow-editor-node-panel.collapsed {
+  overflow: visible;
+}
+
 .jm-workflow-add-plugin-panel {
   display: flex;
   flex-direction: column;

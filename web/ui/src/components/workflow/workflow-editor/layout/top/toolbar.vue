@@ -5,7 +5,7 @@
       <div class="title">{{ workflowData.name }}</div>
       <ElUpload :disabled="fileList.length > 0" :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="false">
       <div :class="{'upload':true,'disabled':fileList.length > 0}">
-        <ElButton>添加插件</ElButton>
+        <ElButton class="add-button" :disabled="fileList.length > 0">添加插件</ElButton>
       </div>
       </ElUpload>
       
@@ -386,9 +386,9 @@ export default defineComponent({
         margin-left: 10px;
       }
     }
+  }
 
-    .operations {
-     .env,.save-return {
+  .env,.save-return,.add-button {
         background: #f5f5f5;
         border-radius: 2px;
         color: #082340;
@@ -399,7 +399,5 @@ export default defineComponent({
           background: #d9d9d9;
         }
       }
-    }
-  }
 }
 </style>
