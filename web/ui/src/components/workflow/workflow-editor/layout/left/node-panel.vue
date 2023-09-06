@@ -48,7 +48,7 @@
        </div>
       </div>
        <div>
-        <ElSelect v-model="selectLabels" class="tag-select" size="small" multiple>
+        <ElSelect allow-create filterable v-model="selectLabels" class="tag-select" size="small" multiple>
           <ElOption 
           v-for="(item,index) in labels"
            :key="index" 
@@ -80,16 +80,19 @@ import NodeGroup from './node-group.vue';
 import noDataImage from '../../svgs/no-data.svg';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
 import { ElButton, ElDrawer, ElMessageBox, ElOption, ElSelect, UploadUserFile } from 'element-plus';
-import { fetchLabel, uploadPlugin } from '@/api/plugin';
+import { uploadPlugin } from '@/api/plugin';
 import { IWorkflowNode } from '../../model/data/common';
 import  PluginDetail  from '@/views/plugin-library/plugin-detail.vue';
-import { mapMutations, mapState, useStore } from 'vuex';
+import { mapMutations, mapState, useStore, mapActions } from 'vuex';
 export default defineComponent({
   components: { NodeGroup, ElButton, ElSelect, ElDrawer, PluginDetail, ElOption },
   emits: ['node-selected'],
   methods:{
     ...mapMutations('worker-editor', [
       'setFileList',
+    ]),
+    ...mapActions('worker-editor', [
+      'getLabels',
     ]),
     async onUpload() {
       try {
@@ -141,7 +144,13 @@ export default defineComponent({
       fileList:(state:any)=>{
         return state.fileList as UploadUserFile[];
       },
+      labels:state=>{
+        return state.labels;
+      },
     }),
+  },
+  mounted() {
+    this.getLabels();
   },
   setup(props, { emit }) {
     const store = useStore();
@@ -150,7 +159,6 @@ export default defineComponent({
     const visible =  ref<boolean>(false);
     const pluginNode = ref<IWorkflowNode>();
     const uploading =  ref<boolean>(false);
-    const labels = ref<string[]>([]);
     const selectLabels = ref<string[]>([]);
 
 
@@ -175,10 +183,7 @@ export default defineComponent({
       // 如果node-group中都找不到节点拖拽面板不展示
       nodeCount.value += count;
     };
-    const loadLabels = async ()=>{
-      const res =  await fetchLabel();
-      labels.value = res;
-    };
+
     const onUploadCancel = () => {
       store.commit('worker-editor/setUploadCancel', true);
       store.commit('worker-editor/setFileList', []);
@@ -199,19 +204,20 @@ export default defineComponent({
     };
     // 确定容器宽度
     onMounted(() => {
+      // 获取label 标签
       // 初始化dnd
       workflowDnd = new WorkflowDnd(
         getGraph(),
         getWorkflowValidator(),
         container.value! as HTMLElement,
         (nodeId: string) => emit('node-selected', nodeId));
+      console.log('+++++===========', this);
+      // this.getLabels();
 
-      loadLabels();
     });
     return {
       store,
       selectLabels,
-      labels,
       uploading,
       visible,
       nodeGroup1,
