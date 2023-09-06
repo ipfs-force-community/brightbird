@@ -211,6 +211,8 @@ export default defineComponent({
 
     const onMouseMoveEvent = (item: IWorkflowNode, e: MouseEvent) => { 
       if (mousePosition.value['clientX'] !== 0 && mousePosition.value['clientY'] !== 0) {
+        mousePosition.value['clientX'] = 0;
+        mousePosition.value['clientX'] = 0;
         getWorkflowDnd().drag(item, e);
       }
     };
