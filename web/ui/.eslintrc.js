@@ -99,5 +99,7 @@ module.exports = {
     '@typescript-eslint/no-empty-interface': 0,
     // 解决.vue文件多个单词命名的报错提示
     'vue/multi-word-component-names': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-explicit-any':'off',
   },
 };

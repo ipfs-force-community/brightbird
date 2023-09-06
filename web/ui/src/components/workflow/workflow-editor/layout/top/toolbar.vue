@@ -3,6 +3,12 @@
     <div class="left">
       <button class="jm-icon-button-left" @click="goBack"></button>
       <div class="title">{{ workflowData.name }}</div>
+      <ElUpload :disabled="fileList.length > 0" :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="false">
+      <div :class="{'upload':true,'disabled':fileList.length > 0}">
+        <ElButton>添加插件</ElButton>
+      </div>
+      </ElUpload>
+      
     </div>
     <div class="right">
       <div class="tools">
@@ -28,7 +34,7 @@
 </template>
 
 <script lang="ts">
-import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, ref  } from 'vue';
+import { computed, defineComponent, getCurrentInstance, inject, onMounted, PropType, Ref, ref  } from 'vue';
 import { Cell, Graph } from '@antv/x6';
 import { ZoomTypeEnum } from '../../model/data/enumeration';
 import { WorkflowTool } from '../../model/workflow-tool';
@@ -37,22 +43,54 @@ import { IWorkflow } from '../../model/data/common';
 import { WorkflowValidator } from '../../model/workflow-validator';
 import { cloneDeep } from 'lodash';
 import { compare } from '../../model/util/object';
-import { ElButton } from 'element-plus';
+import { ElButton, ElUpload, UploadUserFile } from 'element-plus';
+import { mapMutations, mapState, useStore } from 'vuex';
 
 export default defineComponent({
-  components: { ProjectPanel, ElButton },
+  components: { ProjectPanel, ElButton, ElUpload },
   props: {
     workflowData: {
       type: Object as PropType<IWorkflow>,
       required: true,
     },
-    projectPanelVisible: {
-      type: Boolean,
-      default: false,
+    // projectPanelVisible: {
+    //   type: Boolean,
+    //   default: false,
+    // },
+  },
+  // watch:{
+  //   fileList:{
+  //     handler(val) {
+  //       this.setFileList(val);
+  //     },
+  //     deep: true,
+  //   },
+  // },
+  methods:{
+    ...mapMutations('worker-editor', [
+      'setFileList',
+      'setUploadCancel',
+    ]),
+  },
+  computed:{
+    ...mapState('worker-editor', {
+      isUploadCancel:(state:any)=>{
+        return state.isUploadCancel;
+      },
+    }),
+    fileList:{
+      get(){
+        return this.store.state['worker-editor']['fileList'] as UploadUserFile[];
+      },
+      set(val:UploadUserFile[]){
+        this.setFileList(val);
+      },
     },
+    
   },
   emits: ['back', 'save', 'open-cache-panel', 'openEnvironment'],
   setup(props, { emit }) {
+    const store = useStore();
     const { proxy } = getCurrentInstance() as any;
     let workflowBackUp = cloneDeep(props.workflowData);
     const workflowForm = ref<IWorkflow>(props.workflowData);
@@ -95,7 +133,12 @@ export default defineComponent({
 
     const workflowTool = new WorkflowTool(graph);
 
+    const onUploadChange = () => {
+      store.commit('worker-editor/setUploadCancel', false);
+    };
     return {
+      store,
+      onUploadChange,
       ZoomTypeEnum,
       workflowForm,
       projectPanelVisible,
