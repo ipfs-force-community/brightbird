@@ -7,6 +7,7 @@ import (
 
 	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
@@ -56,29 +57,35 @@ var PluginInfo = types.PluginInfo{
 		Repo:        "https://github.com/ipfs-force-community/damocles.git",
 		ImageTarget: "damocles-manager",
 		BuildScript: `sed -i "2 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" Dockerfile.manager
-		sed -i "17 i\RUN go env -w GOPROXY=https://goproxy.cn,direct" Dockerfile.manager
-		sed -i '7 i\ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"' Dockerfile.manager
-		sed -i '8 i\ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"' Dockerfile.manager
-		sed -i "s/https:\/\/sh.rustup.rs/https:\/\/rsproxy.cn\/rustup-init.sh/g" Dockerfile.manager
-		
-		cat > config << EOF
-		[source.crates-io]
-		replace-with = 'rsproxy'
-		[source.rsproxy]
-		registry = "https://rsproxy.cn/crates.io-index"
-		[source.rsproxy-sparse]
-		registry = "sparse+https://rsproxy.cn/index/"
-		[registries.rsproxy]
-		index = "https://rsproxy.cn/crates.io-index"
-		[net]
-		git-fetch-with-cli = true
-		EOF
-		
-		sed -i "12 i\COPY config /root/.cargo/config" Dockerfile.manager
-		
-		sed -i "4 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
-		sed -i "27 i\COPY config /root/.cargo/config" damocles-worker/Dockerfile
-		make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+sed -i "17 i\RUN go env -w GOPROXY=https://goproxy.cn,direct" Dockerfile.manager
+sed -i '7 i\ENV HTTPS_PROXY="{{.Proxy}}"' Dockerfile.manager
+sed -i '8 i\ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"' Dockerfile.manager
+sed -i '9 i\ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"' Dockerfile.manager
+sed -i "s/https:\/\/sh.rustup.rs/https:\/\/rsproxy.cn\/rustup-init.sh/g" Dockerfile.manager
+
+sed -i '1 i\export GITHUB_TOKEN={{.GitToken}}' Makefile
+sed -i '2 i\export HTTPS_PROXY={{.Proxy}}' Makefile
+
+cat > ./config << EOF
+[source.crates-io]
+replace-with = 'rsproxy'
+[source.rsproxy]
+registry = "https://rsproxy.cn/crates.io-index"
+[source.rsproxy-sparse]
+registry = "sparse+https://rsproxy.cn/index/"
+[registries.rsproxy]
+index = "https://rsproxy.cn/crates.io-index"
+[net]
+git-fetch-with-cli = true
+EOF
+
+sed -i "13 i\COPY ./config /usr/local/cargo/config" Dockerfile.manager
+
+sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
+sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
+cp config ./damocles-worker/config
+sed -i "28 i\COPY ./config /usr/local/cargo/config" damocles-worker/Dockerfile
+make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
 }
@@ -151,7 +158,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 
-	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return nil, err
 	}

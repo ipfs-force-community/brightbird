@@ -41,23 +41,26 @@ type IBuilderWorkerProvider interface {
 }
 
 type BuildWorkerProvider struct {
+	gitToken        string
 	proxy           string
 	dockerOp        IDockerOperation
 	privateRegistry types.PrivateRegistry
 	pluginRepo      repo.IPluginService
 }
 
-func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, privateRegistry types.PrivateRegistry, proxy string) *BuildWorkerProvider {
+func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, privateRegistry types.PrivateRegistry, proxy, gitToken string) *BuildWorkerProvider {
 	return &BuildWorkerProvider{
 		pluginRepo:      pluginRepo,
 		dockerOp:        dockerOp,
 		proxy:           proxy,
 		privateRegistry: privateRegistry,
+		gitToken:        gitToken,
 	}
 }
 
 func (provider *BuildWorkerProvider) CreateBuildWorker(ctx context.Context, logger logging.StandardLogger, builderCfg config.BuildWorkerConfig) (IBuilderWorker, error) {
 	return &BuildWorker{
+		gitToken:        provider.gitToken,
 		dockerOp:        provider.dockerOp,
 		cfg:             builderCfg,
 		proxy:           provider.proxy,
@@ -157,6 +160,7 @@ type IBuilderWorker interface {
 
 // BuildWorker implement for local build
 type BuildWorker struct {
+	gitToken        string
 	proxy           string
 	pluginRepo      repo.IPluginService
 	dockerOp        IDockerOperation
@@ -193,7 +197,7 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 			codeSpace: worker.cfg.BuildSpace,
 			registry:  string(worker.privateRegistry),
 		}
-		builder, err = NewDefaultImageBuilder(context.Background(), worker.proxy, worker.cfg.BuildSpace, string(worker.privateRegistry), plugin.Repo)
+		builder, err = NewDefaultImageBuilder(context.Background(), worker.gitToken, worker.proxy, worker.cfg.BuildSpace, string(worker.privateRegistry), plugin.Repo)
 		if err != nil {
 			worker.logger.Errorf("init builder for %s failed %v", buildTask.Name, err)
 			return "", err
@@ -240,12 +244,12 @@ type DefaultImageBuilder struct {
 	registry  string
 
 	repo         *git.Repository
-	scriptRunner *BuildScriptRunner
+	scriptRunner *ExecScript
 	repoPath     string
 }
 
 // NewVenusImageBuilder create new ImageBuilder
-func NewDefaultImageBuilder(ctx context.Context, proxy, codeSpace, registry, repoUrl string) (*DefaultImageBuilder, error) {
+func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, registry, repoUrl string) (*DefaultImageBuilder, error) {
 	repoName, err := getRepoNameFromUrl(repoUrl)
 	if err != nil {
 		return nil, err
@@ -255,7 +259,8 @@ func NewDefaultImageBuilder(ctx context.Context, proxy, codeSpace, registry, rep
 		proxy:     proxy,
 		codeSpace: codeSpace,
 		repoPath:  path.Join(codeSpace, repoName),
-		scriptRunner: &BuildScriptRunner{
+		scriptRunner: &ExecScript{
+			GitToken: gitToken,
 			PwdDir:   path.Join(codeSpace, repoName),
 			Proxy:    proxy,
 			Registry: registry,
@@ -307,7 +312,17 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 
 	err = workTree.Clean(&git.CleanOptions{})
 	if err != nil && err != plumbing.ErrObjectNotFound {
-		return err
+		return fmt.Errorf("clean worktree  fail %w", err)
+	}
+
+	head, err := builder.repo.Head()
+	if err != nil {
+		return fmt.Errorf("get head hash fail %w", err)
+	}
+
+	err = workTree.Reset(&git.ResetOptions{Commit: head.Hash(), Mode: git.HardReset})
+	if err != nil {
+		return fmt.Errorf("reset worktree  fail %w", err)
 	}
 
 	err = builder.repo.FetchContext(ctx, &git.FetchOptions{
@@ -316,13 +331,13 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		Force:           true,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
-		return err
+		return fmt.Errorf("fetch context  fail %w", err)
 	}
 
 	//exec git pull on main branch avoid confict on specific branch
 	branches, err := builder.repo.Branches()
 	if err != nil {
-		return err
+		return fmt.Errorf("get branchs  fail %w", err)
 	}
 
 	masterBranch := "master"
@@ -343,7 +358,7 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 
 	err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
 	if err != nil {
-		return err
+		return fmt.Errorf("git checkout fail %w", err)
 	}
 
 	log.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
@@ -353,12 +368,12 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		Force:           true,
 	})
 	if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
-		return err
+		return fmt.Errorf("pull commit  fail %w", err)
 	}
 
 	builder.repo, _, err = updateSubmoduleByCmd(ctx, builder.repoPath)
 	if err != nil {
-		return fmt.Errorf("update submoudle fail %w", err)
+		return fmt.Errorf("update submodule  fail %w", err)
 	}
 
 	return nil
@@ -370,14 +385,9 @@ func (builder *DefaultImageBuilder) FetchCommit(ctx context.Context, commit stri
 		return "", err
 	}
 
-	repo, err := git.PlainOpen(builder.repoPath)
-	if err != nil {
-		return "", err
-	}
-
 	if len(commit) == 0 {
 		//use head directly
-		masterHead, err := repo.Head()
+		masterHead, err := builder.repo.Head()
 		if err != nil {
 			return "", fmt.Errorf("use repo head %w", err)
 		}
@@ -385,21 +395,21 @@ func (builder *DefaultImageBuilder) FetchCommit(ctx context.Context, commit stri
 	}
 
 	//resolve commit
-	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
+	hash, err := builder.repo.ResolveRevision(plumbing.Revision(commit))
 	if err == nil {
 		return hash.String(), nil
 	}
 
 	if err == plumbing.ErrReferenceNotFound {
 		//resolve branch or tag
-		remotes, err := repo.Remotes()
+		remotes, err := builder.repo.Remotes()
 		if err != nil {
 			return "", fmt.Errorf("get repo remote %w", err)
 		}
 
 		//detect remote   default Origin
 		remoteName := remotes[0].Config().Name
-		hash, err = repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
+		hash, err = builder.repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
 		if err != nil {
 			return "", fmt.Errorf("resolve (%s) to a hash %s", commit, err)
 		}
@@ -417,7 +427,7 @@ func (builder *DefaultImageBuilder) Build(ctx context.Context, script string, co
 
 	repo, err := git.PlainOpen(builder.repoPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("open repo  fail %w", err)
 	}
 
 	workTree, err := repo.Worktree()
@@ -439,7 +449,7 @@ func (builder *DefaultImageBuilder) Build(ctx context.Context, script string, co
 		return fmt.Errorf("repo checkout %w", err)
 	}
 
-	return builder.scriptRunner.BuildScriptRunner(ctx, BuildParams{
+	return builder.scriptRunner.ExecScript(ctx, BuildParams{
 		Script: script,
 		Commit: commit,
 	})

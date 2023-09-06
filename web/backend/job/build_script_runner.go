@@ -14,7 +14,8 @@ type BuildParams struct {
 	Commit string
 }
 
-type BuildScriptRunner struct {
+type ExecScript struct {
+	GitToken string
 	PwdDir   string
 	Proxy    string
 	Registry string
@@ -22,7 +23,7 @@ type BuildScriptRunner struct {
 }
 
 // plugin + version
-func (runner *BuildScriptRunner) BuildScriptRunner(ctx context.Context, params BuildParams) error {
+func (runner *ExecScript) ExecScript(ctx context.Context, params BuildParams) error {
 	//render template
 	t, err := template.New("").Parse(params.Script)
 	if err != nil {
@@ -31,10 +32,12 @@ func (runner *BuildScriptRunner) BuildScriptRunner(ctx context.Context, params B
 
 	renderResult := bytes.NewBuffer(nil)
 	err = t.Execute(renderResult, struct {
+		GitToken string
 		Commit   string
 		Proxy    string
 		Registry string
 	}{
+		runner.GitToken,
 		params.Commit,
 		runner.Proxy,
 		runner.Registry,
@@ -43,6 +46,7 @@ func (runner *BuildScriptRunner) BuildScriptRunner(ctx context.Context, params B
 		return err
 	}
 
+	log.Debugf("space %s script %s", runner.PwdDir, renderResult.String())
 	cmd := exec.Command("/bin/sh", "-c", renderResult.String())
 	cmd.Dir = runner.PwdDir
 	cmd.Env = os.Environ()
@@ -52,5 +56,13 @@ func (runner *BuildScriptRunner) BuildScriptRunner(ctx context.Context, params B
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("exec build script %s fail %w", renderResult.String(), err)
+	}
+
+	if !cmd.ProcessState.Success() {
+		return fmt.Errorf("exit code not zero %d", cmd.ProcessState.ExitCode())
+	}
+	return nil
 }

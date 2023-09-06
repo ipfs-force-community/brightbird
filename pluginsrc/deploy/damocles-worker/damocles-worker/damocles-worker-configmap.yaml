@@ -8,127 +8,37 @@ data:
     name = "filedrive"
     rpc_server.host = "0.0.0.0"
     rpc_server.port = 17891
-{{ range $index, $value := .PieceStores }}
-    local_pieces_dir = "/piece/{{$value}}"
-{{ end }}
+    local_pieces_dirs =[{{ range $index, $value := .PieceStores }}"/piece/{{$value}}"{{ end }}]
 
     [sector_manager]
     rpc_client.addr = "{{.DamoclesManagerUrl}}"
     rpc_client.headers = { User-Agent = "jsonrpc-core-client" }
     piece_token = "{{.UserToken}}"
     [sealing]
-    allowed_miners = [{{.MinerAddress}}]
-    allowed_sizes = ["8MiB"]
+    allowed_miners = []
+    allowed_sizes = []
     enable_deals = true
     disable_cc = false
     max_deals = 6
     min_deal_space = "2kiB"
     max_retries = 6
 
+{{ range $index, $value := .SealPaths }}
     [[sealing_thread]]
-    location = "/root/test1"
+    location = "{{$value}}"
+{{ end }}
 
-    [[sealing_thread]]
-    location = "/root/test2"
-
-    [[sealing_thread]]
-    location = "/root/test3"
-
-    [[sealing_thread]]
-    location = "/root/test4"
-
-    [[sealing_thread]]
-    location = "/root/test5"
-
-    [[sealing_thread]]
-    location = "/root/test6"
-
-    [[sealing_thread]]
-    location = "/root/test7"
-
-    [[sealing_thread]]
-    location = "/root/test8"
-    plan = "snapup"
-
-    [[sealing_thread]]
-    location = "/root/test9"
-    plan = "rebuild"
-
-    [[sealing_thread]]
-    location = "/root/test10"
-    plan = "unseal"
-
-    [[sealing_thread]]
-    location = "/root/test11"
-
-    [[sealing_thread]]
-    location = "/root/test12"
-
-    [[sealing_thread]]
-    location = "/root/test13"
-
-    [[sealing_thread]]
-    location = "/root/test14"
-
-    [[sealing_thread]]
-    location = "/root/test15"
-
-    [[sealing_thread]]
-    location = "/root/test16"
-
-    [[sealing_thread]]
-    location = "/root/test17"
-
-    [[sealing_thread]]
-    location = "/root/test18"
-
-    [[sealing_thread]]
-    location = "/root/test19"
-
-    [[sealing_thread]]
-    location = "/root/test20"
-
-    [[sealing_thread]]
-    location = "/root/test21"
-
-    [[sealing_thread]]
-    location = "/root/test22"
-
-    [[sealing_thread]]
-    location = "/root/test23"
-
-    [[sealing_thread]]
-    location = "/root/test24"
-
-    [[sealing_thread]]
-    location = "/root/test25"
-
-    [[sealing_thread]]
-    location = "/root/test26"
-
-    [[sealing_thread]]
-    location = "/root/test27"
-
-    [[sealing_thread]]
-    location = "/root/test28"
-
-    [[sealing_thread]]
-    location = "/root/test29"
-
-    [[sealing_thread]]
-    location = "/root/test30"
-
+{{ range $index, $value := .PersistStores }}
     [[attached]]
-    name = "storage"
-    location = "/shared-dir/{{.UniqueId}}/{{.MinerAddress}}"
-    [attached_selection]
-    # enable_space_weighted = false
+    name = "{{$value}}"
+    location = "/persist/{{$value}}"
+{{ end }}
 
     [processors.limitation.concurrent]
-    add_pieces = 10
-    pc1 = 10
+    add_pieces = 100
+    pc1 = 100
     pc2 = 1
-    c2 = 1
+    c2 = 20
     tree_d = 1
     snap_encode = 1
     snap_prove = 1
@@ -137,13 +47,10 @@ data:
     8MiB = "/shared-dir/filecoin-proof-parameters/tree_d_all_zero_8388608"
 
     [[processors.pc1]]
-    concurrent = 10
     
     [[processors.pc2]]
-    concurrent = 1
     
     [[processors.c2]]
-    concurrent = 1
     
     [[processors.tree_d]]
     concurrent = 1

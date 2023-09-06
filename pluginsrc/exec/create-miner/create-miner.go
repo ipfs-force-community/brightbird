@@ -49,7 +49,10 @@ type TestCaseParams struct {
 	Auth     sophonauth.SophonAuthDeployReturn   `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	//todo support set owner/worker/controller
+
+	Size       string          `json:"size" jsonschema:"size" title:"Miner SIze" require:"2KiB" description:"miner size (2Kib 8Mib 512Mib 32Gib 64Gib)"`
 	WalletAddr address.Address `json:"walletAddr" jsonschema:"walletAddr" title:"Wallet Address" require:"true" description:"owner/worker address must be f3 address"`
+	Confidence int             `json:"confidence"  jsonschema:"confidence"  title:"Confidence" default:"5" require:"true" description:"confience height for wait message"`
 }
 
 type CreateMinerReturn struct {
@@ -97,8 +100,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 		return address.Undef, fmt.Errorf("get network version: %w", err)
 	}
 
-	sizeStr := "8MiB"
-	ssize, err := units.RAMInBytes(sizeStr)
+	ssize, err := units.RAMInBytes(params.Size)
 	if err != nil {
 		return address.Undef, fmt.Errorf("failed to parse sector size: %w", err)
 	}
@@ -119,11 +121,10 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 		return address.Undef, fmt.Errorf("lookup actor address: %w", err)
 	}
 
-	mlog := log.With("size", sizeStr, "from", fromStr, "actor", actor.String())
+	mlog := log.With("size", params.Size, "from", fromStr, "actor", actor.String())
 	mlog.Info("constructing message")
 
 	owner := actor
-
 	worker := owner
 
 	var pid abi.PeerID
@@ -155,7 +156,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 		return address.Undef, err
 	}
 
-	result, err := messagerRPC.WaitMessage(ctx, messagerId, 5)
+	result, err := messagerRPC.WaitMessage(ctx, messagerId, uint64(params.Confidence))
 	if err != nil {
 		return address.Undef, err
 	}
@@ -170,6 +171,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 		return address.Undef, err
 	}
 
+	mlog.Infof("new miner created %s", r.IDAddress.String())
 	return r.IDAddress, nil
 
 }
