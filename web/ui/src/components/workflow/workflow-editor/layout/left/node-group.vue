@@ -12,10 +12,10 @@
         <span class="anomaly-tip">网络开小差啦</span>
         <div class="reload-btn" @click="loadNodes(keyword,true)">重新加载</div>
       </div>
-      <template v-else-if="nodes.length>0">
+      <template v-else-if="nodesCache.length>0">
         <div class="nodes-wrapper">
           <x6-vue-shape
-            v-for="item in nodes"
+            v-for="item in nodesCache"
             :key="item.getName()"
             :node-data="item"
             @mouseup="(e)=> onMouseUpEvent(item,e)"
@@ -52,9 +52,41 @@ export default defineComponent({
       type: String,
       required: true,
     },
+
+    tags:{
+      type:Array<string>,
+      required: true,
+    },
   },
   components: {
     X6VueShape,
+  },
+
+  watch:{
+    nodes:{
+      handler(val) {
+        this.nodesCache = this.nodes;
+      },
+      deep:true,
+    },
+    tags:{
+      handler(val:string[]) {
+        console.log('+++===handler===========', val);
+        if (val.length > 0) {
+          this.nodesCache = this.nodes.filter(value=>{
+            for (const item of val) {
+              if ( value.getLabels().includes(item)) {
+                return true;
+              }
+            }
+            return false;
+          });
+          return;
+        } 
+        this.nodesCache = this.nodes;
+      },
+
+    },
   },
   setup(props, { emit }) {
     const groupName = computed<string>(() => {
@@ -76,6 +108,7 @@ export default defineComponent({
     const loading = ref<boolean>(false);
     const collapsed = ref<boolean>(true);
     const nodes = ref<IWorkflowNode[]>([]);
+    const nodesCache = ref<IWorkflowNode[]>([]);
     const keyWord = ref<string>(props.keyword);
     const mousePosition = ref();
     mousePosition.value = {
@@ -178,6 +211,8 @@ export default defineComponent({
 
     const onMouseMoveEvent = (item: IWorkflowNode, e: MouseEvent) => { 
       if (mousePosition.value['clientX'] !== 0 && mousePosition.value['clientY'] !== 0) {
+        mousePosition.value['clientX'] = 0;
+        mousePosition.value['clientX'] = 0;
         getWorkflowDnd().drag(item, e);
       }
     };
@@ -194,6 +229,7 @@ export default defineComponent({
       networkAnomaly,
       loading,
       nodes,
+      nodesCache,
       collapsed,
       toggle,
       btnDown,

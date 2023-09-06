@@ -8,9 +8,16 @@
           <i class="jm-icon-button-search"></i>
         </template>
       </jm-input>
-      <ElUpload :disabled="fileList.length > 0" :on-change="onUploadChange"  v-model:file-list="fileList" :auto-upload="false" :show-file-list="false" :multiple="false">
-      <div :class="{'upload':true,'disabled':fileList.length > 0}">+</div>
-      </ElUpload>
+    </div>
+    <div class="tags">
+      <ElSelect v-model="selectLabels" class="tag-select"  multiple>
+          <ElOption 
+          v-for="(item,index) in labels"
+           :key="index" 
+           :label="item" 
+           :value="item"
+           />
+        </ElSelect>
     </div>
     <jm-scrollbar>
       <div class="groups" v-show="nodeCount>0">
@@ -18,6 +25,7 @@
           ref="nodeGroup1"
           :type="PluginTypeEnum.Deploy" 
           :keyword="tempKeyword"
+          :tags="selectLabels"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -25,6 +33,7 @@
         ref="nodeGroup2"
           :type="PluginTypeEnum.Exec" 
           :keyword="tempKeyword"
+          :tags="selectLabels"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -48,7 +57,7 @@
        </div>
       </div>
        <div>
-        <ElSelect v-model="selectLabels" class="tag-select" size="small" multiple>
+        <ElSelect allow-create filterable v-model="selectLabels" class="tag-select" size="small" multiple>
           <ElOption 
           v-for="(item,index) in labels"
            :key="index" 
@@ -79,20 +88,86 @@ import { WorkflowValidator } from '../../model/workflow-validator';
 import NodeGroup from './node-group.vue';
 import noDataImage from '../../svgs/no-data.svg';
 import { PluginTypeEnum } from '@/api/dto/enumeration';
-import { ElButton, ElDrawer, ElMessageBox, ElOption, ElSelect, ElUpload, UploadUserFile } from 'element-plus';
-import { fetchLabel, uploadPlugin } from '@/api/plugin';
+import { ElButton, ElDrawer, ElMessageBox, ElOption, ElSelect, UploadUserFile } from 'element-plus';
+import { uploadPlugin } from '@/api/plugin';
 import { IWorkflowNode } from '../../model/data/common';
 import  PluginDetail  from '@/views/plugin-library/plugin-detail.vue';
+import { mapMutations, mapState, useStore, mapActions } from 'vuex';
 export default defineComponent({
-  components: { NodeGroup, ElButton, ElUpload, ElSelect, ElDrawer, PluginDetail, ElOption },
+  components: { NodeGroup, ElButton, ElSelect, ElDrawer, PluginDetail, ElOption },
   emits: ['node-selected'],
+  methods:{
+    ...mapMutations('worker-editor', [
+      'setFileList',
+    ]),
+    ...mapActions('worker-editor', [
+      'getLabels',
+    ]),
+    async onUpload() {
+      try {
+        this.uploading = true;
+        if (this.fileList.length > 0) {
+          const formData = new FormData(); 
+          this.fileList.forEach(file => {
+            if (file.raw) formData.append('plugin', file.raw);
+            
+          });
+
+          this.selectLabels.forEach(value=>{
+            formData.append('labels', value);
+          });
+          await uploadPlugin(formData);
+          await this.nodeGroup1.loadNodes(this.tempKeyword, false);
+          await this.nodeGroup2.loadNodes(this.tempKeyword, false);
+          this.store.commit('worker-editor/setUploadCancel', true);
+          ElMessageBox.alert('上传成功', '提示', {
+            confirmButtonText: '确定',
+            type: 'success',
+          });
+        } else {
+          ElMessageBox.alert('文件列表为空，请先选择文件', '提示', {
+            confirmButtonText: '确定',
+            type: 'warning',
+          });
+        }
+      } catch (error) {
+        ElMessageBox.alert(`上传失败: ${error}`, '错误', {
+          confirmButtonText: '确定',
+          type: 'error',
+        });
+      } finally {
+        this.uploading = false;
+      }
+    },
+    onFileListDelete(idx:number){
+      const object = JSON.parse(JSON.stringify(this.fileList));
+      object.splice(idx, 1);
+      this.setFileList(object);
+    },
+  },
+  computed:{
+    ...mapState('worker-editor', {
+      isUploadCancel:(state:any)=>{
+        return state.isUploadCancel;
+      },
+      fileList:(state:any)=>{
+        return state.fileList as UploadUserFile[];
+      },
+      labels:state=>{
+        return state.labels;
+      },
+    }),
+  },
+  mounted() {
+    this.getLabels();
+  },
   setup(props, { emit }) {
-    const fileList: Ref<UploadUserFile[]> = ref([]);
-    const isUploadCancel: Ref<boolean> = ref(true);
+    const store = useStore();
+    // const fileList: Ref<UploadUserFile[]> = ref([]);
+    // const isUploadCancel: Ref<boolean> = ref(true);
     const visible =  ref<boolean>(false);
     const pluginNode = ref<IWorkflowNode>();
     const uploading =  ref<boolean>(false);
-    const labels = ref<string[]>([]);
     const selectLabels = ref<string[]>([]);
 
 
@@ -117,61 +192,14 @@ export default defineComponent({
       // 如果node-group中都找不到节点拖拽面板不展示
       nodeCount.value += count;
     };
-    const loadLabels = async ()=>{
-      const res =  await fetchLabel();
-      labels.value = res;
-    };
-    const onUpload = async() => {
-      try {
-        uploading.value = true;
-        if (fileList.value.length > 0) {
-          const formData = new FormData(); 
-          fileList.value.forEach(file => {
-            if (file.raw) formData.append('plugin', file.raw);
-            
-          });
 
-          selectLabels.value.forEach(value=>{
-            formData.append('labels', value);
-          });
-          await uploadPlugin(formData);
-          await nodeGroup1.value.loadNodes(tempKeyword.value, false);
-          await nodeGroup2.value.loadNodes(tempKeyword.value, false);
-          fileList.value = [];
-          isUploadCancel.value = true;
-          ElMessageBox.alert('上传成功', '提示', {
-            confirmButtonText: '确定',
-            type: 'success',
-          });
-        } else {
-          ElMessageBox.alert('文件列表为空，请先选择文件', '提示', {
-            confirmButtonText: '确定',
-            type: 'warning',
-          });
-        }
-      } catch (error) {
-        ElMessageBox.alert(`上传失败: ${error}`, '错误', {
-          confirmButtonText: '确定',
-          type: 'error',
-        });
-      } finally {
-        uploading.value = false;
-      }
-    };
     const onUploadCancel = () => {
-      isUploadCancel.value = true;
-      fileList.value = [];
-    };
-    const onUploadChange = () => {
-      isUploadCancel.value = false;
+      store.commit('worker-editor/setUploadCancel', true);
+      store.commit('worker-editor/setFileList', []);
     };
     const onNodeClick = (item: IWorkflowNode) => {
       pluginNode.value = item;
       visible.value = true;
-    };
-
-    const onFileListDelete = (idx:number)=>{
-      fileList.value.splice(idx, 1);
     };
 
     const onDeletePluginSuccess = async ()=>{
@@ -185,24 +213,24 @@ export default defineComponent({
     };
     // 确定容器宽度
     onMounted(() => {
+      // 获取label 标签
       // 初始化dnd
       workflowDnd = new WorkflowDnd(
         getGraph(),
         getWorkflowValidator(),
         container.value! as HTMLElement,
         (nodeId: string) => emit('node-selected', nodeId));
+      console.log('+++++===========', this);
+      // this.getLabels();
 
-      loadLabels();
     });
     return {
+      store,
       selectLabels,
-      labels,
       uploading,
       visible,
       nodeGroup1,
       nodeGroup2,
-      isUploadCancel,
-      fileList,
       noDataImage,
       nodeCount,
       pluginNode,
@@ -212,11 +240,8 @@ export default defineComponent({
       keyword,
       tempKeyword,
       container,
-      onUpload,
       onUploadCancel,
-      onUploadChange,
       onNodeClick,
-      onFileListDelete,
       onDeletePluginSuccess,
       collapse: () => {
         collapsed.value = container.value!.clientWidth > 0;
@@ -277,10 +302,6 @@ export default defineComponent({
   .search {
     display: flex;
     align-items: center;
-
-    &>:last-child {
-      margin-left: 10px;
-    }
   }
 
   &.collapsed {
@@ -348,8 +369,14 @@ export default defineComponent({
     }
   }
 
+  .tags {
+    margin-top: 130px;
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+
   ::v-deep(.el-scrollbar) {
-    margin-top: 97px;
+    margin-top: 10px;
     height: calc(100% - 97px);
   }
 
@@ -367,6 +394,10 @@ export default defineComponent({
       cursor: pointer;
     }
   }
+}
+
+.jm-workflow-editor-node-panel.collapsed {
+  overflow: visible;
 }
 
 .jm-workflow-add-plugin-panel {

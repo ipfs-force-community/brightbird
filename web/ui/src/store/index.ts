@@ -76,8 +76,9 @@ const store = createStore<IRootState>({
 });
 
 // 动态加载模块
-Object.values(import.meta.glob('./modules/*.ts', { eager: true })).forEach(({ default: module, namespace }) =>
-  store.registerModule(namespace, module),
-);
+Object.values(import.meta.glob('./modules/*.ts', { eager: true })).forEach(({ default: module, namespace }) =>{
+  console.log(namespace, module);
+  store.registerModule(namespace, module);
+});
 
 export default store;
