@@ -278,7 +278,7 @@ export default defineComponent({
   left: 0;
   z-index: 2;
   display: grid;
-  height: calc(100% - @node-panel-top - 100px);
+  height: calc(100% - @node-panel-top);
   transition: grid-template-columns 0.3s ease-in-out;
 
   grid-template-columns: @node-panel-width calc(100vw - @node-panel-width);
@@ -384,7 +384,7 @@ export default defineComponent({
 
   ::v-deep(.el-scrollbar) {
     margin-top: 10px;
-    height: calc(100% - 97px);
+    height: calc(100% - 160px);
   }
 
   .groups {
