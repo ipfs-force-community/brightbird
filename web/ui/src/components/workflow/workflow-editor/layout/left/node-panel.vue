@@ -291,7 +291,7 @@ export default defineComponent({
 
 .jm-workflow-editor-node-panel {
   position: relative;
-  overflow-y: auto;
+  overflow-y: hidden;
   width: @node-panel-width;
   height: 100%;
   border: 1px solid #E6EBF2;
