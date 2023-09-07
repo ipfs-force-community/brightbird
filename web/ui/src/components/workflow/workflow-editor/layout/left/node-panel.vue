@@ -370,6 +370,7 @@ export default defineComponent({
   }
 
   .tags {
+    overflow: hidden;
     margin-top: 130px;
     margin-left: 20px;
     margin-right: 20px;
