@@ -10,7 +10,7 @@
       </jm-input>
     </div>
     <div class="tags">
-      <ElSelect v-model="selectLabels" class="tag-select"  multiple>
+      <ElSelect v-model="selectLabelsFilter" class="tag-select"  multiple>
           <ElOption 
           v-for="(item,index) in labels"
            :key="index" 
@@ -25,7 +25,7 @@
           ref="nodeGroup1"
           :type="PluginTypeEnum.Deploy" 
           :keyword="tempKeyword"
-          :tags="selectLabels"
+          :tags="selectLabelsFilter"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -33,7 +33,7 @@
         ref="nodeGroup2"
           :type="PluginTypeEnum.Exec" 
           :keyword="tempKeyword"
-          :tags="selectLabels"
+          :tags="selectLabelsFilter"
            @get-node-count="getNodeCount"
            @on-node-click="onNodeClick"
            />
@@ -117,9 +117,13 @@ export default defineComponent({
             formData.append('labels', value);
           });
           await uploadPlugin(formData);
+          
           await this.nodeGroup1.loadNodes(this.tempKeyword, false);
           await this.nodeGroup2.loadNodes(this.tempKeyword, false);
+          this.getLabels();
+          this.selectLabels = [];
           this.store.commit('worker-editor/setUploadCancel', true);
+          this.store.commit('worker-editor/setFileList', []);
           ElMessageBox.alert('上传成功', '提示', {
             confirmButtonText: '确定',
             type: 'success',
@@ -168,6 +172,7 @@ export default defineComponent({
     const visible =  ref<boolean>(false);
     const pluginNode = ref<IWorkflowNode>();
     const uploading =  ref<boolean>(false);
+    const selectLabelsFilter = ref<string[]>([]);
     const selectLabels = ref<string[]>([]);
 
 
@@ -226,6 +231,7 @@ export default defineComponent({
     });
     return {
       store,
+      selectLabelsFilter,
       selectLabels,
       uploading,
       visible,
@@ -272,7 +278,7 @@ export default defineComponent({
   left: 0;
   z-index: 2;
   display: grid;
-  height: calc(100% - @node-panel-top);
+  height: calc(100% - @node-panel-top - 100px);
   transition: grid-template-columns 0.3s ease-in-out;
 
   grid-template-columns: @node-panel-width calc(100vw - @node-panel-width);
