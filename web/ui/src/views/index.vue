@@ -17,12 +17,6 @@
               <span class="text">测试流列表</span>
             </div>
           </router-link>
-          <router-link :to="{ name: 'plugin-library' }">
-            <div class="btn-item">
-              <button class="plugin-library"></button>
-              <span class="text">本地节点</span>
-            </div>
-          </router-link>
           <router-link :to="{ name: 'job' }">
             <div class="btn-item">
               <button class="job"></button>

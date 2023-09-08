@@ -10,6 +10,7 @@ interface IPageInfo {
 
 export class WorkflowNode {
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
   constructor() {
   }
 
@@ -19,7 +20,8 @@ export class WorkflowNode {
       item.pluginType, '', item.pluginType, {}, 0, 0));
 
     return {
-      content: keyword ? arr.filter(item => item.getInstanceName().includes(keyword) || item.getLabels().filter(a => a.includes(keyword)).length > 0) : arr,
+      content: keyword ? arr.filter(item => item.getInstanceName().toLocaleLowerCase().includes(keyword.toLocaleLowerCase())
+       || item.getLabels().filter(a => a.toLocaleLowerCase().includes(keyword.toLocaleLowerCase())).length > 0) : arr,
     };
   }
 
@@ -29,7 +31,8 @@ export class WorkflowNode {
       item.pluginType, '', item.pluginType, {}, 0,
       0));
     return {
-      content: keyword ? arr.filter(item => item.getInstanceName().includes(keyword) || item.getLabels().filter(a => a.includes(keyword)).length > 0) : arr,
+      content: keyword ? arr.filter(item => item.getInstanceName().toLocaleLowerCase().includes(keyword.toLocaleLowerCase())
+       || item.getLabels().filter(a => a.toLocaleLowerCase().includes(keyword.toLocaleLowerCase())).length > 0) : arr,
     };
   }
 }

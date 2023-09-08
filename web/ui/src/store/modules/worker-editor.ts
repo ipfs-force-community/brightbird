@@ -13,6 +13,7 @@ export default {
       state.fileList = payload;
     },
     setUploadCancel(state:any, payload:boolean){
+      console.log('======setUploadCancel:==========', payload);
       state.isUploadCancel = payload;
     },
     setLabels(state:any, payload:string[]){

@@ -71,7 +71,6 @@ export default defineComponent({
     },
     tags:{
       handler(val:string[]) {
-        console.log('+++===handler===========', val);
         if (val.length > 0) {
           this.nodesCache = this.nodes.filter(value=>{
             for (const item of val) {
@@ -177,6 +176,7 @@ export default defineComponent({
       collapsed.value = !collapsed.value;
     };
     // 显示更多
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     const btnDown = async () => {};
     onMounted(async () => {
       await loadNodes(keyWord.value, false);
