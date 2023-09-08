@@ -7,6 +7,7 @@ import (
 
 	"github.com/filecoin-project/venus-wallet/config"
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/pelletier/go-toml"
@@ -89,7 +90,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return nil, err
 	}

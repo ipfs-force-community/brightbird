@@ -126,7 +126,7 @@ func NewPrivateRegistry(cfg config.Config) func() (types.PrivateRegistry, error)
 
 func NewBuilderWorkerProvidor(cfg config.Config) func(job.IDockerOperation, repo.IPluginService, types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
 	return func(dockerOp job.IDockerOperation, pluginRepo repo.IPluginService, privateReg types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
-		return job.NewBuildWorkerProvider(dockerOp, pluginRepo, privateReg, cfg.Proxy), nil
+		return job.NewBuildWorkerProvider(dockerOp, pluginRepo, privateReg, cfg.Proxy, cfg.GitToken), nil
 	}
 }
 

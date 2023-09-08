@@ -53,7 +53,7 @@ data:
     [Miners.Sector]
     InitNumber = 0
     MinNumber = 0
-    MaxNumber = 1000
+    MaxNumber = 100
     Enabled = true
     EnableDeals = true
     LifetimeDays = 540
@@ -63,7 +63,7 @@ data:
     Confidence = 10
     [Miners.Commitment.Pre]
     Sender = "{{.SenderWalletAddress}}" 
-    SendFund = false
+    SendFund = true
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
     GasFeeCap = "5 nanoFIL"
@@ -81,14 +81,14 @@ data:
     
     [Miners.Commitment.Prove]
     Sender = "{{.SenderWalletAddress}}" 
-    SendFund = false
+    SendFund = true
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
     GasFeeCap = "5 nanoFIL"
     #MaxFeeCap = ""
     
     [Miners.Commitment.Prove.Batch]
-    Enabled = true
+    Enabled = false
     Threshold = 16
     MaxWait = "1h0m0s"
     CheckInterval = "1m0s"
@@ -99,7 +99,7 @@ data:
     
     [Miners.Commitment.Terminate]
     Sender = "{{.SenderWalletAddress}}"
-    SendFund = false
+    SendFund = true
     GasOverEstimation = 1.2
     GasOverPremium = 0.0
     GasFeeCap = "5 nanoFIL"

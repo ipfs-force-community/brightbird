@@ -80,10 +80,7 @@ func (finder *SchemaPropertyFinder) resolveChildType(definitions map[string]json
 
 func (finder *SchemaPropertyFinder) FindPath(path string) (jsonschema.SimpleType, error) {
 	defs := finder.gSchema.Definitions
-	pathSeq, err := SplitJSONPath(path)
-	if err != nil {
-		return jsonschema.Null, err
-	}
+	pathSeq := SplitJSONPath(path)
 	currentSchema := &finder.gSchema
 	for i := 0; i < len(pathSeq); i++ {
 		seq := pathSeq[i]
@@ -161,7 +158,7 @@ type JSONPathSec struct {
 	IsFirst bool
 }
 
-func SplitJSONPath(path string) ([]JSONPathSec, error) {
+func SplitJSONPath(path string) []JSONPathSec {
 	var result []JSONPathSec
 	for _, seq := range strings.Split(path, ".") {
 		index, err := strconv.Atoi(seq)
@@ -185,7 +182,7 @@ func SplitJSONPath(path string) ([]JSONPathSec, error) {
 		result[0].IsFirst = true
 		result[len(result)-1].IsLast = true
 	}
-	return result, nil
+	return result
 }
 
 func GetJSONValue(schemaType jsonschema.SimpleType, value string) (interface{}, error) {

@@ -36,6 +36,7 @@ func runGraph(ctx context.Context, cfg *Config, pluginRepo repo.IPluginService, 
 		Nodes:  make(map[string]*env.NodeContext),
 	}
 	for _, pip := range graph.Pipeline {
+		plugin.RespStart(pip.Value.InstanceName)
 		deployPlugin, err := pluginRepo.GetPlugin(ctx, pip.Value.Name, pip.Value.Version)
 		if err != nil {
 			return err
@@ -72,7 +73,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	var err error
 	currentCtx.Input, err = resolveInputValue(envCtx, jsonschema.Schema(pluginDef.InputSchema), pip.Input, codeVersion, pip.InstanceName)
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve %s input fail %w", pip.InstanceName, err)
 	}
 
 	// standard input, standard output, and standard error.
@@ -95,7 +96,6 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 
 	log.Debugf("invoke plugin %s params %s", pip.InstanceName, string(initData))
 
-	plugin.RespStart(pip.InstanceName)
 	cmd := exec.Command(pluginPath)
 	cmd.Env = os.Environ()
 	cmd.Stdin = stdInR
@@ -123,7 +123,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	newCtx := &env.EnvContext{}
 	err = json.Unmarshal([]byte(result), newCtx)
 	if err != nil {
-		return fmt.Errorf("plugin %s result is not json format result(%s)", pip.InstanceName, result)
+		return fmt.Errorf("plugin %s result is not json format result(%s) %w", pip.InstanceName, result, err)
 	}
 
 	plugin.RespSuccess("")
@@ -142,21 +142,18 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 				valuePath := value[2 : len(value)-2]
 				depNode := valuePath
 
-				pathSeq, err := plugin.SplitJSONPath(valuePath)
-				if err != nil {
-					return nil, err
-				}
+				pathSeq := plugin.SplitJSONPath(valuePath)
 				if len(pathSeq) == 1 {
 					node, err := envCtx.GetNode(depNode)
 					if err != nil {
-						return nil, err
+						return nil, fmt.Errorf("find node %s fail %w", depNode, err)
 					}
 					propValue = string(node.OutPut) //do convert in front page
 				} else {
 					depNode = pathSeq[0].Name
 					node, err := envCtx.GetNode(depNode)
 					if err != nil {
-						return nil, err
+						return nil, fmt.Errorf("find node %s fail %w", depNode, err)
 					}
 
 					//support array
@@ -172,9 +169,13 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 			//convert to value
 			schemaType, err := propertyFinder.FindPath(keyPath)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("resolve (%s)'s schema type fail %w", keyPath, err)
 			}
-			return plugin.GetJSONValue(schemaType, propValue)
+			val, err := plugin.GetJSONValue(schemaType, propValue)
+			if err != nil {
+				return nil, fmt.Errorf("get json value (path %s, type %s) for schema %w", propValue, schemaType, err)
+			}
+			return val, nil
 		}
 	}
 
