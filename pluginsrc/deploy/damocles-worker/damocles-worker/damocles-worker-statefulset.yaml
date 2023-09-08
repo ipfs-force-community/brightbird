@@ -26,12 +26,21 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
+            - mountPath: /shared-dir/{{.UniqueId}}/{{.MinerAddress}}
+              name: shared-dir-v
+              subPath: {{.NameSpace}}/{{.UniqueId}}/{{.MinerAddress}}
       containers:
         - name: damocles-worker-{{.UniqueId}}
-          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-worker:388e9682b97960dd46e201a7004c3ceead1e97a0"
-          args: ["run"]
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-worker:{{.CodeVersion}}"
+          imagePullPolicy: Always
+          args: ['daemon', '--config', '/root/.damocles-worker/damocles-worker.toml']
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
+            - name: RUST_LOG
+              value: "DEBUG"              
           ports:
-            - containerPort: 1789
+            - containerPort: 17891
               protocol: TCP
           volumeMounts:
             - mountPath: /root
@@ -42,6 +51,14 @@ spec:
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: {{$value}}
+{{ end }}
+{{ range $index, $value := .PersistStores }}
+            - mountPath: /persist/{{$value}}
+              name: {{$value}}
+{{ end }}
       volumes:
         - name: sector-worker-cfg
           configMap:
@@ -50,8 +67,13 @@ spec:
               - key: damocles-worker.toml
                 path: damocles-worker.toml
         - name: shared-dir-v
-            persistentVolumeClaim:
-              claimName: shared-dir
+          persistentVolumeClaim:
+            claimName: shared-dir
+{{ range $index, $value := .MountStorages }}
+        - name: {{$value}}
+          persistentVolumeClaim:
+            claimName: {{$value}}
+{{ end }}
   volumeClaimTemplates:
     - metadata:
         name: damocles-worker-pvc # name+podname

@@ -50,3 +50,4 @@ export interface PluginDetail {
     icon: string;
     isDeleting: boolean;
 }
+

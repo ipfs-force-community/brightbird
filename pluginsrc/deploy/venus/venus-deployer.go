@@ -8,6 +8,7 @@ import (
 
 	vCfg "github.com/filecoin-project/venus/pkg/config"
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	corev1 "k8s.io/api/core/v1"
@@ -97,7 +98,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 
-	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc)
+	svcEndpoint, err := k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return nil, err
 	}

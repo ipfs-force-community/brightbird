@@ -13,8 +13,7 @@ import (
 
 func TestSplitJsonPath(t *testing.T) {
 	t.Run("simple", func(t *testing.T) {
-		path, err := SplitJSONPath("p1")
-		assert.Nil(t, err)
+		path := SplitJSONPath("p1")
 		assert.Len(t, path, 1)
 		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,
@@ -27,8 +26,7 @@ func TestSplitJsonPath(t *testing.T) {
 	})
 
 	t.Run("test first last", func(t *testing.T) {
-		path, err := SplitJSONPath("p1.p2.p3")
-		assert.Nil(t, err)
+		path := SplitJSONPath("p1.p2.p3")
 		assert.Len(t, path, 3)
 		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,
@@ -57,8 +55,7 @@ func TestSplitJsonPath(t *testing.T) {
 	})
 
 	t.Run("array", func(t *testing.T) {
-		path, err := SplitJSONPath("p1.p2.1.2.p3")
-		assert.Nil(t, err)
+		path := SplitJSONPath("p1.p2.1.2.p3")
 		assert.Len(t, path, 5)
 		assert.Equal(t, path[0], JSONPathSec{
 			Index:   0,

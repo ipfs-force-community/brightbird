@@ -19,7 +19,6 @@ import (
 
 	"github.com/ipfs-force-community/brightbird/types"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ipfs-force-community/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
 	"google.golang.org/appengine"
@@ -502,7 +501,7 @@ func (env *K8sEnvDeployer) RunService(ctx context.Context, fs fs.File, args any)
 	return serviceClient.Get(ctx, svcName, metav1.GetOptions{})
 }
 
-func (env *K8sEnvDeployer) WaitForServiceReady(ctx context.Context, svc *corev1.Service) (types.Endpoint, error) {
+func (env *K8sEnvDeployer) WaitForServiceReady(ctx context.Context, svc *corev1.Service, healthchecker func(context.Context, types.Endpoint) error) (types.Endpoint, error) {
 	serviceClient := env.k8sClient.CoreV1().Services(env.namespace)
 	name := svc.GetName()
 
@@ -535,7 +534,6 @@ LOOP:
 			if len(endpoints.Subsets) > 0 && len(endpoints.Subsets[0].Addresses) > 0 {
 				if service.Spec.Type == corev1.ServiceTypeClusterIP {
 					if service.Spec.ClusterIP == "None" {
-						fmt.Println("3")
 						endpoint = types.Endpoint(fmt.Sprintf("%s:%d", name, service.Spec.Ports[0].Port))
 						break LOOP
 					} else {
@@ -562,31 +560,14 @@ LOOP:
 
 	log.Infof("use cluster ip %s", endpoint)
 
-	err = env.WaitForAPIReady(ctx, endpoint)
-	if err != nil {
-		return "", err
+	if healthchecker != nil {
+		err = healthchecker(ctx, endpoint)
+		if err != nil {
+			return "", err
+		}
 	}
+
 	return endpoint, nil
-}
-
-func (env *K8sEnvDeployer) WaitForAPIReady(ctx context.Context, endpoint types.Endpoint) error {
-	req, err := retryablehttp.NewRequest("GET", fmt.Sprintf("http://%s/healthcheck", endpoint), nil)
-	if err != nil {
-		return err
-	}
-
-	retryClient := retryablehttp.NewClient()
-	retryClient.RetryMax = 5
-
-	resp, err := retryClient.Do(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == http.StatusOK {
-		return nil
-	}
-	log.Debugf("track status %s %d", resp.Status, resp.StatusCode)
-	return fmt.Errorf("receive health %s", resp.Status)
 }
 
 func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
