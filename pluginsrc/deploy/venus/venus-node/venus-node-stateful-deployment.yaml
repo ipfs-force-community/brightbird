@@ -45,6 +45,16 @@ spec:
               subPath: {{.NameSpace}}
             - mountPath: /root
               name: venus-pvc
+{{if gt (len .GenesisStorage) 0}}
+            - mountPath: /root/genesis/devgen.car
+              name: {{.GenesisStorage}}
+              subPath: devgen.car
+{{end}}
+{{if gt (len .SnapshotStorage) 0}}
+            - mountPath: /root/genesis/snapshot.car
+              name: {{.SnapshotStorage}}
+              name: snapshot.car
+{{end}}
             - name: venushacfg
               mountPath: "/root/config.tmp"
               subPath: "config.json"
@@ -58,6 +68,16 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: shared-dir
+{{if gt (len .GenesisStorage) 0}}
+        - name: {{.GenesisStorage}}
+          persistentVolumeClaim:
+            claimName: {{.GenesisStorage}}
+{{end}}
+{{if gt (len .SnapshotStorage) 0}}
+        - name: {{.SnapshotStorage}}
+          persistentVolumeClaim:
+            claimName: {{.SnapshotStorage}}
+{{end}}  
   volumeClaimTemplates:
     - metadata:
         name: venus-pvc # name+podname

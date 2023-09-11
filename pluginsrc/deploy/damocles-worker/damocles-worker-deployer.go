@@ -82,7 +82,7 @@ EOF
 
 sed -i "13 i\COPY ./config /usr/local/cargo/config" Dockerfile.manager
 
-sed -i '5 i\export RUSTFLAGS=-C target-feature=-all -C target-cpu=x86-64' damocles-worker/Makefile
+sed -i '5 i\export RUSTFLAGS=-C target-cpu=x86-64' damocles-worker/Makefile
 sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
 sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
 cp config ./damocles-worker/config

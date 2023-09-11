@@ -76,7 +76,7 @@ export default defineComponent({
         }
 
         const handleNodeClick = function (data: TreeProp, obj: any) {
-            var pathSeq = [];
+            var pathSeq:string[] = [];
             var parent = obj;
             while (parent.parent && parent.level > 0) {
                 let onePath = parent.data.name;

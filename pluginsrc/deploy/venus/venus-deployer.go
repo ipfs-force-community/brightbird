@@ -25,7 +25,10 @@ type VConfig struct {
 	BootstrapPeers []string `jsonschema:"-" json:"bootstrapPeers"`
 
 	NetType  string `json:"netType" jsonschema:"netType" title:"Network Type" default:"force" require:"true" description:"network type: mainnet,2k,calibrationnet,force" enum:"mainnet,2k,calibrationnet,force"`
-	Replicas int    `json:"replicas"  jsonschema:"replicas" title:"replicas" default:"1" require:"true" description:"number of replicas"`
+	Replicas int    `json:"replicas"  jsonschema:"replicas" title:"Replicas" default:"1" require:"true" description:"number of replicas"`
+
+	GenesisStorage  string `json:"genesisStorage"  jsonschema:"genesisStorage" title:"GenesisStorage" default:"" require:"true" description:"used genesis file"`
+	SnapshotStorage string `json:"snapshotStorage"  jsonschema:"snapshotStorage" title:"SnapshotStorage" default:"" require:"true" description:"used to read snapshot file"`
 }
 
 type RenderParams struct {
@@ -63,9 +66,22 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
 		UniqueId:  env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName),
-		Args:      buildArgs(incomineCfg.BootstrapPeers, incomineCfg.NetType),
 		Config:    incomineCfg,
 	}
+
+	args := []string{
+		"daemon",
+		"--network=" + incomineCfg.NetType,
+	}
+
+	if len(incomineCfg.GenesisStorage) > 0 {
+		args = append(args, "--genesisfile=/root/genesis/devgen.car")
+	}
+
+	if len(incomineCfg.SnapshotStorage) > 0 {
+		args = append(args, "--import-snapshot=/root/genesis/snapshot.car")
+	}
+	renderParams.Args = args
 
 	//create configmap
 	configMapCfg, err := f.Open("venus-node/venus-configmap.yaml")
@@ -162,17 +178,6 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params VenusDeployR
 	return nil
 }
 
-func buildArgs(bootstrapPeers []string, netType string) []string {
-	args := []string{
-		"daemon",
-		"--genesisfile=/shared-dir/devgen.car",
-		"--import-snapshot=/shared-dir/dev-snapshot.car",
-		"--network=" + netType,
-	}
-	return args
-}
-
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

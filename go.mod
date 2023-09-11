@@ -329,3 +329,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/json-iterator/go => github.com/hunjixin/go v0.0.0-20230913063735-29916792f636 //feat/support_varibale_type

@@ -70,7 +70,13 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	envCtx.CurrentContext = pip.InstanceName
 	envCtx.Nodes[pip.InstanceName] = currentCtx
 
-	var err error
+	envCtxBytes, err := json.Marshal(envCtx)
+	if err != nil {
+		return err
+	}
+	log.Debugf("env context %w", string(envCtxBytes))
+	log.Debugf("input %s", string(pip.Input))
+
 	currentCtx.Input, err = resolveInputValue(envCtx, jsonschema.Schema(pluginDef.InputSchema), pip.Input, codeVersion, pip.InstanceName)
 	if err != nil {
 		return fmt.Errorf("resolve %s input fail %w", pip.InstanceName, err)
@@ -133,39 +139,34 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 
 func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input []byte, codeVersion, instanceName string) ([]byte, error) {
 	propertyFinder := plugin.NewSchemaPropertyFinder(schema)
-	var err error
-	iter := jsoniter.NewIterator(jsoniter.ConfigDefault).ResetBytes(input)
 	valueResolve := func() func(string, string) (interface{}, error) {
 		return func(keyPath string, value string) (interface{}, error) {
 			propValue := value
-			if strings.HasPrefix(value, "{{") || strings.HasSuffix(value, "}}") {
-				valuePath := value[2 : len(value)-2]
-				depNode := valuePath
+			depNode := value
 
-				pathSeq := plugin.SplitJSONPath(valuePath)
-				if len(pathSeq) == 1 {
-					node, err := envCtx.GetNode(depNode)
-					if err != nil {
-						return nil, fmt.Errorf("find node %s fail %w", depNode, err)
-					}
-					propValue = string(node.OutPut) //do convert in front page
-				} else {
-					depNode = pathSeq[0].Name
-					node, err := envCtx.GetNode(depNode)
-					if err != nil {
-						return nil, fmt.Errorf("find node %s fail %w", depNode, err)
-					}
-
-					//support array
-					valuePath = joinGjsonPath(pathSeq[1:])
-					result := gjson.Get(string(node.OutPut), valuePath)
-					propValue = result.Raw
-					if result.Type == gjson.String {
-						propValue = result.Str
-					}
+			pathSeq := plugin.SplitJSONPath(value)
+			if len(pathSeq) == 1 {
+				node, err := envCtx.GetNode(depNode)
+				if err != nil {
+					return nil, fmt.Errorf("find node %s keyPath %s fail %w", depNode, keyPath, err)
 				}
-				//get value from output value and then parser it
+				propValue = string(node.OutPut) //do convert in front page
+			} else {
+				depNode = pathSeq[0].Name
+				node, err := envCtx.GetNode(depNode)
+				if err != nil {
+					return nil, fmt.Errorf("find node %s fail keyPath %s %w", depNode, keyPath, err)
+				}
+
+				//support array
+				value = joinGjsonPath(pathSeq[1:])
+				result := gjson.Get(string(node.OutPut), value)
+				propValue = result.Raw
+				if result.Type == gjson.String { //todo
+					propValue = result.Str
+				}
 			}
+
 			//convert to value
 			schemaType, err := propertyFinder.FindPath(keyPath)
 			if err != nil {
@@ -179,22 +180,59 @@ func resolveInputValue(envCtx *env.EnvContext, schema jsonschema.Schema, input [
 		}
 	}
 
-	iter.ResetBytes(input)
-	w := bytes.NewBufferString("")
-	encoder := jsoniter.NewStream(jsoniter.ConfigDefault, w, 512)
-	err = IterJSON(iter, encoder, "", valueResolve())
-	if err != nil {
-		return nil, err
-	}
-	err = encoder.Flush()
+	// string or number and json was embed in string
+	var kv map[string]interface{}
+	err := json.Unmarshal(input, &kv)
 	if err != nil {
 		return nil, err
 	}
 
 	resultInput := make(map[string]interface{})
-	err = json.Unmarshal(w.Bytes(), &resultInput)
-	if err != nil {
-		return nil, err
+
+	for k, v := range kv {
+		// 1   case 1
+		// "a" case 2
+		// "{{aaaa}" case 3
+		// "[{{"xxx"}}, "x"]" case 4
+		vStr, ok := v.(string)
+		if !ok {
+			// case 1   数值字面量
+			resultInput[k] = v
+			continue
+		} else {
+			schemaType, err := propertyFinder.FindPath(k)
+			if err != nil {
+				return nil, fmt.Errorf("resolve (%s)'s schema type fail %w", k, err)
+			}
+			if schemaType == jsonschema.String {
+				if !strings.HasPrefix(vStr, "{{") {
+					//case 2  字符串字面量
+					resultInput[k] = v
+					continue
+				}
+			}
+		}
+		//json类型或者变量类型
+		iter := jsoniter.NewIterator(jsoniter.ConfigDefault)
+		iter.ResetBytes([]byte(vStr))
+		w := bytes.NewBufferString("")
+		encoder := jsoniter.NewStream(jsoniter.ConfigDefault, w, 512)
+		err = IterJSON(iter, encoder, k, valueResolve())
+		if err != nil {
+			return nil, err
+		}
+		err = encoder.Flush()
+		if err != nil {
+			return nil, err
+		}
+
+		fmt.Println(w.String())
+		var val interface{}
+		err = json.Unmarshal(w.Bytes(), &val)
+		if err != nil {
+			return nil, err
+		}
+		resultInput[k] = val
 	}
 
 	resultInput["instanceName"] = instanceName
