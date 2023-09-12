@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: droplet-client-{{.UniqueId}}-svc
 spec:
-  type: ClusterIP
+  clusterIP: None
   selector:
     app: droplet-client-{{.UniqueId}}-pod
   ports:

@@ -275,8 +275,9 @@ type LogResp struct {
 // CopyTestflow
 // swagger:model copyTestflow
 type CopyTestflow struct {
-	ID   primitive.ObjectID `json:"id" form:"id"`
-	Name string             `json:"name" form:"name"`
+	ID      primitive.ObjectID `json:"id" form:"id"`
+	Name    string             `json:"name" form:"name"`
+	GroupId primitive.ObjectID `json:"groupId" form:"groupId"`
 }
 
 // PluginLabels plugin's Labels

@@ -1,19 +1,20 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"fmt"
-	"text/tabwriter"
 
-	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
-	"github.com/ipfs-force-community/brightbird/types"
-
+	"github.com/filecoin-project/go-address"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
+	logging "github.com/ipfs/go-log/v2"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
+	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
+	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
+
+var log = logging.Logger("actor-list")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -23,44 +24,44 @@ var Info = types.PluginInfo{
 	Name:        "actor-list",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "actor list",
+	Description: "从droplet查询miner列表",
 }
 
 type TestCaseParams struct {
-	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
+	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
 }
 
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	listenAddress, err := actorList(ctx, params)
-	if err != nil {
-		return fmt.Errorf("list actor err:%w", err)
-	}
-	fmt.Printf("market net listen is: %v\n", listenAddress)
-	return nil
+type DropletActorListReturn struct {
+	ActorList []ActorInfo `json:"actorList" jsonschema:"actorList" title:"actorList" require:"true" description:"actor list"`
 }
 
-func actorList(ctx context.Context, params TestCaseParams) (string, error) {
-	client, closer, err := marketapi.NewIMarketRPC(ctx, params.DropletMarket.SvcEndpoint.ToMultiAddr(), nil)
+type ActorInfo struct {
+	MinerAddress address.Address `json:"minerAddress" jsonschema:"minerAddress" title:"minerAddress" require:"true" description:"miner address"`
+	Account      string          `json:"account" jsonschema:"account" title:"account" require:"true" description:"account"`
+}
+
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*DropletActorListReturn, error) {
+	client, closer, err := marketapi.DialIMarketRPC(ctx, params.Droplet.SvcEndpoint.ToMultiAddr(), params.Droplet.UserToken, nil)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	defer closer()
 
 	miners, err := client.ActorList(ctx)
 	if err != nil {
-		return "", nil
+		return nil, err
 	}
 
-	buf := &bytes.Buffer{}
-	tw := tabwriter.NewWriter(buf, 2, 4, 2, ' ', 0)
-	_, _ = fmt.Fprintln(tw, "miner\taccount")
+	dropletActorListReturn := &DropletActorListReturn{}
+
 	for _, miner := range miners {
-		_, _ = fmt.Fprintf(tw, "%s\t%s\n", miner.Addr.String(), miner.Account)
+		log.Debugf("%s\t%s\n", miner.Addr.String(), miner.Account)
+		actorInfo := &ActorInfo{
+			MinerAddress: miner.Addr,
+			Account:      miner.Account,
+		}
+		dropletActorListReturn.ActorList = append(dropletActorListReturn.ActorList, *actorInfo)
 	}
-	if err := tw.Flush(); err != nil {
-		return "", err
-	}
-	fmt.Println(buf.String())
 
-	return buf.String(), err
+	return dropletActorListReturn, nil
 }

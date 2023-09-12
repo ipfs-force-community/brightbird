@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"time"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
@@ -51,7 +52,7 @@ type RenderParams struct {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:       "damocles-manager",
+	Name:       "damocles-manager-exist",
 	Version:    version.Version(),
 	PluginType: types.Deploy,
 	DeployPluginParams: types.DeployPluginParams{
@@ -87,12 +88,12 @@ sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
 sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
 cp config ./damocles-worker/config
 sed -i "28 i\COPY ./config /usr/local/cargo/config" damocles-worker/Dockerfile
-make docker-push-manager TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
 }
 
-//go:embed damocles-manager
+//go:embed damocles-manager-exist
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DamoclesManagerReturn, error) {
@@ -130,7 +131,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	renderParams.MountStorages = mountStorages
 
 	// create configMap
-	configMapFs, err := f.Open("damocles-manager/damocles-manager-configmap.yaml")
+	configMapFs, err := f.Open("damocles-manager-exist/damocles-manager-exist-configmap.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +141,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}
 
 	// create deployment
-	deployCfg, err := f.Open("damocles-manager/damocles-manager-statefulset.yaml")
+	deployCfg, err := f.Open("damocles-manager-exist/damocles-manager-exist-statefulset.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -150,7 +151,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}
 
 	// create service
-	svcCfg, err := f.Open("damocles-manager/damocles-manager-headless.yaml")
+	svcCfg, err := f.Open("damocles-manager-exist/damocles-manager-exist-headless.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -164,6 +165,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
+	time.Sleep(5000000000 * time.Second)
 
 	return &DamoclesManagerReturn{
 		VConfig: cfg.VConfig,
@@ -214,7 +216,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 		}
 	}
 
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
+	err = k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
 	if err != nil {
 		return err
 	}
@@ -222,5 +224,5 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-exist-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

@@ -37,7 +37,7 @@ type ITestFlowRepo interface {
 	List(ctx context.Context, req models.PageReq[ListTestFlowParams]) (*models.PageResp[models.TestFlow], error)
 	Save(context.Context, models.TestFlow) (primitive.ObjectID, error)
 	Count(ctx context.Context, params *CountTestFlowParams) (int64, error)
-	Copy(ctx context.Context, id primitive.ObjectID, name string) error
+	Copy(ctx context.Context, id primitive.ObjectID, name string, GroupId primitive.ObjectID) error
 	Delete(ctx context.Context, id primitive.ObjectID) error
 	ChangeTestflowGroup(ctx context.Context, params ChangeTestflowGroup) error
 }
@@ -172,7 +172,7 @@ func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error 
 	return nil
 }
 
-func (c *TestFlowRepo) Copy(ctx context.Context, id primitive.ObjectID, name string) error {
+func (c *TestFlowRepo) Copy(ctx context.Context, id primitive.ObjectID, name string, GroupId primitive.ObjectID) error {
 	tf := &models.TestFlow{}
 	err := c.caseCol.FindOne(ctx, bson.D{{Key: "_id", Value: id}}).Decode(tf)
 	if err != nil {
@@ -188,6 +188,7 @@ func (c *TestFlowRepo) Copy(ctx context.Context, id primitive.ObjectID, name str
 	tf.Name = name
 	tf.CreateTime = time.Now().Unix()
 	tf.ModifiedTime = time.Now().Unix()
+	tf.GroupId = GroupId
 
 	_, err = c.caseCol.InsertOne(ctx, tf)
 	return err

@@ -50,7 +50,7 @@ type TestCaseParams struct {
 	Messager sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	//todo support set owner/worker/controller
 
-	Size       string          `json:"size" jsonschema:"size" title:"Miner SIze" require:"2KiB" description:"miner size (2Kib 8Mib 512Mib 32Gib 64Gib)"`
+	Size       string          `json:"size" jsonschema:"size" title:"Miner SIze" require:"true" default:"2KiB" description:"miner size (2Kib 8Mib 512Mib 32Gib 64Gib)"`
 	WalletAddr address.Address `json:"walletAddr" jsonschema:"walletAddr" title:"Wallet Address" require:"true" description:"owner/worker address must be f3 address"`
 	Confidence int             `json:"confidence"  jsonschema:"confidence"  title:"Confidence" default:"5" require:"true" description:"confience height for wait message"`
 }

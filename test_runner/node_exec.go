@@ -72,7 +72,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 
 	envCtxBytes, err := json.Marshal(envCtx)
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve %s input fail %w", pip.InstanceName, err)
 	}
 	log.Debugf("env context %w", string(envCtxBytes))
 	log.Debugf("input %s", string(pip.Input))
