@@ -11,6 +11,12 @@
           </router-link>
         </div>
         <div class="right-area">
+          <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
+            <div class="btn-item">
+              <button class="workflow-list"></button>
+              <span class="text">测试流管理</span>
+            </div>
+          </router-link>
           <router-link :to="{ name: 'workflow-list' }">
             <div class="btn-item">
               <button class="workflow-list"></button>

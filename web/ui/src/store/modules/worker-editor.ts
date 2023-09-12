@@ -1,5 +1,4 @@
 import { fetchLabel } from '@/api/plugin';
-import { Commit } from 'vuex';
 export const namespace = 'worker-editor';
 export default {
   namespaced: true,
@@ -13,7 +12,6 @@ export default {
       state.fileList = payload;
     },
     setUploadCancel(state:any, payload:boolean){
-      console.log('======setUploadCancel:==========', payload);
       state.isUploadCancel = payload;
     },
     setLabels(state:any, payload:string[]){

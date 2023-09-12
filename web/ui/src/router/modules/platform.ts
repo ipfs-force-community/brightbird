@@ -119,4 +119,5 @@ export default [
       },
     ],
   },
+
 ] as RouteRecordRaw[];

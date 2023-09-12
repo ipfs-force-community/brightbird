@@ -22,4 +22,12 @@ export default [
     path: 'example',
     component: () => import('@/views/project/example.vue'),
   },
+  {
+    name:'/test-flow',
+    path:'/test-flow',
+    component:()=> import('@/views/test-flow/index.vue'),
+    children:[
+    
+    ],
+  },
 ] as RouteRecordRaw[];
