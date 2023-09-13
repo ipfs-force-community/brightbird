@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: genesis-{{.UniqueId}}-statefulset
+spec:
+  replicas: 1
+  serviceName: genesis-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: genesis-{{.UniqueId}}-pod
+  template:
+    metadata:
+      name: genesis-{{.UniqueId}}-pod
+      labels:
+        app: genesis-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+      containers:
+        - name: genesis-{{.UniqueId}}
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/lotus-force:latest"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/genesis/localnet.json --bootstrap=false;
+          ports:
+            - containerPort: 1234
+              protocol: TCP
+            - containerPort: 34567
+              protocol: TCP
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
+            - name: IPFS_GATEWAY
+              value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+            - mountPath: /root
+              name: genesis-pvc
+            - mountPath: /root/genesis
+              name: shared-dir-v
+              subPath: genesis
+            - name: lotuscfg
+              mountPath: "/root/config.toml"
+              subPath: "config.toml"
+      volumes:
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+        - name: lotuscfg
+          configMap:
+            name: genesis-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+  volumeClaimTemplates:
+    - metadata:
+        name: genesis-pvc
+        labels:
+          app: genesis-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 10Gi

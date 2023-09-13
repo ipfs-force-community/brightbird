@@ -69,7 +69,6 @@ import { TreeProp } from '@/components/workflow/workflow-editor/model/data/commo
 import JmSelect from '@/components/form/select';
 import { Try } from 'json-schema-to-typescript/dist/src/utils';
 import { JSONSchema } from 'json-schema-to-typescript';
-import { schema } from '@antv/g2plot';
 
 export default defineComponent({
   components: { JmEmpty, ExpressionEditor, PropertySelect, JmForm, jmFormItem, JmInput, JmSelect },

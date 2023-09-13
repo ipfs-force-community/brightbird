@@ -12,12 +12,15 @@ func IterJSON(iter *jsoniter.Iterator, encoder *jsoniter.Stream, fieldPath strin
 	switch iter.WhatIsNext() {
 	case jsoniter.InvalidValue:
 		return errors.New("invalidate json")
-	case jsoniter.StringValue:
-		val, err := valResolve(strings.Trim(fieldPath, "."), iter.ReadString()) //express or convert to by property type
+	case jsoniter.VariableValue:
+		variable := iter.ReadVariable()
+		val, err := valResolve(strings.Trim(fieldPath, "."), variable) //express or convert to by property type
 		if err != nil {
 			return err
 		}
 		encoder.WriteVal(val)
+	case jsoniter.StringValue:
+		encoder.WriteVal(iter.ReadString())
 	case jsoniter.BoolValue:
 		encoder.WriteVal(iter.ReadBool())
 	case jsoniter.NilValue:
@@ -58,7 +61,7 @@ func IterJSON(iter *jsoniter.Iterator, encoder *jsoniter.Stream, fieldPath strin
 			index++
 			return true
 		})
-		if index == 0 {
+		if index > 0 {
 			buf := encoder.Buffer()
 			encoder.SetBuffer(buf[:len(buf)-1])
 		}

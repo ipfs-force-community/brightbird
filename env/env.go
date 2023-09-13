@@ -616,6 +616,15 @@ func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey 
 	return err
 }
 
+func (env *K8sEnvDeployer) GetPod(ctx context.Context, podName string) (*corev1.Pod, error) {
+	podClient := env.k8sClient.CoreV1().Pods(env.namespace)
+	pod, err := podClient.Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+	return pod, nil
+}
+
 func (env *K8sEnvDeployer) GetPodsByLabel(ctx context.Context, deployAppLabel ...string) ([]corev1.Pod, error) {
 	podClient := env.k8sClient.CoreV1().Pods(env.namespace)
 	podList, err := podClient.List(ctx, metav1.ListOptions{LabelSelector: "app in (" + strings.Join(deployAppLabel, ",") + ")"})
@@ -671,30 +680,8 @@ func (env *K8sEnvDeployer) ReadSmallFilelInPod(ctx context.Context, podName stri
 
 // ExecRemoteCmd execute remote server command in pod
 func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cmd ...string) ([]byte, error) {
-	req := env.k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
-		Namespace(env.namespace).SubResource("exec")
-	option := &corev1.PodExecOptions{
-		Command: cmd,
-		Stdin:   false,
-		Stdout:  true,
-		Stderr:  true,
-		TTY:     true,
-	}
-	req.VersionedParams(
-		option,
-		scheme.ParameterCodec,
-	)
-	exec, err := remotecommand.NewSPDYExecutor(env.k8sCfg, "POST", req.URL())
-	if err != nil {
-		return nil, err
-	}
 	stdOut := bytes.NewBuffer(nil)
-	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdin:  nil,
-		Stdout: stdOut,
-		Stderr: os.Stderr,
-		Tty:    true,
-	})
+	err := env.ExecRemoteCmdWithStream(ctx, podName, true, stdOut, nil, cmd...)
 	if err != nil {
 		return nil, err
 	}
@@ -702,15 +689,21 @@ func (env *K8sEnvDeployer) ExecRemoteCmd(ctx context.Context, podName string, cm
 }
 
 // ExecRemoteCmd execute remote server command in pod
-func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName string, cmd ...string) ([]byte, error) {
+func (env *K8sEnvDeployer) ExecRemoteCmdWithStream(ctx context.Context, podName string, tty bool, stdOut io.Writer, stdIn io.Reader, cmd ...string) error {
 	req := env.k8sClient.CoreV1().RESTClient().Post().Resource("pods").Name(podName).
 		Namespace(env.namespace).SubResource("exec")
 	option := &corev1.PodExecOptions{
 		Command: cmd,
 		Stdin:   false,
-		Stdout:  true,
+		Stdout:  false,
 		Stderr:  true,
-		TTY:     true,
+		TTY:     tty,
+	}
+	if stdOut != nil {
+		option.Stdout = true
+	}
+	if stdIn != nil {
+		option.Stdin = true
 	}
 	req.VersionedParams(
 		option,
@@ -718,9 +711,24 @@ func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName st
 	)
 	exec, err := remotecommand.NewSPDYExecutor(env.k8sCfg, "POST", req.URL())
 	if err != nil {
-		return nil, err
+		return err
 	}
 
+	streamOpts := remotecommand.StreamOptions{
+		Stderr: os.Stderr,
+		Tty:    tty,
+	}
+	if stdOut != nil {
+		streamOpts.Stdout = stdOut
+	}
+	if stdIn != nil {
+		streamOpts.Stdin = stdIn
+	}
+	return exec.StreamWithContext(ctx, streamOpts)
+}
+
+// ExecRemoteCmd execute remote server command in pod
+func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName string, cmd ...string) ([]byte, error) {
 	username := "ipfsman"
 	password := "1"
 
@@ -728,12 +736,7 @@ func (env *K8sEnvDeployer) ExecRemoteCmdWithName(ctx context.Context, podName st
 	stdIn := bytes.NewBuffer(nil)
 	stdIn.WriteString(fmt.Sprintf("%s\n%s\n", username, password))
 
-	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdin:  stdIn,
-		Stdout: stdOut,
-		Stderr: os.Stderr,
-		Tty:    true,
-	})
+	err := env.ExecRemoteCmdWithStream(ctx, podName, true, stdOut, stdIn, cmd...)
 	if err != nil {
 		return nil, err
 	}

@@ -274,7 +274,12 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 
 	builder.repo, err = git.PlainOpen(builder.repoPath)
 	if err == nil {
-		return builder, nil
+		//check verify
+		_, err = builder.repo.Head()
+		if err == nil {
+			return builder, nil
+		}
+		log.Warnf("repo %s not validate, remove and clone again", builder.repoPath)
 	}
 
 	log.Warnf("open git repo %s fail, clean and clone (%s) again %v", repoUrl, builder.repoPath, err)
@@ -292,7 +297,7 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 		URL:             sshFormat,
 		Progress:        os.Stdout,
 		InsecureSkipTLS: false,
-		//	Depth:           200, //should be enough
+		Depth:           500, //should be enough
 	})
 	if err != nil && err != git.ErrRepositoryAlreadyExists {
 		_ = os.RemoveAll(builder.repoPath) //clean fail repo

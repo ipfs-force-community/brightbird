@@ -18,6 +18,10 @@ func EndpointFromHostPort(host string, port int) Endpoint {
 }
 
 func (endpoint Endpoint) ToMultiAddr() string {
+	if len(endpoint) == 0 {
+		return ""
+	}
+
 	seq := strings.Split(string(endpoint), ":")
 	port := seq[1]
 	ipOrDNS := seq[0]
@@ -29,6 +33,9 @@ func (endpoint Endpoint) ToMultiAddr() string {
 }
 
 func (endpoint Endpoint) ToHTTP() string {
+	if len(endpoint) == 0 {
+		return ""
+	}
 	return fmt.Sprintf("http://%s", string(endpoint))
 }
 
