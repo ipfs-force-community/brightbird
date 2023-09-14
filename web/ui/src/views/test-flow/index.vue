@@ -3,7 +3,8 @@
     <Toolbar @newGroup="onNewGroup" @newJob="onNewJob" />
     <div class="content">
       <WorkFlowList v-if="!isJob"></WorkFlowList>
-      <JobManager v-if="isJob"></JobManager>
+      <!-- <JobManager v-if="isJob"></JobManager> -->
+      <JobManagerNew v-if="isJob"></JobManagerNew>
     </div>
 
     <group-creator
@@ -15,15 +16,21 @@
 </template>
 <script lang="ts">
 import { useRoute } from 'vue-router';
-import { onBeforeUpdate, ref, inject } from 'vue';
+import { onBeforeUpdate, onMounted, ref } from 'vue';
 import Toolbar from '@/components/test-flow/layout/top/toolbar.vue';
 import WorkFlowList from '@/views/index/workflow-list.vue';
 import JobManager from '@/views/job/job-manager.vue';
+import JobManagerNew from '@/views/job/job-manager-new.vue';
 import GroupCreator from '@/views/project-group/project-group-creator.vue';
-import GroupEditor from '@/views/project-group/project-group-editor.vue';
 import { eventBus } from '@/main';
 export default {
-  components: { Toolbar, WorkFlowList, JobManager, GroupCreator },
+  components: {
+    Toolbar,
+    WorkFlowList,
+    JobManager,
+    GroupCreator,
+    JobManagerNew,
+  },
 
   setup(props: any) {
     let router = useRoute();
@@ -39,7 +46,6 @@ export default {
       eventBus.emit('newGroup');
     };
 
-
     const onNewGroup = () => {
       creationActivated.value = true;
     };
@@ -47,10 +53,12 @@ export default {
       editionActivated.value = true;
     };
 
+    onMounted(() => {
+      isJob.value = router.hash.includes('#job');
+    });
     onBeforeUpdate(() => {
       isJob.value = router.hash.includes('#job');
     });
-
     return {
       onNewJob,
       onNewGroup,

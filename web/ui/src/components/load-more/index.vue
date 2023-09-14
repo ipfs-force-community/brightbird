@@ -84,8 +84,8 @@ export default defineComponent({
 <style scoped lang="less">
 .jm-load-more {
   display: inline-block;
-  font-size: 14px;
   color: #7b8c9c;
+  font-size: 14px;
   .have-more {
     position: relative;
     color:#7b8c9c;
@@ -94,14 +94,14 @@ export default defineComponent({
       right: -17px;
     }
     .icon {
+      position: absolute;
+      top: 12px;
+      right: -17px;
       width: 0;
       height: 0;
-      border-left: 6px solid transparent;
-      border-right: 6px solid transparent;
       border-top: 7px solid #7b8c9c;
-      position: absolute;
-      right: -17px;
-      top: 16px;
+      border-right: 6px solid transparent;
+      border-left: 6px solid transparent;
     }
   }
   .have-more:hover {
