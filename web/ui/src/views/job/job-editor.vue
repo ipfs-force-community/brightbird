@@ -181,7 +181,7 @@ export default defineComponent({
         Object.values(pipeline).forEach((a: any) => nodeInUse.add(a.name + a.version));
 
         const pluginMap = new Map<string, PluginDef>();
-        (await fetchDeployPlugins()).map(a => {
+        (await fetchDeployPlugins())?.map(a => {
           a.pluginDefs?.map(p => {
             if (nodeInUse.has(p.name + p.version)) {
               pluginMap.set(p.name, p);

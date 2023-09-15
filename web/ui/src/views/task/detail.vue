@@ -13,7 +13,7 @@
       <div v-else>
         <div class="pod-log-header">{{ selectedPod }} Logs</div>
         <el-collapse v-if="selectedPod.indexOf('test-runner') > -1" class="pod-log  pod-height">
-          <el-collapse-item v-for="step in podLog?.steps" class="step-header">
+          <el-collapse-item v-for="step,index in podLog?.steps" :key="index" class="step-header">
             <template #title>
               <div class="header-title">
                 <el-icon v-if="step.state == StepStateEnum.Success" size="20">
@@ -36,7 +36,7 @@
               </div>
             </template>
             <div class="steps">
-              <el-text class="step-item" size="small" tag="p" v-for="log in step.logs"> {{ log }} </el-text>
+              <el-text class="step-item" size="small" tag="p" v-for="log,index in step.logs" :key="index"> {{ log }} </el-text>
             </div>
           </el-collapse-item>
         </el-collapse>
@@ -63,7 +63,7 @@ export default defineComponent({
   },
   computed: {
     podLogString(): string {
-      return this.podLog?.logs.join('\n') ?? "";
+      return this.podLog?.logs.join('\n') ?? '';
     },
   },
   setup(props: any) {
@@ -125,7 +125,7 @@ export default defineComponent({
     const loadFirstPodLog = async () => {
       if (podList.value.length > 0) {
         selectedPod.value = podList.value[0];
-        podLog.value = await getPodLog({podName:selectedPod.value, testID:props.testId});
+        podLog.value = await getPodLog({ podName:selectedPod.value, testID:props.testId });
       }
     };
 
@@ -247,6 +247,7 @@ export default defineComponent({
       .steps {
         .step-item {
           padding-left: 10px;
+          word-break: break-word;
         }
       }
     }
