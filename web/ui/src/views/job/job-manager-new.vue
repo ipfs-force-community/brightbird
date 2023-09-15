@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="wrap">
     <template v-for="item in jobList" :key="item?.id">
       <job-item :jobVo="item" @toEdit="toEdit" @toDelete="toDelete"></job-item>
     </template>
@@ -95,4 +95,8 @@ export default {
   },
 };
 </script>
-<style lang="less"></style>
+<style scoped lang="less">
+.wrap {
+  margin-top: 10px;
+}
+</style>

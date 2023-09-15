@@ -196,7 +196,7 @@ export default defineComponent({
 
 
 .task-detail {
-  padding-top: 64px;
+  padding-top: 74px;
   display: flex;
   justify-content: space-between;
   background-color: #ffffff;
