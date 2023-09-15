@@ -77,9 +77,9 @@ export default (appContext: AppContext) => {
     const lastMatched = to.matched[to.matched.length - 1];
 
     if (lastMatched.meta.title) {
-      document.title = `建木 - ${lastMatched.meta.title}`;
+      document.title = `BrightBird - ${lastMatched.meta.title}`;
     } else {
-      document.title = '建木';
+      document.title = 'BrightBird';
     }
 
     const store = _store as any;
