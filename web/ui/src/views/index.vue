@@ -3,15 +3,10 @@
     <div class="main">
       <div class="menu-bar">
         <div class="left-area">
-          <router-link :to="{ name: 'create-pipeline' }">
-            <div class="btn-item">
-              <button class="graph"></button>
-              <span class="text">图形项目</span>
-            </div>
-          </router-link>
+          <div>BrightBird</div>
         </div>
         <div class="right-area">
-          <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
+          <!-- <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
             <div class="btn-item">
               <button class="workflow-list"></button>
               <span class="text">测试流管理</span>
@@ -33,6 +28,19 @@
             <div class="btn-item">
               <button class="group"></button>
               <span class="text">分组管理</span>
+            </div>
+          </router-link> -->
+
+          <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
+            <div class="btn-item">
+              <!-- <button class="workflow-list"></button> -->
+              <span class="text">测试流管理</span>
+            </div>
+          </router-link>
+          <router-link :to="{ name: 'create-pipeline' }">
+            <div class="btn-item">
+              <!-- <button class="graph"></button> -->
+              <span class="text">开启工作</span>
             </div>
           </router-link>
         </div>
@@ -78,11 +86,11 @@ export default defineComponent({
     min-height: calc(100vh - 130px);
 
     .menu-bar {
-      background-color: #ffffff;
-      padding: 10px 20px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+      padding: 10px 20px;
+      background-color: #ffffff;
 
       a {
         margin-right: 60px;
@@ -94,8 +102,8 @@ export default defineComponent({
 
       .btn-item {
         display: flex;
-        flex-direction: column;
         align-items: center;
+        flex-direction: column;
 
         &:hover {
           .text {
@@ -108,9 +116,9 @@ export default defineComponent({
           height: 56px;
           border: none;
           background-color: #ffffff;
-          cursor: pointer;
           background-position: center center;
           background-repeat: no-repeat;
+          cursor: pointer;
 
           &.graph {
             background-image: url('@/assets/svgs/index/graph-project-btn.svg');
@@ -143,10 +151,10 @@ export default defineComponent({
         }
 
         .text {
-          font-size: 14px;
           margin-top: 6px;
-          font-weight: 400;
           color: #082340;
+          font-weight: 400;
+          font-size: 14px;
         }
       }
 
@@ -158,8 +166,8 @@ export default defineComponent({
 
     .charts {
       margin-top: 19px;
-      background-color: #ffffff;
       padding: 10px;
+      background-color: #ffffff;
     }
   }
 }

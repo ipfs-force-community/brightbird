@@ -1,10 +1,6 @@
 <template>
   <div class="platform" ref="platFormRef">
-    <!-- <div class="header"></div> -->
     <jm-container class="container">
-      <!-- <el-header height="64px">
-        <top-nav/>
-      </el-header> -->
       <jm-container>
         <el-header v-if="pathNavsDisplay" class="path-nav">
           <jm-breadcrumb>
@@ -163,14 +159,14 @@ export default defineComponent({
 @main-max-width: 1600px;
 
 .platform {
+  overflow: auto;
   margin: 0 auto;
   height: 100vh;
-  overflow: auto;
 
   .header {
     position: fixed;
-    left: 0;
     top: 0;
+    left: 0;
     width: 100%;
     height: 64px;
     background-color: #ffffff;
@@ -180,9 +176,9 @@ export default defineComponent({
   .container {
     max-width: 100%;
     .el-header {
-      width: 100%;
-      max-width: @main-max-width;
       margin: 0 0;
+      max-width: @main-max-width;
+      width: 100%;
     }
 
     .path-nav {
