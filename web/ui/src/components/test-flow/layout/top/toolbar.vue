@@ -33,7 +33,7 @@ export default {
       active.value = false;
     }
     const goBack = () => {
-      router.push('/');
+      router.back();
     };
     const testClick = () => {
       active.value = true;

@@ -1,4 +1,7 @@
 <template>
+    <div class="nav">
+    <button class="jm-icon-button-left" @click="goBack"></button>
+   </div>
   <div class="task-detail" v-loading="loading">
     <div class="task-list">
       <div class="task-item" v-for="pod in podList" :key="pod" @click="selectTask(pod)"
@@ -53,6 +56,7 @@ import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
 import { StepStateEnum } from '@/api/dto/enumeration';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   props: {
@@ -72,7 +76,7 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
-    console.log(props.testId);
+    const router = useRouter();
 
     // 获取所有任务列表
     const loadPodList = async () => {
@@ -129,6 +133,10 @@ export default defineComponent({
       }
     };
 
+    const goBack = () => {
+      router.back();
+    };
+
     onMounted(async () => {
       // 初始化任务列表
       await loadPodList();
@@ -139,19 +147,56 @@ export default defineComponent({
 
     return {
       StepStateEnum,
-
+      loading,
       podList,
       selectedPod,
       podLog,
       selectTask,
-      loading,
+      goBack,
     };
   },
 });
 </script>
 
 <style scoped lang="less">
+@primary-color: #096dd9;
+
+.nav {
+  position: fixed;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  width: 100%;
+  height: 64px;
+  background: white;
+  color: #042749;
+  button[class^="jm-icon-"] {
+    width: 24px;
+    height: 24px;
+    border-width: 0;
+    border-radius: 2px;
+    background-color: transparent;
+    color: #6b7b8d;
+    text-align: center;
+    font-size: 18px;
+    cursor: pointer;
+
+    &::before {
+      font-weight: 500;
+    }
+
+    &:hover {
+      background-color: #eff7ff;
+      color: @primary-color;
+    }
+  }
+}
+
+
 .task-detail {
+  padding-top: 64px;
   display: flex;
   justify-content: space-between;
   background-color: #ffffff;

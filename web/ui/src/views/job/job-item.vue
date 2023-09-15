@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="content">
+    <div class="content" v-loading="loading">
       <folding :status="toggle">
         <template #prefix>
           <span class="prefix-wrapper">
@@ -142,9 +142,7 @@ export default {
         pageData.value.total = queryTask.total;
         pageData.value.pages = queryTask.pages;
         pageData.value.tasks = queryTask.list;
-        initialized.value = true;
-        console.log('+========queryTask:==========', queryTask.pages);
-        
+        initialized.value = true;        
         if (queryTask.pages === 1) {
           loadState.value = StateEnum.NO_MORE;
         } else {
