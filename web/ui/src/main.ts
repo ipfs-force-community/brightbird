@@ -11,6 +11,9 @@ import './utils/operation-btn-position.ts';
 import './utils/baidu-tongji.ts';
 import * as ElementPlusIconsVue from '@element-plus/icons-vue';
 
+import mitt from 'mitt';
+
+export const eventBus = mitt();
 
 // 打印环境变量，用于调试
 console.debug(import.meta.env);
@@ -25,7 +28,7 @@ app.use(router);
 app.use(store);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
-  app.component(key, component)
+  app.component(key, component);
 }
 
 // 注册全局异常处理方法

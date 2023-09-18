@@ -1,4 +1,7 @@
 <template>
+    <div class="nav">
+    <button class="jm-icon-button-left" @click="goBack"></button>
+   </div>
   <div class="task-detail" v-loading="loading">
     <div class="task-list">
       <div class="task-item" v-for="pod in podList" :key="pod" @click="selectTask(pod)"
@@ -13,7 +16,7 @@
       <div v-else>
         <div class="pod-log-header">{{ selectedPod }} Logs</div>
         <el-collapse v-if="selectedPod.indexOf('test-runner') > -1" class="pod-log  pod-height">
-          <el-collapse-item v-for="step in podLog?.steps" class="step-header">
+          <el-collapse-item v-for="step,index in podLog?.steps" :key="index" class="step-header">
             <template #title>
               <div class="header-title">
                 <el-icon v-if="step.state == StepStateEnum.Success" size="20">
@@ -36,7 +39,7 @@
               </div>
             </template>
             <div class="steps">
-              <el-text class="step-item" size="small" tag="p" v-for="log in step.logs"> {{ log }} </el-text>
+              <el-text class="step-item" size="small" tag="p" v-for="log,index in step.logs" :key="index"> {{ log }} </el-text>
             </div>
           </el-collapse-item>
         </el-collapse>
@@ -53,6 +56,7 @@ import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
 import { StepStateEnum } from '@/api/dto/enumeration';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   props: {
@@ -63,7 +67,7 @@ export default defineComponent({
   },
   computed: {
     podLogString(): string {
-      return this.podLog?.logs.join('\n') ?? "";
+      return this.podLog?.logs.join('\n') ?? '';
     },
   },
   setup(props: any) {
@@ -72,7 +76,7 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
-    console.log(props.testId);
+    const router = useRouter();
 
     // 获取所有任务列表
     const loadPodList = async () => {
@@ -125,8 +129,12 @@ export default defineComponent({
     const loadFirstPodLog = async () => {
       if (podList.value.length > 0) {
         selectedPod.value = podList.value[0];
-        podLog.value = await getPodLog({podName:selectedPod.value, testID:props.testId});
+        podLog.value = await getPodLog({ podName:selectedPod.value, testID:props.testId });
       }
+    };
+
+    const goBack = () => {
+      router.back();
     };
 
     onMounted(async () => {
@@ -139,19 +147,56 @@ export default defineComponent({
 
     return {
       StepStateEnum,
-
+      loading,
       podList,
       selectedPod,
       podLog,
       selectTask,
-      loading,
+      goBack,
     };
   },
 });
 </script>
 
 <style scoped lang="less">
+@primary-color: #096dd9;
+
+.nav {
+  position: fixed;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  width: 100%;
+  height: 64px;
+  background: white;
+  color: #042749;
+  button[class^="jm-icon-"] {
+    width: 24px;
+    height: 24px;
+    border-width: 0;
+    border-radius: 2px;
+    background-color: transparent;
+    color: #6b7b8d;
+    text-align: center;
+    font-size: 18px;
+    cursor: pointer;
+
+    &::before {
+      font-weight: 500;
+    }
+
+    &:hover {
+      background-color: #eff7ff;
+      color: @primary-color;
+    }
+  }
+}
+
+
 .task-detail {
+  padding-top: 74px;
   display: flex;
   justify-content: space-between;
   background-color: #ffffff;
@@ -247,6 +292,7 @@ export default defineComponent({
       .steps {
         .step-item {
           padding-left: 10px;
+          word-break: break-word;
         }
       }
     }

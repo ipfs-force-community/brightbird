@@ -9,7 +9,6 @@ import { defineComponent, getCurrentInstance, inject, onMounted, ref, provide } 
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
 import { useRoute, useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
-import { Node } from '@/api/dto/testflow';
 import yaml from 'yaml';
 import JmWorkflowEditor from '@/components/workflow/workflow-editor/index.vue';
 
@@ -65,7 +64,7 @@ export default defineComponent({
       }
     });
     const close = async () => {
-      await router.push({ name: 'index' });
+      await router.back();
     };
     const save = async (back: boolean, graph: string) => {
       try {
@@ -116,7 +115,7 @@ export default defineComponent({
 
 <style scoped lang="less">
 .pipeline {
-  height: 100vh;
   position: relative;
+  height: 100vh;
 }
 </style>

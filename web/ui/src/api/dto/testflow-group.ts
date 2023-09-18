@@ -10,6 +10,8 @@ export interface ITestflowGroupVo
       isShow: boolean;
       testFlowCount: number;
       description?: string;
+      modifiedTime?:string;
+      createTime?:string
     }
   > { }
 /**

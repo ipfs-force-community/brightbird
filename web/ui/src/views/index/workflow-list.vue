@@ -9,112 +9,111 @@
     </div>
   </template>
   
-  <script lang="ts">
-  import { computed, defineComponent } from 'vue';
-  import BottomNav from '@/views/nav/bottom2.vue';
-  import AllProject from '@/views/index/all-project.vue';
-  import SearchProject from '@/views/index/search-project.vue';
+<script lang="ts">
+import { computed, defineComponent } from 'vue';
+import AllProject from '@/views/index/all-project.vue';
+import SearchProject from '@/views/index/search-project.vue';
   
-  export default defineComponent({
-    components: { AllProject, SearchProject, BottomNav },
-    props: {
-      searchName: {
-        type: String,
-      },
-      groupId: {
-        type: String,
-      },
+export default defineComponent({
+  components: { AllProject, SearchProject },
+  props: {
+    searchName: {
+      type: String,
     },
-    setup(props) {
-      // 切换到搜索结果页
-      return {
-        searchResultFlag: computed<boolean>(() => props.searchName === undefined),
-      };
+    groupId: {
+      type: String,
     },
-  });
-  </script>
+  },
+  setup(props) {
+    // 切换到搜索结果页
+    return {
+      searchResultFlag: computed<boolean>(() => props.searchName === undefined),
+    };
+  },
+});
+</script>
   
   <style scoped lang="less">
   .index {
-    .main {
-      min-height: calc(100vh - 130px);
-  
-      .menu-bar {
-        margin-top: 20px;
-        background-color: #ffffff;
-        padding: 40px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-  
-        a {
-          margin-right: 60px;
-  
-          &:last-child {
-            margin-right: 0;
-          }
-        }
-  
-        .btn-item {
+      .main {
+        min-height: calc(100vh - 130px);
+    
+        .menu-bar {
           display: flex;
-          flex-direction: column;
           align-items: center;
-  
-          &:hover {
+          justify-content: space-between;
+          margin-top: 20px;
+          padding: 40px 20px;
+          background-color: #ffffff;
+    
+          a {
+            margin-right: 60px;
+    
+            &:last-child {
+              margin-right: 0;
+            }
+          }
+    
+          .btn-item {
+            display: flex;
+            align-items: center;
+            flex-direction: column;
+    
+            &:hover {
+              .text {
+                color: #096dd9;
+              }
+            }
+    
+            button {
+              width: 56px;
+              height: 56px;
+              border: none;
+              background-color: #ffffff;
+              background-position: center center;
+              background-repeat: no-repeat;
+              cursor: pointer;
+    
+              &.graph {
+                background-image: url('@/assets/svgs/index/graph-project-btn.svg');
+              }
+    
+              &.code {
+                background-image: url('@/assets/svgs/index/code-project-btn.svg');
+              }
+    
+              &.git {
+                background-image: url('@/assets/svgs/index/git-btn.svg');
+              }
+    
+              &.plugin-library {
+                background-image: url('@/assets/svgs/index/node-library-btn.svg');
+              }
+    
+    
+              &.job {
+                background-image: url('@/assets/svgs/index/code-project-btn.svg');
+              }
+    
+              &.group {
+                background-image: url('@/assets/svgs/index/group-btn.svg');
+              }
+            }
+    
             .text {
-              color: #096dd9;
+              margin-top: 6px;
+              color: #082340;
+              font-weight: 400;
+              font-size: 14px;
             }
           }
-  
-          button {
-            width: 56px;
-            height: 56px;
-            border: none;
-            background-color: #ffffff;
-            cursor: pointer;
-            background-position: center center;
-            background-repeat: no-repeat;
-  
-            &.graph {
-              background-image: url('@/assets/svgs/index/graph-project-btn.svg');
-            }
-  
-            &.code {
-              background-image: url('@/assets/svgs/index/code-project-btn.svg');
-            }
-  
-            &.git {
-              background-image: url('@/assets/svgs/index/git-btn.svg');
-            }
-  
-            &.plugin-library {
-              background-image: url('@/assets/svgs/index/node-library-btn.svg');
-            }
-  
-  
-            &.job {
-              background-image: url('@/assets/svgs/index/code-project-btn.svg');
-            }
-  
-            &.group {
-              background-image: url('@/assets/svgs/index/group-btn.svg');
-            }
+    
+          .left-area,
+          .right-area {
+            display: flex;
           }
-  
-          .text {
-            font-size: 14px;
-            margin-top: 6px;
-            font-weight: 400;
-            color: #082340;
-          }
-        }
-  
-        .left-area,
-        .right-area {
-          display: flex;
         }
       }
     }
-  }
   </style>
   

@@ -5,7 +5,7 @@
     </template>
     <jm-form :model="editorForm" :rules="editorRule" ref="editorFormRef" label-width="auto" @submit.prevent>
       <jm-form-item label="Job名称" label-position="top" prop="name">
-        <jm-input v-model="editorForm.name" clearable placeholder="请输入Job名称" />
+        <jm-input disabled v-model="editorForm.name" clearable placeholder="请输入Job名称" />
       </jm-form-item>
 
       <jm-form-item label="测试流" prop="testFlowId">
@@ -149,7 +149,7 @@ export default defineComponent({
       tagCreateEventMatches: [],
     });
     const editorRule = ref<FormRules<IJobUpdateVo>>({
-      name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }]
+      name: [{ required: true, message: '分组名称不能为空', trigger: 'blur' }],
     });
 
     const loading = ref<boolean>(false);
@@ -161,27 +161,27 @@ export default defineComponent({
         jobType.value = job.jobType;
 
         const testflow = await fetchTestFlowDetail({ id: editorForm.value.testFlowId });
-        //update global properties
+        // update global properties
         let globalMapsSet = new Set();
         testflow.globalProperties?.map(val => {
           globalMapsSet.add(val.name);
-        })
+        });
 
-        //1. remove removed property  2. add new property
+        // 1. remove removed property  2. add new property
         const gps = editorForm.value.globalProperties ?? [];
         gps.push(...testflow.globalProperties ?? []);
         const globalProperties = gps.filter(a => globalMapsSet.has(a.name)).filter(
-          (property, index, self) => index === self.findIndex(p => p.name === property.name)
+          (property, index, self) => index === self.findIndex(p => p.name === property.name),
         );
         editorForm.value.globalProperties = globalProperties;
 
-        //update commitmap
+        // update commitmap
         const nodeInUse = new Set<string>();
         const { pipeline } = yaml.parse(testflow.graph);
         Object.values(pipeline).forEach((a: any) => nodeInUse.add(a.name + a.version));
 
         const pluginMap = new Map<string, PluginDef>();
-        (await fetchDeployPlugins()).map(a => {
+        (await fetchDeployPlugins())?.map(a => {
           a.pluginDefs?.map(p => {
             if (nodeInUse.has(p.name + p.version)) {
               pluginMap.set(p.name, p);
@@ -194,24 +194,25 @@ export default defineComponent({
         Object.entries(editorForm.value.versions).map(([k, v]) => {
           if (!pluginMap.has(k)) {
             toDelte.push(k);
-            return
+            return;
           }
         });
 
         pluginMap.forEach((v, k) => {
+          // eslint-disable-next-line no-prototype-builtins
           if (!editorForm.value.versions.hasOwnProperty(k)) {
             toAdd.push(k);
           }
         });
 
         toDelte.forEach(v => {
-          delete (editorForm.value.versions[v])
+          delete (editorForm.value.versions[v]);
           if (jobType.value === JobEnum.TagCreated) {
-            editorForm.value.tagCreateEventMatches = editorForm.value.tagCreateEventMatches.filter(a => a.repo != v);
+            editorForm.value.tagCreateEventMatches = editorForm.value.tagCreateEventMatches.filter(a => a.repo !== v);
           } else if (jobType.value === JobEnum.PRMerged) {
-            editorForm.value.prMergedEventMatches = editorForm.value.prMergedEventMatches.filter(a => a.repo != v);
+            editorForm.value.prMergedEventMatches = editorForm.value.prMergedEventMatches.filter(a => a.repo !== v);
           }
-        })
+        });
 
         toAdd.forEach(v => {
           editorForm.value.versions[v] = '';
@@ -228,7 +229,7 @@ export default defineComponent({
               basePattern: 'master|main',
             });
           }
-        })
+        });
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -366,29 +367,29 @@ export default defineComponent({
 <style scoped lang="less">
 .el-form-item {
   &.is-show {
-    margin-bottom: 0px;
     margin-top: -10px;
+    margin-bottom: 0px;
   }
 }
 
 .editor-title {
   padding-left: 36px;
   background-image: url('@/assets/svgs/btn/edit.svg');
-  background-repeat: no-repeat;
   background-position: left center;
+  background-repeat: no-repeat;
 }
 
 
 .form-inter {
-  font-size: 14px;
-  padding-top: 18px;
   display: inline-block;
+  padding-top: 18px;
   width: 100%;
+  font-size: 14px;
 }
 
 .tips {
-  color: #6b7b8d;
   margin-left: 15px;
+  color: #6b7b8d;
 }
 
 .jobtype {
@@ -407,6 +408,7 @@ export default defineComponent({
 .global-properties-title,
 .global-properties-body {
   display: grid;
+
   grid-template-columns: repeat(2, 1fr);
   grid-column-gap: 20px;
   grid-row-gap: 5px;
