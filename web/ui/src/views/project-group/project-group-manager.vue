@@ -204,6 +204,7 @@ export default defineComponent({
             proxy.$throw(err, proxy);
           }
         })
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
         .catch(() => {
         });
     };

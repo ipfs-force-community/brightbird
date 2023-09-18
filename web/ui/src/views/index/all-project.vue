@@ -7,7 +7,11 @@
       </div>
       <div class="search">
         <i class="jm-icon-button-search" @click="searchProject"></i>
-        <jm-input placeholder="请输入项目名称" v-model="projectName" @change="searchProject" />
+        <jm-input
+          placeholder="请输入项目名称"
+          v-model="projectName"
+          @change="searchProject"
+        />
       </div>
     </div>
     <div class="divider-line"></div>
@@ -34,15 +38,50 @@
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { listTestflowGroup } from '@/api/view-no-auth';
 import ProjectGroup from '@/views/common/project-group.vue';
-import { computed, defineComponent, getCurrentInstance, inject, nextTick, onBeforeMount, onMounted, ref } from 'vue';
+import {
+  computed,
+  defineComponent,
+  getCurrentInstance,
+  inject,
+  nextTick,
+  onMounted,
+  ref,
+} from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { namespace } from '@/store/modules/project';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { SortTypeEnum } from '@/api/dto/enumeration';
-
+import mitt from 'mitt';
+import { eventBus } from '@/main';
 const { mapMutations } = createNamespacedHelpers(namespace);
 export default defineComponent({
   components: { ProjectGroup },
+  methods: {
+    async load() {
+      try {
+        this.allProjectLoading = true;
+        const testflowGroupList = await listTestflowGroup();
+        this.initialized = true;
+        this.testflowGroups = testflowGroupList.filter(item=>item.isShow);
+      } catch (err) {
+        this.proxy.$throw(err, this.proxy);
+      } finally {
+        await nextTick(() => {
+          this.allProjectLoading = false;
+        });
+      }
+    },
+  },
+  beforeMount() {
+    this.load();
+  },
+  mounted() {
+    this.$nextTick(() => {
+      eventBus.on('newGroup', () => {
+        this.load();
+      });
+    });
+  },
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
@@ -64,7 +103,9 @@ export default defineComponent({
       { label: '最近修改', value: SortTypeEnum.LAST_MODIFIED_TIME },
     ]);
     // 所有项目组在vuex中保存的排序类型
-    const sortType = computed<SortTypeEnum>(() => store.state[namespace].sortType);
+    const sortType = computed<SortTypeEnum>(
+      () => store.state[namespace].sortType,
+    );
     // 改变项目排序规则
     const sortChange = async (e: number) => {
       // 更改vuex中的项目组排序状态
@@ -74,39 +115,31 @@ export default defineComponent({
       await nextTick();
       groupListRefresh.value = true;
     };
-    onBeforeMount(async () => {
-      try {
-        allProjectLoading.value = true;
-        const testflowGroupList = await listTestflowGroup();
-        initialized.value = true;
-        testflowGroupList.forEach(item => {
-          // 通过isShow筛选
-          if (item.isShow) {
-            testflowGroups.value.push(item);
-          }
-        });
-      } catch (err) {
-        proxy.$throw(err, proxy);
-      } finally {
-        await nextTick(() => {
-          allProjectLoading.value = false;
-        });
-      }
-    });
+
     // 回车搜索
     const searchProject = () => {
-      router.push({ name: 'workflow-list', query: { searchName: projectName.value } });
+      router.push({
+        name: 'workflow-list',
+        query: { searchName: projectName.value },
+      });
     };
 
     const setScrollbarOffset = inject('setScrollbarOffset') as () => void;
     const updateScrollbarOffset = inject('updateScrollbarOffset') as () => void;
-    onMounted(() => setScrollbarOffset());
+    onMounted(() => {
+      if (setScrollbarOffset) {
+        setScrollbarOffset();
+      }
+    });
     onBeforeRouteLeave((to, from, next) => {
-      updateScrollbarOffset();
+      if (updateScrollbarOffset) {
+        updateScrollbarOffset();
+      }
       next();
     });
 
     return {
+      proxy,
       testflowGroups,
       projectName,
       searchProject,
@@ -125,24 +158,23 @@ export default defineComponent({
 <style scoped lang="less">
 // 所有项目
 .all-project {
-  background: #fff;
   margin-bottom: 20px;
   min-height: calc(100vh - 267px);
+  background: #fff;
 
   .project-operator {
-    overflow: hidden;
-    padding: 0 20px;
     display: flex;
+    overflow: hidden;
+    align-items: center;
     justify-content: space-between;
-    align-items: center; 
     margin-top: 10px;
-
+    padding: 0 20px;
     ::v-deep(.el-input) {
       border-radius: 4px;
 
       .el-input__inner {
-        color: #6b7b8d;
         height: 36px;
+        color: #6b7b8d;
         line-height: 36px;
       }
 
@@ -152,11 +184,11 @@ export default defineComponent({
     }
 
     .project-list {
-      font-size: 20px;
-      color: #6b7b8d;
       display: flex;
       align-items: center;
       margin-top: 10px;
+      color: #6b7b8d;
+      font-size: 20px;
 
       .text {
         margin-right: 30px;
@@ -168,10 +200,10 @@ export default defineComponent({
     }
 
     .search {
+      position: relative;
       display: flex;
       align-items: center;
       box-sizing: border-box;
-      position: relative;
       margin-top: 15px;
 
       ::v-deep(.el-input) {
@@ -187,12 +219,12 @@ export default defineComponent({
       }
 
       .jm-icon-button-search::before {
-        z-index: 100;
-        content: '\e80b';
         position: absolute;
-        left: 10px;
         top: 12px;
+        left: 10px;
+        z-index: 100;
         color: #7f8c9b;
+        content: "\e80b";
       }
     }
   }
@@ -203,7 +235,6 @@ export default defineComponent({
     height: 1px;
     background-color: #e6ebf2;
   }
-
   .project {
     padding: 0 20px 30px;
 

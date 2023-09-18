@@ -22,4 +22,25 @@ export default [
     path: 'example',
     component: () => import('@/views/project/example.vue'),
   },
+  {
+    name:'/test-flow',
+    path:'/test-flow',
+    component:()=> import('@/views/test-flow/index.vue'),
+    children:[
+    
+    ],
+  },
+  {
+    name: 'task-detail',
+    path: 'task/detail',
+    component: () => import('@/views/task/detail.vue'),
+    props: ({
+      query: { testId },
+    }: RouteLocationNormalizedLoaded) => ({
+      testId,
+    }),
+    meta: {
+      title: 'Task详情',
+    },
+  },
 ] as RouteRecordRaw[];

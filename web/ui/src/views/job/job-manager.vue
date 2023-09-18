@@ -156,7 +156,7 @@ export default defineComponent({
     const run = async (id:string) => {
       try {
         const taskId = await execImmediately(id);
-        const task = await getTask({ID:taskId});
+        const task = await getTask({ ID:taskId });
         proxy.$alert(`create new task ${task.name}`);
         router.push({ name: 'job-detail', params: { id } });
       } catch (err) {
@@ -192,6 +192,7 @@ export default defineComponent({
           }
         })
         .catch(() => {
+          // eslint-disable-next-line @typescript-eslint/no-empty-function
         });
     };
     const childRoute = ref<boolean>(false);

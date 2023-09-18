@@ -1,27 +1,33 @@
 <template>
   <div class="task-item">
-    <div :class="{
-      'state-bar': true,
-      [formatState(task.state).toLowerCase()]: true,
-    }"></div>
+    <div
+      :class="{
+        'state-bar': true,
+        [formatState(task.state).toLowerCase()]: true,
+      }"
+    ></div>
     <div class="content">
       <router-link
-          :to="{
-            name: 'task-detail',
-            query: { testId: task.testId },
-          }"
+        :to="{
+          name: 'task-detail',
+          query: { testId: task.testId },
+        }"
       >
         <div class="content-top">
           <jm-text-viewer :value="task.name" :class="{ title: true }" />
         </div>
       </router-link>
-
       <div class="content-center">
-        <jm-text-viewer class="log" v-for="log of latestlog(task.logs)" :value="`${log}`" />
+        <jm-text-viewer
+          class="log"
+          v-for="(log, index) of latestlog(task.logs)"
+          :key="index"
+          :value="`${log}`"
+        />
       </div>
 
       <div class="content-bottom">
-        <span class="podname">{{task.podName}}</span>
+        <span class="podname">{{ task.podName }}</span>
         <div v-if="task.state == 2" class="operation">
           <jm-tooltip content="停止运行" placement="bottom">
             <button class="cancel" @click="cancelTask(task)"></button>
@@ -34,7 +40,12 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, PropType, SetupContext } from 'vue';
+import {
+  defineComponent,
+  getCurrentInstance,
+  PropType,
+  SetupContext,
+} from 'vue';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ITaskVo } from '@/api/dto/tasks';
 import { TaskStateEnum } from '@/api/dto/enumeration';
@@ -54,15 +65,16 @@ export default defineComponent({
     const cancelTask = async (task: ITaskVo) => {
       try {
         await stopTask(task.id);
-        proxy.$success("stop task success");
+        proxy.$success('stop task success');
       } catch (err) {
         proxy.$throw(err, proxy);
       }
     };
 
-    const formatState = (state: TaskStateEnum): string => TaskStateEnum.toString(state);
+    const formatState = (state: TaskStateEnum): string =>
+      TaskStateEnum.toString(state);
     const latestlog = (log: string[]): string[] => {
-      return log.slice(log.length-3).reverse();
+      return log.slice(log.length - 3).reverse();
     };
     return {
       cancelTask,
@@ -126,12 +138,14 @@ export default defineComponent({
     }
 
     &.running {
-      background-image: repeating-linear-gradient(115deg,
-          #10c2c2 0px,
-          #58d4d4 1px,
-          #58d4d4 10px,
-          #10c2c2 11px,
-          #10c2c2 16px);
+      background-image: repeating-linear-gradient(
+        115deg,
+        #10c2c2 0px,
+        #58d4d4 1px,
+        #58d4d4 10px,
+        #10c2c2 11px,
+        #10c2c2 16px
+      );
       background-size: 106px 114px;
       animation: 3s linear 0s infinite normal none running workflow-running;
     }
@@ -186,14 +200,14 @@ export default defineComponent({
       justify-content: space-between;
 
       .podname {
-      font-size: 10px;
+        font-size: 10px;
       }
       .operation {
         min-height: 26px;
         display: flex;
         align-items: center;
 
-        button+button {
+        button + button {
           margin-left: 20px;
         }
 
@@ -213,24 +227,24 @@ export default defineComponent({
           }
 
           &.cancel {
-            background-image: url('@/assets/svgs/btn/cancel.svg');
+            background-image: url("@/assets/svgs/btn/cancel.svg");
           }
         }
 
         &.webhook {
-          background-image: url('@/assets/svgs/btn/hook.svg');
+          background-image: url("@/assets/svgs/btn/hook.svg");
         }
 
         &.git-label {
-          background-image: url('@/assets/svgs/index/git-label.svg');
+          background-image: url("@/assets/svgs/index/git-label.svg");
         }
 
         &.workflow-label {
-          background-image: url('@/assets/svgs/index/workflow-label.svg');
+          background-image: url("@/assets/svgs/index/workflow-label.svg");
         }
 
         &.pipeline-label {
-          background-image: url('@/assets/svgs/index/pipeline-label.svg');
+          background-image: url("@/assets/svgs/index/pipeline-label.svg");
         }
 
         &.doing {
@@ -261,7 +275,7 @@ export default defineComponent({
 
           width: 24px;
           height: 24px;
-          background-image: url('@/assets/svgs/btn/more2.svg');
+          background-image: url("@/assets/svgs/btn/more2.svg");
           transform: rotate(90deg);
         }
       }

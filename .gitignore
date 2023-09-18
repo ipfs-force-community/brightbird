@@ -5,3 +5,5 @@ __debug_bin
 dist
 node_modules
 web/ui/pkg/*
+web/ui/yarn.lock
+web/ui/package-lock.json
