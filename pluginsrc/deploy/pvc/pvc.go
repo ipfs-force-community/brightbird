@@ -15,6 +15,7 @@ type Config struct {
 }
 
 type RenderParams struct {
+	Name      string
 	NameSpace string
 	UniqueId  string
 }
@@ -40,6 +41,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 	pvc, err := k8sEnv.CreatePvc(ctx, pvcYamlData, RenderParams{
+		Name:      cfg.InstanceName,
 		NameSpace: k8sEnv.NameSpace(),
 		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 	})

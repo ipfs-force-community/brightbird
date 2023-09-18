@@ -37,13 +37,10 @@ type DropletMarketDeployReturn struct { //nolint
 
 type RenderParams struct {
 	Config
-	PieceStores []string
-	NameSpace   string
-	Registry    string
-	Args        []string
-
-	UniqueId string
-	MysqlDSN string
+	NameSpace string
+	Registry  string
+	UniqueId  string
+	MysqlDSN  string
 }
 
 func DefaultConfig() Config {
@@ -72,6 +69,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:    cfg,
 	}
+
 	if cfg.UseMysql {
 		renderParams.MysqlDSN = k8sEnv.FormatMysqlConnection("droplet-market-" + renderParams.UniqueId)
 		err := k8sEnv.ResourceMgr().EnsureDatabase(renderParams.MysqlDSN)
@@ -142,30 +140,62 @@ func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName st
 	return cfg, nil
 }
 
-func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DropletMarketDeployReturn, updateCfg config.MarketConfig) error {
-	cfgData, err := toml.Marshal(updateCfg)
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+}
+
+func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketInstance DropletMarketDeployReturn, piecePvc string) error {
+	//mount
+	statefulset, err := k8sEnv.GetStatefulSet(ctx, marketInstance.StatefulSetName)
 	if err != nil {
 		return err
 	}
-	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	volumes := statefulset.Spec.Template.Spec.Volumes
+	for _, vol := range volumes {
+		if vol.Name == piecePvc {
+			return fmt.Errorf("piece pvc %s exist", piecePvc)
+		}
+	}
+
+	volumes = append(volumes, corev1.Volume{
+		Name: piecePvc,
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: piecePvc,
+			},
+		},
+	})
+	statefulset.Spec.Template.Spec.Volumes = volumes
+	statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulset.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      piecePvc,
+		MountPath: "/piece/" + piecePvc,
+	})
+	//restart
+	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
 	if err != nil {
 		return err
 	}
 
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	svc, err := k8sEnv.GetSvc(ctx, marketInstance.SVCName)
 	if err != nil {
-		return nil
+		return err
+	}
+	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
+	if err != nil {
+		return err
+	}
+
+	//write config
+	pods, err := GetPods(ctx, k8sEnv, marketInstance.InstanceName)
+	if err != nil {
+		return err
 	}
 	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-market/config.toml")
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "/bin/bash", "-c", fmt.Sprintf("./droplet piece-storage add-fs --name %s --path %s", piecePvc, "/piece/"+piecePvc))
 		if err != nil {
 			return err
 		}
 	}
 
-	return k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
-}
-
-func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return nil
 }

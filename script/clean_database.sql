@@ -17,7 +17,7 @@ read_loop: LOOP
           LEAVE read_loop;
 END IF;
 
-        SET @query = CONCAT('DROP DATABASE `',dbname, '`');
+SET @query = CONCAT('DROP DATABASE `',dbname, '`');
 PREPARE stmt FROM @query;
 EXECUTE stmt;
 END LOOP;
