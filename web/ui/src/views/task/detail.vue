@@ -1,11 +1,16 @@
 <template>
-    <div class="nav">
+  <div class="nav">
     <button class="jm-icon-button-left" @click="goBack"></button>
-   </div>
+  </div>
   <div class="task-detail" v-loading="loading">
     <div class="task-list">
-      <div class="task-item" v-for="pod in podList" :key="pod" @click="selectTask(pod)"
-        :class="{ 'selected': selectedPod && selectedPod === pod }">
+      <div
+        class="task-item"
+        v-for="pod in podList"
+        :key="pod"
+        @click="selectTask(pod)"
+        :class="{ selected: selectedPod && selectedPod === pod }"
+      >
         {{ pod }}
       </div>
     </div>
@@ -15,8 +20,15 @@
       </div>
       <div v-else>
         <div class="pod-log-header">{{ selectedPod }} Logs</div>
-        <el-collapse v-if="selectedPod.indexOf('test-runner') > -1" class="pod-log  pod-height">
-          <el-collapse-item v-for="step,index in podLog?.steps" :key="index" class="step-header">
+        <el-collapse
+          v-if="selectedPod.indexOf('test-runner') > -1"
+          class="pod-log pod-height"
+        >
+          <el-collapse-item
+            v-for="(step, index) in podLog?.steps"
+            :key="index"
+            class="step-header"
+          >
             <template #title>
               <div class="header-title">
                 <el-icon v-if="step.state == StepStateEnum.Success" size="20">
@@ -27,7 +39,10 @@
                   <CircleCloseFilled color="rgb(255, 168, 168)" />
                 </el-icon>
 
-                <el-icon v-if="step.state == StepStateEnum.NotRunning" size="20">
+                <el-icon
+                  v-if="step.state == StepStateEnum.NotRunning"
+                  size="20"
+                >
                   <RemoveFilled color="gray" />
                 </el-icon>
 
@@ -39,19 +54,39 @@
               </div>
             </template>
             <div class="steps">
-              <el-text class="step-item" size="small" tag="p" v-for="log,index in step.logs" :key="index"> {{ log }} </el-text>
+              <el-text
+                class="step-item"
+                size="small"
+                tag="p"
+                v-for="(log, index) in step.logs"
+                :key="index"
+              >
+                {{ log }}
+              </el-text>
             </div>
           </el-collapse-item>
         </el-collapse>
-        <el-input v-else class="pod-log pod-height" v-model="podLogString" aria-readonly="true" :autosize="{ minRows: 2 }"
-          type="textarea" />
+        <el-input
+          v-else
+          class="pod-log pod-height"
+          v-model="podLogString"
+          aria-readonly="true"
+          :autosize="{ minRows: 2 }"
+          type="textarea"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, onMounted, provide, ref } from 'vue';
+import {
+  defineComponent,
+  getCurrentInstance,
+  onMounted,
+  provide,
+  ref,
+} from 'vue';
 import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
@@ -92,7 +127,10 @@ export default defineComponent({
     const selectTask = async (podName: string) => {
       try {
         selectedPod.value = podName;
-        podLog.value = await getPodLog({ podName: podName, testID: props.testId });
+        podLog.value = await getPodLog({
+          podName: podName,
+          testID: props.testId,
+        });
       } catch (error) {
         console.error(error);
       }
@@ -129,12 +167,19 @@ export default defineComponent({
     const loadFirstPodLog = async () => {
       if (podList.value.length > 0) {
         selectedPod.value = podList.value[0];
-        podLog.value = await getPodLog({ podName:selectedPod.value, testID:props.testId });
+        podLog.value = await getPodLog({
+          podName: selectedPod.value,
+          testID: props.testId,
+        });
       }
     };
 
     const goBack = () => {
-      router.back();
+      if (history.state.back) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     };
 
     onMounted(async () => {
@@ -193,7 +238,6 @@ export default defineComponent({
     }
   }
 }
-
 
 .task-detail {
   padding-top: 74px;
@@ -293,6 +337,7 @@ export default defineComponent({
         .step-item {
           padding-left: 10px;
           word-break: break-word;
+          padding-right: 20px;
         }
       }
     }
@@ -309,4 +354,5 @@ export default defineComponent({
       }
     }
   }
-}</style>
+}
+</style>
