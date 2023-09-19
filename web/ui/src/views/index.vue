@@ -8,7 +8,7 @@
         <div class="right-area">
           <ElButton plain>
             <router-link
-              :to="{ path: 'test-flow', query: {}, hash: '#manager' }"
+              :to="{ path: 'test-flow', query: {}, hash: '#job' }"
             >
               测试流管理
             </router-link>

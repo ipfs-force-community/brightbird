@@ -293,6 +293,7 @@ export default defineComponent({
         .step-item {
           padding-left: 10px;
           word-break: break-word;
+          padding-right: 20px;
         }
       }
     }

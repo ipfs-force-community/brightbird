@@ -14,10 +14,7 @@
         <div class="title">
           <div class="left">
             <div class="group-name">
-              <router-link
-                :to="{ path: `/project-group/detail/${testflowGroup?.id}` }"
-                >{{ testflowGroup?.name }}
-              </router-link>
+              {{ testflowGroup?.name }}
               <div class="description">
                 {{ ('('+ (testflowGroup?.description || '无') + ')' )  }}
               </div>
@@ -310,64 +307,64 @@ export default defineComponent({
   margin-top: 24px;
 
   .prefix-wrapper {
-    cursor: not-allowed;
     display: flex;
     align-items: center;
+    cursor: not-allowed;
   }
 
   .prefix {
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.1s linear;
     color: #6b7b8d;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.1s linear;
 
     &[disabled="true"] {
-      pointer-events: none;
       color: #a7b0bb;
+      pointer-events: none;
     }
 
     &.rotate {
-      transform: rotate(90deg);
       transition: all 0.1s linear;
+      transform: rotate(90deg);
     }
   }
 
   .title {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     .left {
-      margin-left: 10px;
-      font-size: 18px;
-      font-weight: bold;
-      color: #082340;
       display: flex;
-      justify-content: space-between;
       align-items: flex-end;
+      justify-content: space-between;
+      margin-left: 10px;
       padding-right: 0.7%;
+      color: #082340;
+      font-weight: bold;
+      font-size: 18px;
 
       .group-name {
         display: flex;
         align-items: center;
         .description {
           padding-left: 12px;
-          font-size: 14px;
-          font-weight: normal;
           color: #082340;
+          font-weight: normal;
+          font-size: 14px;
           opacity: 0.46;
         }
       }
       .more-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
         width: 86px;
         height: 24px;
-        background: #eff7ff;
         border-radius: 15px;
-        font-size: 12px;
+        background: #eff7ff;
         font-weight: 400;
+        font-size: 12px;
         cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
 
         a {
           color: #6b7b8d;
@@ -375,15 +372,15 @@ export default defineComponent({
         }
 
         .more-icon {
-          display: inline-block;
-          width: 12px;
-          height: 12px;
-          text-align: center;
-          line-height: 12px;
-          background: url("@/assets/svgs/btn/more.svg") no-repeat;
           position: relative;
           top: 1.4px;
           right: 0px;
+          display: inline-block;
+          width: 12px;
+          height: 12px;
+          background: url("@/assets/svgs/btn/more.svg") no-repeat;
+          text-align: center;
+          line-height: 12px;
         }
 
         &:hover {
@@ -403,14 +400,14 @@ export default defineComponent({
     .right {
       display: flex;
       margin-left: 12px;
-      font-size: 14px;
-      font-weight: normal;
       color: #082340;
+      font-weight: normal;
+      font-size: 14px;
       opacity: 0.46;
 
       .operation {
-            margin-left: 5px;
             display: flex;
+            margin-left: 5px;
 
             .op-item {
               width: 22px;
@@ -419,8 +416,8 @@ export default defineComponent({
               cursor: pointer;
 
               &:active {
-                background-color: #eff7ff;
                 border-radius: 4px;
+                background-color: #eff7ff;
               }
 
               &.edit {
@@ -451,30 +448,30 @@ export default defineComponent({
         background-color: transparent;
 
         &::after {
-          content: "";
-          width: 60%;
-          height: 100%;
-          box-sizing: border-box;
-          border: 2px solid #096dd9;
-          background: rgba(9, 109, 217, 0.3);
           position: absolute;
           top: 0;
           left: 20%;
+          box-sizing: border-box;
+          width: 60%;
+          height: 100%;
+          border: 2px solid #096dd9;
+          background: rgba(9, 109, 217, 0.3);
+          content: "";
         }
       }
     }
 
     .list {
-      width: 100%;
       display: flex;
       flex-wrap: wrap;
+      width: 100%;
     }
   }
 
   .load-more {
-    margin: 10px auto 0px;
     display: flex;
     justify-content: center;
+    margin: 10px auto 0px;
   }
 }
 </style>

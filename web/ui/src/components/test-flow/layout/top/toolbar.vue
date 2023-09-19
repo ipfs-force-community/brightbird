@@ -3,17 +3,17 @@
     <div class="left">
       <button class="jm-icon-button-left" @click="goBack"></button>
       <div class="tabs">
-        <div @click="testClick" :class="{ tab: true, active: active }">
-          测试流管理
-        </div>
-        <div @click="jobClick" :class="{ tab: true, active: !active }">
+        <div @click="jobClick" :class="{ tab: true, active: active }">
           Job管理
+        </div>
+        <div @click="testClick" :class="{ tab: true, active: !active }">
+          测试流管理
         </div>
       </div>
     </div>
     <div class="right">
-      <ElButton @click="onNewGroup" v-if="active" type="primary">添加分组</ElButton>
-      <ElButton @click="onNewJob" v-if="!active" type="primary">新建Job</ElButton>
+      <ElButton @click="onNewJob" v-if="active" type="primary">新建Job</ElButton>
+      <ElButton @click="onNewGroup" v-if="!active" type="primary">添加分组</ElButton>
     </div>
   </div>
 </template>
@@ -30,10 +30,11 @@ export default {
     const route = useRoute();
     const active = ref<boolean>(true);
     if (route.hash.includes('job')) {
-      active.value = false;
+      active.value = true;
     }
     const goBack = () => {
-      router.back();
+    
+      router.push('/');
     };
     const testClick = () => {
       active.value = true;
