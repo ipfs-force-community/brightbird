@@ -4,7 +4,6 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"time"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
@@ -88,7 +87,7 @@ sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
 sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
 cp config ./damocles-worker/config
 sed -i "28 i\COPY ./config /usr/local/cargo/config" damocles-worker/Dockerfile
-make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+make docker-push-manager TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
 }
@@ -165,7 +164,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	time.Sleep(5000000000 * time.Second)
 
 	return &DamoclesManagerReturn{
 		VConfig: cfg.VConfig,
@@ -216,7 +214,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 		}
 	}
 
-	err = k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
 	if err != nil {
 		return err
 	}
