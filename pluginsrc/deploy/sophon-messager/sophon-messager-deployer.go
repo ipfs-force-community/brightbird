@@ -182,7 +182,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMessag
 			return err
 		}
 	}
-	err = k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
 	if err != nil {
 		return err
 	}

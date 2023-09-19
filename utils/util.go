@@ -62,3 +62,17 @@ func HasDupItemInArrary(arr []string) bool {
 	}
 	return false
 }
+
+func DistinctArrary(arr []string) []string {
+	var result []string
+	filter := make(map[string]struct{})
+	for _, v := range arr {
+		_, ok := filter[v]
+		if !ok {
+			filter[v] = struct{}{}
+			result = append(result, v)
+			continue
+		}
+	}
+	return result
+}
