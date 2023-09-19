@@ -1,6 +1,7 @@
 package venus
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
@@ -17,16 +18,19 @@ func TestVenusHADeployer_YAML_Check(t *testing.T) {
 		UniqueId: "abc",
 		Config: Config{
 			VConfig: VConfig{
-				Replicas:       1,
-				AuthUrl:        "http://127.0.0.1:8989",
-				AdminToken:     "token",
-				BootstrapPeers: []string{"/ip4/127.0.0.1/tcp/130"},
+				Replicas:        1,
+				AuthUrl:         "http://127.0.0.1:8989",
+				AdminToken:      "token",
+				BootstrapPeers:  []string{"/ip4/127.0.0.1/tcp/130"},
+				SnapshotStorage: "shared-dir-v",
+				GenesisStorage:  "shared-dir-v",
 			},
 		},
 	}
 	data, err := env.QuickRender(f, renderParams)
 	assert.NoError(t, err)
 
+	fmt.Println(string(data))
 	statefulSet := &appv1.StatefulSet{}
 	err = yaml_k8s.Unmarshal(data, statefulSet)
 	assert.NoError(t, err)

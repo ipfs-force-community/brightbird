@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: damocles-manager-cfg-{{.UniqueId}}
+  name: damocles-manager-exist-cfg-{{.UniqueId}}
 data:
   sector-manager.cfg: |
     # Default config:
@@ -22,18 +22,13 @@ data:
     [Common.PieceStores.Meta]
     #SomeKey = "SomeValue"
 {{ end }}
-{{ range $index, $value := .PersistStores }}
     [[Common.PersistStores]]
-    Name = "{{$value}}"
-    Path = "/persist/{{$value}}"
+    Name = "a"
+    Path = "/shared-dir/minerstorage"
     Strict = false
     ReadOnly = false
     Weight = 0
-    AllowMiners = []
-    #DenyMiners = [3, 4]
-    #Plugin = ""
-    #PluginName = "s3store"
-{{ end }}
+    AllowMiners = [{{.MinerAddress}}]
     [Common.PersistStores.Meta]
     #SomeKey = "SomeValue"
 

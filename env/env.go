@@ -18,7 +18,6 @@ import (
 	"time"
 
 	"github.com/ipfs-force-community/brightbird/types"
-
 	"github.com/ipfs-force-community/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
 	"google.golang.org/appengine"

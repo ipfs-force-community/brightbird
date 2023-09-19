@@ -36,6 +36,7 @@ require (
 	github.com/ipfs-force-community/sophon-messager v1.12.0
 	github.com/ipfs-force-community/sophon-miner v1.12.0
 	github.com/ipfs/go-cid v0.3.2
+	github.com/ipfs/go-cidutil v0.1.0
 	github.com/ipfs/go-log/v2 v2.5.1
 	github.com/json-iterator/go v1.1.12
 	github.com/libp2p/go-libp2p v0.23.4
@@ -43,6 +44,7 @@ require (
 	github.com/mittwald/goharbor-client/v5 v5.3.1
 	github.com/modern-go/reflect2 v1.0.2
 	github.com/multiformats/go-multiaddr v0.8.0
+	github.com/multiformats/go-multibase v0.1.1
 	github.com/naoina/toml v0.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.23.0
@@ -239,7 +241,6 @@ require (
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.1.0 // indirect
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
-	github.com/multiformats/go-multibase v0.1.1 // indirect
 	github.com/multiformats/go-multicodec v0.8.0 // indirect
 	github.com/multiformats/go-multihash v0.2.1 // indirect
 	github.com/multiformats/go-varint v0.0.6 // indirect

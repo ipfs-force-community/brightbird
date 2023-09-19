@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: damocles-manager-exist-{{.UniqueId}}
+spec:
+  replicas: 1
+  serviceName: damocles-manager-exist-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: damocles-manager-exist-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: damocles-manager-exist-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "[ -d \".damocles-manager\" ]||(mkdir -p /root/.damocles-manager && cp /root/sector-manager.tmp /root/.damocles-manager/sector-manager.cfg);"]
+          volumeMounts:
+            - mountPath: /root
+              name: damocles-pvc
+            - name: sector-manager-cfg
+              mountPath: "/root/sector-manager.tmp"
+              subPath: "sector-manager.cfg"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+        - name: init-storage-attach
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-manager:{{.CodeVersion}}"
+          command: ['sh', '-c', "damocles-manager util storage attach --verbose --name=a -v /shared-dir/minerstorage"]
+          volumeMounts:
+            - mountPath: /root
+              name: damocles-pvc
+            - name: sector-manager-cfg
+              mountPath: "/root/sector-manager.tmp"
+              subPath: "sector-manager.cfg"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+            - mountPath: /shared-dir/minerstorage
+              name: shared-dir-v
+              subPath: minerstorage
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: {{$value}}
+{{ end }}
+{{ range $index, $value := .PersistStores }}
+            - mountPath: /persist/{{$value}}
+              name: {{$value}}
+{{ end }}
+      containers:
+        - name: damocles-manager-exist-{{.UniqueId}}
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-manager:{{.CodeVersion}}"
+          args: ['daemon', 'run', '--miner', '--listen', '0.0.0.0:1789']
+          env:
+            - name: FIL_PROOFS_PARAMETER_CACHE
+              value: "/shared-dir/filecoin-proof-parameters"
+          ports:
+            - containerPort: 1789
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: damocles-pvc
+            - name: sector-manager-cfg
+              mountPath: "/root/sector-manager.tmp"
+              subPath: "sector-manager.cfg"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+            - mountPath: /shared-dir/minerstorage
+              name: shared-dir-v
+              subPath: minerstorage
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: {{$value}}
+{{ end }}
+{{ range $index, $value := .PersistStores }}
+            - mountPath: /persist/{{$value}}
+              name: {{$value}}
+{{ end }}
+      volumes:
+        - name: sector-manager-cfg
+          configMap:
+            name: damocles-manager-exist-cfg-{{.UniqueId}}
+            items:
+              - key: sector-manager.cfg
+                path: sector-manager.cfg
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+{{ range $index, $value := .MountStorages }}
+        - name: {{$value}}
+          persistentVolumeClaim:
+            claimName: {{$value}}
+{{ end }}
+  volumeClaimTemplates:
+    - metadata:
+        name: damocles-pvc # name+podname
+        labels:
+          app: damocles-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 300Mi

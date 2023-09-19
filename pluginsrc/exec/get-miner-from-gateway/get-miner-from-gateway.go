@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/filecoin-project/go-address"
-
 	v2API "github.com/filecoin-project/venus/venus-shared/api/gateway/v2"
+	logging "github.com/ipfs/go-log/v2"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
@@ -14,6 +14,8 @@ import (
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
+
+var log = logging.Logger("get-miner-from-venus")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -44,12 +46,12 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return err
 	}
 
-	fmt.Println("全部的miner列表:")
+	log.Debugln("全部的miner列表:")
 	for _, miner := range minerList {
-		fmt.Println(miner)
 		if miner == params.Miner {
 			return nil
 		}
 	}
-	return fmt.Errorf("miner %s not found", params.Miner)
+	log.Errorln("miner %s not found", params.Miner)
+	return err
 }
