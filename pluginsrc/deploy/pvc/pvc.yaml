@@ -1,7 +1,7 @@
 kind: mk
 apiVersion: v1
 metadata:
-  name: pvc-{{.UniqueId}}
+  name: pvc-{{.Name}}-{{.UniqueId}}
   namespace: {{.NameSpace}}
 spec:
   storageClassName: nfs-client

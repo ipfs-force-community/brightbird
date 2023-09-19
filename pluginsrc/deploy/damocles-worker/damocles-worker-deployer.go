@@ -87,7 +87,7 @@ sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
 sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
 cp config ./damocles-worker/config
 sed -i "28 i\COPY ./config /usr/local/cargo/config" damocles-worker/Dockerfile
-make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+make docker-push-worker TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
 }

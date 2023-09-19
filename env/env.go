@@ -266,20 +266,25 @@ func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args an
 	}
 }
 
-func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, stateName string) error {
+func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, statefulset *appv1.StatefulSet) error {
+	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
+	log.Infof("Try to update %s ", statefulset.GetName())
+	_, err := statefulSetClient.Update(ctx, statefulset, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("update statefulset(%s) %w", statefulset.GetName(), err)
+	}
+	log.Infof("Updated statefulSet %s.", statefulset.GetName())
+	return nil
+}
+
+func (env *K8sEnvDeployer) UpdateStatefulSetsByName(ctx context.Context, stateName string) error {
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
 	statefulSet, err := statefulSetClient.Get(ctx, stateName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("get statefulset(%s) fail %w", stateName, err)
 	}
 
-	log.Infof("Try to update %s ", stateName)
-	_, err = statefulSetClient.Update(ctx, statefulSet, metav1.UpdateOptions{})
-	if err != nil {
-		return fmt.Errorf("update statefulset(%s) %w", stateName, err)
-	}
-	log.Infof("Updated statefulSet %s.", stateName)
-	return nil
+	return env.UpdateStatefulSets(ctx, statefulSet)
 }
 
 func (env *K8sEnvDeployer) DeletePodAndWait(ctx context.Context, podName string) error {

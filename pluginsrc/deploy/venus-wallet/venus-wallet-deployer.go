@@ -142,7 +142,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params VenusWalletR
 			return err
 		}
 	}
-	return k8sEnv.UpdateStatefulSets(ctx, params.StatefulSetName)
+	return k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {

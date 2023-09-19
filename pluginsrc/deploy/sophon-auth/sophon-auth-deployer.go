@@ -205,7 +205,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams Sophon
 		}
 	}
 
-	err = k8sEnv.UpdateStatefulSets(ctx, deployParams.StatefulSetName)
+	err = k8sEnv.UpdateStatefulSetsByName(ctx, deployParams.StatefulSetName)
 	if err != nil {
 		return err
 	}
