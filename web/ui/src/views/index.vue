@@ -6,47 +6,22 @@
           <div>BrightBird</div>
         </div>
         <div class="right-area">
-          <!-- <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
-            <div class="btn-item">
-              <button class="workflow-list"></button>
-              <span class="text">测试流管理</span>
-            </div>
-          </router-link>
-          <router-link :to="{ name: 'workflow-list' }">
-            <div class="btn-item">
-              <button class="workflow-list"></button>
-              <span class="text">测试流列表</span>
-            </div>
-          </router-link>
-          <router-link :to="{ name: 'job' }">
-            <div class="btn-item">
-              <button class="job"></button>
-              <span class="text">Job管理</span>
-            </div>
-          </router-link>
-          <router-link :to="{ name: 'project-group' }">
-            <div class="btn-item">
-              <button class="group"></button>
-              <span class="text">分组管理</span>
-            </div>
-          </router-link> -->
-
-          <router-link :to="{ path: 'test-flow',query:{},hash: '#manager' }">
-            <div class="btn-item">
-              <!-- <button class="workflow-list"></button> -->
-              <span class="text">测试流管理</span>
-            </div>
-          </router-link>
-          <router-link :to="{ name: 'create-pipeline' }">
-            <div class="btn-item">
-              <!-- <button class="graph"></button> -->
-              <span class="text">开启工作</span>
-            </div>
-          </router-link>
+          <ElButton plain>
+            <router-link
+              :to="{ path: 'test-flow', query: {}, hash: '#manager' }"
+            >
+              测试流管理
+            </router-link>
+          </ElButton>
+          <ElButton plain>
+            <router-link :to="{ name: 'create-pipeline' }">
+              开启工作
+            </router-link>
+          </ElButton>
         </div>
       </div>
       <div class="charts">
-        <DashBoard/>
+        <DashBoard />
       </div>
     </div>
     <bottom-nav />
@@ -59,10 +34,10 @@ import BottomNav from '@/views/nav/bottom2.vue';
 import AllProject from '@/views/index/all-project.vue';
 import SearchProject from '@/views/index/search-project.vue';
 import DashBoard from '@/components/charts/dashboard.vue';
-
+import { ElButton } from 'element-plus';
 export default defineComponent({
   // eslint-disable-next-line vue/no-unused-components
-  components: { AllProject, SearchProject, BottomNav, DashBoard },
+  components: { AllProject, SearchProject, BottomNav, DashBoard, ElButton },
   props: {
     searchName: {
       type: String,
@@ -121,32 +96,31 @@ export default defineComponent({
           cursor: pointer;
 
           &.graph {
-            background-image: url('@/assets/svgs/index/graph-project-btn.svg');
+            background-image: url("@/assets/svgs/index/graph-project-btn.svg");
           }
 
           &.code {
-            background-image: url('@/assets/svgs/index/code-project-btn.svg');
+            background-image: url("@/assets/svgs/index/code-project-btn.svg");
           }
 
           &.git {
-            background-image: url('@/assets/svgs/index/git-btn.svg');
+            background-image: url("@/assets/svgs/index/git-btn.svg");
           }
 
           &.plugin-library {
-            background-image: url('@/assets/svgs/index/node-library-btn.svg');
+            background-image: url("@/assets/svgs/index/node-library-btn.svg");
           }
 
-
           &.job {
-            background-image: url('@/assets/svgs/index/code-project-btn.svg');
+            background-image: url("@/assets/svgs/index/code-project-btn.svg");
           }
 
           &.group {
-            background-image: url('@/assets/svgs/index/group-btn.svg');
+            background-image: url("@/assets/svgs/index/group-btn.svg");
           }
 
           &.workflow-list {
-            background-image: url('@/assets/svgs/process-template/process-template.svg');
+            background-image: url("@/assets/svgs/process-template/process-template.svg");
           }
         }
 
