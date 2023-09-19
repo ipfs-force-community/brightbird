@@ -75,11 +75,11 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	}
 
 	if len(incomineCfg.GenesisStorage) > 0 {
-		args = append(args, "--genesisfile=/root/genesis/devgen.car")
+		args = append(args, "--genesisfile=/root/devgen/devgen.car")
 	}
 
 	if len(incomineCfg.SnapshotStorage) > 0 {
-		args = append(args, "--import-snapshot=/root/genesis/snapshot.car")
+		args = append(args, "--import-snapshot=/root/snapshop/snapshot.car")
 	}
 	renderParams.Args = args
 

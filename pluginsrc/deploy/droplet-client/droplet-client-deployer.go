@@ -7,6 +7,7 @@ import (
 
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	types2 "github.com/ipfs-force-community/brightbird/types"
+	logging "github.com/ipfs/go-log/v2"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/version"
@@ -14,6 +15,8 @@ import (
 	"github.com/pelletier/go-toml/v2"
 	corev1 "k8s.io/api/core/v1"
 )
+
+var log = logging.Logger("droplet-client-deployer")
 
 type Config struct {
 	env.BaseConfig
@@ -32,6 +35,7 @@ type VConfig struct {
 type DropletClientDeployReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
+	ClientToken string
 }
 
 type RenderParams struct {
@@ -104,6 +108,20 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
+
+	pods, err := GetPods(ctx, k8sEnv, cfg.InstanceName)
+	if err != nil {
+		return nil, fmt.Errorf("get pods fail %w", err)
+	}
+
+	clientToken, err := k8sEnv.ReadSmallFilelInPod(ctx, pods[0].GetName(), "/root/.droplet-client/token")
+	if err != nil {
+		return nil, fmt.Errorf("read token fail %w", err)
+	}
+
+	log.Infof("get droplet client token %s", string(clientToken))
+	log.Debugln("statefulset is", statefulSet.GetName())
+
 	return &DropletClientDeployReturn{
 		VConfig: cfg.VConfig,
 		CommonDeployParams: env.CommonDeployParams{
@@ -114,6 +132,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 			SVCName:         svc.GetName(),
 			SvcEndpoint:     svcEndpoint,
 		},
+		ClientToken: string(clientToken),
 	}, nil
 }
 

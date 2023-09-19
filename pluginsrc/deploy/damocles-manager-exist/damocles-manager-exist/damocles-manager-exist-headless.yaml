@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: damocles-manager-exist-{{.UniqueId}}-svc
+spec:
+  clusterIP: None
+  selector:
+    app: damocles-manager-exist-{{.UniqueId}}-pod
+  ports:
+    - protocol: TCP
+      port: 1789

@@ -46,14 +46,18 @@ spec:
             - mountPath: /root
               name: venus-pvc
 {{if gt (len .GenesisStorage) 0}}
-            - mountPath: /root/genesis/devgen.car
+            - mountPath: /root/devgen
               name: {{.GenesisStorage}}
-              subPath: devgen.car
+{{if eq .GenesisStorage "shared-dir-v"}}          
+              subPath: {{.NameSpace}}
+{{end}}
 {{end}}
 {{if gt (len .SnapshotStorage) 0}}
-            - mountPath: /root/genesis/snapshot.car
+            - mountPath: /root/snapshop
               name: {{.SnapshotStorage}}
-              name: snapshot.car
+{{if eq .SnapshotStorage "shared-dir-v"}}          
+              subPath: {{.NameSpace}}
+{{end}}
 {{end}}
             - name: venushacfg
               mountPath: "/root/config.tmp"
@@ -68,12 +72,12 @@ spec:
         - name: shared-dir-v
           persistentVolumeClaim:
             claimName: shared-dir
-{{if gt (len .GenesisStorage) 0}}
+{{if and (gt (len .GenesisStorage) 0) (ne .GenesisStorage "shared-dir-v") }}
         - name: {{.GenesisStorage}}
           persistentVolumeClaim:
             claimName: {{.GenesisStorage}}
 {{end}}
-{{if gt (len .SnapshotStorage) 0}}
+{{if and (gt (len .GenesisStorage) 0) (ne .GenesisStorage "shared-dir-v") }}
         - name: {{.SnapshotStorage}}
           persistentVolumeClaim:
             claimName: {{.SnapshotStorage}}

@@ -223,7 +223,7 @@ func RegisterTestFlowRouter(ctx context.Context, v1group *V1RouterGroup, service
 			return
 		}
 
-		err := service.Copy(ctx, copyTestflow.ID, copyTestflow.Name)
+		err := service.Copy(ctx, copyTestflow.ID, copyTestflow.Name, copyTestflow.GroupId)
 		if err != nil {
 			c.Error(err) //nolint
 			return
