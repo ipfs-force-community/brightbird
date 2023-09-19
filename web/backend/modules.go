@@ -19,11 +19,7 @@ import (
 )
 
 func UseProxy(cfg config.Config) error {
-	err := os.Setenv("ALL_PROXY", cfg.Proxy)
-	if err != nil {
-		return err
-	}
-	err = os.Setenv("HTTP_PROXY", cfg.Proxy)
+	err := os.Setenv("HTTP_PROXY", cfg.Proxy)
 	if err != nil {
 		return err
 	}

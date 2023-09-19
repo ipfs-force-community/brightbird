@@ -70,25 +70,11 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	envCtx.CurrentContext = pip.InstanceName
 	envCtx.Nodes[pip.InstanceName] = currentCtx
 
-	envCtxBytes, err := json.Marshal(envCtx)
-	if err != nil {
-		return fmt.Errorf("resolve %s input fail %w", pip.InstanceName, err)
-	}
-	log.Debugf("env context %w", string(envCtxBytes))
-	log.Debugf("input %s", string(pip.Input))
-
+	var err error
 	currentCtx.Input, err = resolveInputValue(envCtx, jsonschema.Schema(pluginDef.InputSchema), pip.Input, codeVersion, pip.InstanceName)
 	if err != nil {
 		return fmt.Errorf("resolve %s input fail %w", pip.InstanceName, err)
 	}
-
-	// standard input, standard output, and standard error.
-	stdInR, stdInW, err := os.Pipe()
-	if err != nil {
-		return err
-	}
-	stdOut := bytes.NewBuffer(nil)
-	stdErr := bytes.NewBuffer(nil)
 
 	//write init params
 	initParams := plugin.InitParams{
@@ -102,27 +88,24 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 
 	log.Debugf("invoke plugin %s params %s", pip.InstanceName, string(initData))
 
+	inputBuf := bytes.NewBuffer(initData)
+	_, err = inputBuf.Write([]byte{'\n'})
+	if err != nil {
+		return err
+	}
+
+	stdOut := bytes.NewBuffer(nil)
+	stdErr := bytes.NewBuffer(nil)
 	cmd := exec.Command(pluginPath)
 	cmd.Env = os.Environ()
-	cmd.Stdin = stdInR
+	cmd.Stdin = inputBuf
 	cmd.Stdout = io.MultiWriter(os.Stdout, stdOut)
 	cmd.Stderr = io.MultiWriter(os.Stderr, stdErr)
-
-	_, err = stdInW.Write(initData)
-	if err != nil {
-		return err
-	}
-	_, err = stdInW.Write([]byte{'\n'})
-	if err != nil {
-		return err
-	}
 
 	err = cmd.Run()
 	if err != nil {
 		return fmt.Errorf("exec plugin %s fail err(%v) stderr(%s)", pip.InstanceName, err, stdErr.String())
 	}
-
-	stdInW.Close() //nolint
 
 	result := plugin.GetLastJSON(stdOut.String())
 

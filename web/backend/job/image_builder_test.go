@@ -55,3 +55,23 @@ exit(1)
 		assert.NotNil(t, err)
 	})
 }
+
+func Test_ToHttps(t *testing.T) {
+	t.Run("correct", func(t *testing.T) {
+		httpfmt, err := toHTTPFormat("git@github.com:ipfs-force-community/damocles.git")
+		assert.Nil(t, err)
+		assert.Equal(t, "https://github.com/ipfs-force-community/damocles.git", httpfmt)
+	})
+
+	t.Run("alread http", func(t *testing.T) {
+		httpfmt, err := toHTTPFormat("https://github.com/ipfs-force-community/damocles.git")
+		assert.Nil(t, err)
+		assert.Equal(t, "https://github.com/ipfs-force-community/damocles.git", httpfmt)
+	})
+}
+
+func Test_ToSSH(t *testing.T) {
+	httpfmt, err := toSSHFormat("https://github.com/ipfs-force-community/damocles.git")
+	assert.Nil(t, err)
+	assert.Equal(t, "git@github.com:ipfs-force-community/damocles.git", httpfmt)
+}

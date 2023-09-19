@@ -7,7 +7,6 @@ RUN apt-get update && \
 
 RUN apt install openssl -y
 RUN apt install ca-certificates -y
-RUN apt install mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl clang build-essential hwloc libhwloc-dev wget -y
 RUN apt install libssl-dev -y
 
 # copy the app from build env

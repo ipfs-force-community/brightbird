@@ -1,0 +1,90 @@
+
+[[Miners]]
+Actor = {{.MinerActor}}
+
+[Miners.Sector]
+InitNumber = 0
+MinNumber = 0
+MaxNumber = 200
+Enabled = true
+EnableDeals = true
+LifetimeDays = 540
+Verbose = false
+
+[Miners.Commitment]
+Confidence = 10
+[Miners.Commitment.Pre]
+Sender = "{{.SenderWalletAddress}}" 
+SendFund = {{.SendFund}}
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+#MaxFeeCap = ""
+
+[Miners.Commitment.Pre.Batch]
+Enabled = false
+Threshold = 16
+MaxWait = "1h0m0s"
+CheckInterval = "1m0s"
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+MaxFeeCap = ""
+
+[Miners.Commitment.Prove]
+Sender = "{{.SenderWalletAddress}}" 
+SendFund = {{.SendFund}}
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+#MaxFeeCap = ""
+
+[Miners.Commitment.Prove.Batch]
+Enabled = false
+Threshold = 16
+MaxWait = "1h0m0s"
+CheckInterval = "1m0s"
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+#MaxFeeCap = ""
+
+[Miners.Commitment.Terminate]
+Sender = "{{.SenderWalletAddress}}"
+SendFund = {{.SendFund}}
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+MaxFeeCap = ""
+
+[Miners.Commitment.Terminate.Batch]
+Enabled = false
+Threshold = 5
+MaxWait = "1h0m0s"
+CheckInterval = "1m0s"
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+#MaxFeeCap = ""
+
+[Miners.PoSt]
+Sender = "{{.SenderWalletAddress}}" 
+Enabled = true
+StrictCheck = true
+Parallel = false
+GasOverEstimation = 1.2
+GasOverPremium = 0.0
+GasFeeCap = "5 nanoFIL"
+#MaxFeeCap = ""
+Confidence = 10
+SubmitConfidence = 0
+ChallengeConfidence = 0
+MaxRecoverSectorLimit = 0
+MaxPartitionsPerPoStMessage = 0
+MaxPartitionsPerRecoveryMessage = 0
+
+[Miners.Proof]
+Enabled = true
+
+[Miners.Sealing]
+SealingEpochDuration = 0

@@ -45,6 +45,9 @@ spec:
               subPath: {{.NameSpace}}
             - mountPath: /root
               name: venus-pvc
+            - name: venushacfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.json"
 {{if gt (len .GenesisStorage) 0}}
             - mountPath: /root/devgen
               name: {{.GenesisStorage}}
@@ -59,9 +62,6 @@ spec:
               subPath: {{.NameSpace}}
 {{end}}
 {{end}}
-            - name: venushacfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.json"
       volumes:
         - name: venushacfg
           configMap:
@@ -77,7 +77,7 @@ spec:
           persistentVolumeClaim:
             claimName: {{.GenesisStorage}}
 {{end}}
-{{if and (gt (len .GenesisStorage) 0) (ne .GenesisStorage "shared-dir-v") }}
+{{if and (gt (len .SnapshotStorage) 0) (ne .SnapshotStorage "shared-dir-v") }}
         - name: {{.SnapshotStorage}}
           persistentVolumeClaim:
             claimName: {{.SnapshotStorage}}

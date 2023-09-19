@@ -80,8 +80,7 @@ type K8sInitParams struct {
 	MysqlConnTemplate string `json:"mysqlConnTemplate"`
 }
 
-// NewK8sEnvDeployer create a new test environment
-func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
+func K8sFromConfig() (*rest.Config, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		if errors.Is(err, rest.ErrNotInCluster) {
@@ -101,7 +100,15 @@ func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
 			return nil, fmt.Errorf("unable to load config from incluster %w", err)
 		}
 	}
+	return config, nil
+}
 
+// NewK8sEnvDeployer create a new test environment
+func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
+	config, err := K8sFromConfig()
+	if err != nil {
+		return nil, err
+	}
 	// create the clientset
 	k8sClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
