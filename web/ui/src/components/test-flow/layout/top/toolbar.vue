@@ -12,8 +12,12 @@
       </div>
     </div>
     <div class="right">
-      <ElButton @click="onNewJob" v-if="active" type="primary">新建Job</ElButton>
-      <ElButton @click="onNewGroup" v-if="!active" type="primary">添加分组</ElButton>
+      <ElButton @click="onNewJob" v-if="active" type="primary"
+        >新建Job</ElButton
+      >
+      <ElButton @click="onNewGroup" v-if="!active" type="primary"
+        >添加分组</ElButton
+      >
     </div>
   </div>
 </template>
@@ -24,7 +28,7 @@ import { useRoute, useRouter } from 'vue-router';
 
 export default {
   components: { ElButton },
-  emits:['newGroup', 'newJob'],
+  emits: ['newGroup', 'newJob'],
   setup(props, { emit }) {
     const router = useRouter();
     const route = useRoute();
@@ -33,8 +37,11 @@ export default {
       active.value = true;
     }
     const goBack = () => {
-    
-      router.push('/');
+      if (history.state.back) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     };
     const testClick = () => {
       active.value = true;
@@ -45,10 +52,10 @@ export default {
       router.push('#job');
     };
 
-    const onNewGroup = ()=>{
+    const onNewGroup = () => {
       emit('newGroup', '');
     };
-    const onNewJob = ()=>{
+    const onNewJob = () => {
       emit('newJob', '');
     };
 
@@ -118,7 +125,6 @@ export default {
   }
 
   .right {
-    
   }
 }
 </style>

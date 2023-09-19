@@ -64,7 +64,11 @@ export default defineComponent({
       }
     });
     const close = async () => {
-      await router.back();
+      if (history.state.back) {
+        router.back();
+      } else {
+        router.push('/');
+      }
     };
     const save = async (back: boolean, graph: string) => {
       try {
