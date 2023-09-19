@@ -85,6 +85,7 @@ import { createNamespacedHelpers, useStore } from 'vuex';
 import { namespace } from '@/store/modules/test-flow';
 import { useRouter } from 'vue-router';
 import { Mutable } from '@/utils/lib';
+import { TaskStateEnum } from '@/api/dto/enumeration';
 export default {
   components: { TaskItem, Folding },
   emits:['toEdit', 'toDelete'],
@@ -167,6 +168,19 @@ export default {
         loading.value = false;
       }
     };
+
+    // 更新状态 
+    setInterval(async () => {
+      try {
+        for (var i = 0; i < pageData.value.tasks.length; i++) {
+          if (pageData.value.tasks[i].state !== TaskStateEnum.Error && pageData.value.tasks[i].state !== TaskStateEnum.Successful) {
+            pageData.value.tasks[i] = await getTask({ ID:pageData.value.tasks[i].id });
+          }
+        }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      }
+    }, 10000);
 
     const btnDown = async () => {
       try {
