@@ -174,6 +174,8 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		wallet = def
 	}
 
+	log.Debugln("wallet:", wallet)
+
 	dcap, err := fapi.StateVerifiedClientStatus(ctx, wallet, vtypes.EmptyTSK)
 	if err != nil {
 		return "", err
