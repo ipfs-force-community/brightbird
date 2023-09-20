@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -67,6 +68,11 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 			}
 		}
 		if len(finalDeals) > 0 {
+			for _, deal := range finalDeals {
+				if deal.State == storagemarket.StorageDealFailing || deal.State == storagemarket.StorageDealError {
+					return nil, fmt.Errorf("deal failing or has error")
+				}
+			}
 			break
 		}
 
