@@ -44,11 +44,11 @@ export default {
       }
     };
     const testClick = () => {
-      active.value = true;
+      active.value = false;
       router.push('#manager');
     };
     const jobClick = () => {
-      active.value = false;
+      active.value = true;
       router.push('#job');
     };
 
