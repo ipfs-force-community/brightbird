@@ -27,9 +27,9 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
 
-	ProposalDid cid.Cid `json:"proposalDid"  jsonschema:"proposalDid"  title:"proposalDid" require:"true" description:"proposalDid"`
-	CarFile     string  `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
-	SkipCommP   bool    `json:"skipCommP"  jsonschema:"skipCommP"  title:"skipCommP" require:"false" default:"false" description:"skip calculate the piece-cid"`
+	DealPropCid *cid.Cid `json:"DealPropCid"  jsonschema:"DealPropCid"  title:"DealPropCid" require:"true" description:"DealPropCid"`
+	CarFile     string   `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
+	SkipCommP   bool     `json:"skipCommP"  jsonschema:"skipCommP"  title:"skipCommP" default:"false" require:"true" description:"skip calculate the piece-cid"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -39,7 +39,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	err = client.DealsImportData(ctx, params.ProposalDid, params.CarFile, params.SkipCommP)
+	err = client.DealsImportData(ctx, *params.DealPropCid, params.CarFile, params.SkipCommP)
 	if err != nil {
 		return err
 	}

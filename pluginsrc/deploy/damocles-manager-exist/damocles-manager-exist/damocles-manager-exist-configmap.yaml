@@ -23,7 +23,7 @@ data:
     #SomeKey = "SomeValue"
 {{ end }}
     [[Common.PersistStores]]
-    Name = "a"
+    Name = "miner-storage-persist"
     Path = "/shared-dir/minerstorage"
     Strict = false
     ReadOnly = false

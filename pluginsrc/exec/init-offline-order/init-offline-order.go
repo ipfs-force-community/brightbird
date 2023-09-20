@@ -10,7 +10,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/filecoin-project/go-state-types/big"
 	"github.com/filecoin-project/venus/venus-shared/actors/policy"
-	chain "github.com/filecoin-project/venus/venus-shared/api/chain/v1"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	vtypes "github.com/filecoin-project/venus/venus-shared/types"
 	"github.com/filecoin-project/venus/venus-shared/types/market/client"
@@ -53,13 +52,14 @@ type TestCaseParams struct {
 	From               address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
 	StartEpoch         int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
 	FastRetrieval      bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
-	VerifiedDeal       bool            `json:"VerifiedDeal"  jsonschema:"VerifiedDeal"  title:"VerifiedDeal"  default:"true" require:"false" description:"VerifiedDeal"`
 	ProviderCollateral big.Int         `json:"ProviderCollateral"  jsonschema:"ProviderCollateral"  title:"ProviderCollateral" require:"false" description:"ProviderCollateral"`
 }
 
 type InitOfflineOrderReturn struct {
-	DealCid string
-	CarFile string
+	DealCid     string
+	CarFile     string
+	DealPropCid *cid.Cid
+	CarFilePath string
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*InitOfflineOrderReturn, error) {
@@ -87,14 +87,16 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return nil, err
 	}
 
-	DealCid, err := StorageDealsInit(ctx, params, api, dataImportReturns)
+	DealCid, dealPropCid, err := StorageDealsInit(ctx, params, api, dataImportReturns)
 	if err != nil {
 		return nil, err
 	}
 
 	return &InitOfflineOrderReturn{
-		DealCid: DealCid,
-		CarFile: carFile,
+		DealCid:     DealCid,
+		CarFile:     carFile,
+		DealPropCid: dealPropCid,
+		CarFilePath: carFile,
 	}, nil
 }
 
@@ -141,13 +143,7 @@ func GetCidAndPieceSize(ctx context.Context, api clientapi.IMarketClient, file, 
 	}, nil
 }
 
-func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.IMarketClient, initData *DataImportReturn) (string, error) {
-	fapi, closer, err := chain.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
-	if err != nil {
-		return "", err
-	}
-	defer closer()
-
+func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.IMarketClient, initData *DataImportReturn) (string, *cid.Cid, error) {
 	data := &storagemarket.DataRef{
 		TransferType: storagemarket.TTManual,
 		Root:         initData.Root,
@@ -157,10 +153,10 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 
 	MinDealDuration, MaxDealDuration := policy.DealDurationBounds(0)
 	if abi.ChainEpoch(params.Duration) < MinDealDuration {
-		return "", fmt.Errorf("minimum deal duration is %d blocks", MinDealDuration)
+		return "", nil, fmt.Errorf("minimum deal duration is %d blocks", MinDealDuration)
 	}
 	if abi.ChainEpoch(params.Duration) > MaxDealDuration {
-		return "", fmt.Errorf("maximum deal duration is %d blocks", MaxDealDuration)
+		return "", nil, fmt.Errorf("maximum deal duration is %d blocks", MaxDealDuration)
 	}
 
 	var wallet address.Address
@@ -169,24 +165,12 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 	} else {
 		def, err := api.DefaultAddress(ctx)
 		if err != nil {
-			return "", err
+			return "", nil, err
 		}
 		wallet = def
 	}
 
 	log.Debugln("wallet:", wallet)
-
-	dcap, err := fapi.StateVerifiedClientStatus(ctx, wallet, vtypes.EmptyTSK)
-	if err != nil {
-		return "", err
-	}
-	isVerified := dcap != nil
-	if params.VerifiedDeal {
-		if params.VerifiedDeal && !isVerified {
-			return "", fmt.Errorf("address %s does not have verified client status", wallet)
-		}
-		isVerified = params.VerifiedDeal
-	}
 
 	sdParams := &client.DealParams{
 		Data:               data,
@@ -196,20 +180,20 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		MinBlocksDuration:  uint64(params.Duration),
 		DealStartEpoch:     abi.ChainEpoch(params.StartEpoch),
 		FastRetrieval:      params.FastRetrieval,
-		VerifiedDeal:       isVerified,
+		VerifiedDeal:       false,
 		ProviderCollateral: params.ProviderCollateral,
 	}
 
 	proposal, err := api.ClientStartDeal(ctx, sdParams)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	encoder := cidenc.Encoder{Base: multibase.MustNewEncoder(multibase.Base32)}
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 
 	log.Debugln("DealCid cid: ", encoder.Encode(*proposal))
-	return encoder.Encode(*proposal), nil
+	return encoder.Encode(*proposal), proposal, nil
 }
