@@ -182,6 +182,22 @@ export default defineComponent({
       }
     };
 
+    setInterval(async () => {
+      try {
+        if (podList.value.length > 0) {
+          podLog.value = await getPodLog({
+            podName: selectedPod.value,
+            testID: props.testId,
+          });
+        } else {
+          await loadPodList();
+          loadFirstPodLog();
+        }
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      }
+    }, 10000);
+
     onMounted(async () => {
       // 初始化任务列表
       await loadPodList();
