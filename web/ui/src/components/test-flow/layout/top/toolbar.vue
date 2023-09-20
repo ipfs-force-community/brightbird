@@ -1,14 +1,19 @@
 <template>
   <div class="wrap">
     <div class="left">
-      <button class="jm-icon-button-left" @click="goBack"></button>
+      <ElButton  @click="goBack">首页</ElButton>
       <div class="tabs">
-        <div @click="jobClick" :class="{ tab: true, active: active }">
+        <ElButton @click="jobClick" :class="{ tab: true, active: active }">
           Job管理
-        </div>
-        <div @click="testClick" :class="{ tab: true, active: !active }">
+        </ElButton>
+        <ElButton @click="testClick" :class="{ tab: true, active: !active }">
           测试流管理
-        </div>
+        </ElButton>
+        <ElButton plain>
+            <router-link :to="{ name: 'create-pipeline' }">
+              开启工作
+            </router-link>
+          </ElButton>
       </div>
     </div>
     <div class="right">
@@ -38,7 +43,7 @@ export default {
     }
     const goBack = () => {
       if (history.state.back) {
-        router.back();
+        router.push('/');
       } else {
         router.push('/');
       }
@@ -110,13 +115,6 @@ export default {
     .tabs {
       display: flex;
       margin-left: 20px;
-      column-gap: 10px;
-
-      .tab {
-        color: rgb(83, 83, 83);
-        font-size: 16px;
-        cursor: pointer;
-      }
       .tab.active {
         color: #333333;
         font-weight: 600;
