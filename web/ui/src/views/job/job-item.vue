@@ -57,8 +57,8 @@
           </div>
           <!-- 显示更多 -->
           <div class="load-more" v-show="toggle">
-            <jm-load-more :state="loadState" :load-more="btnDown"
-              >LoadMore</jm-load-more>
+            <el-pagination :total="pageData.total" :page-size="pageSize" @current-change="btnDown">
+            </el-pagination>
           </div>
           </div>
         </template>
@@ -88,9 +88,10 @@ import { useRouter } from 'vue-router';
 import { Mutable } from '@/utils/lib';
 import { TaskStateEnum } from '@/api/dto/enumeration';
 import { datetimeFormatter } from '@/utils/formatter';
-
+import { ElPagination } from 'element-plus';
+import { pa } from 'element-plus/es/locale';
 export default {
-  components: { TaskItem, Folding },
+  components: { TaskItem, Folding, ElPagination },
   emits:['toEdit', 'toDelete'],
   props: {
     jobVo: {
@@ -99,6 +100,7 @@ export default {
     },
   },
   setup(props: any, { emit }) {
+    const pageSize = 15;
     const router = useRouter();
     const store = useStore();
     const loading = ref<boolean>();
@@ -141,7 +143,7 @@ export default {
         const queryTask = await getTaskInJob({
           jobId: props.jobVo?.id,
           pageNum: 1,
-          pageSize: 10,
+          pageSize: pageSize,
         });
         pageData.value.total = queryTask.total;
         pageData.value.pages = queryTask.pages;
@@ -185,16 +187,16 @@ export default {
       }
     }, 10000);
 
-    const btnDown = async () => {
+    const btnDown = async value => {      
       try {
         if (pageData.value.pageNum < pageData.value.pages) {
           pageData.value.pageNum++;
           const queryTask = await getTaskInJob({
             jobId: props.jobVo?.id,
-            pageNum: pageData.value.pageNum,
-            pageSize: 10,
+            pageNum: value,
+            pageSize:pageSize,
           });
-          pageData.value.tasks.push(...queryTask.list);
+          pageData.value.tasks = queryTask.list;
           pageData.value.total = queryTask.total;
           pageData.value.pages = queryTask.pages;
           if (pageData.value.pageNum === pageData.value.pages) {
@@ -240,6 +242,7 @@ export default {
       await fetchJobDetail();
     });
     return {
+      pageSize,
       creationActivated,
       jobId,
       loading,
