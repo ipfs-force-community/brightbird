@@ -140,11 +140,14 @@ func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state m
 		"$set": bson.M{
 			"state": state,
 		},
-		"$push": bson.M{
+	}
+
+	if len(logs) > 0 {
+		update["$push"] = bson.M{
 			"logs": bson.M{
 				"$each": logs,
 			},
-		},
+		}
 	}
 
 	_, err := j.taskCol.UpdateByID(ctx, id, update)

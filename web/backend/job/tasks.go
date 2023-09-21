@@ -14,8 +14,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/models"
 	"gopkg.in/yaml.v3"
 
-	errors2 "k8s.io/apimachinery/pkg/api/errors"
-
 	"github.com/ipfs-force-community/brightbird/repo"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/web/backend/config"
@@ -90,29 +88,20 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			for _, task := range runningTask.List {
 				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
-					if errors2.IsNotFound(err) {
-						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "not found testrunner, maybe delete manually")
+					if restartCount > 3 {
+						log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
+						// mark pod as fail and remove this pod
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed five times, delete task")
 						if markFailErr != nil {
-							log.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
+							log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 						}
-						continue
-					} else {
-						if restartCount > 5 {
-							log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
-							// mark pod as fail and remove this pod
-							markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed five times, delete task")
-							if markFailErr != nil {
-								log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
-							}
 
-							cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId))
-							if cleanK8sErr != nil {
-								log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
-							}
+						cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId))
+						if cleanK8sErr != nil {
+							log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
 						}
 					}
 				}
-				//success state update by scriptRunner self
 			}
 
 			// start init task
@@ -188,33 +177,42 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
-	graph := &models.Graph{}
-	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
-	if err != nil {
-		return nil, err
-	}
+	if task.BeforeBuild() {
+		//todo 不在runner里面做的原因 1. 编译需要比较好的性能，而runner可能会调度到比较差的机器上 2. 网络问题，拉代码编译过程很慢， 代理太费流量， 这里使用同一份代码可以缓解一些
+		graph := &models.Graph{}
+		err = yaml.Unmarshal([]byte(testflow.Graph), graph)
+		if err != nil {
+			return nil, err
+		}
+		//confirm version and build image.
+		taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
+		commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
+		if err != nil {
+			return nil, err
+		}
 
-	//confirm version and build image.
-	taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
-	commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
-	if err != nil {
-		return nil, err
-	}
+		var pipelines []*types.ExecNode
+		for _, node := range graph.Pipeline {
+			pipelines = append(pipelines, node.Value)
+		}
+		//save testflow as task params
+		err = taskMgr.taskRepo.UpdatePipeline(ctx, task.ID, pipelines)
+		if err != nil {
+			return nil, err
+		}
 
-	var pipelines []*types.ExecNode
-	for _, node := range graph.Pipeline {
-		pipelines = append(pipelines, node.Value)
-	}
-	//save testflow as task params
-	err = taskMgr.taskRepo.UpdatePipeline(ctx, task.ID, pipelines)
-	if err != nil {
-		return nil, err
-	}
+		//save testflow as task params
+		err = taskMgr.taskRepo.UpdateCommitMap(ctx, task.ID, commitMap)
+		if err != nil {
+			return nil, err
+		}
 
-	//save testflow as task params
-	err = taskMgr.taskRepo.UpdateCommitMap(ctx, task.ID, commitMap)
-	if err != nil {
-		return nil, err
+		//update task state to build completed
+		err = taskMgr.taskRepo.MarkState(ctx, task.ID, models.Building)
+		if err != nil {
+			return nil, err
+		}
+		time.Sleep(time.Minute * 1)
 	}
 
 	//run test flow
