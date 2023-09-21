@@ -26,6 +26,7 @@
               </div>
             </div>
             <div class="right">
+              <span>最后修改时间:{{ datetimeFormatter(jobVo?.modifiedTime) }}</span>
               <span>类型:{{ jobVo?.jobType }}</span>
               <div class="operation">
                 <div class="run op-item" @click="run(jobVo?.id)"></div>
@@ -86,6 +87,8 @@ import { namespace } from '@/store/modules/test-flow';
 import { useRouter } from 'vue-router';
 import { Mutable } from '@/utils/lib';
 import { TaskStateEnum } from '@/api/dto/enumeration';
+import { datetimeFormatter } from '@/utils/formatter';
+
 export default {
   components: { TaskItem, Folding },
   emits:['toEdit', 'toDelete'],
@@ -253,6 +256,7 @@ export default {
       toEdit,
       toDelete,
       fetchJobList,
+      datetimeFormatter,
     };
   },
 };
@@ -310,7 +314,7 @@ export default {
       font-weight: normal;
       font-size: 14px;
       opacity: 0.46;
-
+      column-gap: 10px;
       .operation {
         display: flex;
         margin-left: 40px;
