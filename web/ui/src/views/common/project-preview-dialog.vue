@@ -25,7 +25,6 @@ export default defineComponent({
   props: {
     projectId: {
       type: String,
-      required: true,
     },
   },
   // 覆盖dialog的close事件
@@ -46,6 +45,8 @@ export default defineComponent({
 
       try {
         loading.value = true;
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         const { name, nodes, graph } = await fetchTestFlowDetail({ id:props.projectId });
         title.value = name;
         dsl.value = graph;

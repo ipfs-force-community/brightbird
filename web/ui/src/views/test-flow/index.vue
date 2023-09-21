@@ -24,7 +24,6 @@ import { useRoute } from 'vue-router';
 import { onBeforeUpdate, onMounted, ref } from 'vue';
 import Toolbar from '@/components/test-flow/layout/top/toolbar.vue';
 import WorkFlowList from '@/views/index/workflow-list.vue';
-import JobManager from '@/views/job/job-manager.vue';
 import JobManagerNew from '@/views/job/job-manager-new.vue';
 import GroupCreator from '@/views/project-group/project-group-creator.vue';
 import JobCreator from '@/views/job/job-creator.vue';
@@ -34,7 +33,6 @@ export default {
   components: {
     Toolbar,
     WorkFlowList,
-    JobManager,
     GroupCreator,
     JobManagerNew,
     JobCreator,

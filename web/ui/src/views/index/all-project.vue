@@ -31,6 +31,43 @@
         </div>
       </template>
     </div>
+    <ElDialog
+      v-model="copyActive"
+      class="copy-dialog"
+      width="500"
+      title="复制测试流"
+      :on-close="onCopyClose"
+      :center="true"
+      v-loading="copyLoading"
+    >
+      <ElForm :model="copyForm" :rules="rules" ref="ruleFormRef">
+        <ElFormItem prop="group">
+          <el-select
+            v-model="copyForm.group"
+            placeholder="选择你要复制到的组"
+            size="large"
+          >
+            <el-option
+              v-for="item in testflowGroups"
+              :key="JSON.stringify({ name: item.name, id: item.id })"
+              :label="item.name"
+              :value="JSON.stringify({ name: item.name, id: item.id })"
+            />
+          </el-select>
+        </ElFormItem>
+
+        <ElFormItem prop="name">
+          <ElInput
+            size="large"
+            v-model="copyForm.name"
+            placeholder="请输入测试流名称"
+          ></ElInput>
+        </ElFormItem>
+        <ElFormItem>
+          <el-button @click="onCopyConfirm" type="primary">确认</el-button>
+        </ElFormItem>
+      </ElForm>
+    </ElDialog>
   </div>
 </template>
 
@@ -38,50 +75,36 @@
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
 import { listTestflowGroup } from '@/api/view-no-auth';
 import ProjectGroup from '@/views/common/project-group.vue';
+import { cloneDeep, get } from 'lodash';
 import {
   computed,
   defineComponent,
   getCurrentInstance,
   inject,
   nextTick,
+  onBeforeMount,
   onMounted,
+  reactive,
   ref,
 } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { namespace } from '@/store/modules/project';
 import { createNamespacedHelpers, useStore } from 'vuex';
 import { SortTypeEnum } from '@/api/dto/enumeration';
-import mitt from 'mitt';
 import { eventBus } from '@/main';
+import {
+  ElDialog,
+  ElButton,
+  ElInput,
+  ElForm,
+  ElFormItem,
+  FormInstance,
+} from 'element-plus';
+import { testFlowCopy } from '@/api/job';
 const { mapMutations } = createNamespacedHelpers(namespace);
 export default defineComponent({
-  components: { ProjectGroup },
-  methods: {
-    async load() {
-      try {
-        this.allProjectLoading = true;
-        const testflowGroupList = await listTestflowGroup();
-        this.initialized = true;
-        this.testflowGroups = testflowGroupList.filter(item=>item.isShow);
-      } catch (err) {
-        this.proxy.$throw(err, this.proxy);
-      } finally {
-        await nextTick(() => {
-          this.allProjectLoading = false;
-        });
-      }
-    },
-  },
-  beforeMount() {
-    this.load();
-  },
-  mounted() {
-    this.$nextTick(() => {
-      eventBus.on('newGroup', () => {
-        this.load();
-      });
-    });
-  },
+  components: { ProjectGroup, ElDialog, ElButton, ElInput, ElForm, ElFormItem },
+  methods: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
@@ -96,6 +119,22 @@ export default defineComponent({
 
     // 改变项目组排序后强制数据及时刷新
     const groupListRefresh = ref<boolean>(true);
+
+    const copyActive = ref<boolean>(false);
+    const copyId = ref<string>('');
+    const copyValue = ref<string>('');
+    const copyLoading = ref<boolean>(false);
+    const ruleFormRef = ref<FormInstance>();
+    const copyForm = reactive({
+      name: '',
+      group: '',
+    });
+
+    const rules = reactive({
+      name: [{ required: true, message: '请输入测试流名称' }],
+      group: [{ required: true, message: '选择你要复制到的组' }],
+    });
+
     // 项目组排序类型
     const sortTypeList = ref<Array<{ label: string; value: SortTypeEnum }>>([
       { label: '默认排序', value: SortTypeEnum.DEFAULT_SORT },
@@ -124,12 +163,39 @@ export default defineComponent({
       });
     };
 
+    const load = async () => {
+      try {
+        allProjectLoading.value = true;
+        const testflowGroupList = await listTestflowGroup();
+        initialized.value = true;
+        testflowGroups.value = cloneDeep(
+          testflowGroupList.filter(item => item.isShow),
+        );
+      } catch (err) {
+        proxy.$throw(err, proxy);
+      } finally {
+        await nextTick(() => {
+          allProjectLoading.value = false;
+        });
+      }
+    };
+
     const setScrollbarOffset = inject('setScrollbarOffset') as () => void;
     const updateScrollbarOffset = inject('updateScrollbarOffset') as () => void;
     onMounted(() => {
       if (setScrollbarOffset) {
         setScrollbarOffset();
       }
+
+      nextTick(() => {
+        eventBus.on('newGroup', () => {
+          load();
+        });
+      });
+    });
+
+    onBeforeMount(() => {
+      load();
     });
     onBeforeRouteLeave((to, from, next) => {
       if (updateScrollbarOffset) {
@@ -138,7 +204,48 @@ export default defineComponent({
       next();
     });
 
+    eventBus.on('test-flow-copy', (id: any) => {
+      copyActive.value = true;
+      copyId.value = id;
+    });
+
+    const onCopyClose = () => {
+      copyLoading.value = false;
+      copyActive.value = false;
+    };
+
+    const onCopyConfirm = async () => {
+      if (!ruleFormRef.value) {
+        return;
+      }
+
+      ruleFormRef.value.validate(async (valid, fields) => {
+        if (valid) {
+          try {
+            copyLoading.value = true;
+            await  testFlowCopy({
+              groupId:JSON.parse(copyForm.group).id,
+              name:copyForm.name,
+              id:copyId.value,
+            });
+            copyActive.value = false;
+            initialized.value = false;
+            load();
+          } catch (error:any) {
+            proxy.$error(get(error, 'response.data.message'));
+          }finally {
+            copyLoading.value = false;
+          }
+        } 
+      });
+
+      return;
+  
+    };
+
     return {
+      onCopyConfirm,
+      onCopyClose,
       proxy,
       testflowGroups,
       projectName,
@@ -150,6 +257,13 @@ export default defineComponent({
       sortType,
       sortTypeList,
       groupListRefresh,
+      copyActive,
+      copyId,
+      copyValue,
+      copyLoading,
+      ruleFormRef,
+      copyForm,
+      rules,
     };
   },
 });
@@ -242,6 +356,19 @@ export default defineComponent({
       .el-empty {
         padding-top: 120px;
       }
+    }
+  }
+}
+
+::v-deep(.copy-dialog) {
+  display: flex;
+  flex-direction: column;
+
+  .el-dialog__body {
+    display: flex;
+    flex-direction: column;
+    .el-select {
+      width: 100%;
     }
   }
 }
