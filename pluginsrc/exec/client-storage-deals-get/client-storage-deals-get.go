@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -9,6 +10,7 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	"github.com/filecoin-project/venus/venus-shared/types/market/client"
+	logging "github.com/ipfs/go-log/v2"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
@@ -17,12 +19,14 @@ import (
 	"github.com/ipfs-force-community/brightbird/version"
 )
 
+var log = logging.Logger("client-storage-deals-get")
+
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
 }
 
 var Info = types.PluginInfo{
-	Name:        "client-storage-deals-list",
+	Name:        "client-storage-deals-get",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "验证droplet在被检索时功能是否正常",
@@ -31,8 +35,9 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	DropletClient dropletclient.DropletClientDeployReturn `json:"DropletClient" jsonschema:"DropletClient" title:"DropletClient" require:"true" description:"droplet client return"`
 
-	State   storagemarket.StorageDealStatus `json:"state" jsonschema:"state" title:"state" require:"false" description:"state"`
-	DealCid string                          `json:"DealCid" jsonschema:"DealCid" title:"DealCid" require:"false" description:"DealCid"`
+	State   storagemarket.StorageDealStatus `json:"state" jsonschema:"state" title:"state" require:"true" description:"29-AwaitingPreCommit"`
+	DealCid string                          `json:"DealCid" jsonschema:"DealCid" title:"DealCid" require:"true" description:"DealCid"`
+	TimeOut int                             `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10" description:"TimeOut"`
 }
 
 type ClientStorageDealsList = []client.DealInfo
@@ -45,52 +50,42 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	defer closer()
 
 	var finalDeals []client.DealInfo
-
 	DealCid, _ := strconv.ParseInt(params.DealCid, 10, 64)
-	DealID := abi.DealID(DealCid)
+	paramDealID := abi.DealID(DealCid)
 
-	if params.State != storagemarket.StorageDealUnknown {
-		for {
-			localDeals, err := api.ClientListOfflineDeals(ctx)
-			if err != nil {
-				return nil, err
-			}
+	startTime := time.Now()
+	timeout := time.Duration(params.TimeOut) * time.Second
 
-			for _, deal := range localDeals {
-				if deal.State == params.State {
-					finalDeals = append(finalDeals, deal)
-				}
-			}
-
-			if len(finalDeals) > 0 {
-				break
-			}
-
-			time.Sleep(500 * time.Millisecond)
-		}
-	} else {
+	for {
 		localDeals, err := api.ClientListOfflineDeals(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		finalDeals = filterDeals(localDeals, params, DealID)
+		for _, deal := range localDeals {
+			if params.State == deal.State && paramDealID == deal.DealID {
+				finalDeals = append(finalDeals, deal)
+			}
+		}
+		if len(finalDeals) > 0 {
+			for _, deal := range finalDeals {
+				if deal.State == storagemarket.StorageDealFailing || deal.State == storagemarket.StorageDealError {
+					return nil, fmt.Errorf("deal failing or has error")
+				}
+			}
+			break
+		}
+
+		elapsedTime := time.Since(startTime)
+
+		if elapsedTime >= timeout {
+			log.Errorln("time out error")
+			break
+		}
+
+		time.Sleep(1 * time.Second)
+		finalDeals = []client.DealInfo{}
 	}
 
 	return &finalDeals, nil
-}
-
-func filterDeals(deals []client.DealInfo, params TestCaseParams, DealID abi.DealID) []client.DealInfo {
-	var filteredDeals []client.DealInfo
-
-	for _, deal := range deals {
-		if params.State != storagemarket.StorageDealUnknown && deal.State != params.State {
-			continue
-		}
-		if params.DealCid != "" && deal.DealID != DealID {
-			continue
-		}
-		filteredDeals = append(filteredDeals, deal)
-	}
-	return filteredDeals
 }

@@ -28,7 +28,7 @@ spec:
               subPath: {{.NameSpace}}
         - name: init-storage-attach
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-manager:{{.CodeVersion}}"
-          command: ['sh', '-c', "damocles-manager util storage attach --verbose --name=a -v /shared-dir/minerstorage"]
+          command: ['sh', '-c', "./damocles-manager util storage attach --verbose --name=miner-storage-persist /shared-dir/minerstorage"]
           volumeMounts:
             - mountPath: /root
               name: damocles-pvc
