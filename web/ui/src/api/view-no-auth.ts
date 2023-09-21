@@ -102,7 +102,7 @@ export function fetchTestFlowDetail(params: IGetTestFlowParam): Promise<ITestFlo
   });
 }
 
-export function deleteTestFlow(projectId: string): Promise<void> {
+export function deleteTestFlow(projectId?: string): Promise<void> {
   return restProxy({
     url: `${baseUrl.testflow}/${projectId}`,
     method: 'delete',

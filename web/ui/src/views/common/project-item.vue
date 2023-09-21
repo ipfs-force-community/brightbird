@@ -4,17 +4,20 @@
     <div class="content">
       <div class="content-top">
         <router-link
-            :to="{
+          :to="{
             name: '',
             query: { projectId: project.id },
           }"
         >
-          <jm-text-viewer :value="project.name" :class="{ title: true}" />
+          <jm-text-viewer :value="project.name" :class="{ title: true }" />
         </router-link>
       </div>
 
       <div class="content-center">
-        <jm-text-viewer class="status" :value="`${project.description || '无'}`"/>
+        <jm-text-viewer
+          class="status"
+          :value="`${project.description || '无'}`"
+        />
       </div>
 
       <div class="content-bottom">
@@ -22,8 +25,14 @@
           <jm-tooltip content="编辑" placement="bottom">
             <button class="edit" @click="edit(project.id)"></button>
           </jm-tooltip>
+          <jm-tooltip content="复制" placement="bottom">
+            <button class="copy" @click="copy(project.id)"></button>
+          </jm-tooltip>
           <jm-tooltip content="预览测试流" placement="bottom">
-            <button class="pipeline-label" @click="dslDialogFlag = true"></button>
+            <button
+              class="pipeline-label"
+              @click="dslDialogFlag = true"
+            ></button>
           </jm-tooltip>
           <jm-tooltip content="删除" placement="bottom" :disabled="deleting">
             <button class="delete-label" @click="del(project.id)"></button>
@@ -32,23 +41,36 @@
       </div>
     </div>
 
-    <project-preview-dialog v-if="dslDialogFlag" :project-id="project.id" @close="dslDialogFlag = false" />
+    <project-preview-dialog
+      v-if="dslDialogFlag"
+      :project-id="project.id"
+      @close="dslDialogFlag = false"
+    />
     <div class="cover"></div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, PropType, ref, SetupContext } from 'vue';
+import {
+  defineComponent,
+  getCurrentInstance,
+  PropType,
+  provide,
+  ref,
+  SetupContext,
+} from 'vue';
 import ProjectPreviewDialog from './project-preview-dialog.vue';
-import WebhookDrawer from './webhook-drawer.vue';
-import CacheDrawer from '@/views/common/cache-drawer.vue';
 import { useRouter } from 'vue-router';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ITestFlowDetail } from '@/api/dto/testflow';
 import { deleteTestFlow } from '@/api/view-no-auth';
+import { eventBus } from '@/main';
 
 export default defineComponent({
-  components: { JmTextViewer, ProjectPreviewDialog, WebhookDrawer, CacheDrawer },
+  components: {
+    JmTextViewer,
+    ProjectPreviewDialog,
+  },
   props: {
     project: {
       type: Object as PropType<ITestFlowDetail>,
@@ -70,16 +92,20 @@ export default defineComponent({
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
     const deleting = ref<boolean>(false);
-    const dslDialogFlag = ref<boolean>(false);  // todo replace with config
+    const dslDialogFlag = ref<boolean>(false); // todo replace with config
     const cacheDrawerFlag = ref<boolean>(false);
+    const copy = (id?:string)=>{
+      eventBus.emit('test-flow-copy', id);
+    };
     return {
       deleting,
       dslDialogFlag,
       cacheDrawerFlag,
-      edit: (id: string) => {
+      copy,
+      edit: (id?: string) => {
         router.push({ name: 'update-pipeline', params: { id } });
       },
-      del: (id: string) => {
+      del: (id?: string) => {
         if (deleting.value) {
           return;
         }
@@ -170,14 +196,14 @@ export default defineComponent({
       left: 0;
 
       &::after {
-        content: '';
+        content: "";
         position: absolute;
         bottom: 0;
         right: 0;
         display: inline-block;
         width: 30px;
         height: 30px;
-        background-image: url('@/assets/svgs/sort/drag.svg');
+        background-image: url("@/assets/svgs/sort/drag.svg");
         background-repeat: no-repeat;
       }
     }
@@ -225,7 +251,7 @@ export default defineComponent({
       .alarm {
         width: 24px;
         height: 24px;
-        background: url('@/assets/svgs/index/alarm.svg') 100% no-repeat;
+        background: url("@/assets/svgs/index/alarm.svg") 100% no-repeat;
       }
     }
 
@@ -273,15 +299,19 @@ export default defineComponent({
           }
 
           &.execute {
-            background-image: url('@/assets/svgs/btn/execute.svg');
+            background-image: url("@/assets/svgs/btn/execute.svg");
           }
 
           &.edit {
-            background-image: url('@/assets/svgs/btn/edit.svg');
+            background-image: url("@/assets/svgs/btn/edit.svg");
+          }
+
+          &.copy {
+            background-image: url("@/assets/svgs/btn/copy.svg");
           }
 
           &.sync {
-            background-image: url('@/assets/svgs/btn/sync.svg');
+            background-image: url("@/assets/svgs/btn/sync.svg");
 
             &.doing {
               animation: rotating 2s linear infinite;
@@ -289,23 +319,23 @@ export default defineComponent({
           }
 
           &.webhook {
-            background-image: url('@/assets/svgs/btn/hook.svg');
+            background-image: url("@/assets/svgs/btn/hook.svg");
           }
 
           &.git-label {
-            background-image: url('@/assets/svgs/index/git-label.svg');
+            background-image: url("@/assets/svgs/index/git-label.svg");
           }
 
           &.workflow-label {
-            background-image: url('@/assets/svgs/index/workflow-label.svg');
+            background-image: url("@/assets/svgs/index/workflow-label.svg");
           }
 
           &.pipeline-label {
-            background-image: url('@/assets/svgs/index/pipeline-label.svg');
+            background-image: url("@/assets/svgs/index/pipeline-label.svg");
           }
 
           &.delete-label {
-             background-image: url('@/assets/svgs/btn/del.svg');
+            background-image: url("@/assets/svgs/btn/del.svg");
           }
 
           &.doing {
@@ -336,7 +366,7 @@ export default defineComponent({
 
             width: 24px;
             height: 24px;
-            background-image: url('@/assets/svgs/btn/more2.svg');
+            background-image: url("@/assets/svgs/btn/more2.svg");
             transform: rotate(90deg);
           }
         }

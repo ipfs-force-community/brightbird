@@ -101,6 +101,9 @@ export default async function rest({
       throw new TimeoutError(err.message);
     }
 
+
+    console.log('=====================++++++++', err.response);
+
     throw new HttpError(err.response, err.message);
   }
 

@@ -132,3 +132,11 @@ export function nextNTime(params: IJobNextParam): Promise<number[]> {
     payload: params,
   });
 }
+
+export function testFlowCopy(data: {groupId:string, id:string, name:string}): Promise<any> {
+  return restProxy({
+    url: '/testflow/copy',
+    method: 'post',
+    payload: data,
+  });
+}
