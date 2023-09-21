@@ -29,12 +29,13 @@
               <span>最后修改时间:{{ datetimeFormatter(jobVo?.modifiedTime) }}</span>
               <span>类型:{{ jobVo?.jobType }}</span>
               <div class="operation">
-                <div class="run op-item" @click="run(jobVo?.id)"></div>
-                <div class="edit op-item" @click="toEdit(jobVo?.id)"></div>
-                <div
+                <ElButton type="primary"><div class="run op-item" @click="run(jobVo?.id)"/></ElButton>
+                
+               <el-button type="primary"> <div class="edit op-item" @click="toEdit(jobVo?.id)"></div></el-button>
+               <el-button type="primary"> <div
                   class="delete op-item"
                   @click="toDelete(jobVo?.name, jobVo?.id)"
-                ></div>
+                ></div></el-button>
               </div>
             </div>
           </div>
@@ -87,9 +88,9 @@ import { useRouter } from 'vue-router';
 import { Mutable } from '@/utils/lib';
 import { TaskStateEnum } from '@/api/dto/enumeration';
 import { datetimeFormatter } from '@/utils/formatter';
-import { ElPagination } from 'element-plus';
+import { ElPagination, ElButton } from 'element-plus';
 export default {
-  components: { TaskItem, Folding, ElPagination },
+  components: { TaskItem, Folding, ElPagination, ElButton },
   emits:['toEdit', 'toDelete'],
   props: {
     jobVo: {
@@ -317,8 +318,12 @@ export default {
       color: #082340;
       font-weight: normal;
       font-size: 14px;
-      opacity: 0.46;
+      
       column-gap: 10px;
+
+      span {
+        opacity: 0.46;
+      }
       .operation {
         display: flex;
         margin-left: 40px;
@@ -338,12 +343,11 @@ export default {
             background-image: url("@/assets/svgs/btn/rocketstart.svg");
           }
           &.edit {
-            background-image: url("@/assets/svgs/btn/edit.svg");
+            background-image: url("@/assets/svgs/btn/edit2.svg");
           }
 
           &.delete {
-            margin-left: 15px;
-            background-image: url("@/assets/svgs/btn/del.svg");
+            background-image: url("@/assets/svgs/btn/del3.svg");
           }
         }
       }
