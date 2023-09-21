@@ -6,11 +6,10 @@
         <div class="text">项目列表</div>
       </div>
       <div class="search">
-        <i class="jm-icon-button-search" @click="searchProject"></i>
         <jm-input
-          placeholder="请输入项目名称"
+          placeholder="请输入测试流名称"
           v-model="projectName"
-          @change="searchProject"
+          clearable
         />
       </div>
     </div>
@@ -24,6 +23,7 @@
             :sortType="sortType"
             :testflow-group="testflowGroup"
             :pageable="false"
+            :project-name="projectName"
           />
         </template>
         <div class="project-empty" v-else>
@@ -104,7 +104,6 @@ import { testFlowCopy } from '@/api/job';
 const { mapMutations } = createNamespacedHelpers(namespace);
 export default defineComponent({
   components: { ProjectGroup, ElDialog, ElButton, ElInput, ElForm, ElFormItem },
-  methods: {},
   setup() {
     const { proxy } = getCurrentInstance() as any;
     const router = useRouter();
@@ -153,14 +152,6 @@ export default defineComponent({
       groupListRefresh.value = false;
       await nextTick();
       groupListRefresh.value = true;
-    };
-
-    // 回车搜索
-    const searchProject = () => {
-      router.push({
-        name: 'workflow-list',
-        query: { searchName: projectName.value },
-      });
     };
 
     const load = async () => {
@@ -249,7 +240,6 @@ export default defineComponent({
       proxy,
       testflowGroups,
       projectName,
-      searchProject,
       initialized,
       allProjectLoading,
       sortChange,
