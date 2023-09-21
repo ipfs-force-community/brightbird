@@ -1,7 +1,7 @@
 <template>
   <div class="wrap">
     <div class="left">
-      <ElButton  @click="goBack">首页</ElButton>
+      <ElButton @click="goBack">首页</ElButton>
       <div class="tabs">
         <ElButton @click="jobClick" :class="{ tab: true, active: active }">
           Job管理
@@ -10,10 +10,10 @@
           测试流管理
         </ElButton>
         <ElButton plain>
-            <router-link :to="{ name: 'create-pipeline' }">
-              开启工作
-            </router-link>
-          </ElButton>
+          <router-link :to="{ name: 'create-pipeline' }">
+            开启工作
+          </router-link>
+        </ElButton>
       </div>
     </div>
     <div class="right">
@@ -38,9 +38,8 @@ export default {
     const router = useRouter();
     const route = useRoute();
     const active = ref<boolean>(true);
-    if (route.hash.includes('job')) {
-      active.value = true;
-    }
+    active.value = route.hash.includes('job');
+
     const goBack = () => {
       if (history.state.back) {
         router.push('/');

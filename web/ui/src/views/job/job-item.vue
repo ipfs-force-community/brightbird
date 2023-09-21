@@ -67,10 +67,9 @@
   </div>
 </template>
 <script lang="ts">
-import { getCurrentInstance, onMounted, ref, PropType, computed } from 'vue';
+import { getCurrentInstance, onMounted, ref, PropType, computed, onUnmounted } from 'vue';
 import { ITaskVo } from '@/api/dto/tasks';
 import {
-  deleteJob,
   execImmediately,
   getJobDetail,
   listJobs,
@@ -89,7 +88,6 @@ import { Mutable } from '@/utils/lib';
 import { TaskStateEnum } from '@/api/dto/enumeration';
 import { datetimeFormatter } from '@/utils/formatter';
 import { ElPagination } from 'element-plus';
-import { pa } from 'element-plus/es/locale';
 export default {
   components: { TaskItem, Folding, ElPagination },
   emits:['toEdit', 'toDelete'],
@@ -175,7 +173,7 @@ export default {
     };
 
     // 更新状态 
-    setInterval(async () => {
+    const timer =  setInterval(async () => {
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
           if (pageData.value.tasks[i].state !== TaskStateEnum.Error && pageData.value.tasks[i].state !== TaskStateEnum.Successful) {
@@ -240,6 +238,9 @@ export default {
     };
     onMounted(async () => {
       await fetchJobDetail();
+    });
+    onUnmounted(() => {
+      clearInterval(timer);
     });
     return {
       pageSize,
