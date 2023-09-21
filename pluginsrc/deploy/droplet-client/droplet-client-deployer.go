@@ -26,10 +26,10 @@ type Config struct {
 type VConfig struct {
 	NodeUrl     string `jsonschema:"-" json:"nodeUrl"`
 	WalletUrl   string `jsonschema:"-" json:"walletUrl"`
-	WalletToken string `jsonschema:"-" json:"walletToken"`
+	WalletToken string `json:"walletToken" jsonschema:"walletToken" title:"WalletToken" description:"wallet用于鉴权的token" require:"true"`
 
-	UserToken  string `json:"userToken" jsonschema:"userToken" title:"User Token" description:"user token" require:"true" `
-	ClientAddr string `json:"clientAddr" jsonschema:"clientAddr" title:"Client Address" description:"pay for storage/retrieval" require:"true" `
+	UserToken            string `json:"userToken" jsonschema:"userToken" title:"User Token" description:"user token" require:"true" `
+	DefaultMarketAddress string `json:"defaultMarketAddress" jsonschema:"defaultMarketAddress" title:"DefaultMarketAddress" description:"当前droplet-client的默认地址" require:"true"`
 }
 
 type DropletClientDeployReturn struct { //nolint

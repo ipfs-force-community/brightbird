@@ -27,10 +27,11 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 	return dropletclient.DeployFromConfig(ctx, k8sEnv, dropletclient.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: dropletclient.VConfig{
-			NodeUrl:     depParams.Venus.SvcEndpoint.ToMultiAddr(),
-			UserToken:   depParams.UserToken,
-			WalletUrl:   depParams.VenusWallet.SvcEndpoint.ToMultiAddr(),
-			WalletToken: depParams.WalletToken,
+			NodeUrl:              depParams.Venus.SvcEndpoint.ToMultiAddr(),
+			UserToken:            depParams.UserToken,
+			WalletUrl:            depParams.VenusWallet.SvcEndpoint.ToMultiAddr(),
+			WalletToken:          depParams.WalletToken,
+			DefaultMarketAddress: depParams.DefaultMarketAddress,
 		},
 	})
 }

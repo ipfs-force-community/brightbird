@@ -16,14 +16,14 @@ import (
 	"github.com/ipfs-force-community/brightbird/version"
 )
 
-var log = logging.Logger("get-wallet-in-gateway")
+var log = logging.Logger("list-wallet-in-gateway")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
 }
 
 var Info = types.PluginInfo{
-	Name:        "get-wallet-in-gateway",
+	Name:        "list-wallet-in-gateway",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "从gateway获取wallet信息",
@@ -45,19 +45,17 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	wallets := []*gtypes.WalletDetail{}
-	if params.WalletAddress == address.Undef {
-		wallets, err = api.ListWalletInfo(ctx)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		walletInfo, err := api.ListWalletInfoByWallet(ctx, params.WalletAddress.String())
-		if err != nil {
-			log.Error("can not get wallet %v", params.WalletAddress)
-			return nil, err
-		}
-		wallets = append(wallets, walletInfo)
+	log.Debugln("param wallet is", params.WalletAddress)
+
+	wallets, err := api.ListWalletInfo(ctx)
+	if err != nil {
+		return nil, err
 	}
+	for i, wallet := range wallets {
+		for _, addr := range wallet.ConnectStates {
+			log.Debugf("wallet list %v is %v\n", i, addr.Addrs)
+		}
+	}
+
 	return wallets, nil
 }
