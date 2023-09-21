@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/filecoin-project/go-address"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/stretchr/testify/assert"
 	corev1 "k8s.io/api/core/v1"
@@ -23,14 +22,11 @@ func TestDeployFromConfig(t *testing.T) {
 				PieceStores:   []string{"default"},
 				PersistStores: []string{"default"},
 
-				NodeUrl:      "/ip4/192.168.1.1",
-				MessagerUrl:  "/ip4/192.168.1.1",
-				MarketUrl:    "/ip4/192.168.1.1",
-				GatewayUrl:   "/ip4/192.168.1.1",
-				MinerAddress: "f0100",
-
-				SenderWalletAddress: address.NewForTestGetter()(),
-				UserToken:           "tokenabc",
+				NodeUrl:     "/ip4/192.168.1.1",
+				MessagerUrl: "/ip4/192.168.1.1",
+				MarketUrl:   "/ip4/192.168.1.1",
+				GatewayUrl:  "/ip4/192.168.1.1",
+				UserToken:   "tokenabc",
 			},
 		},
 		UniqueId:  "aaaaaa",

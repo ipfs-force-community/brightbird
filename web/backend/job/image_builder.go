@@ -14,6 +14,7 @@ import (
 
 	git "github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
@@ -192,11 +193,6 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 	builder, ok := worker.buildMap[plugin.Repo]
 	if !ok {
 		worker.logger.Infof("target %s not found and create a new builder", buildTask.Name)
-		builder = &DefaultImageBuilder{
-			proxy:     worker.proxy,
-			codeSpace: worker.cfg.BuildSpace,
-			registry:  string(worker.privateRegistry),
-		}
 		builder, err = NewDefaultImageBuilder(context.Background(), worker.gitToken, worker.proxy, worker.cfg.BuildSpace, string(worker.privateRegistry), plugin.Repo)
 		if err != nil {
 			worker.logger.Errorf("init builder for %s failed %v", buildTask.Name, err)
@@ -220,7 +216,7 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 	}
 
 	if !hasImage {
-		worker.logger.Infof("try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
+		worker.logger.Infof("task %s  try to build repo %s commit %s success", buildTask.Name, plugin.ImageTarget, version)
 		err := builder.Build(ctx, plugin.BuildScript, version)
 		if err != nil {
 			worker.logger.Errorf("build task (%s) commit (%s) %v", buildTask.Name, version, err)
@@ -239,10 +235,9 @@ type IIMageBuilder interface {
 }
 
 type DefaultImageBuilder struct {
-	proxy     string
 	codeSpace string
-	registry  string
 
+	proxyOpt     transport.ProxyOptions
 	repo         *git.Repository
 	scriptRunner *ExecScript
 	repoPath     string
@@ -256,7 +251,6 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 	}
 
 	builder := &DefaultImageBuilder{
-		proxy:     proxy,
 		codeSpace: codeSpace,
 		repoPath:  path.Join(codeSpace, repoName),
 		scriptRunner: &ExecScript{
@@ -264,6 +258,9 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 			PwdDir:   path.Join(codeSpace, repoName),
 			Proxy:    proxy,
 			Registry: registry,
+		},
+		proxyOpt: transport.ProxyOptions{
+			URL: proxy,
 		},
 	}
 
@@ -288,7 +285,7 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 		return nil, err
 	}
 
-	sshFormat, err := toSSHFormat(repoUrl)
+	sshFormat, err := toHTTPFormat(repoUrl)
 	if err != nil {
 		return nil, err
 	}
@@ -298,6 +295,7 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 		Progress:        os.Stdout,
 		InsecureSkipTLS: false,
 		Depth:           500, //should be enough
+		ProxyOptions:    builder.proxyOpt,
 	})
 	if err != nil && err != git.ErrRepositoryAlreadyExists {
 		_ = os.RemoveAll(builder.repoPath) //clean fail repo
@@ -334,6 +332,7 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
 		Force:           true,
+		ProxyOptions:    builder.proxyOpt,
 	})
 	if err != nil && err != git.NoErrAlreadyUpToDate {
 		return fmt.Errorf("fetch context  fail %w", err)
@@ -371,16 +370,24 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
 		Force:           true,
+		ProxyOptions:    builder.proxyOpt,
 	})
 	if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
 		return fmt.Errorf("pull commit  fail %w", err)
 	}
 
-	builder.repo, _, err = updateSubmoduleByCmd(ctx, builder.repoPath)
+	modules, err := workTree.Submodules()
 	if err != nil {
-		return fmt.Errorf("update submodule  fail %w", err)
+		return fmt.Errorf("get submoudle fail %w", err)
 	}
-
+	err = modules.UpdateContext(ctx, &git.SubmoduleUpdateOptions{
+		Init:              true,
+		RecurseSubmodules: 0,
+		NoFetch:           false,
+	})
+	if err != nil {
+		return fmt.Errorf("update submoudle fail %w", err)
+	}
 	return nil
 }
 
@@ -460,25 +467,6 @@ func (builder *DefaultImageBuilder) Build(ctx context.Context, script string, co
 	})
 }
 
-// have bug https://github.com/go-git/go-git/issues/511
-func updateSubmoduleByCmd(ctx context.Context, dir string) (*git.Repository, *git.Worktree, error) {
-	err := execCmd(dir, "git", "submodule", "update", "--init", "--recursive")
-	if err != nil {
-		return nil, nil, err
-	}
-
-	repo, err := git.PlainOpen(dir)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	workTree, err := repo.Worktree()
-	if err != nil {
-		return nil, nil, err
-	}
-	return repo, workTree, nil
-}
-
 func getRepoNameFromUrl(repoUrl string) (string, error) {
 	schema, err := giturls.Parse(repoUrl)
 	if err != nil {
@@ -497,7 +485,21 @@ func toSSHFormat(repoUrl string) (string, error) {
 		return repoUrl, nil
 	}
 
+	//git@github.com:ipfs-force-community/damocles.git
 	return fmt.Sprintf("git@github.com:%s", schema.Path[1:]), nil
+}
+
+func toHTTPFormat(repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	if schema.Scheme == "https" {
+		return repoUrl, nil
+	}
+
+	//https://github.com/ipfs-force-community/damocles.git
+	return fmt.Sprintf("https://github.com/%s", schema.Path), nil
 }
 
 func execCmd(dir string, name string, arg ...string) error {

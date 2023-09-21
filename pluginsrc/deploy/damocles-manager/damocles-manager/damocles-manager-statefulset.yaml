@@ -16,7 +16,7 @@ spec:
       initContainers:
         - name: init-myservice
           image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \".damocles-manager\" ]||(mkdir -p /root/.damocles-manager && cp /root/sector-manager.tmp /root/.damocles-manager/sector-manager.cfg);"]
+          command: ['sh', '-c', "[ -d \"/root/.damocles-manager\" ]||(mkdir -p /root/.damocles-manager && cp /root/sector-manager.tmp /root/.damocles-manager/sector-manager.cfg);"]
           volumeMounts:
             - mountPath: /root
               name: damocles-pvc

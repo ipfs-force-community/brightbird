@@ -4,13 +4,19 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"os"
+	"strconv"
 
 	"github.com/filecoin-project/go-address"
+	"github.com/filecoin-project/go-jsonrpc"
+	"github.com/filecoin-project/go-state-types/abi"
+	vapi "github.com/filecoin-project/venus/venus-shared/api"
 	"github.com/ipfs-force-community/brightbird/env"
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
+	"github.com/ipfs-force-community/damocles/damocles-manager/core"
 	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
 )
@@ -24,15 +30,18 @@ type VConfig struct {
 	PieceStores   []string `jsonschema:"-"`
 	PersistStores []string `jsonschema:"-"`
 
-	NodeUrl      string `jsonschema:"-"`
-	MessagerUrl  string `jsonschema:"-"`
-	MarketUrl    string `jsonschema:"-"`
-	GatewayUrl   string `jsonschema:"-"`
-	MinerAddress string `jsonschema:"-"`
+	NodeUrl     string `jsonschema:"-"`
+	MessagerUrl string `jsonschema:"-"`
+	MarketUrl   string `jsonschema:"-"`
+	GatewayUrl  string `jsonschema:"-"`
 
-	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" description:"sender wallet address"`
-	UserToken           string          `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true" description:"user token"`
-	SendFund            string          `jsonschema:"-"`
+	UserToken string `json:"userToken" jsonschema:"userToken" title:"UserToken" require:"true" `
+}
+
+type MinerCfg struct {
+	SendFund            string          `json:"sendFund"  jsonschema:"sendFund" title:"sendFund" require:"true" default:"false" description:"sendFund"`
+	MinerActor          abi.ActorID     `json:"minerActor"  jsonschema:"minerActor" title:"MinerActor" require:"true" `
+	SenderWalletAddress address.Address `json:"senderWalletAddress"  jsonschema:"senderWalletAddress" title:"SenderWalletAddress" require:"true" `
 }
 
 type DamoclesManagerReturn struct { //nolint
@@ -223,4 +232,75 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+}
+
+func AddMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, damoclesInstance DamoclesManagerReturn, minerCfg MinerCfg) error {
+	//write config
+	pods, err := GetPods(ctx, k8sEnv, damoclesInstance.InstanceName)
+	if err != nil {
+		return err
+	}
+
+	minerCfgFs, err := f.Open("damocles-manager/miner-cfg.toml")
+	if err != nil {
+		return err
+	}
+
+	data, err := env.QuickRender(minerCfgFs, struct {
+		SendFund            string
+		MinerActor          string
+		SenderWalletAddress string
+	}{
+		SendFund:            minerCfg.SendFund,
+		MinerActor:          strconv.Itoa(int(minerCfg.MinerActor)),
+		SenderWalletAddress: minerCfg.SenderWalletAddress.String(),
+	})
+	if err != nil {
+		return err
+	}
+
+	script := fmt.Sprintf(`cat <<EOT >> %s
+	%s
+EOT`, "/root/.damocles-manager/sector-manager.cfg", string(data))
+	for _, pod := range pods {
+		err = k8sEnv.ExecRemoteCmdWithStream(ctx, pod.Name, false, os.Stdout, nil, "/bin/bash", "-c", script)
+		if err != nil {
+			return err
+		}
+	}
+
+	//restart
+	for _, pod := range pods {
+		err = k8sEnv.DeletePodAndWait(ctx, pod.GetName())
+		if err != nil {
+			return fmt.Errorf("restart pod %s", pod.GetName())
+		}
+	}
+
+	svc, err := k8sEnv.GetSvc(ctx, damoclesInstance.SVCName)
+	if err != nil {
+		return err
+	}
+	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func BuildDamoclesClient(ctx context.Context, damoclesManager DamoclesManagerReturn) (core.APIClient, jsonrpc.ClientCloser, error) {
+	ainfo := vapi.NewAPIInfo(damoclesManager.SvcEndpoint.ToMultiAddr(), "")
+	apiAddr, err := ainfo.DialArgs(vapi.VerString(core.MajorVersion))
+	if err != nil {
+		return core.APIClient{}, nil, err
+	}
+
+	var client core.APIClient
+	closer, err := jsonrpc.NewMergeClient(ctx, apiAddr, core.APINamespace, []interface{}{&client}, ainfo.AuthHeader(), jsonrpc.WithRetry(true))
+	if err != nil {
+		return core.APIClient{}, nil, err
+	}
+
+	return client, closer, nil
 }

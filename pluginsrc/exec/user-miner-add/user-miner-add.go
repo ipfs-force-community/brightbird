@@ -22,7 +22,7 @@ var Info = types.PluginInfo{
 	Name:        "user-miner-add",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "user miner add",
+	Description: "add miner in sophon auth",
 }
 
 type TestCaseParams struct {

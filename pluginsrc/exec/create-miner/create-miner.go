@@ -56,9 +56,10 @@ type TestCaseParams struct {
 }
 
 type CreateMinerReturn struct {
-	Miner  address.Address `json:"miner" jsonschema:"miner" title:"Miner Address" require:"true" description:"miner address"`
-	Owner  address.Address `json:"owner" jsonschema:"owner" title:"Owner Address" require:"true" description:"owner address of miner"`
-	Worker address.Address `json:"worker" jsonschema:"worker" title:"Worker Address" require:"true" description:"worker address of miner"`
+	MinerID abi.ActorID     `json:"minerId" jsonschema:"minerId" title:"Miner Actor Id" require:"true" description:"miner actor id"`
+	Miner   address.Address `json:"miner" jsonschema:"miner" title:"Miner Address" require:"true" description:"miner address"`
+	Owner   address.Address `json:"owner" jsonschema:"owner" title:"Owner Address" require:"true" description:"owner address of miner"`
+	Worker  address.Address `json:"worker" jsonschema:"worker" title:"Worker Address" require:"true" description:"worker address of miner"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*CreateMinerReturn, error) {
@@ -67,11 +68,26 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		fmt.Printf("create miner failed: %v\n", err)
 		return nil, err
 	}
+	chainRPC, closer, err := chain.DialFullNodeRPC(ctx, params.Venus.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer closer()
 
+	idAddr, err := chainRPC.StateLookupID(ctx, minerAddr, vTypes.EmptyTSK)
+	if err != nil {
+		return nil, err
+	}
+
+	actorID, err := address.IDFromAddress(idAddr)
+	if err != nil {
+		return nil, err
+	}
 	return &CreateMinerReturn{
-		Miner:  minerAddr,
-		Owner:  params.WalletAddr,
-		Worker: params.WalletAddr,
+		MinerID: abi.ActorID(actorID),
+		Miner:   minerAddr,
+		Owner:   params.WalletAddr,
+		Worker:  params.WalletAddr,
 	}, nil
 }
 
