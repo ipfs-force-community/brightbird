@@ -100,11 +100,9 @@ export default {
   },
   setup(props: any, { emit }) {
     const pageSize = 15;
-    const router = useRouter();
     const store = useStore();
     const loading = ref<boolean>();
     const creationActivated = ref<boolean>(false);
-    const editionActivated = ref<boolean>(false);
     const jobId = ref<string>();
     const projectGroupFoldingMapping = store.state[namespace];
     const { mapMutations } = createNamespacedHelpers(namespace);
@@ -219,9 +217,8 @@ export default {
     const run = async (id: string) => {
       try {
         const taskId = await execImmediately(id);
-        const task = await getTask({ ID: taskId });
+        await getTask({ ID: taskId });
         await fetchJobDetail();
-        proxy.$alert(`create new task ${task.name}`);
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {

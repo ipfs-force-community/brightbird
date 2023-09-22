@@ -186,6 +186,7 @@ export default defineComponent({
     const timer= setInterval(async () => {
       try {
         if (podList.value.length > 0) {
+          await loadPodList();
           podLog.value = await getPodLog({
             podName: selectedPod.value,
             testID: props.testId,
