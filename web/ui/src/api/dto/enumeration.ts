@@ -131,6 +131,7 @@ export enum TaskStateEnum {
   TempError = 3,
   Error = 4,
   Successful = 5,
+  Building = 6,
 }
 
 export namespace TaskStateEnum {
@@ -146,6 +147,8 @@ export namespace TaskStateEnum {
         return 'error';
       case TaskStateEnum.Successful:
         return 'success';
+        case TaskStateEnum.Building:
+          return 'building';
     }
   }
 }
