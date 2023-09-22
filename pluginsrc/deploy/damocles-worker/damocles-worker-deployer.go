@@ -34,7 +34,7 @@ type VConfig struct {
 	MinerAddress       string   `jsonschema:"-"`
 }
 
-type DropletMarketDeployReturn struct {
+type DamoclesWorkerReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }
@@ -95,7 +95,7 @@ make docker-push-worker TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_RE
 //go:embed  damocles-worker
 var f embed.FS
 
-func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DropletMarketDeployReturn, error) {
+func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*DamoclesWorkerReturn, error) {
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
@@ -169,7 +169,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 
-	return &DropletMarketDeployReturn{
+	return &DamoclesWorkerReturn{
 		VConfig: cfg.VConfig,
 		CommonDeployParams: env.CommonDeployParams{
 			BaseConfig:      cfg.BaseConfig,

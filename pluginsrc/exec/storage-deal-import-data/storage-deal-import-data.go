@@ -5,13 +5,17 @@ import (
 
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/ipfs/go-cid"
+	logging "github.com/ipfs/go-log/v2"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/pvc"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
+
+var log = logging.Logger("storage-deal-import-data")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -25,11 +29,12 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
+	Droplet    dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
+	PieceStore pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
 
-	DealPropCid *cid.Cid `json:"DealPropCid"  jsonschema:"DealPropCid"  title:"DealPropCid" require:"true" description:"DealPropCid"`
-	CarFile     string   `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
-	SkipCommP   bool     `json:"skipCommP"  jsonschema:"skipCommP"  title:"skipCommP" default:"false" require:"true" description:"skip calculate the piece-cid"`
+	ProposalCid string `json:"ProposalCid"  jsonschema:"ProposalCid"  title:"ProposalCid" require:"true" description:"ProposalCid"`
+	CarFile     string `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
+	SkipCommP   bool   `json:"skipCommP"  jsonschema:"skipCommP"  title:"skipCommP" require:"true" default:"false" description:"skip calculate the piece-cid"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -39,7 +44,20 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	err = client.DealsImportData(ctx, *params.DealPropCid, params.CarFile, params.SkipCommP)
+	mountPath := "/carfile/"
+	err = dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
+	if err != nil {
+		return err
+	}
+
+	proposalCid, err := cid.Decode(params.ProposalCid)
+	if err != nil {
+		return err
+	}
+
+	log.Debug("proposalCid: ", proposalCid)
+
+	err = client.DealsImportData(ctx, proposalCid, params.CarFile, params.SkipCommP)
 	if err != nil {
 		return err
 	}

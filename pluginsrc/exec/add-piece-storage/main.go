@@ -33,7 +33,8 @@ type TestCaseParams struct {
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.DropletMarket, params.PieceStore.Name)
+	mountPath := "/piece/"
+	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.DropletMarket, params.PieceStore.Name, mountPath)
 	if err != nil {
 		return err
 	}
@@ -41,6 +42,12 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	pods, err := dropletmarket.GetPods(ctx, k8sEnv, params.DropletMarket.InstanceName)
 	if err != nil {
 		return err
+	}
+	for _, pod := range pods {
+		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "/bin/bash", "-c", fmt.Sprintf("./droplet piece-storage add-fs --name %s --path %s", params.PieceStore.Name, mountPath+params.PieceStore.Name))
+		if err != nil {
+			return err
+		}
 	}
 
 	pieceList, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/bash", "-c", "./droplet piece-storage list")

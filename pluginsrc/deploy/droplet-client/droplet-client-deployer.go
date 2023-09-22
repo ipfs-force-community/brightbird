@@ -178,3 +178,46 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DropletClien
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-client-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }
+
+func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, clientInstance DropletClientDeployReturn, piecePvc, mountPath string) error {
+	statefulset, err := k8sEnv.GetStatefulSet(ctx, clientInstance.StatefulSetName)
+	if err != nil {
+		return err
+	}
+	volumes := statefulset.Spec.Template.Spec.Volumes
+	for _, vol := range volumes {
+		if vol.Name == piecePvc {
+			return fmt.Errorf("piece pvc %s exist", piecePvc)
+		}
+	}
+
+	volumes = append(volumes, corev1.Volume{
+		Name: piecePvc,
+		VolumeSource: corev1.VolumeSource{
+			PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+				ClaimName: piecePvc,
+			},
+		},
+	})
+	statefulset.Spec.Template.Spec.Volumes = volumes
+	statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulset.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+		Name:      piecePvc,
+		MountPath: mountPath + piecePvc,
+	})
+	//restart
+	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
+	if err != nil {
+		return err
+	}
+
+	svc, err := k8sEnv.GetSvc(ctx, clientInstance.SVCName)
+	if err != nil {
+		return err
+	}
+	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
