@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
-	"github.com/filecoin-project/go-state-types/abi"
 	clientapi "github.com/filecoin-project/venus/venus-shared/api/market/client"
 	"github.com/filecoin-project/venus/venus-shared/types/market/client"
 	logging "github.com/ipfs/go-log/v2"
@@ -29,15 +27,15 @@ var Info = types.PluginInfo{
 	Name:        "client-storage-deals-get",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
-	Description: "验证droplet在被检索时功能是否正常",
+	Description: "在droplet-client检索订单的状态是否符合预期",
 }
 
 type TestCaseParams struct {
 	DropletClient dropletclient.DropletClientDeployReturn `json:"DropletClient" jsonschema:"DropletClient" title:"DropletClient" require:"true" description:"droplet client return"`
 
-	State   storagemarket.StorageDealStatus `json:"state" jsonschema:"state" title:"state" require:"true" description:"29-AwaitingPreCommit"`
-	DealCid string                          `json:"DealCid" jsonschema:"DealCid" title:"DealCid" require:"true" description:"DealCid"`
-	TimeOut int                             `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10" description:"TimeOut"`
+	State       storagemarket.StorageDealStatus `json:"state" jsonschema:"state" title:"state" require:"true" description:"13-CheckForAcceptance, 29-AwaitingPreCommit"`
+	ProposalCid string                          `json:"ProposalCid" jsonschema:"ProposalCid" title:"ProposalCid" require:"true" description:"ProposalCid"`
+	TimeOut     int                             `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10" description:"TimeOut"`
 }
 
 type ClientStorageDealsList = []client.DealInfo
@@ -50,42 +48,43 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	defer closer()
 
 	var finalDeals []client.DealInfo
-	DealCid, _ := strconv.ParseInt(params.DealCid, 10, 64)
-	paramDealID := abi.DealID(DealCid)
 
 	startTime := time.Now()
 	timeout := time.Duration(params.TimeOut) * time.Second
 
 	for {
-		localDeals, err := api.ClientListOfflineDeals(ctx)
+		localDeals, err := api.ClientListDeals(ctx)
 		if err != nil {
 			return nil, err
 		}
-
+		log.Debugln("params.DealCid: ", params.ProposalCid)
 		for _, deal := range localDeals {
-			if params.State == deal.State && paramDealID == deal.DealID {
+			log.Debugln("deal.ProposalCid: ", deal.ProposalCid)
+			if params.ProposalCid == deal.ProposalCid.String() {
 				finalDeals = append(finalDeals, deal)
 			}
 		}
+
 		if len(finalDeals) > 0 {
 			for _, deal := range finalDeals {
+				log.Debugln("params.State: ", params.State)
+				log.Debugln("deal.State: ", deal.State)
 				if deal.State == storagemarket.StorageDealFailing || deal.State == storagemarket.StorageDealError {
 					return nil, fmt.Errorf("deal failing or has error")
+				} else if params.State == deal.State {
+					return &finalDeals, nil
 				}
 			}
-			break
 		}
 
 		elapsedTime := time.Since(startTime)
 
 		if elapsedTime >= timeout {
 			log.Errorln("time out error")
-			break
+			return nil, fmt.Errorf("time out error")
 		}
 
 		time.Sleep(1 * time.Second)
 		finalDeals = []client.DealInfo{}
 	}
-
-	return &finalDeals, nil
 }

@@ -24,7 +24,7 @@ type DepParams struct {
 	MinerAddress    address.Address                       `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
-func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesworker.DropletMarketDeployReturn, error) {
+func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) (*damoclesworker.DamoclesWorkerReturn, error) {
 	return damoclesworker.DeployFromConfig(ctx, k8sEnv, damoclesworker.Config{
 		BaseConfig: depParams.BaseConfig,
 		VConfig: damoclesworker.VConfig{

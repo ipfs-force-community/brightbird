@@ -144,8 +144,7 @@ func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName strin
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }
 
-func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketInstance DropletMarketDeployReturn, piecePvc string) error {
-	//mount
+func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketInstance DropletMarketDeployReturn, piecePvc, mountPath string) error {
 	statefulset, err := k8sEnv.GetStatefulSet(ctx, marketInstance.StatefulSetName)
 	if err != nil {
 		return err
@@ -168,7 +167,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 	statefulset.Spec.Template.Spec.Volumes = volumes
 	statefulset.Spec.Template.Spec.Containers[0].VolumeMounts = append(statefulset.Spec.Template.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
 		Name:      piecePvc,
-		MountPath: "/piece/" + piecePvc,
+		MountPath: mountPath + piecePvc,
 	})
 	//restart
 	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
@@ -183,18 +182,6 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return err
-	}
-
-	//write config
-	pods, err := GetPods(ctx, k8sEnv, marketInstance.InstanceName)
-	if err != nil {
-		return err
-	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "/bin/bash", "-c", fmt.Sprintf("./droplet piece-storage add-fs --name %s --path %s", piecePvc, "/piece/"+piecePvc))
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
