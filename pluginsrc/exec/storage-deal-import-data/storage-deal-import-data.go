@@ -78,10 +78,5 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return err
 	}
 
-	// err = client.DealsImportData(ctx, proposalCid, params.CarFile, params.SkipCommP)
-	// if err != nil {
-	// 	return err
-	// }
-
 	return nil
 }
