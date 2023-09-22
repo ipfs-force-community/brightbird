@@ -41,6 +41,9 @@ const (
 	Error
 	// Successful task success
 	Successful
+
+	// Indicated the task have build before
+	Building
 )
 
 // Task
@@ -59,6 +62,10 @@ type Task struct {
 	InheritVersions map[string]string  `json:"inheritVersions"` // save a copy of task flow, but task flow update version information in this running
 	CommitMap       map[string]string  `json:"versions"`        // save a copy of task's commit of each deploy component in testflow
 	BaseTime        `bson:",inline"`
+}
+
+func (task *Task) BeforeBuild() bool {
+	return task.State == 0 || task.State == Init
 }
 
 func (task Task) InRunning() bool {

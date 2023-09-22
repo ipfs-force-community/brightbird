@@ -1,29 +1,20 @@
 <template>
   <div class="task-item">
-    <div
-      :class="{
-        'state-bar': true,
-        [formatState(task.state).toLowerCase()]: true,
-      }"
-    ></div>
+    <div :class="{
+      'state-bar': true,
+      [formatState(task.state).toLowerCase()]: true,
+    }"></div>
     <div class="content">
-      <router-link
-        :to="{
-          name: 'task-detail',
-          query: { testId: task.testId },
-        }"
-      >
+      <router-link :to="{
+        name: 'task-detail',
+        query: { testId: task.testId },
+      }">
         <div class="content-top">
           <jm-text-viewer :value="task.name" :class="{ title: true }" />
         </div>
       </router-link>
       <div class="content-center">
-        <jm-text-viewer
-          class="log"
-          v-for="(log, index) of latestlog(task.logs)"
-          :key="index"
-          :value="`${log}`"
-        />
+        <jm-text-viewer class="log" v-for="(log, index) of latestlog(task.logs)" :key="index" :value="`${log}`" />
       </div>
 
       <div class="content-bottom">
@@ -73,9 +64,11 @@ export default defineComponent({
 
     const formatState = (state: TaskStateEnum): string =>
       TaskStateEnum.toString(state);
+
     const latestlog = (log: string[]): string[] => {
       return log.slice(log.length - 3).reverse();
     };
+
     return {
       cancelTask,
       formatState,
@@ -138,18 +131,19 @@ export default defineComponent({
     }
 
     &.running {
-      background-image: repeating-linear-gradient(
-        115deg,
-        #10c2c2 0px,
-        #58d4d4 1px,
-        #58d4d4 10px,
-        #10c2c2 11px,
-        #10c2c2 16px
-      );
+      background-image: repeating-linear-gradient(115deg,
+          #10c2c2 0px,
+          #58d4d4 1px,
+          #58d4d4 10px,
+          #10c2c2 11px,
+          #10c2c2 16px);
       background-size: 106px 114px;
       animation: 3s linear 0s infinite normal none running workflow-running;
     }
 
+    &.building {
+      background-color: #ad82f7;
+    }
     &.success {
       background-color: #3ebb03;
     }
@@ -181,6 +175,7 @@ export default defineComponent({
       .log {
         font-size: 10px;
       }
+
       .status {
         margin-top: 10px;
         display: flex;
@@ -202,12 +197,13 @@ export default defineComponent({
       .podname {
         font-size: 10px;
       }
+
       .operation {
         min-height: 26px;
         display: flex;
         align-items: center;
 
-        button + button {
+        button+button {
           margin-left: 20px;
         }
 
