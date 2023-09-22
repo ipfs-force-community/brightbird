@@ -1,9 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
 	"context"
+	"fmt"
 	"text/template"
 
 	"github.com/ipfs/go-cid"
@@ -58,8 +58,8 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 
 	data := map[string]interface{}{
-		"ProposalCid":  params.ProposalCid,
-		"CarFile": params.CarFile,
+		"ProposalCid": params.ProposalCid,
+		"CarFile":     params.CarFile,
 	}
 
 	var importDataCmd bytes.Buffer

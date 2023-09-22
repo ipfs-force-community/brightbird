@@ -69,7 +69,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 			return nil, err
 		}
 		log.Debugln("deals:", deals)
-		
+
 		log.Debugln("params.DealCid: ", params.ProposalCid)
 		for _, deal := range deals {
 			log.Debugln("deal.ProposalCid: ", deal.ProposalCid)
