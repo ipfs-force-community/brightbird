@@ -26,14 +26,16 @@
               </div>
             </div>
             <div class="right">
+              <span>最后修改时间:{{ datetimeFormatter(jobVo?.modifiedTime) }}</span>
               <span>类型:{{ jobVo?.jobType }}</span>
               <div class="operation">
-                <div class="run op-item" @click="run(jobVo?.id)"></div>
-                <div class="edit op-item" @click="toEdit(jobVo?.id)"></div>
-                <div
+                <ElButton type="primary"><div class="run op-item" @click="run(jobVo?.id)"/></ElButton>
+                
+               <el-button type="primary"> <div class="edit op-item" @click="toEdit(jobVo?.id)"></div></el-button>
+               <el-button type="primary"> <div
                   class="delete op-item"
                   @click="toDelete(jobVo?.name, jobVo?.id)"
-                ></div>
+                ></div></el-button>
               </div>
             </div>
           </div>
@@ -56,8 +58,8 @@
           </div>
           <!-- 显示更多 -->
           <div class="load-more" v-show="toggle">
-            <jm-load-more :state="loadState" :load-more="btnDown"
-              >LoadMore</jm-load-more>
+            <el-pagination :total="pageData.total" :page-size="pageSize" @current-change="btnDown">
+            </el-pagination>
           </div>
           </div>
         </template>
@@ -66,10 +68,9 @@
   </div>
 </template>
 <script lang="ts">
-import { getCurrentInstance, onMounted, ref, PropType, computed } from 'vue';
+import { getCurrentInstance, onMounted, ref, PropType, computed, onUnmounted } from 'vue';
 import { ITaskVo } from '@/api/dto/tasks';
 import {
-  deleteJob,
   execImmediately,
   getJobDetail,
   listJobs,
@@ -86,8 +87,10 @@ import { namespace } from '@/store/modules/test-flow';
 import { useRouter } from 'vue-router';
 import { Mutable } from '@/utils/lib';
 import { TaskStateEnum } from '@/api/dto/enumeration';
+import { datetimeFormatter } from '@/utils/formatter';
+import { ElPagination, ElButton } from 'element-plus';
 export default {
-  components: { TaskItem, Folding },
+  components: { TaskItem, Folding, ElPagination, ElButton },
   emits:['toEdit', 'toDelete'],
   props: {
     jobVo: {
@@ -96,6 +99,7 @@ export default {
     },
   },
   setup(props: any, { emit }) {
+    const pageSize = 15;
     const router = useRouter();
     const store = useStore();
     const loading = ref<boolean>();
@@ -138,7 +142,7 @@ export default {
         const queryTask = await getTaskInJob({
           jobId: props.jobVo?.id,
           pageNum: 1,
-          pageSize: 10,
+          pageSize: pageSize,
         });
         pageData.value.total = queryTask.total;
         pageData.value.pages = queryTask.pages;
@@ -170,7 +174,7 @@ export default {
     };
 
     // 更新状态 
-    setInterval(async () => {
+    const timer =  setInterval(async () => {
       try {
         for (var i = 0; i < pageData.value.tasks.length; i++) {
           if (pageData.value.tasks[i].state !== TaskStateEnum.Error && pageData.value.tasks[i].state !== TaskStateEnum.Successful) {
@@ -182,16 +186,16 @@ export default {
       }
     }, 10000);
 
-    const btnDown = async () => {
+    const btnDown = async value => {      
       try {
         if (pageData.value.pageNum < pageData.value.pages) {
           pageData.value.pageNum++;
           const queryTask = await getTaskInJob({
             jobId: props.jobVo?.id,
-            pageNum: pageData.value.pageNum,
-            pageSize: 10,
+            pageNum: value,
+            pageSize:pageSize,
           });
-          pageData.value.tasks.push(...queryTask.list);
+          pageData.value.tasks = queryTask.list;
           pageData.value.total = queryTask.total;
           pageData.value.pages = queryTask.pages;
           if (pageData.value.pageNum === pageData.value.pages) {
@@ -236,7 +240,11 @@ export default {
     onMounted(async () => {
       await fetchJobDetail();
     });
+    onUnmounted(() => {
+      clearInterval(timer);
+    });
     return {
+      pageSize,
       creationActivated,
       jobId,
       loading,
@@ -253,6 +261,7 @@ export default {
       toEdit,
       toDelete,
       fetchJobList,
+      datetimeFormatter,
     };
   },
 };
@@ -309,8 +318,12 @@ export default {
       color: #082340;
       font-weight: normal;
       font-size: 14px;
-      opacity: 0.46;
+      
+      column-gap: 10px;
 
+      span {
+        opacity: 0.46;
+      }
       .operation {
         display: flex;
         margin-left: 40px;
@@ -330,12 +343,11 @@ export default {
             background-image: url("@/assets/svgs/btn/rocketstart.svg");
           }
           &.edit {
-            background-image: url("@/assets/svgs/btn/edit.svg");
+            background-image: url("@/assets/svgs/btn/edit2.svg");
           }
 
           &.delete {
-            margin-left: 15px;
-            background-image: url("@/assets/svgs/btn/del.svg");
+            background-image: url("@/assets/svgs/btn/del3.svg");
           }
         }
       }

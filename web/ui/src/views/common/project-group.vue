@@ -129,6 +129,10 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
+    projectName:{
+      type:String,
+      require:true,
+    },
   },
   setup(props: any) {
     const store = useStore();
@@ -156,7 +160,12 @@ export default defineComponent({
       list: [],
       pageNum: START_PAGE_NUM,
     });
-    const testflows = computed<ITestFlowDetail[]>(() => projectPage.value.list);
+    const testflows = computed<ITestFlowDetail[]>(() => projectPage.value.list.filter(value=>{
+      if (props?.projectName !== '') {
+        return value.name.includes(props?.projectName);
+      }
+      return true;
+    }));
 
     const queryForm = ref<IQueryForm>({
       pageNum: START_PAGE_NUM,
@@ -256,7 +265,6 @@ export default defineComponent({
       queryForm.value.name = props.name;
       queryForm.value.groupId = props.testflowGroup?.id;
     });
-    const currentItem = ref<string>('');
 
     reloadCurrentProjectList(); // init
     return {

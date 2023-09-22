@@ -3,8 +3,6 @@
       <div class="main">
         <!-- 全部项目 -->
         <all-project v-if="searchResultFlag" />
-        <!-- 搜索结果 -->
-        <search-project :searchName="searchName" :groupId="groupId" v-else />
       </div>
     </div>
   </template>
@@ -12,10 +10,9 @@
 <script lang="ts">
 import { computed, defineComponent } from 'vue';
 import AllProject from '@/views/index/all-project.vue';
-import SearchProject from '@/views/index/search-project.vue';
   
 export default defineComponent({
-  components: { AllProject, SearchProject },
+  components: { AllProject },
   props: {
     searchName: {
       type: String,

@@ -86,6 +86,7 @@ import {
   onMounted,
   provide,
   ref,
+  onUnmounted,
 } from 'vue';
 import { listAllPod, getPodLog } from '@/api/log';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
@@ -182,7 +183,7 @@ export default defineComponent({
       }
     };
 
-    setInterval(async () => {
+    const timer= setInterval(async () => {
       try {
         if (podList.value.length > 0) {
           podLog.value = await getPodLog({
@@ -204,6 +205,10 @@ export default defineComponent({
 
       // 加载第一个 Pod 的日志
       await loadFirstPodLog();
+    });
+
+    onUnmounted(() => {
+      clearInterval(timer);
     });
 
     return {
