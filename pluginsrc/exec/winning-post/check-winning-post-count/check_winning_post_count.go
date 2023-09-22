@@ -66,16 +66,18 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	head, err := chainRPC.ChainHead(ctx)
-	if err != nil {
-		return err
-	}
-
 	networkParams, err := chainRPC.StateGetNetworkParams(ctx)
 	if err != nil {
 		return nil
 	}
 	blockDelaySecs := int(networkParams.BlockDelaySecs)
+
+	time.Sleep(3 * time.Duration(blockDelaySecs) * time.Second)
+
+	head, err := chainRPC.ChainHead(ctx)
+	if err != nil {
+		return err
+	}
 
 	startHeight := int(head.Height())
 	endHeight := startHeight + params.CheckCount
