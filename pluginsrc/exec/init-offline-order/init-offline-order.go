@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"path/filepath"
+	"text/template"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
@@ -21,6 +23,7 @@ import (
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	dropletclient "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-client"
+	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/pvc"
 	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
 	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 	"github.com/ipfs-force-community/brightbird/types"
@@ -44,11 +47,14 @@ type TestCaseParams struct {
 	Auth          sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 	Venus         venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
 	DropletClient dropletclient.DropletClientDeployReturn `json:"DropClient" jsonschema:"DropClient" title:"DropletClient" description:"droplet client return"`
+	PieceStore    pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
 
 	MinerAddress address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
 	Price        vtypes.FIL      `json:"Price"  jsonschema:"Price"  title:"Price" require:"true" default:"0.01fil" description:"price"`
 	Duration     int64           `json:"Duration"  jsonschema:"Duration"  title:"Duration" default:"518400" require:"true" description:"Set the price of the ask for retrievals"`
+	FileSize     string          `json:"FileSize" jsonschema:"FileSize" title:"FileSize" default:"1M" require:"true" description:"File size in bytes (b=512, kB=1000, K=1024, MB=kB*kB, M=K*K, GB=kB*kB*kB, G=K*K*K)"`
 
+	StatelessDeal      bool            `json:"StatelessDeal"  jsonschema:"StatelessDeal"  title:"StatelessDeal" default:"false" require:"true" description:"true离线订单/false在线订单"`
 	From               address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
 	StartEpoch         int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
 	FastRetrieval      bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
@@ -56,10 +62,8 @@ type TestCaseParams struct {
 }
 
 type InitOfflineOrderReturn struct {
-	DealCid     string
+	ProposalCid string
 	CarFile     string
-	DealPropCid *cid.Cid
-	CarFilePath string
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*InitOfflineOrderReturn, error) {
@@ -69,34 +73,55 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
+	mountPath := "/carfile/"
+	filePath := mountPath + params.PieceStore.Name + "/file.txt"
+	carFile := filePath + ".car"
+	log.Debugln("carFilePath:", carFile)
+
+	tmpl, err := template.New("command").Parse("dd if=/dev/urandom of={{.FilePath}} bs={{.BlockSize}} count=1")
+	if err != nil {
+		return nil, fmt.Errorf("parase template: %v", err)
+	}
+
+	data := map[string]interface{}{
+		"FilePath":  filePath,
+		"BlockSize": params.FileSize,
+	}
+
+	var createFileCmd bytes.Buffer
+	err = tmpl.Execute(&createFileCmd, data)
+	if err != nil {
+		panic(err)
+	}
+
+	err = dropletclient.AddPieceStoragge(ctx, k8sEnv, params.DropletClient, params.PieceStore.Name, mountPath)
+	if err != nil {
+		return nil, err
+	}
+
 	pods, err := dropletclient.GetPods(ctx, k8sEnv, params.DropletClient.InstanceName)
 	if err != nil {
 		return nil, err
 	}
 
-	filePath := "/root/file.txt"
-	_, err = k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/sh", "-c", "head -c 200 /dev/urandom | tr -dc 'a-zA-Z0-9' > /root/file.txt")
+	_, err = k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/sh", "-c", createFileCmd.String())
 	if err != nil {
 		return nil, err
 	}
-
-	carFile := filePath + ".car"
 
 	dataImportReturns, err := GetCidAndPieceSize(ctx, api, filePath, carFile)
 	if err != nil {
 		return nil, err
 	}
 
-	DealCid, dealPropCid, err := StorageDealsInit(ctx, params, api, dataImportReturns)
+	proposalCid, err := StorageDealsInit(ctx, params, api, dataImportReturns)
 	if err != nil {
 		return nil, err
 	}
 
 	return &InitOfflineOrderReturn{
-		DealCid:     DealCid,
 		CarFile:     carFile,
-		DealPropCid: dealPropCid,
-		CarFilePath: carFile,
+		ProposalCid: proposalCid,
 	}, nil
 }
 
@@ -143,7 +168,7 @@ func GetCidAndPieceSize(ctx context.Context, api clientapi.IMarketClient, file, 
 	}, nil
 }
 
-func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.IMarketClient, initData *DataImportReturn) (string, *cid.Cid, error) {
+func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.IMarketClient, initData *DataImportReturn) (string, error) {
 	data := &storagemarket.DataRef{
 		TransferType: storagemarket.TTManual,
 		Root:         initData.Root,
@@ -153,10 +178,10 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 
 	MinDealDuration, MaxDealDuration := policy.DealDurationBounds(0)
 	if abi.ChainEpoch(params.Duration) < MinDealDuration {
-		return "", nil, fmt.Errorf("minimum deal duration is %d blocks", MinDealDuration)
+		return "", fmt.Errorf("minimum deal duration is %d blocks", MinDealDuration)
 	}
 	if abi.ChainEpoch(params.Duration) > MaxDealDuration {
-		return "", nil, fmt.Errorf("maximum deal duration is %d blocks", MaxDealDuration)
+		return "", fmt.Errorf("maximum deal duration is %d blocks", MaxDealDuration)
 	}
 
 	var wallet address.Address
@@ -165,7 +190,7 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 	} else {
 		def, err := api.DefaultAddress(ctx)
 		if err != nil {
-			return "", nil, err
+			return "", err
 		}
 		wallet = def
 	}
@@ -184,16 +209,25 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		ProviderCollateral: params.ProviderCollateral,
 	}
 
-	proposal, err := api.ClientStartDeal(ctx, sdParams)
+	var proposal *cid.Cid
+	var err error
+	if params.StatelessDeal {
+		if params.Price.Int64() != 0 {
+			return "", fmt.Errorf("when manual-stateless-deal is enabled, you must also provide a 'price' of 0 and specify 'manual-piece-cid' and 'manual-piece-size'")
+		}
+		proposal, err = api.ClientStatelessDeal(ctx, sdParams)
+	} else {
+		proposal, err = api.ClientStartDeal(ctx, sdParams)
+	}
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	encoder := cidenc.Encoder{Base: multibase.MustNewEncoder(multibase.Base32)}
 	if err != nil {
-		return "", nil, err
+		return "", err
 	}
 
 	log.Debugln("DealCid cid: ", encoder.Encode(*proposal))
-	return encoder.Encode(*proposal), proposal, nil
+	return encoder.Encode(*proposal), nil
 }
