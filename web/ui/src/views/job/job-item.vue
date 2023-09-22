@@ -188,19 +188,16 @@ export default {
 
     const btnDown = async value => {      
       try {
-        if (pageData.value.pageNum < pageData.value.pages) {
-          pageData.value.pageNum++;
-          const queryTask = await getTaskInJob({
-            jobId: props.jobVo?.id,
-            pageNum: value,
-            pageSize:pageSize,
-          });
-          pageData.value.tasks = queryTask.list;
-          pageData.value.total = queryTask.total;
-          pageData.value.pages = queryTask.pages;
-          if (pageData.value.pageNum === pageData.value.pages) {
-            loadState.value = StateEnum.NO_MORE;
-          }
+        const queryTask = await getTaskInJob({
+          jobId: props.jobVo?.id,
+          pageNum: value,
+          pageSize:pageSize,
+        });
+        pageData.value.tasks = queryTask.list;
+        pageData.value.total = queryTask.total;
+        pageData.value.pages = queryTask.pages;
+        if (pageData.value.pageNum === pageData.value.pages) {
+          loadState.value = StateEnum.NO_MORE;
         }
       } catch (err) {
         proxy.$throw(err, proxy);
@@ -364,7 +361,10 @@ export default {
   }
 
   .load-more {
+    display: flex;
+    justify-content: center;
     text-align: center;
+    padding-bottom: 20px;
   }
 }
 </style>
