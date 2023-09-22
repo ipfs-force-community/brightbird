@@ -34,7 +34,7 @@ type VConfig struct {
 	MinerAddress       string   `jsonschema:"-"`
 }
 
-type DamoclesWorkerReturn struct {
+type DamoclesWorkerReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
 }
