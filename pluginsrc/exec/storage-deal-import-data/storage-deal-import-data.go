@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"text/template"
 
-	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
 	"github.com/ipfs/go-cid"
 	logging "github.com/ipfs/go-log/v2"
 
@@ -34,18 +36,11 @@ type TestCaseParams struct {
 
 	ProposalCid string `json:"ProposalCid"  jsonschema:"ProposalCid"  title:"ProposalCid" require:"true" description:"ProposalCid"`
 	CarFile     string `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
-	SkipCommP   bool   `json:"skipCommP"  jsonschema:"skipCommP"  title:"skipCommP" require:"true" default:"false" description:"skip calculate the piece-cid"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	client, closer, err := marketapi.DialIMarketRPC(ctx, params.Droplet.SvcEndpoint.ToMultiAddr(), params.Droplet.UserToken, nil)
-	if err != nil {
-		return err
-	}
-	defer closer()
-
 	mountPath := "/carfile/"
-	err = dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
+	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
 	if err != nil {
 		return err
 	}
@@ -57,7 +52,28 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 
 	log.Debug("proposalCid: ", proposalCid)
 
-	err = client.DealsImportData(ctx, proposalCid, params.CarFile, params.SkipCommP)
+	tmpl, err := template.New("command").Parse("./droplet storage deal import-data {{.ProposalCid}} {{.CarFile}}")
+	if err != nil {
+		return fmt.Errorf("parase template: %v", err)
+	}
+
+	data := map[string]interface{}{
+		"ProposalCid": params.ProposalCid,
+		"CarFile":     params.CarFile,
+	}
+
+	var importDataCmd bytes.Buffer
+	err = tmpl.Execute(&importDataCmd, data)
+	if err != nil {
+		panic(err)
+	}
+
+	pods, err := dropletmarket.GetPods(ctx, k8sEnv, params.Droplet.InstanceName)
+	if err != nil {
+		return err
+	}
+
+	_, err = k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/sh", "-c", importDataCmd.String())
 	if err != nil {
 		return err
 	}

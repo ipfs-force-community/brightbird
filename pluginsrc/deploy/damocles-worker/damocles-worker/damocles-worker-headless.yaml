@@ -8,4 +8,4 @@ spec:
     app: damocles-worker-{{.UniqueId}}-pod
   ports:
     - protocol: TCP
-      port: 17891
+      port: 17890

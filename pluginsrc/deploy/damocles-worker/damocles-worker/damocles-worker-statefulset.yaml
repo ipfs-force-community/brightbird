@@ -40,7 +40,7 @@ spec:
             - name: RUST_LOG
               value: "DEBUG"              
           ports:
-            - containerPort: 17891
+            - containerPort: 17890
               protocol: TCP
           volumeMounts:
             - mountPath: /root
