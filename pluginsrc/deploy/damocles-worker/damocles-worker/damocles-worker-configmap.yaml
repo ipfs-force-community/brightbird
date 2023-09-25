@@ -7,7 +7,7 @@ data:
     [worker]
     name = "filedrive"
     rpc_server.host = "0.0.0.0"
-    rpc_server.port = 17891
+    rpc_server.port = 17890
     local_pieces_dirs =[{{ range $index, $value := .PieceStores }}"/piece/{{$value}}"{{ end }}]
 
     [sector_manager]

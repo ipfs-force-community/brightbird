@@ -125,3 +125,4 @@ func readLogForMsgIds() (string, error) {
 	fmt.Printf("msg_wdpost_id: %v\n", msgWdpostId)
 	return msgWdpostId, nil
 }
+

@@ -58,7 +58,6 @@ type TestCaseParams struct {
 	From               address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
 	StartEpoch         int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
 	FastRetrieval      bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
-	ProviderCollateral big.Int         `json:"ProviderCollateral"  jsonschema:"ProviderCollateral"  title:"ProviderCollateral" require:"false" description:"ProviderCollateral"`
 }
 
 type InitOfflineOrderReturn struct {
@@ -195,7 +194,13 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		wallet = def
 	}
 
+	log.Debugln("data:", data)
 	log.Debugln("wallet:", wallet)
+	log.Debugln("params.MinerAddress:", params.MinerAddress)
+	log.Debugln("EpochPrice:", vtypes.BigInt(params.Price))
+	log.Debugln("MinBlocksDuration:", uint64(params.Duration))
+	log.Debugln("DealStartEpoch:", abi.ChainEpoch(params.StartEpoch))
+	log.Debugln("FastRetrieval:", params.FastRetrieval)
 
 	sdParams := &client.DealParams{
 		Data:               data,
@@ -206,7 +211,7 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		DealStartEpoch:     abi.ChainEpoch(params.StartEpoch),
 		FastRetrieval:      params.FastRetrieval,
 		VerifiedDeal:       false,
-		ProviderCollateral: params.ProviderCollateral,
+		ProviderCollateral: big.NewInt(0),
 	}
 
 	var proposal *cid.Cid
