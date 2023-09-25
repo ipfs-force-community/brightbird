@@ -54,10 +54,10 @@ type TestCaseParams struct {
 	Duration     int64           `json:"Duration"  jsonschema:"Duration"  title:"Duration" default:"518400" require:"true" description:"Set the price of the ask for retrievals"`
 	FileSize     string          `json:"FileSize" jsonschema:"FileSize" title:"FileSize" default:"1M" require:"true" description:"File size in bytes (b=512, kB=1000, K=1024, MB=kB*kB, M=K*K, GB=kB*kB*kB, G=K*K*K)"`
 
-	StatelessDeal      bool            `json:"StatelessDeal"  jsonschema:"StatelessDeal"  title:"StatelessDeal" default:"false" require:"true" description:"true离线订单/false在线订单"`
-	From               address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
-	StartEpoch         int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
-	FastRetrieval      bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
+	StatelessDeal bool            `json:"StatelessDeal"  jsonschema:"StatelessDeal"  title:"StatelessDeal" default:"false" require:"true" description:"true离线订单/false在线订单"`
+	From          address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
+	StartEpoch    int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
+	FastRetrieval bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
 }
 
 type InitOfflineOrderReturn struct {
