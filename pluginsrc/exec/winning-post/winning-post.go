@@ -33,7 +33,7 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	Messager        sophonmessager.SophonMessagerReturn   `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
 	DamoclesManager damoclesmanager.DamoclesManagerReturn `json:"DamoclesManager" jsonschema:"DamoclesManager" title:"Damocles Manager" description:"damocles manager return" require:"true"`
-	Miner           sophonminer.SophonMinerDeployReturn   `json:"SophonMiner"  jsonschema:"SophonMiner" title:"Sophon Miner" description:"sophon miner eturn" require:"true"`
+	Miner           sophonminer.SophonMinerDeployReturn   `json:"SophonMiner"  jsonschema:"SophonMiner" title:"Sophon Miner" description:"sophon miner return" require:"true"`
 	MinerAddress    address.Address                       `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true" `
 }
 
