@@ -1,6 +1,8 @@
 package models
 
 import (
+	"fmt"
+
 	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,10 +19,10 @@ func (st State) String() string {
 	switch st {
 	case Init:
 		return "init"
+	case Building:
+		return "building"
 	case Running:
 		return "running"
-	case TempError:
-		return "temperr"
 	case Error:
 		return "error"
 	case Successful:
@@ -33,17 +35,18 @@ const (
 	_ State = iota //skip default 0
 	// Init init state
 	Init
-	// Running task was running
-	Running
-	// TempError task got temp error and try late
-	TempError
-	// Error task  was error and never retry
-	Error
-	// Successful task success
-	Successful
 
 	// Indicated the task have build before
 	Building
+
+	// Running task was running
+	Running
+
+	// Error task  was error and never retry
+	Error
+
+	// Successful task success
+	Successful
 )
 
 // Task
@@ -69,5 +72,9 @@ func (task *Task) BeforeBuild() bool {
 }
 
 func (task Task) InRunning() bool {
-	return task.State == Running || task.State == TempError
+	return task.State == Running
+}
+
+func ToRetryTaskID(id string, retryTime int) string {
+	return fmt.Sprintf("%s-%d", id, retryTime)
 }

@@ -92,7 +92,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, statefulSetCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, statefulSetCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}

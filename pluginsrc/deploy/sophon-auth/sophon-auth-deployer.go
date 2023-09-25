@@ -17,6 +17,7 @@ import (
 	"github.com/ipfs-force-community/sophon-auth/config"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -95,7 +96,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -210,4 +213,8 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams Sophon
 		return err
 	}
 	return nil
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

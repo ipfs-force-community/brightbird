@@ -61,7 +61,7 @@ require (
 	github.com/vmihailenco/msgpack/v5 v5.3.5
 	github.com/whilp/git-urls v1.0.0
 	github.com/wk8/go-ordered-map v1.0.0
-	go.mongodb.org/mongo-driver v1.11.2
+	go.mongodb.org/mongo-driver v1.12.1
 	go.uber.org/fx v1.19.2
 	go.uber.org/zap v1.23.0
 	golang.org/x/oauth2 v0.7.0
@@ -303,8 +303,8 @@ require (
 	github.com/whyrusleeping/timecache v0.0.0-20160911033111-cfcb2f1abfee // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
-	github.com/xdg-go/scram v1.1.1 // indirect
-	github.com/xdg-go/stringprep v1.0.3 // indirect
+	github.com/xdg-go/scram v1.1.2 // indirect
+	github.com/xdg-go/stringprep v1.0.4 // indirect
 	github.com/xlab/c-for-go v0.0.0-20201112171043-ea6dce5809cb // indirect
 	github.com/xlab/pkgconfig v0.0.0-20170226114623-cea12a0fd245 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect

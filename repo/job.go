@@ -10,7 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type CountJobParams struct {
@@ -37,7 +36,7 @@ func NewJobRepo(ctx context.Context, db *mongo.Database) (*JobRepo, error) {
 	col := db.Collection("jobs")
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
-			Keys: bsonx.Doc{{Key: "name", Value: bsonx.Int32(-1)}},
+			Keys: bson.D{{Key: "name", Value: -1}},
 		},
 	})
 	if err != nil {

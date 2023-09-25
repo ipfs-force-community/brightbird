@@ -210,10 +210,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
-	if task.State == models.TempError {
-		_ = taskRepo.MarkState(pCtx, taskId, models.Running, "restart")
-	}
-
 	cleaner := Cleaner{}
 	defer func() {
 		if r := recover(); r != nil {
@@ -223,15 +219,16 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 			}
 			err = fmt.Errorf("panic when run testrunner reason %s stack %s", reason, string(debug.Stack()))
 		}
-		if err != nil {
-			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())
-		} else {
-			_ = taskRepo.MarkState(pCtx, taskId, models.Successful, "run successfully")
-		}
 
-		//todo get logs
 		if cleanErr := cleaner.DoClean(); cleanErr != nil {
 			log.Errorf("clean up failed %v", cleanErr)
+		}
+
+		fmt.Println("xxxxx")
+		if err != nil {
+			_ = taskRepo.MarkState(pCtx, taskId, models.Error, err.Error())
+		} else {
+			_ = taskRepo.MarkState(pCtx, taskId, models.Successful, "run successfully")
 		}
 	}()
 

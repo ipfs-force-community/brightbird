@@ -96,11 +96,11 @@ func (runnerDeployer *TestRunnerDeployer) CheckTestRunner(ctx context.Context, i
 		return 0, err
 	}
 	if pod.Status.Phase == corev1.PodFailed {
-		return 0, fmt.Errorf("pod error %v", pod.Status.Message)
+		return 0, fmt.Errorf("runnerpod error %v", pod.Status.Message)
 	}
 	for _, container := range pod.Status.ContainerStatuses {
 		if container.LastTerminationState.Terminated != nil && container.LastTerminationState.Terminated.ExitCode != 0 {
-			return int(container.RestartCount), fmt.Errorf("pod error %v", pod.Status.Message)
+			return int(container.RestartCount), fmt.Errorf("runner pod crashed %v", pod.Status.Message)
 		}
 	}
 	return 0, nil

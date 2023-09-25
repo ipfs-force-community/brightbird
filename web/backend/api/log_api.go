@@ -16,7 +16,7 @@ import (
 func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo repo.ILogRepo, testflowRepo repo.ITestFlowRepo, taskRepo repo.ITaskRepo) {
 	group := v1group.Group("/logs")
 
-	// swagger:route GET /logs/pods/{testid} log listPodsInTest
+	// swagger:route GET /logs/pods log listPodsReq
 	//
 	// List all pod names in test.
 	//
@@ -29,19 +29,19 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 	//
 	//     Deprecated: false
 	//
-	//     Parameters:
-	//       + name: testid
-	//         in: path
-	//         description: test id
-	//         required: true
-	//         type: string
 	//
 	//     Responses:
 	//       200: stringArr
 	//		 503: apiError
-	group.GET("pods/:testid", func(c *gin.Context) {
-		testID := c.Param("testid")
-		pods, err := logRepo.ListPodsInTest(c, testID)
+	group.GET("pods", func(c *gin.Context) {
+		listPodsReq := models.ListPodsReq{}
+		err := c.ShouldBindQuery(&listPodsReq)
+		if err != nil {
+			c.Error(err) //nolint
+			return
+		}
+
+		pods, err := logRepo.ListPodsInTest(c, models.ToRetryTaskID(listPodsReq.TestID, *listPodsReq.RetryTime))
 		if err != nil {
 			c.Error(err) //nolint
 			return
@@ -73,7 +73,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 			return
 		}
 
-		logs, err := logRepo.GetPodLog(c, podReq.PodName)
+		logs, err := logRepo.GetPodLog(c, podReq.PodName, models.ToRetryTaskID(podReq.TestID, *podReq.RetryTime))
 		if err != nil {
 			c.Error(err) //nolint
 			return

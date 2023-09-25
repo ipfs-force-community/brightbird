@@ -6,12 +6,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type ILogRepo interface {
 	ListPodsInTest(context.Context, string) ([]string, error)
-	GetPodLog(context.Context, string) ([]string, error)
+	GetPodLog(context.Context, string, string) ([]string, error)
 }
 
 type LogRepo struct {
@@ -24,19 +23,19 @@ func NewLogRepo(ctx context.Context, db *mongo.Database) (*LogRepo, error) {
 	col := db.Collection("logs")
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
-			Keys: bsonx.Doc{{Key: "kubernetes.labels.testid", Value: bsonx.Int32(-1)}},
+			Keys: bson.D{{Key: "kubernetes.labels.testid", Value: -1}},
 		},
 		{
-			Keys: bsonx.Doc{{Key: "kubernetes.pod_name", Value: bsonx.Int32(-1)}},
+			Keys: bson.D{{Key: "kubernetes.pod_name", Value: -1}},
 		},
 		{
-			Keys: bsonx.Doc{
-				{Key: "kubernetes.pod_name", Value: bsonx.Int32(-1)},
-				{Key: "kubernetes.time", Value: bsonx.Int32(-1)},
+			Keys: bson.D{
+				{Key: "kubernetes.pod_name", Value: -1},
+				{Key: "kubernetes.time", Value: -1},
 			},
 		},
 		{
-			Keys:    bsonx.Doc{{Key: "kubernetes.time", Value: bsonx.Int32(1)}},
+			Keys:    bson.D{{Key: "kubernetes.time", Value: 1}},
 			Options: options.Index().SetExpireAfterSeconds(60 * 60 * 24 * 7), //keep latest one week logs
 		},
 	})
@@ -73,9 +72,12 @@ func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]st
 	return podName, nil
 }
 
-func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string) ([]string, error) {
+func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string, testID string) ([]string, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "time", Value: 1}}).SetProjection(bson.D{{Key: "log", Value: 1}, {Key: "_id", Value: 0}}).SetAllowDiskUse(true)
-	logResultCur, err := logRepo.col.Find(ctx, bson.M{"kubernetes.pod_name": podName}, opts)
+	logResultCur, err := logRepo.col.Find(ctx, bson.M{
+		"kubernetes.pod_name":      podName,
+		"kubernetes.labels.testid": testID,
+	}, opts)
 	if err != nil {
 		return nil, err
 	}

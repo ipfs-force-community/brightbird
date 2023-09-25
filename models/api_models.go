@@ -71,6 +71,12 @@ type JobNextNReq struct {
 	N  int    `form:"n" json:"n"`
 }
 
+// RetryTaskReq
+// swagger:model retryTaskReq
+type RetryTaskReq struct {
+	ID string `form:"id" json:"id"`
+}
+
 // CountJobRequest
 // swagger:parameters countJobRequest
 type CountJobRequest struct {
@@ -233,6 +239,19 @@ type DeletePluginReq struct {
 	ID string `form:"id" json:"id" binding:"required"`
 }
 
+// ListPodsReq
+// swagger:parameters listPodsReq
+type ListPodsReq struct {
+	// testid of task
+	//
+	// required: true
+	TestID string `form:"testID" json:"testID" binding:"required"`
+	// retrytime of task
+	//
+	// required: true
+	RetryTime *int `form:"retryTime" json:"retryTime" binding:"required"`
+}
+
 // PodLogReq
 // swagger:parameters podLogReq
 type PodLogReq struct {
@@ -240,6 +259,10 @@ type PodLogReq struct {
 	//
 	// required: true
 	TestID string `form:"testID" json:"testID" binding:"required"`
+	// retrytime of task
+	//
+	// required: true
+	RetryTime *int `form:"retryTime" json:"retryTime" binding:"required"`
 	// pod name
 	//
 	// required: true

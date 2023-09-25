@@ -8,7 +8,7 @@ metadata:
     apptype: testrunner
     testid: {{.TestID}}
 spec:
-  restartPolicy: OnFailure
+  restartPolicy: Never
   initContainers:
   containers:
     - name: venus-testrunner

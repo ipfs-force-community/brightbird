@@ -15,6 +15,7 @@ import (
 	"github.com/ipfs-force-community/brightbird/version"
 	logging "github.com/ipfs/go-log/v2"
 	ma "github.com/multiformats/go-multiaddr"
+	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("genesis-node")
@@ -73,7 +74,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	if err != nil {
 		return nil, err
 	}
-	_, err = k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	_, err = k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, incomineCfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -186,4 +189,8 @@ func checkLotusHealthy(_ context.Context, endpoint types.Endpoint) error {
 		return nil
 	}
 	return fmt.Errorf("receive health %s", resp.Status)
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

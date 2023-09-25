@@ -43,6 +43,8 @@ var log = logging.Logger("env")
 // CloseFunc use this to do some clean work after create a resource in k8s
 type CloseFunc func() error
 
+type PodGetter func(ctx context.Context, k8sEnv *K8sEnvDeployer) ([]corev1.Pod, error)
+
 // JoinCloser wrap multiple closer to one
 func JoinCloser(fns ...CloseFunc) CloseFunc {
 	return func() error {
@@ -199,79 +201,6 @@ func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []corev1.Pod) erro
 	return nil
 }
 
-// RunDeployment deploy k8s's deployment from specific yaml config
-func (env *K8sEnvDeployer) RunDeployment(ctx context.Context, f fs.File, args any) (*appv1.Deployment, error) {
-	data, err := QuickRender(f, args)
-	if err != nil {
-		return nil, fmt.Errorf("render deployment fail %w", err)
-	}
-
-	deployment := &appv1.Deployment{}
-	err = yaml_k8s.Unmarshal(data, deployment)
-	if err != nil {
-		return nil, err
-	}
-
-	env.setCommonLabels(&deployment.ObjectMeta)
-	env.setCommonLabels(&deployment.Spec.Template.ObjectMeta)
-	env.setPrivateRegistry(&deployment.Spec.Template)
-	cfgData, err := yaml.Marshal(deployment)
-	if err != nil {
-		return nil, fmt.Errorf("market yaml to deployment %w", err)
-	}
-	log.Debug("deployment(%s) yaml config", deployment.GetName(), string(cfgData))
-
-	name := deployment.Name
-	deploymentClient := env.k8sClient.AppsV1().Deployments(env.namespace)
-
-	_, err = deploymentClient.Get(ctx, deployment.GetName(), metav1.GetOptions{})
-	if err != nil {
-		if errors2.IsNotFound(err) {
-			log.Infof("Creating deployment %s ...", name)
-			_, err = deploymentClient.Create(ctx, deployment, metav1.CreateOptions{})
-			if err != nil {
-				return nil, fmt.Errorf("create deployment fail %w", err)
-			}
-			log.Infof("Created deployment %s.", name)
-		} else {
-			return nil, err
-		}
-	} else {
-		log.Infof("Deployment already exit try to update %s ", deployment.GetName())
-		_, err = deploymentClient.Update(ctx, deployment, metav1.UpdateOptions{})
-		if err != nil {
-			return nil, fmt.Errorf("update deployment fail %w", err)
-		}
-		log.Infof("Updated deployment %s.", name)
-	}
-
-	ticker := time.NewTicker(time.Second * 5)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return nil, fmt.Errorf("context cancel when deploy %s", name)
-		case <-ticker.C:
-			dep, err := deploymentClient.Get(ctx, deployment.GetName(), metav1.GetOptions{})
-			if err != nil {
-				if errors2.IsNotFound(err) {
-					continue
-				}
-				return nil, fmt.Errorf("get deployment fail %w", err)
-			}
-
-			replicas := int32(1)
-			if deployment.Spec.Replicas != nil {
-				replicas = *deployment.Spec.Replicas
-			}
-			if dep.Status.ReadyReplicas == replicas {
-				return dep, nil
-			}
-		}
-	}
-}
-
 func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, statefulset *appv1.StatefulSet) error {
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
 	log.Infof("Try to update %s ", statefulset.GetName())
@@ -328,7 +257,7 @@ func (env *K8sEnvDeployer) WaitPodReady(ctx context.Context, podName string) err
 	})
 }
 
-// RunDeployment deploy k8s's deployment from specific yaml config
+// CreatePvc deploy k8s's deployment from specific yaml config
 func (env *K8sEnvDeployer) CreatePvc(ctx context.Context, f fs.File, args any) (*corev1.PersistentVolumeClaim, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
@@ -359,8 +288,8 @@ func (env *K8sEnvDeployer) CreatePvc(ctx context.Context, f fs.File, args any) (
 	return pvc, nil
 }
 
-// RunDeployment deploy k8s's deployment from specific yaml config
-func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args any) (*appv1.StatefulSet, error) {
+// RunStatefulSets deploy k8s's deployment from specific yaml config
+func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, podGetter PodGetter, f fs.File, args any) (*appv1.StatefulSet, error) {
 	data, err := QuickRender(f, args)
 	if err != nil {
 		return nil, fmt.Errorf("render statefulset fail %w", err)
@@ -430,7 +359,19 @@ func (env *K8sEnvDeployer) RunStatefulSets(ctx context.Context, f fs.File, args 
 				return dep, nil
 			}
 
+			//detect crash
+			pods, err := podGetter(ctx, env)
+			if err != nil {
+				return nil, err
+			}
+
 			time.Sleep(time.Second * 5)
+			for _, pod := range pods {
+				if len(pod.Status.ContainerStatuses) > 0 && pod.Status.ContainerStatuses[0].RestartCount > 1 {
+					//pod maybe crash
+					return nil, fmt.Errorf("pod restart more than 1 times, maybe crash")
+				}
+			}
 		}
 	}
 }
