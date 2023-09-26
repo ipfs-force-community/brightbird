@@ -40,8 +40,8 @@ type TestCaseParams struct {
 }
 
 type ClientCreateFileReturn struct {
-	File string
-	CarFile  string
+	File    string
+	CarFile string
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*ClientCreateFileReturn, error) {
@@ -88,7 +88,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 
 	return &ClientCreateFileReturn{
-		File: filePath,
-		CarFile:  carFile,
+		File:    filePath,
+		CarFile: carFile,
 	}, nil
 }

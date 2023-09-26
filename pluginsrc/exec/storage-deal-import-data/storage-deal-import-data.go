@@ -30,7 +30,7 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Droplet    dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
+	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
 
 	ProposalCid string `json:"ProposalCid"  jsonschema:"ProposalCid"  title:"ProposalCid" require:"true" description:"ProposalCid"`
 	CarFile     string `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`

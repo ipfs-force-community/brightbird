@@ -41,12 +41,12 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	DropletClient dropletclient.DropletClientDeployReturn `json:"DropClient" jsonschema:"DropClient" title:"DropletClient" description:"droplet client return"`
 
-	File 	string `json:"File" jsonschema:"File" title:"File"`
+	File    string `json:"File" jsonschema:"File" title:"File"`
 	CarFile string `json:"CarFile" jsonschema:"CarFile" title:"CarFile"`
 
-	MinerAddress address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
-	Price        vtypes.FIL      `json:"Price"  jsonschema:"Price"  title:"Price" require:"true" default:"0.01fil" description:"price"`
-	Duration     int64           `json:"Duration"  jsonschema:"Duration"  title:"Duration" default:"518400" require:"true" description:"Set the price of the ask for retrievals"`
+	MinerAddress  address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
+	Price         vtypes.FIL      `json:"Price"  jsonschema:"Price"  title:"Price" require:"true" default:"0.01fil" description:"price"`
+	Duration      int64           `json:"Duration"  jsonschema:"Duration"  title:"Duration" default:"518400" require:"true" description:"Set the price of the ask for retrievals"`
 	StatelessDeal bool            `json:"StatelessDeal"  jsonschema:"StatelessDeal"  title:"StatelessDeal" default:"false" require:"true" description:"true离线订单/false在线订单"`
 	From          address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
 	StartEpoch    int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
