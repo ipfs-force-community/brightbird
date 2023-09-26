@@ -1,8 +1,6 @@
 package models
 
 import (
-	"fmt"
-
 	"github.com/ipfs-force-community/brightbird/types"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -73,8 +71,4 @@ func (task *Task) BeforeBuild() bool {
 
 func (task Task) InRunning() bool {
 	return task.State == Running
-}
-
-func ToRetryTaskID(id string, retryTime int) string {
-	return fmt.Sprintf("%s-%d", id, retryTime)
 }

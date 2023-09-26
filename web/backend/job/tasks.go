@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/imdario/mergo"
@@ -272,10 +273,10 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
-	retryTaskID := models.ToRetryTaskID(string(task.TestId), task.RetryTime)
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
+	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s", "--retry=%d", "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
 		taskMgr.cfg.NameSpace,
+		task.RetryTime,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
 		taskMgr.cfg.Mysql,
@@ -289,7 +290,8 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"NameSpace": taskMgr.cfg.NameSpace,
 		"Registry":  string(taskMgr.privateRegistry),
-		"TestID":    retryTaskID,
+		"TestID":    string(task.TestId),
+		"ReTry":     strconv.Itoa(task.RetryTime),
 		"Args":      args,
 	})
 }

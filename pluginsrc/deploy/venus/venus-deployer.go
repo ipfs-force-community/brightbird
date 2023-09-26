@@ -65,7 +65,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), incomineCfg.InstanceName),
 		Config:    incomineCfg,
 	}
 
@@ -181,5 +181,5 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params VenusDeployR
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("venus-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

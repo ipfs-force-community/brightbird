@@ -68,6 +68,7 @@ type K8sEnvDeployer struct {
 	namespace         string
 	hostIP            string
 	testID            string
+	retry             int
 	registry          string
 	mysqlConnTemplate string
 	k8sCfg            *rest.Config
@@ -78,6 +79,7 @@ type K8sEnvDeployer struct {
 type K8sInitParams struct {
 	Namespace         string `json:"namespace"`
 	TestID            string `json:"testID"`
+	Retry             int    `json:"retry"`
 	Registry          string `json:"registry"`
 	MysqlConnTemplate string `json:"mysqlConnTemplate"`
 }
@@ -130,6 +132,7 @@ func NewK8sEnvDeployer(params K8sInitParams) (*K8sEnvDeployer, error) {
 		k8sClient:         k8sClient,
 		namespace:         params.Namespace,
 		testID:            params.TestID,
+		retry:             params.Retry,
 		hostIP:            url.Hostname(),
 		dialCtx:           dialCtx,
 		registry:          params.Registry,
@@ -153,6 +156,11 @@ func (env *K8sEnvDeployer) TestID() string {
 	return env.testID
 }
 
+// Retry return task retry
+func (env *K8sEnvDeployer) Retry() int {
+	return env.retry
+}
+
 // Registry
 func (env *K8sEnvDeployer) Registry() string {
 	return env.registry
@@ -174,6 +182,7 @@ func (env *K8sEnvDeployer) setCommonLabels(objectMeta *metav1.ObjectMeta) {
 	}
 	objectMeta.Namespace = env.namespace
 	objectMeta.Labels["testid"] = env.TestID()
+	objectMeta.Labels["retry"] = strconv.Itoa(env.Retry())
 	objectMeta.Labels["apptype"] = "venus"
 }
 
@@ -761,9 +770,6 @@ func (env *K8sEnvDeployer) Clean(ctx context.Context) error {
 	return env.resourceMgr.Clean(ctx)
 }
 
-func UniqueId(testId, outName string) string {
-	if len(outName) > 0 {
-		return testId + hex.EncodeToString(utils.Blake256([]byte(outName))[:4])
-	}
-	return testId
+func UniqueId(testId string, retry int, instanceName string) string {
+	return testId + strconv.Itoa(retry) + hex.EncodeToString(utils.Blake256([]byte(instanceName))[:4])
 }

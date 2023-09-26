@@ -54,7 +54,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), incomineCfg.InstanceName),
 		Config:    incomineCfg,
 	}
 
@@ -96,7 +96,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 
-	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), incomineCfg.InstanceName)))
+	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), incomineCfg.InstanceName)))
 	if err != nil {
 		return nil, err
 	}
@@ -192,5 +192,5 @@ func checkLotusHealthy(_ context.Context, endpoint types.Endpoint) error {
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

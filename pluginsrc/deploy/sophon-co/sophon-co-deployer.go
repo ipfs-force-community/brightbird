@@ -128,10 +128,10 @@ func buildRenderParams(k8sEnv *env.K8sEnvDeployer, cfg Config) RenderParams {
 		Config:    cfg,
 		Registry:  k8sEnv.Registry(),
 		Args:      args,
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 	}
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-co-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-co-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

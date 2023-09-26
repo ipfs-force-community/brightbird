@@ -1,7 +1,7 @@
 apiVersion: v1
 data:
   config.toml: |
-        Listen = "0.0.0.0:898911111"
+        Listen = "0.0.0.0:8989"
         Secret = "1299c3162a7c51ce11f473c1cc011c7dd263a2a7a69549abb42ded69d7607f29"
         ReadTimeout = 60000000000
         WriteTimeout = 60000000000
@@ -12,7 +12,7 @@ data:
         Type = 0
         HookSwitch = false
 
-        [D B]
+        [DB]
         Type = "{{if gt (len .MysqlDSN) 0}}mysql{{else}}badger{{end}}"
         DSN = "{{.MysqlDSN}}"
         MaxOpenConns = 0

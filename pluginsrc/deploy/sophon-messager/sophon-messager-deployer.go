@@ -63,11 +63,11 @@ var PluginInfo = types.PluginInfo{
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonMessagerReturn, error) {
-	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-messager-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-messager-" + env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName))
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 		Config:    cfg,
 	}
 
@@ -192,5 +192,5 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMessag
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-messager-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-messager-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

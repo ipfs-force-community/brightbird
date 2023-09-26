@@ -5,7 +5,7 @@
       重试次数+{{ curRetry }}
       <template #dropdown>
         <el-dropdown-menu>
-          <el-dropdown-item v-for="index in retryTime" :command="index">{{ index }}</el-dropdown-item>
+          <el-dropdown-item v-for="index in latestRetry" :command="index">{{ index }}</el-dropdown-item>
         </el-dropdown-menu>
       </template>
     </el-dropdown>
@@ -70,6 +70,7 @@ import {
   onUnmounted,
 } from 'vue';
 import { listAllPod, getPodLog } from '@/api/log';
+import { getTask } from '@/api/tasks';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
 import { StepStateEnum } from '@/api/dto/enumeration';
@@ -77,12 +78,8 @@ import { useRouter } from 'vue-router';
 
 export default defineComponent({
   props: {
-    testId: {
+    id: {
       type: String,
-      required: true,
-    },
-    retryTime: {
-      type: Number,
       required: true,
     },
   },
@@ -97,13 +94,14 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
+    const testId  = ref<string>("");
+    const latestRetry = ref<number>(0);
     const curRetry = ref<number>(props.retryTime);
     const router = useRouter();
-
     // 获取所有pod列表
     const loadPodList = async () => {
       try {
-        const pods = await listAllPod({ testID: props.testId, retryTime: curRetry.value });
+        const pods = await listAllPod({ testID:testId.value, retryTime: curRetry.value });
         podList.value = pods;
       } catch (error) {
         console.error(error);
@@ -116,7 +114,7 @@ export default defineComponent({
         selectedPod.value = podName;
         podLog.value = await getPodLog({
           podName: podName,
-          testID: props.testId,
+          testID: testId.value,
           retryTime: curRetry.value,
         });
       } catch (error) {
@@ -127,7 +125,7 @@ export default defineComponent({
     const loadData = async (refreshing?: boolean) => {
       try {
         await proxy.listAllPod({
-          testId: props.testId,
+          testId: testId.value,
           retryTime: curRetry.value,
         });
       } catch (err) {
@@ -158,7 +156,7 @@ export default defineComponent({
         selectedPod.value = podList.value[0];
         podLog.value = await getPodLog({
           podName: selectedPod.value,
-          testID: props.testId,
+          testID: testId.value,
           retryTime: curRetry.value,
         });
       }
@@ -172,13 +170,13 @@ export default defineComponent({
       }
     };
 
-    const timer = setInterval(async () => {
+    const refresh = async () => {
       try {
         if (podList.value.length > 0) {
           await loadPodList();
           podLog.value = await getPodLog({
             podName: selectedPod.value,
-            testID: props.testId,
+            testID: testId.value,
             retryTime: curRetry.value,
           });
         } else {
@@ -188,18 +186,18 @@ export default defineComponent({
       } catch (err) {
         proxy.$throw(err, proxy);
       }
-    }, 10000);
+    }
+    const timer = setInterval(refresh, 10000);
 
     const changeRetry = async (retryNum: number) => {
-      try {
-        curRetry.value = retryNum;
-        await loadPodList();
-        loadFirstPodLog();
-      } catch (err) {
-        proxy.$throw(err, proxy);
-      }
+      curRetry.value = retryNum;
+      refresh();
     }
     onMounted(async () => {
+      let task = await getTask({ID: props.id});
+      latestRetry.value = task.retryTime;
+      testId.value = task.testId;
+      curRetry.value  = task.retryTime;
       // 初始化任务列表
       await loadPodList();
 
@@ -217,7 +215,7 @@ export default defineComponent({
       podList,
       selectedPod,
       podLog,
-      retryTime: props.retryTime,
+      latestRetry,
       curRetry,
       selectTask,
       goBack,

@@ -41,7 +41,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 			return
 		}
 
-		pods, err := logRepo.ListPodsInTest(c, models.ToRetryTaskID(listPodsReq.TestID, *listPodsReq.RetryTime))
+		pods, err := logRepo.ListPodsInTest(c, listPodsReq.TestID, *listPodsReq.RetryTime)
 		if err != nil {
 			c.Error(err) //nolint
 			return
@@ -73,7 +73,7 @@ func RegisterLogRouter(ctx context.Context, v1group *gin.RouterGroup, logRepo re
 			return
 		}
 
-		logs, err := logRepo.GetPodLog(c, podReq.PodName, models.ToRetryTaskID(podReq.TestID, *podReq.RetryTime))
+		logs, err := logRepo.GetPodLog(c, podReq.PodName, podReq.TestID, *podReq.RetryTime)
 		if err != nil {
 			c.Error(err) //nolint
 			return

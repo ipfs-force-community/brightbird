@@ -2,6 +2,7 @@ package repo
 
 import (
 	"context"
+	"strconv"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -9,8 +10,8 @@ import (
 )
 
 type ILogRepo interface {
-	ListPodsInTest(context.Context, string) ([]string, error)
-	GetPodLog(context.Context, string, string) ([]string, error)
+	ListPodsInTest(context.Context, string, int) ([]string, error)
+	GetPodLog(context.Context, string, string, int) ([]string, error)
 }
 
 type LogRepo struct {
@@ -45,8 +46,11 @@ func NewLogRepo(ctx context.Context, db *mongo.Database) (*LogRepo, error) {
 	return &LogRepo{col: col}, nil
 }
 
-func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]string, error) {
-	matchStage := bson.D{{Key: "$match", Value: bson.D{{Key: "kubernetes.labels.testid", Value: testid}}}}
+func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string, retry int) ([]string, error) {
+	matchStage := bson.D{{Key: "$match", Value: bson.D{
+		{Key: "kubernetes.labels.testid", Value: testid},
+		{Key: "kubernetes.labels.retry", Value: strconv.Itoa(retry)},
+	}}}
 	sortStage := bson.D{{Key: "$sort", Value: bson.D{{Key: "time", Value: 1}}}}
 	groupStage := bson.D{
 		{Key: "$group",
@@ -72,11 +76,12 @@ func (logRepo *LogRepo) ListPodsInTest(ctx context.Context, testid string) ([]st
 	return podName, nil
 }
 
-func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string, testID string) ([]string, error) {
+func (logRepo *LogRepo) GetPodLog(ctx context.Context, podName string, testID string, retry int) ([]string, error) {
 	opts := options.Find().SetSort(bson.D{{Key: "time", Value: 1}}).SetProjection(bson.D{{Key: "log", Value: 1}, {Key: "_id", Value: 0}}).SetAllowDiskUse(true)
 	logResultCur, err := logRepo.col.Find(ctx, bson.M{
 		"kubernetes.pod_name":      podName,
 		"kubernetes.labels.testid": testID,
+		"kubernetes.labels.retry":  strconv.Itoa(retry),
 	}, opts)
 	if err != nil {
 		return nil, err

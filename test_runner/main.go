@@ -76,6 +76,10 @@ func main() {
 				Name:  "taskId",
 				Usage: "test  to running",
 			},
+			&cli.IntFlag{
+				Name:  "retry",
+				Usage: "retry number ",
+			},
 			&cli.StringFlag{
 				Name:  "registry",
 				Usage: "use private registry",
@@ -122,6 +126,10 @@ func main() {
 
 			if c.IsSet("taskId") {
 				cfg.TaskId = c.String("taskId")
+			}
+
+			if c.IsSet("retry") {
+				cfg.Retry = c.Int("retry")
 			}
 
 			if c.IsSet("dbName") {
@@ -262,6 +270,7 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 				Namespace:         cfg.NameSpace,
 				TestID:            string(task.TestId),
 				Registry:          cfg.Registry,
+				Retry:             cfg.Retry,
 				MysqlConnTemplate: cfg.Mysql,
 			}
 		}),

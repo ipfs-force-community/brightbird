@@ -7,7 +7,7 @@
     <div class="content">
       <router-link :to="{
         name: 'task-detail',
-        query: { testId: task.testId, retryTime: task.retryTime },
+        query: { testId: task.testId, id: task.id },
       }">
         <div class="content-top">
           <jm-text-viewer :value="task.name" :class="{ title: true }" />
