@@ -29,13 +29,9 @@
               <span>最后修改时间:{{ datetimeFormatter(jobVo?.modifiedTime) }}</span>
               <span>类型:{{ jobVo?.jobType }}</span>
               <div class="operation">
-                <ElButton type="primary"><div class="run op-item" @click="run(jobVo?.id)"/></ElButton>
-                
-               <el-button type="primary"> <div class="edit op-item" @click="toEdit(jobVo?.id)"></div></el-button>
-               <el-button type="primary"> <div
-                  class="delete op-item"
-                  @click="toDelete(jobVo?.name, jobVo?.id)"
-                ></div></el-button>
+                <ElButton @click="run(jobVo?.id)" type="primary"><div class="run op-item" /></ElButton>
+               <el-button @click="toEdit(jobVo?.id)" type="primary" > <div class="edit op-item"/></el-button>
+               <el-button @click="toDelete(jobVo?.name, jobVo?.id)" type="primary"> <div class="delete op-item"/></el-button>
               </div>
             </div>
           </div>
