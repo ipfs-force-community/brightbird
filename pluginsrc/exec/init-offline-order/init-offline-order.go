@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"path/filepath"
-	"text/template"
 
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-fil-markets/storagemarket"
@@ -23,9 +21,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	dropletclient "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-client"
-	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/pvc"
-	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
-	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
@@ -44,25 +39,21 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Auth          sophonauth.SophonAuthDeployReturn       `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
-	Venus         venus.VenusDeployReturn                 `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
 	DropletClient dropletclient.DropletClientDeployReturn `json:"DropClient" jsonschema:"DropClient" title:"DropletClient" description:"droplet client return"`
-	PieceStore    pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
+
+	File 	string `json:"File" jsonschema:"File" title:"File"`
+	CarFile string `json:"CarFile" jsonschema:"CarFile" title:"CarFile"`
 
 	MinerAddress address.Address `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
 	Price        vtypes.FIL      `json:"Price"  jsonschema:"Price"  title:"Price" require:"true" default:"0.01fil" description:"price"`
 	Duration     int64           `json:"Duration"  jsonschema:"Duration"  title:"Duration" default:"518400" require:"true" description:"Set the price of the ask for retrievals"`
-	FileSize     string          `json:"FileSize" jsonschema:"FileSize" title:"FileSize" default:"1M" require:"true" description:"File size in bytes (b=512, kB=1000, K=1024, MB=kB*kB, M=K*K, GB=kB*kB*kB, G=K*K*K)"`
-
 	StatelessDeal bool            `json:"StatelessDeal"  jsonschema:"StatelessDeal"  title:"StatelessDeal" default:"false" require:"true" description:"true离线订单/false在线订单"`
 	From          address.Address `json:"From"  jsonschema:"From"  title:"From" require:"false" description:"From"`
 	StartEpoch    int64           `json:"StartEpoch"  jsonschema:"StartEpoch"  title:"StartEpoch" default:"-1" require:"false" description:"StartEpoch"`
-	FastRetrieval bool            `json:"FastRetrieval"  jsonschema:"FastRetrieval"  title:"FastRetrieval" default:"true" require:"true" description:"FastRetrieval"`
 }
 
 type InitOfflineOrderReturn struct {
 	ProposalCid string
-	CarFile     string
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*InitOfflineOrderReturn, error) {
@@ -72,43 +63,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	defer closer()
 
-	mountPath := "/carfile/"
-	filePath := mountPath + params.PieceStore.Name + "/file.txt"
-	carFile := filePath + ".car"
-	log.Debugln("carFilePath:", carFile)
-
-	tmpl, err := template.New("command").Parse("dd if=/dev/urandom of={{.FilePath}} bs={{.BlockSize}} count=1")
-	if err != nil {
-		return nil, fmt.Errorf("parase template: %v", err)
-	}
-
-	data := map[string]interface{}{
-		"FilePath":  filePath,
-		"BlockSize": params.FileSize,
-	}
-
-	var createFileCmd bytes.Buffer
-	err = tmpl.Execute(&createFileCmd, data)
-	if err != nil {
-		panic(err)
-	}
-
-	err = dropletclient.AddPieceStoragge(ctx, k8sEnv, params.DropletClient, params.PieceStore.Name, mountPath)
-	if err != nil {
-		return nil, err
-	}
-
-	pods, err := dropletclient.GetPods(ctx, k8sEnv, params.DropletClient.InstanceName)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/sh", "-c", createFileCmd.String())
-	if err != nil {
-		return nil, err
-	}
-
-	dataImportReturns, err := GetCidAndPieceSize(ctx, api, filePath, carFile)
+	dataImportReturns, err := GetCidAndPieceSize(ctx, api, params.File, params.CarFile)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +74,6 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 
 	return &InitOfflineOrderReturn{
-		CarFile:     carFile,
 		ProposalCid: proposalCid,
 	}, nil
 }
@@ -200,7 +154,6 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 	log.Debugln("EpochPrice:", vtypes.BigInt(params.Price))
 	log.Debugln("MinBlocksDuration:", uint64(params.Duration))
 	log.Debugln("DealStartEpoch:", abi.ChainEpoch(params.StartEpoch))
-	log.Debugln("FastRetrieval:", params.FastRetrieval)
 
 	sdParams := &client.DealParams{
 		Data:               data,
@@ -209,7 +162,7 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		EpochPrice:         vtypes.BigInt(params.Price),
 		MinBlocksDuration:  uint64(params.Duration),
 		DealStartEpoch:     abi.ChainEpoch(params.StartEpoch),
-		FastRetrieval:      params.FastRetrieval,
+		FastRetrieval:      true,
 		VerifiedDeal:       false,
 		ProviderCollateral: big.NewInt(0),
 	}
