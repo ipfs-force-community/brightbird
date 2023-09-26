@@ -234,10 +234,14 @@ export default defineComponent({
         .then(async () => {
           if (!groupId) { return; }
           try {
+            console.log('=============deleteProjectGroup=======000====');
             await deleteProjectGroup(groupId);
+            console.log('=============deleteProjectGroup========1111===');
+            
             proxy.$success('测试流分组删除成功');
             eventBus.emit('newGroup');
           } catch (err) {
+            console.log('=============deleteProjectGroup========1111===', err);
             proxy.$throw(err, proxy);
           }
         })
@@ -286,8 +290,8 @@ export default defineComponent({
         await reloadCurrentProjectList();
       },
       handleProjectDeleted: (id: string) => {
-        const index = testflows.value.findIndex(item => item.id === id);
-        testflows.value.splice(index, 1);
+        // const index = testflows.value.findIndex(item => item.id === id);
+        loadProject();        
       },
       handleProjectTriggered: async (id: string) => {
         await sleep(400);
