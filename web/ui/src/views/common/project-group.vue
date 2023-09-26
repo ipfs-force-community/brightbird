@@ -234,14 +234,10 @@ export default defineComponent({
         .then(async () => {
           if (!groupId) { return; }
           try {
-            console.log('=============deleteProjectGroup=======000====');
-            await deleteProjectGroup(groupId);
-            console.log('=============deleteProjectGroup========1111===');
-            
+            await deleteProjectGroup(groupId);            
             proxy.$success('测试流分组删除成功');
             eventBus.emit('newGroup');
           } catch (err) {
-            console.log('=============deleteProjectGroup========1111===', err);
             proxy.$throw(err, proxy);
           }
         })
