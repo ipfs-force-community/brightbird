@@ -7,8 +7,9 @@ metadata:
     app: venus-testrunner-pod
     apptype: testrunner
     testid: {{.TestID}}
+    retry: {{.ReTry}}
 spec:
-  restartPolicy: OnFailure
+  restartPolicy: Never
   initContainers:
   containers:
     - name: venus-testrunner

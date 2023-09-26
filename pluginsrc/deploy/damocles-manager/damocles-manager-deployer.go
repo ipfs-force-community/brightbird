@@ -88,14 +88,8 @@ index = "https://rsproxy.cn/crates.io-index"
 [net]
 git-fetch-with-cli = true
 EOF
-
+sed -i '1 i\export RUSTFLAGS=-C target-cpu=x86-64' Makefile
 sed -i "13 i\COPY ./config /usr/local/cargo/config" Dockerfile.manager
-
-sed -i '5 i\export RUSTFLAGS=-C target-cpu=x86-64' damocles-worker/Makefile
-sed -i '4 i\ENV HTTPS_PROXY="{{.Proxy}}"' damocles-worker/Dockerfile
-sed -i "5 i\RUN sed -i 's/deb.debian.org/mirrors.ustc.edu.cn/g' /etc/apt/sources.list" damocles-worker/Dockerfile
-cp config ./damocles-worker/config
-sed -i "28 i\COPY ./config /usr/local/cargo/config" damocles-worker/Dockerfile
 make docker-push-manager TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
 	},
 	Description: "",
@@ -108,7 +102,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 		Config:    cfg,
 	}
 
@@ -153,7 +147,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -231,7 +227,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }
 
 func AddMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, damoclesInstance DamoclesManagerReturn, minerCfg MinerCfg) error {

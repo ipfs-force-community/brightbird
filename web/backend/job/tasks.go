@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/imdario/mergo"
 	"github.com/ipfs-force-community/brightbird/env"
 
 	"github.com/ipfs-force-community/brightbird/models"
-	"gopkg.in/yaml.v3"
-
 	"github.com/ipfs-force-community/brightbird/repo"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/web/backend/config"
 	logging "github.com/ipfs/go-log/v2"
 	"github.com/robfig/cron/v3"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gopkg.in/yaml.v3"
 	corev1 "k8s.io/api/core/v1"
+	errors2 "k8s.io/apimachinery/pkg/api/errors"
 )
 
 var taskLog = logging.Logger("task")
@@ -77,7 +78,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
 					JobID: job.ID,
-					State: []models.State{models.Running, models.TempError},
+					State: []models.State{models.Running},
 				},
 			})
 			if err != nil {
@@ -86,20 +87,38 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			for _, task := range runningTask.List {
-				restartCount, err := taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
+				isClean := false
+				if len(task.PodName) == 0 {
+					//很少发生
+					markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "pod name is empty")
+					if markFailErr != nil {
+						log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
+					}
+					isClean = true
+				}
+				_, err = taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
-					if restartCount > 3 {
-						log.Errorf("task id(%s) name(%s) try exceed more than 5 times, mark error and remove", task.ID, task.Name)
-						// mark pod as fail and remove this pod
-						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed five times, delete task")
+					if errors2.IsNotFound(err) {
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed 3 times, delete task")
 						if markFailErr != nil {
 							log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 						}
-
-						cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId))
-						if cleanK8sErr != nil {
-							log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
+						isClean = true
+					} else {
+						log.Errorf("task id(%s) name(%s) try runner exceed more than 3 times, mark error and remove", task.ID, task.Name)
+						// mark pod as fail and remove this pod
+						markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, "failed 3 times, delete task")
+						if markFailErr != nil {
+							log.Errorf("cannot mark task as fail %v origin err %v", err, markFailErr)
 						}
+						isClean = true
+					}
+				}
+
+				if isClean {
+					cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId)) //clean again to ensure release all resource
+					if cleanK8sErr != nil {
+						log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
 					}
 				}
 			}
@@ -110,7 +129,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				PageSize: math.MaxInt64,
 				Params: repo.ListTaskParams{
 					JobID: job.ID,
-					State: []models.State{models.Init},
+					State: []models.State{models.Init, models.Building},
 				},
 			})
 			if err != nil {
@@ -119,7 +138,17 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			for _, task := range initTasks.List {
-				err = taskMgr.RunOneTask(ctx, task)
+				pod, err := taskMgr.Process(ctx, task)
+				if err != nil {
+					taskLog.Errorf("process task fail %v", err)
+					innerErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, err.Error())
+					if innerErr != nil {
+						taskLog.Errorf("append log error %v", innerErr)
+					}
+					continue
+				}
+
+				err = taskMgr.taskRepo.UpdatePodRunning(ctx, task.ID, pod.Name)
 				if err != nil {
 					taskLog.Errorf("run task list fail %v", err)
 				}
@@ -132,17 +161,6 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 		case <-tm.C:
 		}
 	}
-}
-
-func (taskMgr *TaskMgr) RunOneTask(ctx context.Context, task *models.Task) error {
-	pod, err := taskMgr.Process(ctx, task)
-	if err != nil {
-		markFailErr := taskMgr.taskRepo.MarkState(ctx, task.ID, models.Error, err.Error())
-		if err != nil {
-			return fmt.Errorf("cannot mark task as fail origin err %v %v", err, markFailErr)
-		}
-	}
-	return taskMgr.taskRepo.UpdatePodRunning(ctx, task.ID, pod.Name)
 }
 
 func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) error {
@@ -166,6 +184,11 @@ func (taskMgr *TaskMgr) StopOneTask(ctx context.Context, id primitive.ObjectID) 
 }
 
 func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1.Pod, error) {
+	task, err := taskMgr.taskRepo.IncreaseRetry(ctx, task.ID)
+	if err != nil {
+		return nil, err
+	}
+
 	job, err := taskMgr.jobRepo.Get(ctx, task.JobId)
 	if err != nil {
 		return nil, err
@@ -176,14 +199,20 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		taskLog.Errorf("get test flow failed %v", err)
 		return nil, err
 	}
+	graph := &models.Graph{}
+	err = yaml.Unmarshal([]byte(testflow.Graph), graph)
+	if err != nil {
+		return nil, err
+	}
 
 	if task.BeforeBuild() {
-		//todo 不在runner里面做的原因 1. 编译需要比较好的性能，而runner可能会调度到比较差的机器上 2. 网络问题，拉代码编译过程很慢， 代理太费流量， 这里使用同一份代码可以缓解一些
-		graph := &models.Graph{}
-		err = yaml.Unmarshal([]byte(testflow.Graph), graph)
+		//update task state to build completed
+		err = taskMgr.taskRepo.MarkState(ctx, task.ID, models.Building)
 		if err != nil {
 			return nil, err
 		}
+		//todo 不在runner里面做的原因 1. 编译需要比较好的性能，而runner可能会调度到比较差的机器上 2. 网络问题，拉代码编译过程很慢， 代理太费流量， 这里使用同一份代码可以缓解一些
+
 		//confirm version and build image.
 		taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
 		commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
@@ -206,13 +235,6 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		if err != nil {
 			return nil, err
 		}
-
-		//update task state to build completed
-		err = taskMgr.taskRepo.MarkState(ctx, task.ID, models.Building)
-		if err != nil {
-			return nil, err
-		}
-		time.Sleep(time.Minute * 1)
 	}
 
 	//run test flow
@@ -250,9 +272,11 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 	if err != nil {
 		return nil, err
 	}
+
 	//--log-level=DEBUG, --namespace={{.NameSpace}},--config=/shared-dir/config-template.toml, --plugins=/shared-dir/plugins, --taskId={{.TaskID}}
-	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s",  "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
+	args := fmt.Sprintf(`"--plugins=/shared-dir/plugins", "--namespace=%s", "--retry=%d", "--dbName=%s", "--mongoUrl=%s", "--mysql=%s", "--registry=%s", "--taskId=%s", --globalParams, %s`,
 		taskMgr.cfg.NameSpace,
+		task.RetryTime,
 		taskMgr.cfg.DBName,
 		taskMgr.cfg.MongoURL,
 		taskMgr.cfg.Mysql,
@@ -261,12 +285,13 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		string(globalParamsBytes),
 	)
 
-	fmt.Println(args)
+	log.Infof("invoke testrunner args %s", args)
 
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"NameSpace": taskMgr.cfg.NameSpace,
 		"Registry":  string(taskMgr.privateRegistry),
 		"TestID":    string(task.TestId),
+		"ReTry":     strconv.Itoa(task.RetryTime),
 		"Args":      args,
 	})
 }

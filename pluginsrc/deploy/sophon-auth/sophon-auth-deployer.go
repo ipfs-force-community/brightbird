@@ -17,6 +17,7 @@ import (
 	"github.com/ipfs-force-community/sophon-auth/config"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
 	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -66,12 +67,12 @@ var PluginInfo = types.PluginInfo{
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonAuthDeployReturn, error) {
-	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-auth-" + env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName))
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
 		Args:      nil,
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 		Config:    cfg,
 	}
 
@@ -95,7 +96,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -136,7 +139,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 }
 
 func GenerateAdminToken(ctx context.Context, k8sEnv *env.K8sEnvDeployer, isntanceName string, endpoint types.Endpoint) (string, error) {
-	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), isntanceName)))
+	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), isntanceName)))
 	if err != nil {
 		return "", err
 	}
@@ -193,7 +196,7 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams Sophon
 		return err
 	}
 
-	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), deployParams.InstanceName)))
+	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), deployParams.InstanceName)))
 	if err != nil {
 		return err
 	}
@@ -210,4 +213,8 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams Sophon
 		return err
 	}
 	return nil
+}
+
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

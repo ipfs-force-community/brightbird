@@ -63,9 +63,9 @@ sed -i '7 i\ENV HTTPS_PROXY="{{.Proxy}}"' Dockerfile.manager
 sed -i '8 i\ENV RUSTUP_DIST_SERVER="https://rsproxy.cn"' Dockerfile.manager
 sed -i '9 i\ENV RUSTUP_UPDATE_ROOT="https://rsproxy.cn/rustup"' Dockerfile.manager
 sed -i "s/https:\/\/sh.rustup.rs/https:\/\/rsproxy.cn\/rustup-init.sh/g" Dockerfile.manager
-
-sed -i '1 i\export GITHUB_TOKEN={{.GitToken}}' Makefile
-sed -i '2 i\export HTTPS_PROXY={{.Proxy}}' Makefile
+sed -i '1 i\export RUSTFLAGS=-C target-cpu=x86-64' Makefile
+sed -i '2 i\export GITHUB_TOKEN={{.GitToken}}' Makefile
+sed -i '3 i\export HTTPS_PROXY={{.Proxy}}' Makefile
 
 cat > ./config << EOF
 [source.crates-io]
@@ -99,7 +99,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 		Config:    cfg,
 	}
 
@@ -144,7 +144,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -222,5 +224,5 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesMana
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-exist-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("damocles-manager-exist-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

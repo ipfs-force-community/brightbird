@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type GetTestFlowParams struct {
@@ -50,15 +49,15 @@ func NewTestFlowRepo(ctx context.Context, db *mongo.Database) (*TestFlowRepo, er
 	col := db.Collection("testflows")
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
-			Keys: bsonx.Doc{{Key: "name", Value: bsonx.Int32(-1)}},
+			Keys: bson.D{{Key: "name", Value: -1}},
 		},
 		{
-			Keys: bsonx.Doc{{Key: "groupid", Value: bsonx.Int32(-1)}},
+			Keys: bson.D{{Key: "groupid", Value: -1}},
 		},
 		{
-			Keys: bsonx.Doc{
-				{Key: "name", Value: bsonx.Int32(-1)},
-				{Key: "groupid", Value: bsonx.Int32(-1)},
+			Keys: bson.D{
+				{Key: "name", Value: -1},
+				{Key: "groupid", Value: -1},
 			},
 		},
 	})

@@ -43,7 +43,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	pvc, err := k8sEnv.CreatePvc(ctx, pvcYamlData, RenderParams{
 		Name:      cfg.InstanceName,
 		NameSpace: k8sEnv.NameSpace(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("create pvc fail %w", err)

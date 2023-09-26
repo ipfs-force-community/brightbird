@@ -64,7 +64,9 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, cfg.InstanceName)
+	}, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +107,9 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params *Config) err
 		return err
 	}
 
-	_, err = k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
+	_, err = k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
+		return GetPods(ctx, k8sEnv, params.InstanceName)
+	}, deployCfg, renderParams)
 	return err
 }
 
@@ -124,10 +128,10 @@ func buildRenderParams(k8sEnv *env.K8sEnvDeployer, cfg Config) RenderParams {
 		Config:    cfg,
 		Registry:  k8sEnv.Registry(),
 		Args:      args,
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
 	}
 }
 
-func Pods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonCoDeployReturn) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-co-%s-pod", env.UniqueId(k8sEnv.TestID(), params.InstanceName)))
+func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-co-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }

@@ -223,7 +223,7 @@ func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string
 			return "", err
 		}
 	} else {
-		worker.logger.Debugf("node %s (%s) have build image before skip", buildTask.Name, version)
+		worker.logger.Debugf("node %s (%s) skip build because image exist", buildTask.Name, version)
 	}
 
 	return version, nil

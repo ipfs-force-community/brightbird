@@ -312,7 +312,7 @@ func RegisterJobRouter(ctx context.Context, v1group *V1RouterGroup, jobRepo repo
 		}
 
 		for _, task := range tasks.List {
-			if task.State == models.Running || task.State == models.TempError {
+			if task.State == models.Running {
 				err = taskManager.StopOneTask(ctx, task.ID)
 				if err != nil {
 					jobLogger.Warnf("delete job, but clean task fail and need clean manually %s", err)
