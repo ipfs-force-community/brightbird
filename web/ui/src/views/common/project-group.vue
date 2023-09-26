@@ -234,7 +234,7 @@ export default defineComponent({
         .then(async () => {
           if (!groupId) { return; }
           try {
-            await deleteProjectGroup(groupId);
+            await deleteProjectGroup(groupId);            
             proxy.$success('测试流分组删除成功');
             eventBus.emit('newGroup');
           } catch (err) {
@@ -286,8 +286,8 @@ export default defineComponent({
         await reloadCurrentProjectList();
       },
       handleProjectDeleted: (id: string) => {
-        const index = testflows.value.findIndex(item => item.id === id);
-        testflows.value.splice(index, 1);
+        // const index = testflows.value.findIndex(item => item.id === id);
+        loadProject();        
       },
       handleProjectTriggered: async (id: string) => {
         await sleep(400);
