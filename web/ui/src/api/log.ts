@@ -1,18 +1,17 @@
 
 import { restProxy } from '@/api/index';
 import { baseUrl } from '@/api/view-no-auth';
-import { LogReq, LogResp, ListPodsReq } from './dto/log';
+import { LogReq, LogResp } from './dto/log';
 
 
 /**
  * 获取task中的Pod
  * @param taskId
  */
-export function listAllPod(req: ListPodsReq): Promise<string[]> {
+export function listAllPod(taskId: string): Promise<string[]> {
   return restProxy({
-    url: `${baseUrl.log}/pods`,
+    url: `${baseUrl.log}/pods/${taskId}`,
     method: 'get',
-    payload: req,
   });
 }
 

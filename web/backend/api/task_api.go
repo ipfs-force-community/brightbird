@@ -2,7 +2,6 @@ package api
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 
 	"github.com/ipfs-force-community/brightbird/models"
@@ -178,56 +177,6 @@ func RegisterTaskRouter(ctx context.Context, v1group *V1RouterGroup, taskManager
 			return
 		}
 
-		c.Status(http.StatusOK)
-	})
-
-	// swagger:route Get /task/retry task retryTaskReq
-	//
-	// Retry a fail task
-	//
-	//     Consumes:
-	//
-	//     Produces:
-	//     - application/json
-	//
-	//     Schemes: http, https
-	//
-	//     Deprecated: false
-	//
-	//
-	//     Responses:
-	//       200: int64Arr
-	//		 503: apiError
-	group.POST("retry", func(c *gin.Context) {
-		retryTaskReq := &models.RetryTaskReq{}
-		err := c.ShouldBindJSON(retryTaskReq)
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
-
-		taskID, err := primitive.ObjectIDFromHex(retryTaskReq.ID)
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
-
-		task, err := tasksRepo.Get(ctx, &repo.GetTaskReq{ID: taskID})
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
-
-		if task.State != models.Error {
-			c.Error(fmt.Errorf("only retry error task")) //nolint
-			return
-		}
-
-		err = tasksRepo.MarkState(ctx, taskID, models.Init, "task retry")
-		if err != nil {
-			c.Error(err) //nolint
-			return
-		}
 		c.Status(http.StatusOK)
 	})
 }

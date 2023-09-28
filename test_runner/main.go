@@ -76,10 +76,6 @@ func main() {
 				Name:  "taskId",
 				Usage: "test  to running",
 			},
-			&cli.IntFlag{
-				Name:  "retry",
-				Usage: "retry number ",
-			},
 			&cli.StringFlag{
 				Name:  "registry",
 				Usage: "use private registry",
@@ -126,10 +122,6 @@ func main() {
 
 			if c.IsSet("taskId") {
 				cfg.TaskId = c.String("taskId")
-			}
-
-			if c.IsSet("retry") {
-				cfg.Retry = c.Int("retry")
 			}
 
 			if c.IsSet("dbName") {
@@ -218,6 +210,10 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 		return err
 	}
 
+	if task.State == models.TempError {
+		_ = taskRepo.MarkState(pCtx, taskId, models.Running, "restart")
+	}
+
 	cleaner := Cleaner{}
 	defer func() {
 		if r := recover(); r != nil {
@@ -227,16 +223,15 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 			}
 			err = fmt.Errorf("panic when run testrunner reason %s stack %s", reason, string(debug.Stack()))
 		}
-
-		if cleanErr := cleaner.DoClean(); cleanErr != nil {
-			log.Errorf("clean up failed %v", cleanErr)
-		}
-
-		fmt.Println("xxxxx")
 		if err != nil {
-			_ = taskRepo.MarkState(pCtx, taskId, models.Error, err.Error())
+			_ = taskRepo.MarkState(pCtx, taskId, models.TempError, err.Error())
 		} else {
 			_ = taskRepo.MarkState(pCtx, taskId, models.Successful, "run successfully")
+		}
+
+		//todo get logs
+		if cleanErr := cleaner.DoClean(); cleanErr != nil {
+			log.Errorf("clean up failed %v", cleanErr)
 		}
 	}()
 
@@ -270,7 +265,6 @@ func run(pCtx context.Context, cfg *Config) (err error) {
 				Namespace:         cfg.NameSpace,
 				TestID:            string(task.TestId),
 				Registry:          cfg.Registry,
-				Retry:             cfg.Retry,
 				MysqlConnTemplate: cfg.Mysql,
 			}
 		}),

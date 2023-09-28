@@ -7,7 +7,7 @@
     <div class="content">
       <router-link :to="{
         name: 'task-detail',
-        query: { testId: task.testId, id: task.id },
+        query: { testId: task.testId },
       }">
         <div class="content-top">
           <jm-text-viewer :value="task.name" :class="{ title: true }" />
@@ -19,14 +19,9 @@
 
       <div class="content-bottom">
         <span class="podname">{{ task.podName }}</span>
-        <div v-if="task.state == TaskStateEnum.Running" class="operation">
+        <div v-if="task.state == 2" class="operation">
           <jm-tooltip content="停止运行" placement="bottom">
             <button class="cancel" @click="cancelTask(task)"></button>
-          </jm-tooltip>
-        </div>
-        <div v-if="task.state == TaskStateEnum.Error" class="operation">
-          <jm-tooltip content="重试" placement="bottom">
-            <button class="retry" @click="retryTaskOnce(task.id)"></button>
           </jm-tooltip>
         </div>
       </div>
@@ -41,16 +36,14 @@ import {
   getCurrentInstance,
   PropType,
   SetupContext,
-  ref,
 } from 'vue';
 import JmTextViewer from '@/components/text-viewer/index.vue';
 import { ITaskVo } from '@/api/dto/tasks';
 import { TaskStateEnum } from '@/api/dto/enumeration';
-import { stopTask, retryTask} from '@/api/tasks';
-
+import { stopTask } from '@/api/tasks';
 
 export default defineComponent({
-  components: { JmTextViewer},
+  components: { JmTextViewer },
   props: {
     task: {
       type: Object as PropType<ITaskVo>,
@@ -60,22 +53,10 @@ export default defineComponent({
   emits: [],
   setup(props: any, { emit }: SetupContext) {
     const { proxy } = getCurrentInstance() as any;
-
-    const task = ref<ITaskVo>(props.task);
     const cancelTask = async (task: ITaskVo) => {
       try {
         await stopTask(task.id);
         proxy.$success('stop task success');
-      } catch (err) {
-        proxy.$throw(err, proxy);
-      }
-    };
-
-    const retryTaskOnce = async (id: string) => {
-      try {
-        await retryTask(id);
-        task.value = Object.assign(task.value, {state: TaskStateEnum.Init});
-        proxy.$success('retry task success');
       } catch (err) {
         proxy.$throw(err, proxy);
       }
@@ -89,12 +70,10 @@ export default defineComponent({
     };
 
     return {
-      TaskStateEnum,
       cancelTask,
-      retryTaskOnce,
       formatState,
       latestlog,
-      task,
+      props,
     };
   },
 });
@@ -245,10 +224,6 @@ export default defineComponent({
 
           &.cancel {
             background-image: url("@/assets/svgs/btn/cancel.svg");
-          }
-
-          &.retry {
-            background-image: url("@/assets/svgs/btn/refresh.svg");
           }
         }
 

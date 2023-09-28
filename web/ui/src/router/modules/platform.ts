@@ -85,6 +85,19 @@ export default [
           title: 'Job详情',
         },
       },
+      // {
+      //   name: 'task-detail',
+      //   path: 'task/detail',
+      //   component: () => import('@/views/task/detail.vue'),
+      //   props: ({
+      //     query: { testId },
+      //   }: RouteLocationNormalizedLoaded) => ({
+      //     testId,
+      //   }),
+      //   meta: {
+      //     title: 'Task详情',
+      //   },
+      // },
     ],
   },
   {

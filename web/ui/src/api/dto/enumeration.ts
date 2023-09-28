@@ -127,11 +127,11 @@ export enum JobEnum {
  */
 export enum TaskStateEnum {
   Init = 1,
-  Building = 2,
-  Running = 3,
+  Running = 2,
+  TempError = 3,
   Error = 4,
   Successful = 5,
-
+  Building = 6,
 }
 
 export namespace TaskStateEnum {
@@ -141,6 +141,8 @@ export namespace TaskStateEnum {
         return 'init';
       case TaskStateEnum.Running:
         return 'running';
+      case TaskStateEnum.TempError:
+        return 'temperr';
       case TaskStateEnum.Error:
         return 'error';
       case TaskStateEnum.Successful:

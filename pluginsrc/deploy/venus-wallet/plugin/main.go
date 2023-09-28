@@ -25,7 +25,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, depParams DepParams) 
 		return nil, errors.New("gateway have value but not set token value")
 	}
 
-	if depParams.Gateway == nil && len(depParams.UserToken) != 0 {
+	if depParams.Gateway == nil && len(depParams.UserToken) == 0 {
 		return nil, errors.New("token have value but not set gateway url")
 	}
 

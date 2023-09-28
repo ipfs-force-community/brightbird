@@ -17,10 +17,4 @@ export interface LogResp extends Readonly<{
 export interface LogReq extends Readonly<{
     podName: string;
     testID: string;
-    retryTime: number;
-}> { }
-
-export interface ListPodsReq extends Readonly<{
-    testID: string;
-    retryTime: number;
 }> { }

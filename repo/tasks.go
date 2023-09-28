@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/x/bsonx"
 )
 
 type ListTaskParams struct {
@@ -28,8 +29,6 @@ type GetTaskReq struct {
 
 type ITaskRepo interface {
 	List(context.Context, models.PageReq[ListTaskParams]) (*models.PageResp[*models.Task], error)
-	AppendLog(ctx context.Context, id primitive.ObjectID, msg ...string) error
-	IncreaseRetry(ctx context.Context, id primitive.ObjectID) (*models.Task, error)
 	UpdateCommitMap(ctx context.Context, id primitive.ObjectID, versionMap map[string]string) error
 	UpdatePipeline(ctx context.Context, id primitive.ObjectID, pipeline []*types.ExecNode) error
 	MarkState(ctx context.Context, id primitive.ObjectID, state models.State, msg ...string) error
@@ -51,22 +50,22 @@ func NewTaskRepo(ctx context.Context, db *mongo.Database) (*TaskRepo, error) {
 	col := db.Collection("tasks")
 	_, err := col.Indexes().CreateMany(ctx, []mongo.IndexModel{
 		{
-			Keys: bson.D{{Key: "jobid", Value: -1}},
+			Keys: bsonx.Doc{{Key: "jobid", Value: bsonx.Int32(-1)}},
 		},
 		{
-			Keys: bson.D{{Key: "state", Value: -1}},
+			Keys: bsonx.Doc{{Key: "state", Value: bsonx.Int32(-1)}},
 		},
 		{
-			Keys: bson.D{
-				{Key: "jobid", Value: -1},
-				{Key: "state", Value: -1},
+			Keys: bsonx.Doc{
+				{Key: "jobid", Value: bsonx.Int32(-1)},
+				{Key: "state", Value: bsonx.Int32(-1)},
 			},
 		},
 		{
-			Keys: bson.D{
-				{Key: "jobid", Value: -1},
-				{Key: "state", Value: -1},
-				{Key: "createtime", Value: -1},
+			Keys: bsonx.Doc{
+				{Key: "jobid", Value: bsonx.Int32(-1)},
+				{Key: "state", Value: bsonx.Int32(-1)},
+				{Key: "createtime", Value: bsonx.Int32(-1)},
 			},
 		},
 	})
@@ -151,33 +150,6 @@ func (j *TaskRepo) MarkState(ctx context.Context, id primitive.ObjectID, state m
 		}
 	}
 
-	_, err := j.taskCol.UpdateByID(ctx, id, update)
-	return err
-}
-
-func (j *TaskRepo) IncreaseRetry(ctx context.Context, id primitive.ObjectID) (*models.Task, error) {
-	update := bson.M{
-		"$inc": bson.M{
-			"retryTime": 1,
-		},
-	}
-
-	var task models.Task
-	err := j.taskCol.FindOneAndUpdate(ctx, bson.D{{Key: "_id", Value: id}}, update, options.FindOneAndUpdate().SetReturnDocument(options.After)).Decode(&task)
-	if err != nil {
-		return nil, err
-	}
-	return &task, nil
-}
-
-func (j *TaskRepo) AppendLog(ctx context.Context, id primitive.ObjectID, logs ...string) error {
-	update := bson.M{
-		"$push": bson.M{
-			"logs": bson.M{
-				"$each": logs,
-			},
-		},
-	}
 	_, err := j.taskCol.UpdateByID(ctx, id, update)
 	return err
 }

@@ -54,10 +54,10 @@ var PluginInfo = types.PluginInfo{
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*VenusWalletProDeployReturn, error) {
-	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName))
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("venus-wallet-pro-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
 		Registry: k8sEnv.Registry(),
-		UniqueId: env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
+		UniqueId: env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:   cfg,
 	}
 	//create database
@@ -81,9 +81,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
-		return GetPods(ctx, k8sEnv, cfg.InstanceName)
-	}, deployCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, deployCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -116,5 +114,5 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-pro-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("venus-wallet-pro-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

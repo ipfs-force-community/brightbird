@@ -62,21 +62,21 @@ func (schema *Schema) UnmarshalJSON(data []byte) error {
 func (schema Schema) MarshalBSONValue() (bsontype.Type, []byte, error) {
 	data, err := (jsonschema.Schema)(schema).MarshalJSON()
 	if err != nil {
-		return bson.TypeBoolean, nil, err
+		return bsontype.Boolean, nil, err
 	}
 
 	var doc interface{}
 	err = bson.UnmarshalExtJSON(data, false, &doc)
 	if err != nil {
-		return bson.TypeBoolean, nil, err
+		return bsontype.Boolean, nil, err
 	}
 
 	bsonBytes, err := bson.Marshal(doc)
 	if err != nil {
-		return bson.TypeBoolean, nil, err
+		return bsontype.Boolean, nil, err
 	}
 
-	return bson.TypeEmbeddedDocument, bsoncore.AppendDocument(nil, bsonBytes), err
+	return bsontype.EmbeddedDocument, bsoncore.AppendDocument(nil, bsonBytes), err
 }
 
 func (schema *Schema) UnmarshalBSONValue(t bsontype.Type, b []byte) error {

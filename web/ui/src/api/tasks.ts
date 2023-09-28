@@ -48,17 +48,3 @@ export async function stopTask(id: string): Promise<ITaskVo[]> {
   
   return res;
 }
-
-/**
- * 重试任务
- * @param dto
- */
-export async function retryTask(id: string): Promise<ITaskVo[]> {
-  const res = await restProxy({ 
-    url:`${baseUrl.task}/retry`,
-    method:'post',
-    payload:{ID:id}
-  });
-  
-  return res;
-}

@@ -1,19 +1,16 @@
 <template>
   <div class="nav">
     <button class="jm-icon-button-left" @click="goBack"></button>
-    <el-dropdown split-button type="primary" @command="changeRetry">
-      重试次数+{{ curRetry }}
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item v-for="index in latestRetry" :command="index">{{ index }}</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
   </div>
   <div class="task-detail" v-loading="loading">
     <div class="task-list">
-      <div class="task-item" v-for="pod in podList" :key="pod" @click="selectTask(pod)"
-        :class="{ selected: selectedPod && selectedPod === pod }">
+      <div
+        class="task-item"
+        v-for="pod in podList"
+        :key="pod"
+        @click="selectTask(pod)"
+        :class="{ selected: selectedPod && selectedPod === pod }"
+      >
         {{ pod }}
       </div>
     </div>
@@ -23,8 +20,15 @@
       </div>
       <div v-else>
         <div class="pod-log-header">{{ selectedPod }} Logs</div>
-        <el-collapse v-if="selectedPod.indexOf('test-runner') > -1" class="pod-log pod-height">
-          <el-collapse-item v-for="(step, index) in podLog?.steps" :key="index" class="step-header">
+        <el-collapse
+          v-if="selectedPod.indexOf('test-runner') > -1"
+          class="pod-log pod-height"
+        >
+          <el-collapse-item
+            v-for="(step, index) in podLog?.steps"
+            :key="index"
+            class="step-header"
+          >
             <template #title>
               <div class="header-title">
                 <el-icon v-if="step.state == StepStateEnum.Success" size="20">
@@ -35,7 +39,10 @@
                   <CircleCloseFilled color="rgb(255, 168, 168)" />
                 </el-icon>
 
-                <el-icon v-if="step.state == StepStateEnum.NotRunning" size="20">
+                <el-icon
+                  v-if="step.state == StepStateEnum.NotRunning"
+                  size="20"
+                >
                   <RemoveFilled color="gray" />
                 </el-icon>
 
@@ -47,14 +54,26 @@
               </div>
             </template>
             <div class="steps">
-              <el-text class="step-item" size="small" tag="p" v-for="(log, index) in step.logs" :key="index">
+              <el-text
+                class="step-item"
+                size="small"
+                tag="p"
+                v-for="(log, index) in step.logs"
+                :key="index"
+              >
                 {{ log }}
               </el-text>
             </div>
           </el-collapse-item>
         </el-collapse>
-        <el-input v-else class="pod-log pod-height" v-model="podLogString" aria-readonly="true" :autosize="{ minRows: 2 }"
-          type="textarea" />
+        <el-input
+          v-else
+          class="pod-log pod-height"
+          v-model="podLogString"
+          aria-readonly="true"
+          :autosize="{ minRows: 2 }"
+          type="textarea"
+        />
       </div>
     </div>
   </div>
@@ -70,7 +89,6 @@ import {
   onUnmounted,
 } from 'vue';
 import { listAllPod, getPodLog } from '@/api/log';
-import { getTask } from '@/api/tasks';
 import { HttpError, TimeoutError } from '@/utils/rest/error';
 import { LogResp } from '@/api/dto/log';
 import { StepStateEnum } from '@/api/dto/enumeration';
@@ -78,7 +96,7 @@ import { useRouter } from 'vue-router';
 
 export default defineComponent({
   props: {
-    id: {
+    testId: {
       type: String,
       required: true,
     },
@@ -94,14 +112,12 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
-    const testId  = ref<string>("");
-    const latestRetry = ref<number>(0);
-    const curRetry = ref<number>(props.retryTime);
     const router = useRouter();
-    // 获取所有pod列表
+
+    // 获取所有任务列表
     const loadPodList = async () => {
       try {
-        const pods = await listAllPod({ testID:testId.value, retryTime: curRetry.value });
+        const pods = await listAllPod(props.testId);
         podList.value = pods;
       } catch (error) {
         console.error(error);
@@ -114,8 +130,7 @@ export default defineComponent({
         selectedPod.value = podName;
         podLog.value = await getPodLog({
           podName: podName,
-          testID: testId.value,
-          retryTime: curRetry.value,
+          testID: props.testId,
         });
       } catch (error) {
         console.error(error);
@@ -125,8 +140,7 @@ export default defineComponent({
     const loadData = async (refreshing?: boolean) => {
       try {
         await proxy.listAllPod({
-          testId: testId.value,
-          retryTime: curRetry.value,
+          testId: props.testId,
         });
       } catch (err) {
         if (!refreshing) {
@@ -156,8 +170,7 @@ export default defineComponent({
         selectedPod.value = podList.value[0];
         podLog.value = await getPodLog({
           podName: selectedPod.value,
-          testID: testId.value,
-          retryTime: curRetry.value,
+          testID: props.testId,
         });
       }
     };
@@ -170,14 +183,13 @@ export default defineComponent({
       }
     };
 
-    const refresh = async () => {
+    const timer= setInterval(async () => {
       try {
         if (podList.value.length > 0) {
           await loadPodList();
           podLog.value = await getPodLog({
             podName: selectedPod.value,
-            testID: testId.value,
-            retryTime: curRetry.value,
+            testID: props.testId,
           });
         } else {
           await loadPodList();
@@ -186,18 +198,9 @@ export default defineComponent({
       } catch (err) {
         proxy.$throw(err, proxy);
       }
-    }
-    const timer = setInterval(refresh, 10000);
+    }, 10000);
 
-    const changeRetry = async (retryNum: number) => {
-      curRetry.value = retryNum;
-      refresh();
-    }
     onMounted(async () => {
-      let task = await getTask({ID: props.id});
-      latestRetry.value = task.retryTime;
-      testId.value = task.testId;
-      curRetry.value  = task.retryTime;
       // 初始化任务列表
       await loadPodList();
 
@@ -215,11 +218,8 @@ export default defineComponent({
       podList,
       selectedPod,
       podLog,
-      latestRetry,
-      curRetry,
       selectTask,
       goBack,
-      changeRetry,
     };
   },
 });
@@ -239,7 +239,6 @@ export default defineComponent({
   height: 64px;
   background: white;
   color: #042749;
-
   button[class^="jm-icon-"] {
     width: 24px;
     height: 24px;

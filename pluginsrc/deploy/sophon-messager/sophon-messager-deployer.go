@@ -63,11 +63,11 @@ var PluginInfo = types.PluginInfo{
 var f embed.FS
 
 func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Config) (*SophonMessagerReturn, error) {
-	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-messager-" + env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName))
+	cfg.MysqlDSN = k8sEnv.FormatMysqlConnection("sophon-messager-" + env.UniqueId(k8sEnv.TestID(), cfg.InstanceName))
 	renderParams := RenderParams{
 		NameSpace: k8sEnv.NameSpace(),
 		Registry:  k8sEnv.Registry(),
-		UniqueId:  env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), cfg.InstanceName),
+		UniqueId:  env.UniqueId(k8sEnv.TestID(), cfg.InstanceName),
 		Config:    cfg,
 	}
 
@@ -92,9 +92,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	if err != nil {
 		return nil, err
 	}
-	statefulSet, err := k8sEnv.RunStatefulSets(ctx, func(ctx context.Context, k8sEnv *env.K8sEnvDeployer) ([]corev1.Pod, error) {
-		return GetPods(ctx, k8sEnv, cfg.InstanceName)
-	}, statefulSetCfg, renderParams)
+	statefulSet, err := k8sEnv.RunStatefulSets(ctx, statefulSetCfg, renderParams)
 	if err != nil {
 		return nil, err
 	}
@@ -192,5 +190,5 @@ func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMessag
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
-	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-messager-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
+	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-messager-%s-pod", env.UniqueId(k8sEnv.TestID(), instanceName)))
 }

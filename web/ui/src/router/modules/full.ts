@@ -34,7 +34,11 @@ export default [
     name: 'task-detail',
     path: 'task/detail',
     component: () => import('@/views/task/detail.vue'),
-    props: route => ({ testId: route.query.testId,id: route.query.id }), 
+    props: ({
+      query: { testId },
+    }: RouteLocationNormalizedLoaded) => ({
+      testId,
+    }),
     meta: {
       title: 'Task详情',
     },

@@ -7,7 +7,6 @@ export interface ITaskVo extends Readonly<{
   jobId: string;
   testflowId: string;
   testId: string;
-  retryTime: number;
   state: TaskStateEnum;
   logs: string[];
   versions: {};
@@ -27,10 +26,5 @@ export interface IListTaskVo
 export interface IGetTaskReq extends Readonly<{
 }> {
   testID?: string;
-  ID?: string;
-}
-
-export interface IRetryReq extends Readonly<{
-}> {
   ID?: string;
 }
