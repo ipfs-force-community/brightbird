@@ -69,6 +69,7 @@ import { TreeProp } from '@/components/workflow/workflow-editor/model/data/commo
 import JmSelect from '@/components/form/select';
 import { Try } from 'json-schema-to-typescript/dist/src/utils';
 import { JSONSchema } from 'json-schema-to-typescript';
+import localforage from 'localforage';
 
 export default defineComponent({
   components: { JmEmpty, ExpressionEditor, PropertySelect, JmForm, jmFormItem, JmInput, JmSelect },
@@ -128,14 +129,18 @@ export default defineComponent({
     };
 
     const prepareNodeParams = async () => {
-      try {
-        // prepare plugin paramsters
+      try {        
+        if (form.value.version) {
+          const inputSchema = await localforage.getItem<any>(`inputSchema/${instanceName}/${form.value.version}`);
+          input.value =  convertToSchema(inputSchema);
+        }
+
         const nodes = graph.getNodes();
         for (var i = 0; i < nodes.length; i++) {
           const proxy = new CustomX6NodeProxy(nodes[i]);
           const nodeData = proxy.getData(graph);
           const anode = nodeData as AsyncTask;
-          if (anode.instanceName != instanceName) {
+          if (anode.instanceName !== instanceName) {
             const pluginDef = await getPluginDef(anode.name, anode.version);
             nodeNames.push({
               name: anode.instanceName,
@@ -160,25 +165,25 @@ export default defineComponent({
       if (form.value.version) {
         failureVisible.value = true;
       }
-      try {
+      try {      
         const pluginDetail = await getPluginByName(props.nodeData.name);
         pluginDetail.pluginDefs?.forEach(a => {
           plugins.set(a.version, a);
           versionList.value.versions.push(a.version);
         });
 
-        if (!pluginDetail.pluginDefs || pluginDetail.pluginDefs.length == 0) {
+        if (!pluginDetail.pluginDefs || pluginDetail.pluginDefs.length === 0) {
           return;
         }
 
         if (form.value.version) {
           input.value =  convertToSchema(plugins.get(form.value.version)?.inputSchema );
+          localforage.setItem(`inputSchema/${instanceName}/${form.value.version}`, plugins.get(form.value.version)?.inputSchema);
         } else {
           form.value.version = versionList.value.versions[0];
           input.value = convertToSchema(pluginDetail.pluginDefs[0]?.inputSchema); 
+          localforage.setItem(`inputSchema/${instanceName}/${form.value.version}`, pluginDetail.pluginDefs[0]?.inputSchema);
         }
-
-
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
