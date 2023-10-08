@@ -22,7 +22,6 @@ export default defineComponent({
   setup(props) {
     const { proxy, appContext } = getCurrentInstance() as any;
     const router = useRouter();
-    const route = useRoute();
     const loading = ref<boolean>(false);
     // workflow数据是否加载完成
     const loaded = ref<boolean>(false);

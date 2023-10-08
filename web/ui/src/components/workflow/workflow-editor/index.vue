@@ -5,7 +5,7 @@
       <toolbar :workflow-data="workflowData" @back="handleBack" @save="handleSave" @open-environment="onOpenEnvironment" :project-panel-visible="projectPanelVisible" />
 <!--      节点配置面板：选中某个节点时，显示该节点的配置面板，允许用户进行配置-->
       <node-config-panel
-        v-if="selectedNodeId"
+        v-if="nodeConfigPanelVisible"
         v-model="nodeConfigPanelVisible"
         :node-id="selectedNodeId"
         :node-waring-clicked="nodeWaringClicked"
