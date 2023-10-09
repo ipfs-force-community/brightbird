@@ -35,7 +35,7 @@ type TestCaseParams struct {
 
 	State       uint64 `json:"state" jsonschema:"state" title:"state" require:"true" description:"18-StorageDealWaitingForData, 24-StorageDealPublish"`
 	ProposalCid string `json:"ProposalCid" jsonschema:"ProposalCid" title:"ProposalCid" require:"true" description:"ProposalCid"`
-	TimeOut     int    `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10" description:"TimeOut"`
+	TimeOut     int    `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10000" description:"TimeOut"`
 }
 
 type StorageDealsGetReturn = []market.MinerDeal

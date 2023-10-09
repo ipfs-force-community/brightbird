@@ -51,8 +51,10 @@ type TestCaseParams struct {
 }
 
 type SetupDropletReturn struct {
-	Multiaddrs []abi.Multiaddrs `json:"multiaddrs" jsonschema:"multiaddrs" title:"multiaddrs" require:"true" description:"addresses that your miner can be publicly dialed on"`
-	PeerID     peer.ID          `json:"peerID" jsonschema:"peerID" title:"peerID" require:"true" description:"peer id of your miner"`
+	Multiaddrs         []abi.Multiaddrs
+	PeerID             peer.ID
+	SetAddrMessageId   string
+	SetPeerIdMessageId string
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) (*SetupDropletReturn, error) {
@@ -95,28 +97,30 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return nil, err
 	}
 
-	err = SendMessage(ctx, params, addrMessageParams, client, fapi, builtin.MethodsMiner.ChangeMultiaddrs)
-	if err != nil {
+	setAddrMessageId, err := SendMessage(ctx, params, addrMessageParams, client, fapi, builtin.MethodsMiner.ChangeMultiaddrs)
+	if err != nil || setAddrMessageId == "" {
 		log.Errorf("set address failed: %v\n", err)
 		return nil, err
 	}
 
-	err = SendMessage(ctx, params, pidMessageParams, client, fapi, builtin.MethodsMiner.ChangePeerID)
-	if err != nil {
+	setPeerIdMessageId, err := SendMessage(ctx, params, pidMessageParams, client, fapi, builtin.MethodsMiner.ChangePeerID)
+	if err != nil || setPeerIdMessageId == "" {
 		log.Errorln("set peer-id failed: %v\n", err)
 		return nil, err
 	}
 
 	return &SetupDropletReturn{
-		Multiaddrs: addrs,
-		PeerID:     pid,
+		Multiaddrs:         addrs,
+		PeerID:             pid,
+		SetAddrMessageId:   setAddrMessageId,
+		SetPeerIdMessageId: setPeerIdMessageId,
 	}, nil
 }
 
-func SendMessage(ctx context.Context, params TestCaseParams, messageParams []byte, client marketapi.IMarket, fapi chain.FullNode, method abi.MethodNum) error {
+func SendMessage(ctx context.Context, params TestCaseParams, messageParams []byte, client marketapi.IMarket, fapi chain.FullNode, method abi.MethodNum) (string, error) {
 	minfo, err := fapi.StateMinerInfo(ctx, params.MinerAddress, vtypes.EmptyTSK)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	messageId, err := client.MessagerPushMessage(ctx, &vtypes.Message{
@@ -129,26 +133,26 @@ func SendMessage(ctx context.Context, params TestCaseParams, messageParams []byt
 	}, nil)
 	if err != nil {
 		log.Errorf("push message failed: %v\n", err)
-		return err
+		return "", err
 	}
 
 	log.Debugf("Requested multiaddrs change in message %s\n", messageId)
 
 	messagerRPC, closer, err := messager.DialIMessagerRPC(ctx, params.Messager.SvcEndpoint.ToMultiAddr(), params.Auth.AdminToken, nil)
 	if err != nil {
-		return err
+		return "", err
 	}
 	defer closer()
 
 	result, err := messagerRPC.WaitMessage(ctx, messageId.String(), uint64(params.Confidence))
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if result.Receipt.ExitCode != 0 {
 		log.Errorln("message fail %d", result.Receipt.ExitCode)
-		return err
+		return "", err
 	}
 
-	return nil
+	return messageId.String(), nil
 }

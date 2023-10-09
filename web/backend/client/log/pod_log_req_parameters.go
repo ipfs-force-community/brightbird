@@ -14,6 +14,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 )
 
 // NewPodLogReqParams creates a new PodLogReqParams object,
@@ -66,6 +67,14 @@ type PodLogReqParams struct {
 	   pod name
 	*/
 	PodName string
+
+	/* RetryTime.
+
+	   retrytime of task
+
+	   Format: int64
+	*/
+	RetryTime int64
 
 	/* TestID.
 
@@ -137,6 +146,17 @@ func (o *PodLogReqParams) SetPodName(podLog string) {
 	o.PodName = podLog
 }
 
+// WithRetryTime adds the retryTime to the pod log req params
+func (o *PodLogReqParams) WithRetryTime(retryTime int64) *PodLogReqParams {
+	o.SetRetryTime(retryTime)
+	return o
+}
+
+// SetRetryTime adds the retryTime to the pod log req params
+func (o *PodLogReqParams) SetRetryTime(retryTime int64) {
+	o.RetryTime = retryTime
+}
+
 // WithTestID adds the testID to the pod log req params
 func (o *PodLogReqParams) WithTestID(testID string) *PodLogReqParams {
 	o.SetTestID(testID)
@@ -162,6 +182,16 @@ func (o *PodLogReqParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 	if qPodLog != "" {
 
 		if err := r.SetQueryParam("podLog", qPodLog); err != nil {
+			return err
+		}
+	}
+
+	// query param retryTime
+	qrRetryTime := o.RetryTime
+	qRetryTime := swag.FormatInt64(qrRetryTime)
+	if qRetryTime != "" {
+
+		if err := r.SetQueryParam("retryTime", qRetryTime); err != nil {
 			return err
 		}
 	}
