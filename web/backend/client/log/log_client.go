@@ -30,7 +30,7 @@ type ClientOption func(*runtime.ClientOperation)
 
 // ClientService is the interface for Client methods
 type ClientService interface {
-	ListPodsInTest(params *ListPodsInTestParams, opts ...ClientOption) (*ListPodsInTestOK, error)
+	ListPodsReq(params *ListPodsReqParams, opts ...ClientOption) (*ListPodsReqOK, error)
 
 	PodLogReq(params *PodLogReqParams, opts ...ClientOption) (*PodLogReqOK, error)
 
@@ -38,22 +38,22 @@ type ClientService interface {
 }
 
 /*
-ListPodsInTest lists all pod names in test
+ListPodsReq lists all pod names in test
 */
-func (a *Client) ListPodsInTest(params *ListPodsInTestParams, opts ...ClientOption) (*ListPodsInTestOK, error) {
+func (a *Client) ListPodsReq(params *ListPodsReqParams, opts ...ClientOption) (*ListPodsReqOK, error) {
 	// TODO: Validate the params before sending
 	if params == nil {
-		params = NewListPodsInTestParams()
+		params = NewListPodsReqParams()
 	}
 	op := &runtime.ClientOperation{
-		ID:                 "listPodsInTest",
+		ID:                 "listPodsReq",
 		Method:             "GET",
-		PathPattern:        "/logs/pods/{testid}",
+		PathPattern:        "/logs/pods",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json", "application/xml"},
 		Schemes:            []string{"http", "https"},
 		Params:             params,
-		Reader:             &ListPodsInTestReader{formats: a.formats},
+		Reader:             &ListPodsReqReader{formats: a.formats},
 		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
@@ -65,13 +65,13 @@ func (a *Client) ListPodsInTest(params *ListPodsInTestParams, opts ...ClientOpti
 	if err != nil {
 		return nil, err
 	}
-	success, ok := result.(*ListPodsInTestOK)
+	success, ok := result.(*ListPodsReqOK)
 	if ok {
 		return success, nil
 	}
 	// unexpected success response
 	// safeguard: normally, absent a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for listPodsInTest: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for listPodsReq: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

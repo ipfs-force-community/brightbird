@@ -86,7 +86,7 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		return err
 	}
 
-	log.Debugf("invoke plugin %s params %s", pip.InstanceName, string(initData))
+	log.Infof("invoke plugin %s params %s", pip.InstanceName, string(initData))
 
 	inputBuf := bytes.NewBuffer(initData)
 	_, err = inputBuf.Write([]byte{'\n'})

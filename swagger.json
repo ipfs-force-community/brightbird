@@ -667,6 +667,15 @@
             "required": true
           },
           {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "RetryTime",
+            "description": "retrytime of task",
+            "name": "retryTime",
+            "in": "query",
+            "required": true
+          },
+          {
             "type": "string",
             "x-go-name": "PodName",
             "description": "pod name",
@@ -691,7 +700,7 @@
         }
       }
     },
-    "/logs/pods/{testid}": {
+    "/logs/pods": {
       "get": {
         "produces": [
           "application/json"
@@ -704,13 +713,23 @@
           "log"
         ],
         "summary": "List all pod names in test.",
-        "operationId": "listPodsInTest",
+        "operationId": "listPodsReq",
         "parameters": [
           {
             "type": "string",
-            "description": "test id",
-            "name": "testid",
-            "in": "path",
+            "x-go-name": "TestID",
+            "description": "testid of task",
+            "name": "testID",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "RetryTime",
+            "description": "retrytime of task",
+            "name": "retryTime",
+            "in": "query",
             "required": true
           }
         ],
@@ -1309,6 +1328,36 @@
             }
           },
           "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task/retry": {
+      "get": {
+        "description": "Retry a fail task",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "operationId": "retryTaskReq",
+        "responses": {
+          "200": {
+            "description": "int64Arr",
+            "schema": {
+              "$ref": "#/definitions/int64Arr"
+            }
+          },
+          "503": {
             "description": "apiError",
             "schema": {
               "$ref": "#/definitions/apiError"
@@ -1991,6 +2040,10 @@
       "description": "CopyTestflow",
       "type": "object",
       "properties": {
+        "groupId": {
+          "type": "string",
+          "x-go-name": "GroupId"
+        },
         "id": {
           "type": "string",
           "x-go-name": "ID"
@@ -2508,6 +2561,18 @@
         }
       },
       "x-go-name": "PluginLabel",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/models"
+    },
+    "retryTaskReq": {
+      "description": "RetryTaskReq",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        }
+      },
+      "x-go-name": "RetryTaskReq",
       "x-go-package": "github.com/ipfs-force-community/brightbird/models"
     },
     "stepLog": {

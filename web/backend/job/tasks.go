@@ -72,7 +72,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				taskLog.Errorf("clean finish scriptRunner %v", err)
 				continue
 			}
-			//check running task state
+			// get running-task(Running State) list form jobId
 			runningTask, err := taskMgr.taskRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 				PageNum:  1,
 				PageSize: math.MaxInt64,
@@ -86,6 +86,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 				continue
 			}
 
+			// check test-runner state of running task
 			for _, task := range runningTask.List {
 				isClean := false
 				if len(task.PodName) == 0 {
@@ -96,6 +97,8 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 					}
 					isClean = true
 				}
+
+				// checkout test-runner state from task.podName
 				_, err = taskMgr.testRunner.CheckTestRunner(ctx, task.PodName)
 				if err != nil {
 					if errors2.IsNotFound(err) {
@@ -115,7 +118,9 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 					}
 				}
 
+				// if test-runner has error, clean this test-runner
 				if isClean {
+					// clean test-runner rateled resource
 					cleanK8sErr := taskMgr.testRunner.CleanTestResource(ctx, string(task.TestId)) //clean again to ensure release all resource
 					if cleanK8sErr != nil {
 						log.Errorf("cannot clean k8s resource %v %v", cleanK8sErr)
@@ -124,6 +129,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			// start init task
+			// get init-task(Building) list from jobId
 			initTasks, err := taskMgr.taskRepo.List(ctx, models.PageReq[repo.ListTaskParams]{
 				PageNum:  1,
 				PageSize: math.MaxInt64,
@@ -138,6 +144,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 			}
 
 			for _, task := range initTasks.List {
+				// run task and return is test-runner pod
 				pod, err := taskMgr.Process(ctx, task)
 				if err != nil {
 					taskLog.Errorf("process task fail %v", err)
@@ -148,6 +155,7 @@ func (taskMgr *TaskMgr) Start(ctx context.Context) error {
 					continue
 				}
 
+				// update task-runner state to Running and update db
 				err = taskMgr.taskRepo.UpdatePodRunning(ctx, task.ID, pod.Name)
 				if err != nil {
 					taskLog.Errorf("run task list fail %v", err)
@@ -205,8 +213,9 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 		return nil, err
 	}
 
+	// if task state is init
 	if task.BeforeBuild() {
-		//update task state to build completed
+		// update task state to build completed
 		err = taskMgr.taskRepo.MarkState(ctx, task.ID, models.Building)
 		if err != nil {
 			return nil, err
@@ -215,22 +224,24 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 
 		//confirm version and build image.
 		taskLog.Infof("start to build image for testflow %s job %s", testflow.Name, job.Name)
+		// create version map: key: node.name, value: version
 		commitMap, err := taskMgr.imageBuilder.BuildTestFlowEnv(ctx, graph.Pipeline, task.InheritVersions) //todo maybe move this code to previous step
 		if err != nil {
 			return nil, err
 		}
 
 		var pipelines []*types.ExecNode
+		// construct a pipeline containing (input, output, instancename, name, plugintype, version) from graph.Pipeline
 		for _, node := range graph.Pipeline {
 			pipelines = append(pipelines, node.Value)
 		}
-		//save testflow as task params
+		// save testflow as task params to db
 		err = taskMgr.taskRepo.UpdatePipeline(ctx, task.ID, pipelines)
 		if err != nil {
 			return nil, err
 		}
 
-		//save testflow as task params
+		// if user input version of plugin, it will be add into db as commitmap
 		err = taskMgr.taskRepo.UpdateCommitMap(ctx, task.ID, commitMap)
 		if err != nil {
 			return nil, err
@@ -287,6 +298,7 @@ func (taskMgr *TaskMgr) Process(ctx context.Context, task *models.Task) (*corev1
 
 	log.Infof("invoke testrunner args %s", args)
 
+	// run test-runner and get test-runner pod
 	return taskMgr.testRunner.ApplyRunner(ctx, file, map[string]string{
 		"NameSpace": taskMgr.cfg.NameSpace,
 		"Registry":  string(taskMgr.privateRegistry),

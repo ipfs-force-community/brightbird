@@ -12,7 +12,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
-	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/pvc"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
@@ -31,20 +30,13 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Droplet    dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
-	PieceStore pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
+	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
 
 	ProposalCid string `json:"ProposalCid"  jsonschema:"ProposalCid"  title:"ProposalCid" require:"true" description:"ProposalCid"`
 	CarFile     string `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	mountPath := "/carfile/"
-	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
-	if err != nil {
-		return err
-	}
-
 	proposalCid, err := cid.Decode(params.ProposalCid)
 	if err != nil {
 		return err
