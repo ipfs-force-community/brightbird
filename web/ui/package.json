@@ -29,6 +29,7 @@
     "json-schema": "^0.4.0",
     "json-schema-to-typescript": "^13.0.2",
     "localforage": "^1.10.0",
+    "lodash": "^4.17.21",
     "mitt": "^3.0.1",
     "mockjs": "^1.1.0",
     "normalize-wheel": "^1.0.1",

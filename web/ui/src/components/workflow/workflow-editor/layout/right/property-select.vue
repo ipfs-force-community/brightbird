@@ -10,7 +10,7 @@
     <el-tree v-show="showTree" :data="treeData" :props="defaultProps" :load="loadNode" lazy>
         <template #default="{ node, data }">
             <span class="custom-tree-node">
-                <span @click="handleNodeClick(data, node)">{{ node.label }}</span>
+                <span @click="handleNodeClick(data, node)">{{"xxxx" + node.label }}</span>
                 <el-input-number v-show="data.name == 'index'" class="arrayIndex" v-model="data.index" size="small" />
             </span>
         </template>
@@ -59,18 +59,22 @@ export default defineComponent({
     const defaultProps = {
       children: 'children',
       label: 'name',
-      isLeaf: 'isLeaf',
+      isLeaf: (data, node) => {
+        return data.isLeaf;
+      },
     };
 
     const refValue = ref<string>('');
     const showTree = ref<boolean>(false);
 
     if (props.input[props.propName]) {
+      // eslint-disable-next-line vue/no-setup-props-destructure
       refValue.value = props.input[props.propName];
     } else {
       if (props.property.default) {
         // todo check object and arrary default value
         refValue.value = props.property.default as string;
+        // eslint-disable-next-line vue/no-mutating-props
         props.input[props.propName] = refValue.value;
       }
     }
@@ -80,7 +84,7 @@ export default defineComponent({
       var parent = obj;
       while (parent.parent && parent.level > 0) {
         let onePath = parent.data.name;
-        if (parent.data.name == 'index') {
+        if (parent.data.name === 'index') {
           onePath = parent.data.index;
         }
         pathSeq.push(onePath);
@@ -89,6 +93,7 @@ export default defineComponent({
       const expressValue = '{{' + pathSeq.reverse().join('.') + '}}';
       refValue.value = expressValue;
       showTree.value = false;
+      // eslint-disable-next-line no-use-before-define
       setPropValue();
     };
 
@@ -100,9 +105,11 @@ export default defineComponent({
       if (!props.propName) {
         return;
       }
-      if (!refValue.value) {
-        return;
-      }
+      // TODO: 临时不强制必选项
+      // if (!refValue.value) {
+      //   return;
+      // }
+      // eslint-disable-next-line vue/no-mutating-props
       props.input[props.propName] = refValue.value;
     };
 
@@ -142,7 +149,7 @@ export default defineComponent({
       }
 
       let treeData: TreeProp[] = [];
-      if (schema.type == 'object') {
+      if (schema.type === 'object') {
         for (let [key, prop] of Object.entries(schema.properties)) {
           let treeProp: TreeProp = {
             name: key,
@@ -152,8 +159,10 @@ export default defineComponent({
             type: '',
             schema: null,
             children: [],
-          };
+          };          
+
           prop = resolveSchema(prop);
+
           if (isSimpleType(prop.type as string)) {
             treeProp.type = prop.type as string;
             treeProp.schema = resolveSchema(prop);
@@ -191,7 +200,6 @@ export default defineComponent({
       } else {
         throw new TypeError('unexpect json type' + schema.type);
       }
-      console.log(treeData);
       resolve(treeData);
     };
     return {

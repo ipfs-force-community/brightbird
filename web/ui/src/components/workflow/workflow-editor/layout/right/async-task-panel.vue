@@ -65,7 +65,7 @@ import JmInput from '@/components/form/input';
 import { getPluginByName, getPluginDef } from '@/api/plugin';
 import PropertySelect from './property-select.vue';
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
-import { TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
+import { IWorkflow, TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
 import JmSelect from '@/components/form/select';
 import { Try } from 'json-schema-to-typescript/dist/src/utils';
 import { JSONSchema } from 'json-schema-to-typescript';
@@ -81,18 +81,23 @@ export default defineComponent({
     caches: {
       type: [Array, String],
     },
+    workflowData: {
+      type: Object as PropType<IWorkflow>,
+      required: true,
+    },
   },
   emits: ['form-created'],
   setup(props, { emit }) {
     const { proxy } = getCurrentInstance() as any;
     const formRef = ref();
+
     const form = ref<AsyncTask>(props.nodeData);
     // 依赖组件列表
     const getGraph = inject('getGraph') as () => Graph;
     const graph = getGraph();
 
     const instanceName = props.nodeData.getInstanceName();
-    const nodeNames: TreeProp[] = [];
+    let nodeNames= ref<TreeProp[]>([]);
 
     console.log(nodeNames);
     // 版本列表
@@ -131,28 +136,36 @@ export default defineComponent({
     const prepareNodeParams = async () => {
       try {        
         if (form.value.version) {
+          const tree = await localforage.getItem<TreeProp[]>(`inputSchema/${props.workflowData?.groupId}`);
+          if (tree) {
+            nodeNames.value = tree;
+          }          
           const inputSchema = await localforage.getItem<any>(`inputSchema/${instanceName}/${form.value.version}`);
           input.value =  convertToSchema(inputSchema);
         }
-
+        const  _nodeNames : TreeProp[] = [];
         const nodes = graph.getNodes();
         for (var i = 0; i < nodes.length; i++) {
           const proxy = new CustomX6NodeProxy(nodes[i]);
           const nodeData = proxy.getData(graph);
           const anode = nodeData as AsyncTask;
           if (anode.instanceName !== instanceName) {
-            const pluginDef = await getPluginDef(anode.name, anode.version);
-            nodeNames.push({
+            const pluginDef = await getPluginDef(anode.name, anode.version);            
+            
+            nodeNames.value.push({
               name: anode.instanceName,
               type:'object',
               index:-1,
               defs: pluginDef.outputSchema.definitions || {},
               schema: convertToSchema(pluginDef.outputSchema) || {},
-              isLeaf: false,
+              isLeaf: Object.keys(pluginDef.outputSchema).length === 0,
               children:[],
             });
+            nodeNames.value = _nodeNames;
+            localforage.setItem(`inputSchema/${props.workflowData?.groupId}`, _nodeNames);
           }
         }
+
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
