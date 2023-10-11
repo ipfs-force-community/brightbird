@@ -16,7 +16,7 @@ spec:
       containers:
         - name: sophon-co-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-co:{{.CodeVersion}}"
-          args: [run, {{join .Args ","}}]
+          args: ["run", {{join .Args ", "}}]
           ports:
             - containerPort: 1234
               protocol: TCP
@@ -33,4 +33,4 @@ spec:
         storageClassName: "nfs-client"
         resources:
           requests:
-            storage: 100M
+            storage: 100Mi

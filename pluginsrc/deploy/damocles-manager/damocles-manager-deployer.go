@@ -76,7 +76,7 @@ sed -i "s/https:\/\/sh.rustup.rs/https:\/\/rsproxy.cn\/rustup-init.sh/g" Dockerf
 sed -i '1 i\export GITHUB_TOKEN={{.GitToken}}' Makefile
 sed -i '2 i\export HTTPS_PROXY={{.Proxy}}' Makefile
 
-cat > ./config << EOF
+cat > ./config.toml << EOF
 [source.crates-io]
 replace-with = 'rsproxy'
 [source.rsproxy]
@@ -88,9 +88,13 @@ index = "https://rsproxy.cn/crates.io-index"
 [net]
 git-fetch-with-cli = true
 EOF
-sed -i '1 i\export RUSTFLAGS=-C target-cpu=x86-64' Makefile
-sed -i "13 i\COPY ./config /usr/local/cargo/config" Dockerfile.manager
-make docker-push-manager TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+sed -i '10 i\ENV RUSTFLAGS="-C target-cpu=x86-64"' Dockerfile.manager
+sed -i '13 i\COPY ./config.toml /root/.cargo/config.toml' Dockerfile.manager
+sed -i '14 i\ENV CARGO_HOME="/root/.cargo"' Dockerfile.manager
+
+docker build -f Dockerfile.manager -t damocles-manager --build-arg HTTPS_PROXY={{.Proxy}} --build-arg FFI_BUILD_FROM_SOURCE=1 .
+docker tag damocles-manager {{.Registry}}/filvenus/damocles-manager:{{.Commit}}
+docker push {{.Registry}}/filvenus/damocles-manager:{{.Commit}}`,
 	},
 	Description: "",
 }
