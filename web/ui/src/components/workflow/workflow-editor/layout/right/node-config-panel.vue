@@ -10,6 +10,7 @@
         <async-task-panel
           v-if="nodeData.getType() === NodeTypeEnum.ASYNC_TASK"
           :node-data="nodeData"
+          :workflowData="workflowData"
           @form-created="handleFormCreated"
         />
       </jm-scrollbar>
@@ -23,8 +24,8 @@ import { NodeTypeEnum } from '../../model/data/enumeration';
 import AsyncTaskPanel from './async-task-panel.vue';
 import { Graph, Node } from '@antv/x6';
 import { CustomX6NodeProxy } from '../../model/data/custom-x6-node-proxy';
-import { IWorkflow } from '../../model/data/common';
-
+import { IWorkflow, IWorkflowNode } from '../../model/data/common';
+import { cloneDeep } from 'lodash';
 export default defineComponent({
   components: { AsyncTaskPanel },
   props: {
@@ -49,7 +50,8 @@ export default defineComponent({
     const node = graph.getNodes().find(({ id }) => props.nodeId === id)!;
     const proxy = new CustomX6NodeProxy(node);
     // 不能为ref，否则，表单内容的变化影响数据绑定
-    const nodeData = proxy.getData(graph, props.workflowData);
+    const nodeData = ref<IWorkflowNode>();
+    nodeData.value = cloneDeep(proxy.getData(graph, props.workflowData));
 
     const formRef = ref();
     provide('getNode', (): Node => node);
@@ -75,7 +77,9 @@ export default defineComponent({
       },
       save: () => {
         formRef.value?.validate((valid: boolean) => {
-          proxy.setData(nodeData);
+          if (nodeData.value) {
+            proxy.setData(nodeData.value);
+          }
           emit('closed', valid);
         });
       },

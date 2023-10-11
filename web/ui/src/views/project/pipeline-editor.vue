@@ -7,7 +7,7 @@
 <script lang="ts">
 import { defineComponent, getCurrentInstance, inject, onMounted, ref, provide } from 'vue';
 import { IWorkflow } from '@/components/workflow/workflow-editor/model/data/common';
-import { useRoute, useRouter } from 'vue-router';
+import {  useRouter } from 'vue-router';
 import { saveTestFlow, fetchTestFlowDetail } from '@/api/view-no-auth';
 import yaml from 'yaml';
 import JmWorkflowEditor from '@/components/workflow/workflow-editor/index.vue';
