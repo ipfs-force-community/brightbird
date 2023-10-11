@@ -10,7 +10,7 @@
     <el-tree v-show="showTree" :data="treeData" :props="defaultProps" :load="loadNode" lazy>
         <template #default="{ node, data }">
             <span class="custom-tree-node">
-                <span @click="handleNodeClick(data, node)">{{"xxxx" + node.label }}</span>
+                <span @click="handleNodeClick(data, node)">{{node.label }}</span>
                 <el-input-number v-show="data.name == 'index'" class="arrayIndex" v-model="data.index" size="small" />
             </span>
         </template>
