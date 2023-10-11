@@ -117,7 +117,7 @@ func buildRenderParams(k8sEnv *env.K8sEnvDeployer, cfg Config) RenderParams {
 	var args []string
 	for _, node := range cfg.Nodes {
 		args = append(args, "--node")
-		args = append(args, node)
+		args = append(args, cfg.AdminToken+node)
 	}
 
 	args = append(args, "--auth")

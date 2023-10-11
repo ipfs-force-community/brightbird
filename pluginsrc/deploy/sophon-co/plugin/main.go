@@ -19,7 +19,7 @@ func main() {
 type DepParams struct {
 	chainco.Config
 
-	Venus env.CommonDeployParams            `json:"Venus"  jsonschema:"Venus Daemon" title:"Venus Daemon" require:"true" description:"[Deploy]venus/lotus/sophonco daemon"`
+	Venus venus.VenusDeployReturn           `json:"Venus" jsonschema:"Venus"  title:"Venus Daemon" require:"true" description:"venus deploy return"`
 	Auth  sophonauth.SophonAuthDeployReturn `json:"SophonAuth" jsonschema:"SophonAuth" title:"Sophon Auth" require:"true" description:"sophon auth return"`
 }
 
