@@ -16,7 +16,7 @@ spec:
       containers:
         - name: sophon-co-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-co:{{.CodeVersion}}"
-          args: ["--listen", "0.0.0.0:5555", "run", {{join .Args ", "}}]
+          args: ["run", {{join .Args ", "}}]
           ports:
             - containerPort: 1234
               protocol: TCP
