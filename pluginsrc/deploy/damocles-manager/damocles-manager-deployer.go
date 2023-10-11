@@ -89,8 +89,8 @@ index = "https://rsproxy.cn/crates.io-index"
 git-fetch-with-cli = true
 EOF
 sed -i '10 i\ENV RUSTFLAGS="-C target-cpu=x86-64"' Dockerfile.manager
-sed -i "13 i\COPY ./config.toml /usr/local/cargo/config.toml" Dockerfile.manager
-
+sed -i '13 i\COPY ./config.toml /root/.cargo/config.toml' Dockerfile.manager
+sed -i '14 i\ENV CARGO_HOME="/root/.cargo"' Dockerfile.manager
 
 docker build -f Dockerfile.manager -t damocles-manager --build-arg HTTPS_PROXY={{.Proxy}} --build-arg FFI_BUILD_FROM_SOURCE=1 .
 docker tag damocles-manager {{.Registry}}/filvenus/damocles-manager:{{.Commit}}
