@@ -145,6 +145,7 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 	if err != nil {
 		return address.Undef, fmt.Errorf("getting post proof type: %v", err)
 	}
+	mlog.Infof("network version: %v, proof: %v",nv, spt)
 
 	serializeParams, err := actors.SerializeParams(&abiPower.CreateMinerParams{
 		Owner:               owner,

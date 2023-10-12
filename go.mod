@@ -7,10 +7,10 @@ require (
 	github.com/cskr/pubsub v1.0.2
 	github.com/docker/go-units v0.5.0
 	github.com/filecoin-project/go-address v1.1.0
-	github.com/filecoin-project/go-fil-markets v1.28.3
-	github.com/filecoin-project/go-state-types v0.12.4-0.20231002153316-c656c180c4d2
-	github.com/filecoin-project/venus v1.12.1-0.20231011033007-4fcf50f3b350
-	github.com/filecoin-project/venus-wallet v1.11.0
+	github.com/filecoin-project/go-fil-markets v1.28.4-0.20230816163331-bd08f1651b1d
+	github.com/filecoin-project/go-state-types v0.12.4
+	github.com/filecoin-project/venus v1.14.0-rc2
+	github.com/filecoin-project/venus-wallet v1.14.0-rc1
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/static v0.0.1
@@ -30,12 +30,12 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
-	github.com/ipfs-force-community/damocles/damocles-manager v0.0.0-20230908020354-12d535a81e4c
-	github.com/ipfs-force-community/droplet/v2 v2.8.0
-	github.com/ipfs-force-community/sophon-auth v1.12.0
-	github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183
-	github.com/ipfs-force-community/sophon-messager v1.12.0
-	github.com/ipfs-force-community/sophon-miner v1.12.0
+	github.com/ipfs-force-community/damocles/damocles-manager v0.0.0-20231011095342-ee08b0545cff
+	github.com/ipfs-force-community/droplet/v2 v2.9.0
+	github.com/ipfs-force-community/sophon-auth v1.14.0-rc1
+	github.com/ipfs-force-community/sophon-gateway v1.14.0-rc1
+	github.com/ipfs-force-community/sophon-messager v1.14.0-rc1
+	github.com/ipfs-force-community/sophon-miner v1.14.0-rc1
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-cidutil v0.1.0
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -62,7 +62,7 @@ require (
 	github.com/whilp/git-urls v1.0.0
 	github.com/wk8/go-ordered-map v1.0.0
 	go.mongodb.org/mongo-driver v1.12.1
-	go.uber.org/fx v1.19.2
+	go.uber.org/fx v1.19.3
 	go.uber.org/zap v1.24.0
 	golang.org/x/oauth2 v0.7.0
 	golang.org/x/sync v0.3.0
@@ -122,7 +122,6 @@ require (
 	github.com/filecoin-project/go-bitfield v0.2.4 // indirect
 	github.com/filecoin-project/go-cbor-util v0.0.1 // indirect
 	github.com/filecoin-project/go-crypto v0.0.1 // indirect
-	github.com/filecoin-project/go-data-transfer v1.15.2 // indirect
 	github.com/filecoin-project/go-data-transfer/v2 v2.0.0-rc7 // indirect
 	github.com/filecoin-project/go-fil-commcid v0.1.0 // indirect
 	github.com/filecoin-project/go-hamt-ipld v0.1.5 // indirect
@@ -131,7 +130,8 @@ require (
 	github.com/filecoin-project/go-padreader v0.0.1 // indirect
 	github.com/filecoin-project/go-statemachine v1.0.3 // indirect
 	github.com/filecoin-project/go-statestore v0.2.0 // indirect
-	github.com/filecoin-project/lotus v1.22.2 // indirect
+	github.com/filecoin-project/kubo-api-client v0.0.1 // indirect
+	github.com/filecoin-project/lotus v1.23.3 // indirect
 	github.com/filecoin-project/specs-actors v0.9.15 // indirect
 	github.com/filecoin-project/specs-actors/v2 v2.3.6 // indirect
 	github.com/filecoin-project/specs-actors/v3 v3.1.2 // indirect
@@ -187,7 +187,7 @@ require (
 	github.com/influxdata/influxdb-client-go/v2 v2.2.2 // indirect
 	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
 	github.com/ipfs-force-community/damocles/manager-plugin v0.0.0-20230830062024-608c68ada10e // indirect
-	github.com/ipfs-force-community/metrics v1.0.1-0.20230626064437-eed34cb166f5 // indirect
+	github.com/ipfs-force-community/metrics v1.0.1-0.20231011024528-8c881d456601 // indirect
 	github.com/ipfs-force-community/venus-common-utils v0.0.0-20220217030526-e5e4c6bc14f7 // indirect
 	github.com/ipfs/bbloom v0.0.4 // indirect
 	github.com/ipfs/boxo v0.10.1 // indirect
@@ -199,20 +199,14 @@ require (
 	github.com/ipfs/go-ipfs-cmds v0.9.0 // indirect
 	github.com/ipfs/go-ipfs-ds-help v1.1.0 // indirect
 	github.com/ipfs/go-ipfs-exchange-interface v0.2.0 // indirect
-	github.com/ipfs/go-ipfs-files v0.3.0 // indirect
-	github.com/ipfs/go-ipfs-http-client v0.4.0 // indirect
 	github.com/ipfs/go-ipfs-util v0.0.3 // indirect
 	github.com/ipfs/go-ipld-cbor v0.0.6 // indirect
 	github.com/ipfs/go-ipld-format v0.5.0 // indirect
 	github.com/ipfs/go-ipld-legacy v0.2.1 // indirect
-	github.com/ipfs/go-libipfs v0.7.0 // indirect
 	github.com/ipfs/go-log v1.0.5 // indirect
 	github.com/ipfs/go-merkledag v0.11.0 // indirect
 	github.com/ipfs/go-metrics-interface v0.0.1 // indirect
-	github.com/ipfs/go-path v0.3.1 // indirect
-	github.com/ipfs/go-unixfs v0.4.5 // indirect
 	github.com/ipfs/go-verifcid v0.0.2 // indirect
-	github.com/ipfs/interface-go-ipfs-core v0.10.0 // indirect
 	github.com/ipld/go-car v0.6.1 // indirect
 	github.com/ipld/go-codec-dagpb v1.6.0 // indirect
 	github.com/ipld/go-ipld-prime v0.20.0 // indirect
@@ -231,7 +225,6 @@ require (
 	github.com/leodido/go-urn v1.2.4 // indirect
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
-	github.com/libp2p/go-libp2p-core v0.20.1 // indirect
 	github.com/libp2p/go-libp2p-pubsub v0.9.3 // indirect
 	github.com/libp2p/go-msgio v0.3.0 // indirect
 	github.com/magefile/mage v1.11.0 // indirect
@@ -269,7 +262,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polydawn/refmt v0.89.0 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
-	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/client_model v0.4.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/prometheus/statsd_exporter v0.23.0 // indirect
@@ -313,19 +306,18 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v0.39.0 // indirect
 	go.opentelemetry.io/otel/trace v1.16.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
-	go.uber.org/dig v1.16.1 // indirect
-	go.uber.org/goleak v1.2.1 // indirect
+	go.uber.org/dig v1.17.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/arch v0.3.0 // indirect
-	golang.org/x/crypto v0.13.0 // indirect
+	golang.org/x/crypto v0.14.0 // indirect
 	golang.org/x/mod v0.12.0 // indirect
-	golang.org/x/net v0.15.0 // indirect
-	golang.org/x/sys v0.12.0 // indirect
-	golang.org/x/term v0.12.0 // indirect
+	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/term v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9 // indirect
+	golang.org/x/time v0.1.0 // indirect
 	golang.org/x/tools v0.13.0 // indirect
-	google.golang.org/api v0.102.0 // indirect
+	google.golang.org/api v0.103.0 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
@@ -333,7 +325,7 @@ require (
 	gopkg.in/warnings.v0 v0.1.2 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gorm.io/driver/mysql v1.3.5 // indirect
-	gorm.io/gorm v1.23.8 // indirect
+	gorm.io/gorm v1.25.0 // indirect
 	k8s.io/klog/v2 v2.90.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20221012153701-172d655c2280 // indirect
 	k8s.io/utils v0.0.0-20221107191617-1a15be271d1d // indirect
