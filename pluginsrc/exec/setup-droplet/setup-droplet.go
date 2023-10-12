@@ -85,6 +85,11 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 			addrs = append(addrs, a.Bytes())
 		}
 	}
+	log.Infoln("adds is: ", addrs)
+
+	podIP := getDropletIPFromK8s(ctx, k8sEnv, params)
+	log.Infoln("pod ip is: ", podIP)
+
 	addrMessageParams, err := actors.SerializeParams(&vtypes.ChangeMultiaddrsParams{NewMultiaddrs: addrs})
 	if err != nil {
 		return nil, err
@@ -115,6 +120,17 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		SetAddrMessageId:   setAddrMessageId,
 		SetPeerIdMessageId: setPeerIdMessageId,
 	}, nil
+}
+
+func getDropletIPFromK8s(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) string {
+
+	pods, err := droplet.GetPods(ctx, k8sEnv, params.Droplet.InstanceName)
+	if err != nil {
+		fmt.Printf("Error getting pod %s: %v\n", params.Droplet.InstanceName, err)
+	}
+
+	podIP := pods[0].Status.PodIP
+	return podIP
 }
 
 func SendMessage(ctx context.Context, params TestCaseParams, messageParams []byte, client marketapi.IMarket, fapi chain.FullNode, method abi.MethodNum) (string, error) {
