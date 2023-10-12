@@ -10,12 +10,9 @@ import (
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-messager/config"
-	logging "github.com/ipfs/go-log/v2"
 	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
 )
-
-var log = logging.Logger("messager-deployer")
 
 type Config struct {
 	env.BaseConfig
@@ -114,7 +111,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 	return &SophonMessagerReturn{
-		VConfig:     cfg.VConfig,
+		VConfig: cfg.VConfig,
 		CommonDeployParams: env.CommonDeployParams{
 			BaseConfig:      cfg.BaseConfig,
 			DeployName:      PluginInfo.Name,

@@ -20,7 +20,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	droplet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
-	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
 	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
 	sophonmessager "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-messager"
 	"github.com/ipfs-force-community/brightbird/types"
@@ -88,8 +87,8 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}
 	log.Infoln("adds is: ", addrs)
 
-	podIp := getDropletIpFromK8s(ctx, k8sEnv, params)
-	log.Infoln("pod ip is: ", podIp)
+	podIP := getDropletIPFromK8s(ctx, k8sEnv, params)
+	log.Infoln("pod ip is: ", podIP)
 
 	addrMessageParams, err := actors.SerializeParams(&vtypes.ChangeMultiaddrsParams{NewMultiaddrs: addrs})
 	if err != nil {
@@ -123,9 +122,9 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	}, nil
 }
 
-func getDropletIpFromK8s(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) string {
+func getDropletIPFromK8s(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) string {
 
-	pods, err := dropletmarket.GetPods(ctx, k8sEnv, params.Droplet.InstanceName)
+	pods, err := droplet.GetPods(ctx, k8sEnv, params.Droplet.InstanceName)
 	if err != nil {
 		fmt.Printf("Error getting pod %s: %v\n", params.Droplet.InstanceName, err)
 	}
