@@ -121,11 +121,6 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 		return address.Undef, fmt.Errorf("failed to parse sector size: %w", err)
 	}
 
-	sealProof, err := miner.SealProofTypeFromSectorSize(abi.SectorSize(ssize), nv)
-	if err != nil {
-		return address.Undef, fmt.Errorf("invalid sector size %d: %w", ssize, err)
-	}
-
 	fromStr := walletAddr.String()
 	from, err := ShouldAddress(fromStr, true, false)
 	if err != nil {
@@ -145,15 +140,16 @@ func CreateMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCas
 
 	var pid abi.PeerID
 	var multiaddrs []abi.Multiaddrs
-	postProof, err := sealProof.RegisteredWindowPoStProofByNetworkVersion(nv)
+
+	spt, err := miner.WindowPoStProofTypeFromSectorSize(abi.SectorSize(ssize), nv)
 	if err != nil {
-		return address.Undef, fmt.Errorf("invalid seal proof type %d: %w", sealProof, err)
+		return address.Undef, fmt.Errorf("getting post proof type: %v", err)
 	}
 
 	serializeParams, err := actors.SerializeParams(&abiPower.CreateMinerParams{
 		Owner:               owner,
 		Worker:              worker,
-		WindowPoStProofType: postProof,
+		WindowPoStProofType: spt,
 		Peer:                pid,
 		Multiaddrs:          multiaddrs,
 	})
