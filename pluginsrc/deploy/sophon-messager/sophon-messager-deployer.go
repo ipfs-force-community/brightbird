@@ -35,7 +35,6 @@ type VConfig struct {
 type SophonMessagerReturn struct { //nolint
 	VConfig
 	env.CommonDeployParams
-	PushPodName string `json:"pushPodName"`
 }
 
 type RenderParams struct {
@@ -99,24 +98,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 		return nil, err
 	}
 
-	//change the first node to a push node
-	pods, err := GetPods(ctx, k8sEnv, cfg.InstanceName)
-	if err != nil {
-		return nil, err
-	}
-
-	pushPodName := pods[0].GetName()
-	_, err = k8sEnv.ExecRemoteCmd(ctx, pushPodName, "/bin/sh", "-c", "sed -i -e  's/skipProcessHead = true/skipProcessHead = false/g' -e 's/skipPushMessage = true/skipPushMessage = false/g' /root/.sophon-messager/config.toml")
-	if err != nil {
-		return nil, fmt.Errorf("set first pod to push %w", err)
-	}
-
-	err = k8sEnv.DeletePodAndWait(ctx, pushPodName)
-	if err != nil {
-		return nil, fmt.Errorf("delete pod fail %w", err)
-	}
-	log.Infof("change pod %s to a push node", pushPodName)
-
 	//create service
 	svcCfg, err := f.Open("sophon-messager/sophon-messager-headless.yaml")
 	if err != nil {
@@ -134,7 +115,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}
 	return &SophonMessagerReturn{
 		VConfig:     cfg.VConfig,
-		PushPodName: pushPodName,
 		CommonDeployParams: env.CommonDeployParams{
 			BaseConfig:      cfg.BaseConfig,
 			DeployName:      PluginInfo.Name,
@@ -146,8 +126,8 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMessagerReturn) (config.Config, error) {
-	cfgData, err := k8sEnv.ExecRemoteCmd(ctx, params.PushPodName, "cat /root/.sophon-messager/config.toml")
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
+	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
 		return config.Config{}, err
 	}
@@ -159,36 +139,6 @@ func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMes
 	}
 
 	return cfg, nil
-}
-
-func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMessagerReturn, updateCfg config.Config) error {
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
-	if err != nil {
-		return nil
-	}
-	for _, pod := range pods {
-		if pod.GetName() == params.PushPodName {
-			updateCfg.MessageService.SkipProcessHead = false
-			updateCfg.MessageService.SkipPushMessage = false
-		} else {
-			updateCfg.MessageService.SkipProcessHead = true
-			updateCfg.MessageService.SkipPushMessage = true
-		}
-
-		cfgData, err := toml.Marshal(updateCfg)
-		if err != nil {
-			return err
-		}
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-messager/config.toml")
-		if err != nil {
-			return err
-		}
-	}
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
