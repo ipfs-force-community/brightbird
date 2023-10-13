@@ -40,8 +40,8 @@ data:
       EstimateMessageTimeout = "5s"
       SignMessageTimeout = "3s"
       WaitingChainHeadStableDuration = "15s"
-      skipProcessHead = true
-      skipPushMessage = true
+      skipProcessHead = false
+      skipPushMessage = false
 
     [metrics]
       Enabled = false
