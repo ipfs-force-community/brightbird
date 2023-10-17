@@ -48,13 +48,13 @@
               class="task"
               v-else
               v-for="task of pageData.tasks"
-              :key="task.id"
+              :key="task.id + task.state"
               :task="task"
             />
           </div>
           <!-- 显示更多 -->
           <div class="load-more" v-show="toggle">
-            <el-pagination :total="pageData.total" :page-size="pageSize" @current-change="btnDown">
+            <el-pagination :hide-on-single-page="true" :total="pageData.total" :page-size="pageSize" @current-change="btnDown">
             </el-pagination>
           </div>
           </div>
