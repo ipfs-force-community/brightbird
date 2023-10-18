@@ -1,0 +1,32 @@
+FROM golang:1.20.7-bullseye AS build
+
+ENV GOPROXY="https://goproxy.cn,direct"
+
+WORKDIR /build/
+COPY . /build/
+
+RUN make clean
+
+RUN go clean --modcache
+
+RUN go mod download
+
+# 检查 exec 目录是否存在
+RUN if [ -d pluginsrc/exec ]; then \
+        echo "Directory exists, Run build exec"; \
+        make exec-plugin; \
+    else \
+        echo "Directory does not exist"; \
+    fi
+
+# 检查 plugin 目录是否存在
+RUN if [ -d pluginsrc/deploy ]; then \
+        echo "Directory exists, Run build deploy"; \
+        make deploy-plugin; \
+    else \
+        echo "Directory does not exist"; \
+    fi
+
+FROM ubuntu:20.04
+
+COPY --from=build /build/dist/plugins /plugins
