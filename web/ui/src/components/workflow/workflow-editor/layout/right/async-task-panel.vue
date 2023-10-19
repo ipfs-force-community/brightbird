@@ -1,20 +1,53 @@
 <template>
   <div class="jm-workflow-editor-async-task-panel">
-    <jm-form label-width="auto" :model="form" label-position="top" ref="formRef" @submit.prevent>
+    <jm-form
+      label-width="auto"
+      :model="form"
+      label-position="top"
+      ref="formRef"
+      @submit.prevent
+    >
       <div class="set-padding">
         <div class="name-item">
           <el-text size="large" tag="b">{{ form.name }}</el-text>
         </div>
 
-        <jm-form-item label="实例名称" prop="instanceName" class="name-item" :rules="nodeData.getFormRules().instanceName">
-          <jm-input v-model="form.instanceName" show-word-limit :maxlength="36" />
+        <jm-form-item
+          label="实例名称"
+          prop="instanceName"
+          class="name-item"
+          :rules="nodeData.getFormRules().instanceName"
+        >
+          <jm-input
+            v-model="form.instanceName"
+            show-word-limit
+            :maxlength="36"
+          />
         </jm-form-item>
-        <jm-form-item label="节点版本" prop="version" :rules="nodeData.getFormRules().version" class="node-item">
-          <jm-select v-loading="versionLoading" :disabled="versionLoading" v-model="form.version" placeholder="请选择节点版本"
-            @change="changeVersion">
-            <jm-option v-for="item in versionList.versions" :key="item" :label="item" :value="item" />
+        <jm-form-item
+          label="节点版本"
+          prop="version"
+          :rules="nodeData.getFormRules().version"
+          class="node-item"
+        >
+          <jm-select
+            v-loading="versionLoading"
+            :disabled="versionLoading"
+            v-model="form.version"
+            placeholder="请选择节点版本"
+            @change="changeVersion"
+          >
+            <jm-option
+              v-for="item in versionList.versions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
           </jm-select>
-          <div v-if="form.version ? !versionLoading : false" class="version-description">
+          <div
+            v-if="form.version ? !versionLoading : false"
+            class="version-description"
+          >
             {{ form.version }}
           </div>
         </jm-form-item>
@@ -22,7 +55,10 @@
       <div class="separate"></div>
       <div v-if="form.version">
         <div class="tab-container">
-          <div :class="{ 'input-tab': true, 'selected-tab': tabFlag === 1 }" @click="tabFlag = 1">
+          <div
+            :class="{ 'input-tab': true, 'selected-tab': tabFlag === 1 }"
+            @click="tabFlag = 1"
+          >
             输入参数
             <div class="checked-underline" v-if="tabFlag === 1"></div>
           </div>
@@ -32,15 +68,30 @@
             <jm-empty description="无输入参数" :image="noParamImage"></jm-empty>
           </div>
           <div v-else>
-            <jm-form-item v-for="(value, key) in input.properties" :key="key" :prop="`inputs.${key}.value`"
-              class="node-name">
+            <jm-form-item
+              v-for="(value, key) in input.properties"
+              :key="value"
+              :prop="`inputs.${key}.value`"
+              class="node-name"
+            >
               <template #label>
-                {{value.title}}
-                <jm-tooltip placement="top" v-if="value.description" :append-to-body="false" :content="value.description">
+                {{ value.title }}
+                <jm-tooltip
+                  placement="top"
+                  v-if="value.description"
+                  :append-to-body="false"
+                  :content="value.description"
+                >
                   <i class="jm-icon-button-help"></i>
                 </jm-tooltip>
               </template>
-              <PropertySelect :instanceName="form.instanceName" :propName="key" :input="form.input" :property="value" :treeData="nodeNames">
+              <PropertySelect
+                :instanceName="form.instanceName"
+                :propName="key"
+                :input="form.input"
+                :property="value"
+                :treeData="nodeNames"
+              >
               </PropertySelect>
             </jm-form-item>
           </div>
@@ -51,7 +102,14 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, getCurrentInstance, inject, onMounted, PropType, ref } from 'vue';
+import {
+  defineComponent,
+  getCurrentInstance,
+  inject,
+  onMounted,
+  PropType,
+  ref,
+} from 'vue';
 import { AsyncTask } from '../../model/data/node/async-task';
 import { ParamTypeEnum } from '../../model/data/enumeration';
 import noParamImage from '../../svgs/no-param.svg';
@@ -65,14 +123,25 @@ import JmInput from '@/components/form/input';
 import { getPluginByName, getPluginDef } from '@/api/plugin';
 import PropertySelect from './property-select.vue';
 import { CustomX6NodeProxy } from '@/components/workflow/workflow-editor/model/data/custom-x6-node-proxy';
-import { IWorkflow, TreeProp } from '@/components/workflow/workflow-editor/model/data/common';
+import {
+  IWorkflow,
+  TreeProp,
+} from '@/components/workflow/workflow-editor/model/data/common';
 import JmSelect from '@/components/form/select';
 import { Try } from 'json-schema-to-typescript/dist/src/utils';
 import { JSONSchema } from 'json-schema-to-typescript';
 import localforage from 'localforage';
 
 export default defineComponent({
-  components: { JmEmpty, ExpressionEditor, PropertySelect, JmForm, jmFormItem, JmInput, JmSelect },
+  components: {
+    JmEmpty,
+    ExpressionEditor,
+    PropertySelect,
+    JmForm,
+    jmFormItem,
+    JmInput,
+    JmSelect,
+  },
   props: {
     nodeData: {
       type: Object as PropType<AsyncTask>,
@@ -97,9 +166,8 @@ export default defineComponent({
     const graph = getGraph();
 
     const instanceName = props.nodeData.getInstanceName();
-    let nodeNames= ref<TreeProp[]>([]);
+    let nodeNames = ref<TreeProp[]>([]);
 
-    console.log(nodeNames);
     // 版本列表
     const plugins = new Map<string, PluginDef>();
     const versionList = ref<INodeDefVersionListVo>({ versions: [] });
@@ -113,18 +181,20 @@ export default defineComponent({
     const outputTabSelected = ref<boolean>(false);
     const input = ref<JSONSchema>();
 
-    const convertToSchema = (input: any):JSONSchema =>{
+    const convertToSchema = (input: any): JSONSchema => {
       return Try<JSONSchema>(
         () => input,
-        () => { throw new TypeError('Error parsing JSON');});
+        () => {
+          throw new TypeError('Error parsing JSON');
+        },
+      );
     };
     const changeVersion = async () => {
       try {
         versionLoading.value = true;
         failureVisible.value = false;
         const selectPlugin = plugins.get(form.value.version);
-        input.value  = convertToSchema(selectPlugin?.inputSchema);
-          
+        input.value = convertToSchema(selectPlugin?.inputSchema);
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -134,38 +204,50 @@ export default defineComponent({
     };
 
     const prepareNodeParams = async () => {
-      try {        
+      try {
         if (form.value.version) {
-          const tree = await localforage.getItem<TreeProp[]>(`inputSchema/${props.workflowData?.groupId}`);
+          const tree = await localforage.getItem<TreeProp[]>(
+            `inputSchema/${props.workflowData?.groupId}`,
+          );
           if (tree) {
             nodeNames.value = tree;
-          }          
-          const inputSchema = await localforage.getItem<any>(`inputSchema/${instanceName}/${form.value.version}`);
-          input.value =  convertToSchema(inputSchema);
+          }
+          const inputSchema = await localforage.getItem<any>(
+            `inputSchema/${instanceName}/${form.value.version}`,
+          );
+          input.value = convertToSchema(inputSchema);
         }
-        const  _nodeNames : TreeProp[] = [];
+        const _nodeNames: TreeProp[] = [];
         const nodes = graph.getNodes();
+
         for (var i = 0; i < nodes.length; i++) {
           const proxy = new CustomX6NodeProxy(nodes[i]);
           const nodeData = proxy.getData(graph);
           const anode = nodeData as AsyncTask;
           if (anode.instanceName !== instanceName) {
-            const pluginDef = await getPluginDef(anode.name, anode.version);            
-            
-            nodeNames.value.push({
-              name: anode.instanceName,
-              type:'object',
-              index:-1,
-              defs: pluginDef.outputSchema.definitions || {},
-              schema: convertToSchema(pluginDef.outputSchema) || {},
-              isLeaf: Object.keys(pluginDef.outputSchema).length === 0,
-              children:[],
-            });
-            nodeNames.value = _nodeNames;
-            localforage.setItem(`inputSchema/${props.workflowData?.groupId}`, _nodeNames);
+            try {
+              const pluginDef = await getPluginDef(anode.name, anode.version);
+
+              _nodeNames.push({
+                name: anode.instanceName,
+                type: 'object',
+                index: -1,
+                defs: pluginDef.outputSchema.definitions || {},
+                schema: convertToSchema(pluginDef.outputSchema) || {},
+                isLeaf: Object.keys(pluginDef.outputSchema).length === 0,
+                children: [],
+              });
+              nodeNames.value = _nodeNames;
+
+              localforage.setItem(
+                `inputSchema/${props.workflowData?.groupId}`,
+                _nodeNames,
+              );
+            } catch (error) {
+              console.log('=========localforage=============');
+            }
           }
         }
-
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
@@ -178,7 +260,7 @@ export default defineComponent({
       if (form.value.version) {
         failureVisible.value = true;
       }
-      try {      
+      try {
         const pluginDetail = await getPluginByName(props.nodeData.name);
         pluginDetail.pluginDefs?.forEach(a => {
           plugins.set(a.version, a);
@@ -190,18 +272,27 @@ export default defineComponent({
         }
 
         if (form.value.version) {
-          input.value =  convertToSchema(plugins.get(form.value.version)?.inputSchema );
-          localforage.setItem(`inputSchema/${instanceName}/${form.value.version}`, plugins.get(form.value.version)?.inputSchema);
+          input.value = convertToSchema(
+            plugins.get(form.value.version)?.inputSchema,
+          );
+          localforage.setItem(
+            `inputSchema/${instanceName}/${form.value.version}`,
+            plugins.get(form.value.version)?.inputSchema,
+          );
         } else {
           form.value.version = versionList.value.versions[0];
-          input.value = convertToSchema(pluginDetail.pluginDefs[0]?.inputSchema); 
-          localforage.setItem(`inputSchema/${instanceName}/${form.value.version}`, pluginDetail.pluginDefs[0]?.inputSchema);
+          input.value = convertToSchema(
+            pluginDetail.pluginDefs[0]?.inputSchema,
+          );
+          localforage.setItem(
+            `inputSchema/${instanceName}/${form.value.version}`,
+            pluginDetail.pluginDefs[0]?.inputSchema,
+          );
         }
       } catch (err) {
         proxy.$throw(err, proxy);
       } finally {
         versionLoading.value = false;
-
       }
     };
     onMounted(async () => {
@@ -227,7 +318,6 @@ export default defineComponent({
       nodeNames,
       input,
     };
-
   },
 });
 </script>
@@ -337,7 +427,7 @@ export default defineComponent({
       display: inline-block;
       width: 6px;
       height: 6px;
-      background: url('../../svgs/required-icon.svg');
+      background: url("../../svgs/required-icon.svg");
       position: relative;
       top: -5px;
     }
