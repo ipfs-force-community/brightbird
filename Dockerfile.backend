@@ -1,0 +1,40 @@
+FROM golang:1.20.7-bullseye AS build
+
+ENV GOPROXY="https://goproxy.cn,direct"
+
+WORKDIR /build/
+COPY . /build/
+
+RUN make clean
+
+RUN go clean --modcache
+
+RUN go mod download
+
+RUN make backend
+
+RUN make runner
+
+# make UI
+FROM node:latest AS build-ui
+
+WORKDIR /build/
+COPY . /build/
+
+RUN apt update && apt install make -y
+
+RUN cd web/ui/ && yarn install
+
+RUN make ui
+
+FROM ubuntu:20.04
+
+# copy the binary from build
+COPY --from=build /build/dist/backend /backend
+
+COPY --from=build /build/dist/testrunner /testrunner
+
+COPY --from=build-ui /build/dist/front /front
+
+EXPOSE 12356
+ENTRYPOINT ["/backend"]
