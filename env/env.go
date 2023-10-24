@@ -20,6 +20,7 @@ import (
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	logging "github.com/ipfs/go-log/v2"
+	"github.com/pelletier/go-toml/v2"
 	"google.golang.org/appengine"
 	"gopkg.in/yaml.v3"
 	appv1 "k8s.io/api/apps/v1"
@@ -210,14 +211,65 @@ func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []corev1.Pod) erro
 	return nil
 }
 
+func (env *K8sEnvDeployer) UpdateConfigMaps(ctx context.Context, configMap *corev1.ConfigMap) error {
+	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
+	log.Infof("Try to update %s ", configMap.GetName())
+	_, err := configMapClient.Update(ctx, configMap, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("update configMap(%s) fail %w", configMap.GetName(), err)
+	}
+	log.Infof("Updated configMap %s.", configMap.GetName())
+	return nil
+}
+
 func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, statefulset *appv1.StatefulSet) error {
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
 	log.Infof("Try to update %s ", statefulset.GetName())
-	_, err := statefulSetClient.Update(ctx, statefulset, metav1.UpdateOptions{})
+
+	// 更新 StatefulSet
+	updatedStatefulSet, err := statefulSetClient.Update(ctx, statefulset, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("update statefulset(%s) %w", statefulset.GetName(), err)
 	}
+	// 检查更新是否成功
+	err = env.waitForStatefulSetUpdate(ctx, updatedStatefulSet)
+	if err != nil {
+		return err
+	}
 	log.Infof("Updated statefulSet %s.", statefulset.GetName())
+
+	return nil
+}
+
+func (env *K8sEnvDeployer) waitForStatefulSetUpdate(ctx context.Context, statefulset *appv1.StatefulSet) error {
+	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
+
+	// 设置超时和轮询间隔
+	timeout := time.Minute * 5
+	pollInterval := time.Second * 5
+	deadline := time.Now().Add(timeout)
+
+	// 循环检查 StatefulSet 是否更新成功
+	for {
+		// 获取最新的 StatefulSet
+		currentStatefulSet, err := statefulSetClient.Get(ctx, statefulset.GetName(), metav1.GetOptions{})
+		if err != nil {
+			return fmt.Errorf("failed to get updated StatefulSet: %w", err)
+		}
+
+		// 检查 observedGeneration 是否与更新前的一致
+		if currentStatefulSet.Status.ObservedGeneration == statefulset.Status.ObservedGeneration {
+			// 如果 observedGeneration 未增加，继续等待
+			if time.Now().After(deadline) {
+				return fmt.Errorf("timed out waiting for StatefulSet to update")
+			}
+			time.Sleep(pollInterval)
+		} else {
+			// 更新已成功
+			break
+		}
+	}
+
 	return nil
 }
 
@@ -399,11 +451,7 @@ func (env *K8sEnvDeployer) RunConfigMap(ctx context.Context, f fs.File, args any
 	}
 
 	env.setCommonLabels(&configMap.ObjectMeta)
-	cfgData, err := yaml.Marshal(configMap)
-	if err != nil {
-		return nil, err
-	}
-	log.Debugf("configmap(%s) yaml config %s", configMap.GetName(), string(cfgData))
+	log.Infof("configmap(%s) yaml config %s", configMap.GetName(), string(data))
 
 	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
 	name := configMap.GetName()
@@ -549,16 +597,34 @@ func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
 	return "", fmt.Errorf("not support service type %s", svc.GetName())
 }
 
+func (env *K8sEnvDeployer) GetConfigMapByName(ctx context.Context, name string) (*corev1.ConfigMap, error) {
+	return env.k8sClient.CoreV1().ConfigMaps(env.namespace).Get(ctx, name, metav1.GetOptions{})
+}
+
 func (env *K8sEnvDeployer) GetConfigMap(ctx context.Context, cfgMapName, cfgFileName string) ([]byte, error) {
 	cfgMap, err := env.k8sClient.CoreV1().ConfigMaps(env.namespace).Get(ctx, cfgMapName, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
-	data, ok := cfgMap.BinaryData[cfgFileName]
-	if !ok {
-		return nil, fmt.Errorf("config %s not found in configmap %s", cfgFileName, cfgMapName)
+
+	var tomlConfig interface{}
+	for key, value := range cfgMap.Data {
+		if key == cfgFileName {
+			err := toml.Unmarshal([]byte(value), &tomlConfig)
+			if err != nil {
+				return nil, err
+			}
+			break
+		}
 	}
-	return data, nil
+
+	tomlBytes, err := toml.Marshal(tomlConfig)
+	if err != nil {
+		fmt.Println("转换为TOML格式出错:", err)
+		return nil, err
+	}
+	
+	return tomlBytes, nil
 }
 
 func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey string, cfgValue []byte) error {
@@ -568,7 +634,7 @@ func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey 
 		return err
 	}
 
-	cfgMap.BinaryData[cfgKey] = cfgValue
+	cfgMap.Data[cfgKey] = string(cfgValue)
 
 	_, err = configMapClient.Update(ctx, cfgMap, metav1.UpdateOptions{})
 	if err != nil {

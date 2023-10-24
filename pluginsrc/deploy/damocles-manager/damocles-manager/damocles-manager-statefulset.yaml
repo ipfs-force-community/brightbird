@@ -13,29 +13,13 @@ spec:
       labels:
         app: damocles-manager-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.damocles-manager\" ]||(mkdir -p /root/.damocles-manager && cp /root/sector-manager.tmp /root/.damocles-manager/sector-manager.cfg);"]
-          volumeMounts:
-            - mountPath: /root
-              name: damocles-pvc
-            - name: sector-manager-cfg
-              mountPath: "/root/sector-manager.tmp"
-              subPath: "sector-manager.cfg"
-            - mountPath: /shared-dir
-              name: shared-dir-v
-              subPath: {{.NameSpace}}
-        - name: init-storage
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', 'mkdir -p /root/storage1']
-          volumeMounts:
-            - mountPath: /root/storage1
-              name: storage1
       containers:
         - name: damocles-manager-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-manager:{{.CodeVersion}}"
-          args: ['daemon', 'run', '--poster', '--miner', '--listen', '0.0.0.0:1789']
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.damocles-manager && cp /root/sector-manager.tmp /root/.damocles-manager/sector-manager.cfg && /damocles-manager daemon run --poster --miner --listen 0.0.0.0:1789;
           env:
             - name: FIL_PROOFS_PARAMETER_CACHE
               value: "/shared-dir/filecoin-proof-parameters"
@@ -48,8 +32,6 @@ spec:
             - name: sector-manager-cfg
               mountPath: "/root/sector-manager.tmp"
               subPath: "sector-manager.cfg"
-            - mountPath: /root/storage1
-              name: storage1
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}

@@ -14,23 +14,13 @@ spec:
       labels:
         app: venus-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.venus\" ]||(mkdir -p /root/.venus && cp /root/config.tmp /root/.venus/config.json);"]
-          volumeMounts:
-            - mountPath: /shared-dir
-              name: shared-dir-v
-              subPath: {{.NameSpace}}
-            - mountPath: /root
-              name: venus-pvc
-            - name: venushacfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.json"
       containers:
         - name: venus-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/venus:{{.CodeVersion}}"
-          args: [{{join .Args ","}}]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.venus && cp /root/config.tmp /root/.venus/config.json && /app/venus {{join .Args " "}};
           ports:
             - containerPort: 3453
               protocol: TCP

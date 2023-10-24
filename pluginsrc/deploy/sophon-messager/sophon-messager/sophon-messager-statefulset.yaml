@@ -12,21 +12,14 @@ spec:
     metadata:
       labels:
         app: sophon-messager-{{.UniqueId}}-pod
-    spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.sophon-messager\" ]||(mkdir -p /root/.sophon-messager && cp /root/config.tmp /root/.sophon-messager/config.toml && echo \"init success\");"]
-          volumeMounts:
-            - mountPath: /root
-              name: sophon-messager-pvc
-            - name: sophon-messager-cfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
+    spec: 
       containers:
         - name: sophon-messager-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-messager:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.sophon-messager && cp /root/config.tmp /root/.sophon-messager/config.toml && /app/sophon-messager run;
           ports:
             - containerPort: 39812
               protocol: TCP

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"time"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
@@ -31,6 +32,8 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	if err != nil {
 		return err
 	}
+
+	time.Sleep(10000 * time.Second)
 
 	client, closer, err := damoclesmanager.BuildDamoclesClient(ctx, params.DamoclesManager)
 	if err != nil {

@@ -13,20 +13,13 @@ spec:
       labels:
         app: sophon-auth-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.sophon-auth\" ]||(mkdir -p /root/.sophon-auth && cp /root/config.tmp /root/.sophon-auth/config.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: sophon-auth-pvc
-            - name: sophon-auth-cfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
       containers:
         - name: sophon-auth-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-auth:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.sophon-auth && cp /root/config.tmp /root/.sophon-auth/config.toml && /app/sophon-auth run;
           ports:
             - containerPort: 8989
               protocol: TCP

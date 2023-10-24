@@ -13,23 +13,13 @@ spec:
       labels:
         app: droplet-market-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.droplet\" ]||(mkdir -p /root/.droplet && cp /root/config.tmp /root/.droplet/config.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: droplet-market-pvc
-            - name: marketcfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
-            - mountPath: /shared-dir
-              name: shared-dir-v
-              subPath: {{.NameSpace}}
       containers:
         - name: droplet-market-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/droplet:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.droplet/ && rm -rf /root/.droplet/config.toml && cp /root/config.tmp /root/.droplet/config.toml && /app/droplet run;
           ports:
             - containerPort: 41235
               protocol: TCP

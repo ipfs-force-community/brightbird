@@ -10,7 +10,6 @@ metadata:
     retry: {{.ReTry}}
 spec:
   restartPolicy: Never
-  initContainers:
   containers:
     - name: venus-testrunner
       image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/testrunner:zsk"

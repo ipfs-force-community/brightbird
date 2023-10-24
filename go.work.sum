@@ -236,12 +236,14 @@ github.com/ipfs/go-cid v0.4.0/go.mod h1:uQHwDeX4c6CtyrFwdqyhpNcxVewur1M7l7fNU7LK
 github.com/ipfs/go-ds-badger2 v0.1.3/go.mod h1:TPhhljfrgewjbtuL/tczP8dNrBYwwk+SdPYbms/NO9w=
 github.com/ipfs/go-graphsync v0.14.5/go.mod h1:yT0AfjFgicOoWdAlUJ96tQ5AkuGI4r1taIQX/aHbBQo=
 github.com/ipfs/go-ipfs-files v0.2.0/go.mod h1:vT7uaQfIsprKktzbTPLnIsd+NGw9ZbYwSq0g3N74u0M=
+github.com/ipfs/go-ipfs-files v0.3.0 h1:fallckyc5PYjuMEitPNrjRfpwl7YFt69heCOUhsbGxQ=
 github.com/ipfs/go-libipfs v0.4.0/go.mod h1:XsU2cP9jBhDrXoJDe0WxikB8XcVmD3k2MEZvB3dbYu8=
 github.com/ipfs/go-libipfs v0.6.0/go.mod h1:UjjDIuehp2GzlNP0HEr5I9GfFT7zWgst+YfpUEIThtw=
 github.com/ipfs/go-merkledag v0.9.0/go.mod h1:bPHqkHt5OZ0p1n3iqPeDiw2jIBkjAytRjS3WSBwjq90=
 github.com/ipfs/go-merkledag v0.10.0/go.mod h1:zkVav8KiYlmbzUzNM6kENzkdP5+qR7+2mCwxkQ6GIj8=
 github.com/ipfs/go-namesys v0.7.0/go.mod h1:KYSZBVZG3VJC34EfqqJPG7T48aWgxseoMPAPA5gLyyQ=
 github.com/ipfs/go-unixfs v0.4.4/go.mod h1:TSG7G1UuT+l4pNj91raXAPkX0BhJi3jST1FDTfQ5QyM=
+github.com/ipfs/go-unixfs v0.4.5 h1:wj8JhxvV1G6CD7swACwSKYa+NgtdWC1RUit+gFnymDU=
 github.com/ipfs/go-unixfsnode v1.5.1/go.mod h1:ed79DaG9IEuZITJVQn4U6MZDftv6I3ygUBLPfhEbHvk=
 github.com/ipfs/go-unixfsnode v1.5.2/go.mod h1:NlOebRwYx8lMCNMdhAhEspYPBD3obp7TE0LvBqHY+ks=
 github.com/ipfs/go-unixfsnode v1.7.1/go.mod h1:PVfoyZkX1B34qzT3vJO4nsLUpRCyhnMuHBznRcXirlk=

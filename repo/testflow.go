@@ -130,31 +130,32 @@ func (c *TestFlowRepo) Count(ctx context.Context, params *CountTestFlowParams) (
 	return c.caseCol.CountDocuments(ctx, filter)
 }
 
-func (c *TestFlowRepo) Save(ctx context.Context, tf models.TestFlow) (primitive.ObjectID, error) {
-	if tf.ID.IsZero() {
-		tf.ID = primitive.NewObjectID()
+func (c *TestFlowRepo) Save(ctx context.Context, testFlow models.TestFlow) (primitive.ObjectID, error) {
+	if testFlow.ID.IsZero() {
+		testFlow.ID = primitive.NewObjectID()
 	}
 
-	count, err := c.caseCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: tf.ID}})
+	count, err := c.caseCol.CountDocuments(ctx, bson.D{{Key: "_id", Value: testFlow.ID}})
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
 	if count == 0 {
-		tf.BaseTime.CreateTime = time.Now().Unix()
-		tf.BaseTime.ModifiedTime = time.Now().Unix()
+		testFlow.BaseTime.CreateTime = time.Now().Unix()
+		testFlow.BaseTime.ModifiedTime = time.Now().Unix()
 	} else {
-		tf.BaseTime.ModifiedTime = time.Now().Unix()
+		testFlow.BaseTime.ModifiedTime = time.Now().Unix()
 	}
 
 	update := bson.M{
-		"$set": tf,
+		"$set": testFlow,
 	}
-	_, err = c.caseCol.UpdateOne(ctx, bson.D{{Key: "name", Value: tf.Name}}, update, options.Update().SetUpsert(true))
+
+	_, err = c.caseCol.UpdateOne(ctx, bson.D{{Key: "_id", Value: testFlow.ID}}, update, options.Update().SetUpsert(true))
 	if err != nil {
 		return primitive.ObjectID{}, err
 	}
 
-	return tf.ID, nil
+	return testFlow.ID, nil
 }
 
 func (c *TestFlowRepo) Delete(ctx context.Context, id primitive.ObjectID) error {

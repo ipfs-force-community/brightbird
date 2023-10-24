@@ -14,14 +14,14 @@ import (
 	logging "github.com/ipfs/go-log/v2"
 )
 
-var log = logging.Logger("add-storage")
+var log = logging.Logger("droplet-add-piece-storage")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
 }
 
 var Info = types.PluginInfo{
-	Name:        "market-add-piece-storage",
+	Name:        "droplet-add-piece-storage",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "add a new piece storage in droplet",
@@ -30,11 +30,11 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
 	PieceStore    pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
+	MountPath     string  `json:"MountPath" jsonschema:"MountPath" title:"MountPath" require:"true" description:"/piece/"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	mountPath := "/piece/"
-	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.DropletMarket, params.PieceStore.Name, mountPath)
+	err := dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.DropletMarket, params.PieceStore.Name, params.MountPath)
 	if err != nil {
 		return err
 	}
@@ -43,13 +43,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	if err != nil {
 		return err
 	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "/bin/bash", "-c", fmt.Sprintf("./droplet piece-storage add-fs --name %s --path %s", params.PieceStore.Name, mountPath+params.PieceStore.Name))
-		if err != nil {
-			return err
-		}
-	}
-
+	
 	pieceList, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/bash", "-c", "./droplet piece-storage list")
 	if err != nil {
 		return err

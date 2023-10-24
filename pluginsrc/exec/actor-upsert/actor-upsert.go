@@ -4,18 +4,16 @@ import (
 	"context"
 
 	"github.com/filecoin-project/go-address"
-	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
-	mkTypes "github.com/filecoin-project/venus/venus-shared/types/market"
 	logging "github.com/ipfs/go-log/v2"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
-	dropletmarket "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
+	droplet "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/droplet-market"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 )
 
-var log = logging.Logger("actor-list")
+var log = logging.Logger("actor-upsert")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
@@ -29,58 +27,24 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Droplet      dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
-	MinerAddress address.Address                         `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
-	Account      string                                  `json:"account"  jsonschema:"account" title:"account" require:"false" description:"create username"`
+	Droplet      droplet.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
+	MinerAddress address.Address                   `json:"minerAddress"  jsonschema:"minerAddress" title:"MinerAddress" require:"true"`
+	Account      string                            `json:"account"  jsonschema:"account" title:"account" require:"false" description:"create username"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
-	client, closer, err := marketapi.DialIMarketRPC(ctx, params.Droplet.SvcEndpoint.ToMultiAddr(), params.Droplet.UserToken, nil)
+	// ./droplet actor upsert --account admin-test-1 t01004
+	pods, err := droplet.GetPods(ctx, k8sEnv, params.Droplet.InstanceName)
 	if err != nil {
 		return err
 	}
-	defer closer()
-	err = actorUpsert(ctx, params, client)
-	if err != nil {
-		log.Errorln("upsert actor err %v", err)
-		return err
-	}
+	upsertCmd := "./droplet actor upsert --account " + params.Account + " " + params.MinerAddress.String()
+	log.Infoln("upsertCmd is: ", upsertCmd)
 
-	err = actorList(ctx, params, client)
+	res, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/sh", "-c", upsertCmd)
 	if err != nil {
-		log.Errorln("list actor err %w", err)
 		return err
 	}
-
+	log.Infoln("actor upsert success: ", string(res))
 	return nil
-}
-
-func actorUpsert(ctx context.Context, params TestCaseParams, client marketapi.IMarket) error {
-	bAdd, err := client.ActorUpsert(ctx, mkTypes.User{Addr: params.MinerAddress, Account: params.Account})
-	if err != nil {
-		return err
-	}
-
-	opr := "Add"
-	if !bAdd {
-		opr = "Update"
-	}
-
-	log.Debugln("%s miner %s success\n", opr, params.MinerAddress)
-
-	return nil
-}
-
-func actorList(ctx context.Context, params TestCaseParams, client marketapi.IMarket) error {
-	miners, err := client.ActorList(ctx)
-	if err != nil {
-		return err
-	}
-	for _, miner := range miners {
-		if miner.Addr == params.MinerAddress {
-			return nil
-		}
-	}
-
-	return err
 }

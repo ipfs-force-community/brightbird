@@ -148,12 +148,12 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		wallet = def
 	}
 
-	log.Debugln("data:", data)
-	log.Debugln("wallet:", wallet)
-	log.Debugln("params.MinerAddress:", params.MinerAddress)
-	log.Debugln("EpochPrice:", vtypes.BigInt(params.Price))
-	log.Debugln("MinBlocksDuration:", uint64(params.Duration))
-	log.Debugln("DealStartEpoch:", abi.ChainEpoch(params.StartEpoch))
+	log.Infoln("data:", data)
+	log.Infoln("wallet:", wallet)
+	log.Infoln("params.MinerAddress:", params.MinerAddress)
+	log.Infoln("EpochPrice:", vtypes.BigInt(params.Price))
+	log.Infoln("MinBlocksDuration:", uint64(params.Duration))
+	log.Infoln("DealStartEpoch:", abi.ChainEpoch(params.StartEpoch))
 
 	sdParams := &client.DealParams{
 		Data:               data,
@@ -186,6 +186,6 @@ func StorageDealsInit(ctx context.Context, params TestCaseParams, api clientapi.
 		return "", err
 	}
 
-	log.Debugln("DealCid cid: ", encoder.Encode(*proposal))
+	log.Infoln("DealCid cid: ", encoder.Encode(*proposal))
 	return encoder.Encode(*proposal), nil
 }

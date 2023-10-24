@@ -5,14 +5,18 @@ import (
 	"embed"
 	"fmt"
 
+	logging "github.com/ipfs/go-log/v2"
+	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	types2 "github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/droplet/v2/config"
-	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
 )
+
+var log = logging.Logger("droplet-client")
 
 type Config struct {
 	env.BaseConfig
@@ -127,26 +131,75 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketConfig, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
-	if err != nil {
-		return config.MarketConfig{}, err
-	}
+// func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketConfig, error) {
+// 	tomlBytes, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
+// 	if err != nil {
+// 		return config.MarketConfig{}, err
+// 	}
+// 	log.Infoln("tomlBytes is: ", string(tomlBytes))
 
-	var cfg config.MarketConfig
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return config.MarketConfig{}, err
-	}
+// 	var cfg config.MarketConfig
+// 	err = toml.Unmarshal(tomlBytes, &cfg)
+// 	if err != nil {
+// 		log.Infoln("Unmarshal failed")
+// 		return config.MarketConfig{}, err
+// 	}
+// 	log.Infoln("Unmarshal successed")
 
-	return cfg, nil
-}
+// 	return cfg, nil
+// }
 
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }
 
 func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketInstance DropletMarketDeployReturn, piecePvc, mountPath string) error {
+	// 更新 configmap
+	// 1. 得到新的config.toml文件
+	// 2. 修改configmap的 config.toml 字段
+	// 3. 更新configmap
+	pods, err := GetPods(ctx, k8sEnv, marketInstance.InstanceName)
+	if err != nil {
+		return err
+	}
+
+	tomlBytes, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "cat", "/root/.droplet/config.toml")
+	if err != nil {
+		return err
+	}
+	log.Infoln("tomlBytes is: ", string(tomlBytes))
+
+	dropletCfg := config.DefaultMarketConfig
+	err = toml.Unmarshal(tomlBytes, &dropletCfg)
+	if err != nil {
+		log.Infoln("Unmarshal failed")
+		return err
+	}
+	log.Infoln("Unmarshal successed")
+
+	dropletCfg.AddFsPieceStorage(&config.FsPieceStorage{
+		Name:     piecePvc,
+		ReadOnly: false,
+		Path:     mountPath + piecePvc,
+	})
+
+	tomlData, err := toml.Marshal(dropletCfg)
+	if err != nil {
+		return err
+	}
+
+	configmap, err := k8sEnv.GetConfigMapByName(ctx, marketInstance.ConfigMapName)
+	if err != nil {
+		return err
+	}
+
+	configmap.Data["config.toml"] = string(tomlData)
+
+	err = k8sEnv.UpdateConfigMaps(ctx, configmap)
+	if err != nil {
+		return err
+	}
+
 	statefulset, err := k8sEnv.GetStatefulSet(ctx, marketInstance.StatefulSetName)
 	if err != nil {
 		return err
@@ -171,7 +224,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 		Name:      piecePvc,
 		MountPath: mountPath + piecePvc,
 	})
-	//restart
+
 	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
 	if err != nil {
 		return err
@@ -181,6 +234,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 	if err != nil {
 		return err
 	}
+
 	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return err

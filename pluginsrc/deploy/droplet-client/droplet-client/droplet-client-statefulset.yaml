@@ -13,20 +13,13 @@ spec:
       labels:
         app: droplet-client-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.droplet-client\" ]||(mkdir -p /root/.droplet-client/ && cp /root/config.tmp /root/.droplet-client/config.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: droplet-client-pvc
-            - name: droplet-client-cfg-vol
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
       containers:
         - name: droplet-client-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/droplet-client:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.droplet-client/ && cp /root/config.tmp /root/.droplet-client/config.toml && /app/droplet-client run;
           ports:
             - containerPort: 41231
               protocol: TCP

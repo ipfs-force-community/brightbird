@@ -6,19 +6,21 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
+	logging "github.com/ipfs/go-log/v2"
+
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
-
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/auth"
-
 	"github.com/ipfs-force-community/sophon-auth/config"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
 )
+
+var log = logging.Logger("sophon-auth")
 
 type Config struct {
 	env.BaseConfig
@@ -170,14 +172,15 @@ func GenerateAdminToken(ctx context.Context, k8sEnv *env.K8sEnvDeployer, isntanc
 	return adminToken, nil
 }
 
-func GetConfig(ctx context.Context, envCtx *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
-	cfgData, err := envCtx.GetConfigMap(ctx, configMapName, "config.toml")
+func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
+	tomlBytes, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
 		return config.Config{}, err
 	}
+	log.Infoln("tomlBytes is: ", string(tomlBytes))
 
 	var cfg config.Config
-	err = toml.Unmarshal(cfgData, &cfg)
+	err = toml.Unmarshal(tomlBytes, &cfg)
 	if err != nil {
 		return config.Config{}, err
 	}

@@ -139,16 +139,19 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 }
 
 func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketClientConfig, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
+	tomlBytes, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
 	if err != nil {
 		return config.MarketClientConfig{}, err
 	}
+	log.Infoln("tomlBytes is: ", string(tomlBytes))
 
 	var cfg config.MarketClientConfig
-	err = toml.Unmarshal(cfgData, &cfg)
+	err = toml.Unmarshal(tomlBytes, &cfg)
 	if err != nil {
+		log.Infoln("Unmarshal failed")
 		return config.MarketClientConfig{}, err
 	}
+	log.Infoln("Unmarshal successed")
 
 	return cfg, nil
 }
@@ -206,7 +209,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, clientIns
 		Name:      piecePvc,
 		MountPath: mountPath + piecePvc,
 	})
-	//restart
+
 	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
 	if err != nil {
 		return err
@@ -216,6 +219,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, clientIns
 	if err != nil {
 		return err
 	}
+	
 	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return err
