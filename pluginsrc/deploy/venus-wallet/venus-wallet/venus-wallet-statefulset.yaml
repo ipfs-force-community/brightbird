@@ -13,20 +13,13 @@ spec:
       labels:
         app: venus-wallet-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.venus_wallet\" ]||(mkdir -p /root/.venus_wallet && cp /root/config.tmp /root/.venus_wallet/config.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: venus-wallet-pvc
-            - name: venus-wallet-cfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
       containers:
         - name: venus-wallet-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/venus-wallet:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.venus_wallet && cp /root/config.tmp /root/.venus_wallet/config.toml && /app/venus-wallet run;
           ports:
             - containerPort: 5678
               protocol: TCP

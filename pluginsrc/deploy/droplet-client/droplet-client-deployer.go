@@ -5,15 +5,14 @@ import (
 	"embed"
 	"fmt"
 
-	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
-	types2 "github.com/ipfs-force-community/brightbird/types"
 	logging "github.com/ipfs/go-log/v2"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
+	types2 "github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/droplet/v2/config"
-	"github.com/pelletier/go-toml/v2"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("droplet-client-deployer")
@@ -138,41 +137,26 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketClientConfig, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
-	if err != nil {
-		return config.MarketClientConfig{}, err
-	}
-
-	var cfg config.MarketClientConfig
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return config.MarketClientConfig{}, err
-	}
-
-	return cfg, nil
-}
-
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DropletClientDeployReturn, updateCfg config.MarketClientConfig) error {
-	cfgData, err := toml.Marshal(updateCfg)
-	if err != nil {
-		return err
-	}
-	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
-	if err != nil {
-		return err
-	}
+	// cfgData, err := toml.Marshal(updateCfg)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	// if err != nil {
+	// 	return err
+	// }
 
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
-	if err != nil {
-		return nil
-	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-client/config.toml")
-		if err != nil {
-			return err
-		}
-	}
+	// pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	// if err != nil {
+	// 	return nil
+	// }
+	// for _, pod := range pods {
+	// 	_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.droplet-client/config.toml")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
 }
@@ -206,7 +190,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, clientIns
 		Name:      piecePvc,
 		MountPath: mountPath + piecePvc,
 	})
-	//restart
+
 	err = k8sEnv.UpdateStatefulSets(ctx, statefulset)
 	if err != nil {
 		return err
@@ -216,6 +200,7 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, clientIns
 	if err != nil {
 		return err
 	}
+
 	_, err = k8sEnv.WaitForServiceReady(ctx, svc, venusutils.VenusHealthCheck)
 	if err != nil {
 		return err

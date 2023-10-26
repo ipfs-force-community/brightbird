@@ -8,14 +8,15 @@ import (
 	"os"
 	"strings"
 
+	logging "github.com/ipfs/go-log/v2"
+	ma "github.com/multiformats/go-multiaddr"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
-	logging "github.com/ipfs/go-log/v2"
-	ma "github.com/multiformats/go-multiaddr"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("genesis-node")
@@ -32,11 +33,15 @@ type RenderParams struct {
 }
 
 var PluginInfo = types.PluginInfo{
-	Name:               "genesis-node",
-	Version:            version.Version(),
-	PluginType:         types.Deploy,
-	DeployPluginParams: types.DeployPluginParams{}, //no build
-	Description:        "create genesis node for test",
+	Name:       "genesis-node",
+	Version:    version.Version(),
+	PluginType: types.Deploy,
+	DeployPluginParams: types.DeployPluginParams{
+		Repo:        "https://github.com/ipfs-force-community/lotus.git",
+		ImageTarget: "lotus",
+		BuildScript: `make docker-push TAG={{.Commit}} BUILD_DOCKER_PROXY={{.Proxy}} PRIVATE_REGISTRY={{.Registry}}`,
+	},
+	Description: "create genesis node for test",
 }
 
 type GenesisReturn struct { //nolint
@@ -103,7 +108,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	// /lotus wallet import --as-default ~/.genesis-sectors/pre-seal-t01000.key ;
 	// /lotus-miner init --genesis-miner --actor=t01000 --sector-size=2KiB --pre-sealed-sectors=/root/genesis/.genesis-sectors --pre-sealed-metadata=/root/genesis/.genesis-sectors/pre-seal-t01000.json --nosync ;
 	// /lotus-miner run --nosync ;
-	importResult, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "wallet", "import", "--as-default", "/root/genesis/.genesis-sectors/pre-seal-t01000.key")
+	importResult, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "wallet", "import", "--as-default", "/root/.genesis-sectors/pre-seal-t01000.key")
 	if err != nil {
 		return nil, fmt.Errorf("import key fail %w", err)
 	}
@@ -114,7 +119,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 
-	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=2KiB", "--pre-sealed-sectors=/root/genesis/.genesis-sectors", "--pre-sealed-metadata=/root/genesis/.genesis-sectors/pre-seal-t01000.json", "--nosync")
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=2KiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
 	if err != nil {
 		return nil, fmt.Errorf("init genesis miner fail %w", err)
 	}

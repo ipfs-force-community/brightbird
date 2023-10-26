@@ -34,7 +34,6 @@ require (
 	github.com/ipfs-force-community/droplet/v2 v2.9.0
 	github.com/ipfs-force-community/sophon-auth v1.14.0-rc1
 	github.com/ipfs-force-community/sophon-gateway v1.14.0-rc1
-	github.com/ipfs-force-community/sophon-messager v1.14.0-rc1
 	github.com/ipfs-force-community/sophon-miner v1.14.0-rc1
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-cidutil v0.1.0
@@ -49,8 +48,8 @@ require (
 	github.com/naoina/toml v0.1.1
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.27.10
-	github.com/pelletier/go-toml v1.9.5
-	github.com/pelletier/go-toml/v2 v2.0.8
+	github.com/pelletier/go-toml v1.9.5 // indirect
+	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/saagie/fluent-bit-mongo v0.0.0-20230329131900-c984d3f02519
 	github.com/simlecode/api-compare v0.0.0-20231011081109-91fe92ae32c4

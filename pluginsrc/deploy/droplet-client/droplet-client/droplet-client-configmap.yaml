@@ -4,6 +4,8 @@ data:
     # Default config:
     SimultaneousTransfersForRetrieval = 20
     SimultaneousTransfersForStorage = 20
+    # client 发单等使用的 wallet address
+    # ./venus state get-actor t3wma7x5c724zwb5bb5j65qd4nunb6khbsrcocf4x64oy7x4iyqt26ougkdkzzk4aehujx433yvj7rt47xh4sq
     DefaultMarketAddress = "{{.DefaultMarketAddress}}"
 
     [API]

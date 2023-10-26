@@ -6,12 +6,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	vCfg "github.com/filecoin-project/venus/pkg/config"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -131,21 +131,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 			SvcEndpoint:     svcEndpoint,
 		},
 	}, nil
-}
-
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (vCfg.Config, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.json")
-	if err != nil {
-		return vCfg.Config{}, err
-	}
-
-	cfg := vCfg.Config{}
-	err = json.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return vCfg.Config{}, err
-	}
-
-	return cfg, nil
 }
 
 // Update

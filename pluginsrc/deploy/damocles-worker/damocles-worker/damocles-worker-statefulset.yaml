@@ -13,27 +13,13 @@ spec:
       labels:
         app: damocles-worker-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.damocles-worker\" ]||(mkdir -p /root/.damocles-worker && cp /root/config.tmp /root/.damocles-worker/damocles-worker.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: damocles-worker-pvc
-            - name: sector-worker-cfg
-              mountPath: "/root/config.tmp"
-              subPath: "damocles-worker.toml"
-            - mountPath: /shared-dir
-              name: shared-dir-v
-              subPath: {{.NameSpace}}
-            - mountPath: /shared-dir/{{.UniqueId}}/{{.MinerAddress}}
-              name: shared-dir-v
-              subPath: {{.NameSpace}}/{{.UniqueId}}/{{.MinerAddress}}
       containers:
         - name: damocles-worker-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/damocles-worker:{{.CodeVersion}}"
           imagePullPolicy: Always
-          args: ['daemon', '--config', '/root/.damocles-worker/damocles-worker.toml']
+          command: ["/bin/sh", "-c"]
+          args: 
+            - mkdir -p /root/.damocles-worker && cp /root/config.tmp /root/.damocles-worker/damocles-worker.toml && /app/damocles-worker daemon --config /root/.damocles-worker/damocles-worker.toml;
           env:
             - name: FIL_PROOFS_PARAMETER_CACHE
               value: "/shared-dir/filecoin-proof-parameters"
@@ -48,6 +34,9 @@ spec:
             - name: sector-worker-cfg
               mountPath: "/root/config.tmp"
               subPath: "damocles-worker.toml"
+            - mountPath: /shared-dir/{{.UniqueId}}/{{.MinerAddress}}
+              name: shared-dir-v
+              subPath: {{.NameSpace}}/{{.UniqueId}}/{{.MinerAddress}}
             - mountPath: /shared-dir
               name: shared-dir-v
               subPath: {{.NameSpace}}

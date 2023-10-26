@@ -13,20 +13,13 @@ spec:
       labels:
         app: sophon-miner-{{.UniqueId}}-pod
     spec:
-      initContainers:
-        - name: init-myservice
-          image: {{if gt (len .Registry) 0}}{{.Registry}}/{{end}}library/busybox:1.35
-          command: ['sh', '-c', "[ -d \"/root/.sophon-miner\" ]||(mkdir -p /root/.sophon-miner && cp /root/config.tmp /root/.sophon-miner/config.toml);"]
-          volumeMounts:
-            - mountPath: /root
-              name: sophon-miner-pvc
-            - name: sophon-miner-cfg
-              mountPath: "/root/config.tmp"
-              subPath: "config.toml"
       containers:
         - name: sophon-miner-{{.UniqueId}}
           image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-miner:{{.CodeVersion}}"
-          args: ["run"]
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.sophon-miner && cp /root/config.tmp /root/.sophon-miner/config.toml && /app/sophon-miner run;
           ports:
             - containerPort: 12308
               protocol: TCP

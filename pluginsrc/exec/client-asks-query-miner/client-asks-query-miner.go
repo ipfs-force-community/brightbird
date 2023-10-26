@@ -19,14 +19,14 @@ import (
 	"github.com/ipfs-force-community/brightbird/version"
 )
 
-var log = logging.Logger("clinet-asks-query-miner")
+var log = logging.Logger("client-asks-query-miner")
 
 func main() {
 	plugin.SetupPluginFromStdin(Info, Exec)
 }
 
 var Info = types.PluginInfo{
-	Name:        "clinet-asks-query-miner",
+	Name:        "client-asks-query-miner",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "droplet-client 查询 miner 挂单信息",

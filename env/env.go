@@ -210,6 +210,17 @@ func (env *K8sEnvDeployer) StopPods(ctx context.Context, pods []corev1.Pod) erro
 	return nil
 }
 
+func (env *K8sEnvDeployer) UpdateConfigMaps(ctx context.Context, configMap *corev1.ConfigMap) error {
+	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
+	log.Infof("Try to update %s ", configMap.GetName())
+	_, err := configMapClient.Update(ctx, configMap, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("update configMap(%s) fail %w", configMap.GetName(), err)
+	}
+	log.Infof("Updated configMap %s.", configMap.GetName())
+	return nil
+}
+
 func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, statefulset *appv1.StatefulSet) error {
 	statefulSetClient := env.k8sClient.AppsV1().StatefulSets(env.namespace)
 	log.Infof("Try to update %s ", statefulset.GetName())
@@ -218,6 +229,27 @@ func (env *K8sEnvDeployer) UpdateStatefulSets(ctx context.Context, statefulset *
 		return fmt.Errorf("update statefulset(%s) %w", statefulset.GetName(), err)
 	}
 	log.Infof("Updated statefulSet %s.", statefulset.GetName())
+
+	// 获取 StatefulSet 所有 Pod 的名称
+	podList, err := env.k8sClient.CoreV1().Pods(env.namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("statefulset.kubernetes.io/pod-name=%s", statefulset.GetName()+"-0"),
+	})
+	if err != nil {
+		return err
+	}
+
+	// 逐个重启 Pod
+	for _, pod := range podList.Items {
+		podName := pod.GetName()
+		log.Infof("PodName is: %s ", podName)
+		// 执行 Pod 的 Patch 操作
+		err = env.k8sClient.CoreV1().Pods(env.namespace).Delete(ctx, podName, metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Restarted Pod: %s\n", podName)
+	}
+
 	return nil
 }
 
@@ -399,11 +431,7 @@ func (env *K8sEnvDeployer) RunConfigMap(ctx context.Context, f fs.File, args any
 	}
 
 	env.setCommonLabels(&configMap.ObjectMeta)
-	cfgData, err := yaml.Marshal(configMap)
-	if err != nil {
-		return nil, err
-	}
-	log.Debugf("configmap(%s) yaml config %s", configMap.GetName(), string(cfgData))
+	log.Infof("configmap(%s) yaml config %s", configMap.GetName(), string(data))
 
 	configMapClient := env.k8sClient.CoreV1().ConfigMaps(env.namespace)
 	name := configMap.GetName()
@@ -549,16 +577,8 @@ func (env *K8sEnvDeployer) GetSvcEndpoint(svc *corev1.Service) (string, error) {
 	return "", fmt.Errorf("not support service type %s", svc.GetName())
 }
 
-func (env *K8sEnvDeployer) GetConfigMap(ctx context.Context, cfgMapName, cfgFileName string) ([]byte, error) {
-	cfgMap, err := env.k8sClient.CoreV1().ConfigMaps(env.namespace).Get(ctx, cfgMapName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-	data, ok := cfgMap.BinaryData[cfgFileName]
-	if !ok {
-		return nil, fmt.Errorf("config %s not found in configmap %s", cfgFileName, cfgMapName)
-	}
-	return data, nil
+func (env *K8sEnvDeployer) GetConfigMapByName(ctx context.Context, name string) (*corev1.ConfigMap, error) {
+	return env.k8sClient.CoreV1().ConfigMaps(env.namespace).Get(ctx, name, metav1.GetOptions{})
 }
 
 func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey string, cfgValue []byte) error {
@@ -568,7 +588,7 @@ func (env *K8sEnvDeployer) SetConfigMap(ctx context.Context, cfgMapName, cfgKey 
 		return err
 	}
 
-	cfgMap.BinaryData[cfgKey] = cfgValue
+	cfgMap.Data[cfgKey] = string(cfgValue)
 
 	_, err = configMapClient.Update(ctx, cfgMap, metav1.UpdateOptions{})
 	if err != nil {

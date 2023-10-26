@@ -10,7 +10,6 @@ import (
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-miner/node/config"
-	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -125,46 +124,31 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MinerConfig, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
-	if err != nil {
-		return config.MinerConfig{}, err
-	}
-
-	var cfg config.MinerConfig
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return config.MinerConfig{}, err
-	}
-	return cfg, nil
-}
-
-// Update
-// todo change this mode to config
+// Update: todo change this mode to config
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonMinerDeployReturn, updateCfg config.MinerConfig) error {
-	cfgData, err := toml.Marshal(updateCfg)
-	if err != nil {
-		return err
-	}
-	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
-	if err != nil {
-		return err
-	}
+	// cfgData, err := toml.Marshal(updateCfg)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "config.toml", cfgData)
+	// if err != nil {
+	// 	return err
+	// }
 
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
-	if err != nil {
-		return nil
-	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-miner/config.toml")
-		if err != nil {
-			return err
-		}
-	}
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
-	if err != nil {
-		return err
-	}
+	// pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	// if err != nil {
+	// 	return nil
+	// }
+	// for _, pod := range pods {
+	// 	_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-miner/config.toml")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
+	// err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

@@ -6,18 +6,16 @@ import (
 	"fmt"
 	"strings"
 
-	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
-	"github.com/ipfs-force-community/brightbird/types"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
+	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
 	"github.com/ipfs-force-community/sophon-auth/auth"
-
 	"github.com/ipfs-force-community/sophon-auth/config"
 	"github.com/ipfs-force-community/sophon-auth/jwtclient"
-	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -170,48 +168,33 @@ func GenerateAdminToken(ctx context.Context, k8sEnv *env.K8sEnvDeployer, isntanc
 	return adminToken, nil
 }
 
-func GetConfig(ctx context.Context, envCtx *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
-	cfgData, err := envCtx.GetConfigMap(ctx, configMapName, "config.toml")
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	var cfg config.Config
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	return cfg, nil
-}
-
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, deployParams SophonAuthDeployReturn, updateCfg config.Config) error {
-	cfgData, err := toml.Marshal(updateCfg)
-	if err != nil {
-		return err
-	}
+	// cfgData, err := toml.Marshal(updateCfg)
+	// if err != nil {
+	// 	return err
+	// }
 
-	err = k8sEnv.SetConfigMap(ctx, deployParams.ConfigMapName, "config.toml", cfgData)
-	if err != nil {
-		return err
-	}
+	// err = k8sEnv.SetConfigMap(ctx, deployParams.ConfigMapName, "config.toml", cfgData)
+	// if err != nil {
+	// 	return err
+	// }
 
-	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), deployParams.InstanceName)))
-	if err != nil {
-		return err
-	}
+	// pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("sophon-auth-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), deployParams.InstanceName)))
+	// if err != nil {
+	// 	return err
+	// }
 
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-auth/config.toml")
-		if err != nil {
-			return err
-		}
-	}
+	// for _, pod := range pods {
+	// 	_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.sophon-auth/config.toml")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, deployParams.StatefulSetName)
-	if err != nil {
-		return err
-	}
+	// err = k8sEnv.UpdateStatefulSetsByName(ctx, deployParams.StatefulSetName)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

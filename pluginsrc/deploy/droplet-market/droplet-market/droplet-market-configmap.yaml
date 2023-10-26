@@ -42,11 +42,12 @@ data:
       ConnMaxLifeTime = "1m"
       Debug = false
 
+    [PieceStorage]
 {{ range $index, $value := .PieceStores }}
-    [[PieceStorage.Fs]]
-      Name = "{{$value}}"
-      ReadOnly = false
-      Path = "/piece/{{$value}}"
+      [[PieceStorage.Fs]]
+        Name = "{{$value}}"
+        ReadOnly = false
+        Path = "/piece/{{$value}}"
 {{ end }}
      
 

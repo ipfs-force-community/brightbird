@@ -112,20 +112,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.Config, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
-	if err != nil {
-		return config.Config{}, err
-	}
-
-	var cfg config.Config
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return config.Config{}, err
-	}
-	return cfg, nil
-}
-
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params SophonGatewayReturn, updateCfg config.Config) error {
 	cfgData, err := toml.Marshal(updateCfg)
 	if err != nil {

@@ -14,14 +14,13 @@ spec:
       labels:
         app: genesis-{{.UniqueId}}-pod
     spec:
-      initContainers:
       containers:
         - name: genesis-{{.UniqueId}}
-          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/lotus-force:latest"
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/lotus:{{.CodeVersion}}"
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/genesis/localnet.json --bootstrap=false;
+            - /lotus-seed pre-seal --sector-size 8388608 --num-sectors 10 && /lotus-seed genesis new /root/localnet.json && /lotus-seed genesis add-miner /root/localnet.json ~/.genesis-sectors/pre-seal-t01000.json && /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/localnet.json --bootstrap=false;
           ports:
             - containerPort: 1234
               protocol: TCP
@@ -38,9 +37,6 @@ spec:
               subPath: {{.NameSpace}}
             - mountPath: /root
               name: genesis-pvc
-            - mountPath: /root/genesis
-              name: shared-dir-v
-              subPath: genesis
             - name: lotuscfg
               mountPath: "/root/config.toml"
               subPath: "config.toml"

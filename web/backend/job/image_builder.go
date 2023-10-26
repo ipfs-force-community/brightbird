@@ -308,26 +308,31 @@ func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, reg
 }
 
 func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
+	// 获取当前工作树
 	workTree, err := builder.repo.Worktree()
 	if err != nil {
 		return err
 	}
 
+	// 清理工作树
 	err = workTree.Clean(&git.CleanOptions{})
 	if err != nil && err != plumbing.ErrObjectNotFound {
 		return fmt.Errorf("clean worktree  fail %w", err)
 	}
 
+	// 获取当前repo的HEAD引用
 	head, err := builder.repo.Head()
 	if err != nil {
 		return fmt.Errorf("get head hash fail %w", err)
 	}
 
+	// 重置工作树
 	err = workTree.Reset(&git.ResetOptions{Commit: head.Hash(), Mode: git.HardReset})
 	if err != nil {
 		return fmt.Errorf("reset worktree  fail %w", err)
 	}
 
+	// 获取最新的改动
 	err = builder.repo.FetchContext(ctx, &git.FetchOptions{
 		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
@@ -338,7 +343,8 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		return fmt.Errorf("fetch context  fail %w", err)
 	}
 
-	//exec git pull on main branch avoid confict on specific branch
+	// 在主分支上执行 git pull 避免特定分支上的冲突
+	// 获取仓库的所有分支
 	branches, err := builder.repo.Branches()
 	if err != nil {
 		return fmt.Errorf("get branchs  fail %w", err)
@@ -360,12 +366,14 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		return err
 	}
 
-	err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)}) //git checkout master
+	// git checkout master
+	err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)})
 	if err != nil {
 		return fmt.Errorf("git checkout fail %w", err)
 	}
 
 	log.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
+	// 使用PullContext方法在masterBranch上拉取最新的改动
 	err = workTree.PullContext(ctx, &git.PullOptions{
 		Progress:        os.Stdout,
 		InsecureSkipTLS: true,
@@ -376,6 +384,7 @@ func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
 		return fmt.Errorf("pull commit  fail %w", err)
 	}
 
+	// 首先获取所有的子模块，然后更新它们
 	modules, err := workTree.Submodules()
 	if err != nil {
 		return fmt.Errorf("get submoudle fail %w", err)

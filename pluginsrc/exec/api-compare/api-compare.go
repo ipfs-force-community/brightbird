@@ -17,7 +17,7 @@ func main() {
 }
 
 var Info = types.PluginInfo{
-	Name:        "api_compare",
+	Name:        "api-compare",
 	Version:     version.Version(),
 	PluginType:  types.TestExec,
 	Description: "api compare",
