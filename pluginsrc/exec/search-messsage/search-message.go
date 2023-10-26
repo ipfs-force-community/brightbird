@@ -27,8 +27,8 @@ var Info = types.PluginInfo{
 }
 
 type TestCaseParams struct {
-	Messager   sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
-	MessageId  string                              `json:"MessageId"  jsonschema:"MessageId"  title:"MessageId" require:"true" description:"MessageId"`
+	Messager  sophonmessager.SophonMessagerReturn `json:"SophonMessager"  jsonschema:"SophonMessager"  title:"Sophon Messager" require:"true" description:"messager return"`
+	MessageId string                              `json:"MessageId"  jsonschema:"MessageId"  title:"MessageId" require:"true" description:"MessageId"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {

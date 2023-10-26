@@ -6,14 +6,13 @@ import (
 	"fmt"
 	"strconv"
 
-	logging "github.com/ipfs/go-log/v2"
-	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/filecoin-project/go-address"
 	"github.com/filecoin-project/go-jsonrpc"
 	"github.com/filecoin-project/go-state-types/abi"
 	vapi "github.com/filecoin-project/venus/venus-shared/api"
+	logging "github.com/ipfs/go-log/v2"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
@@ -319,32 +318,31 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesManagerReturn, updateCfg interface{}) error {
-	cfgData, err := toml.Marshal(updateCfg)
-	if err != nil {
-		return err
-	}
-	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "sector-manager.cfg", cfgData)
-	if err != nil {
-		return err
-	}
+	// cfgData, err := toml.Marshal(updateCfg)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "sector-manager.cfg", cfgData)
+	// if err != nil {
+	// 	return err
+	// }
 
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
-	if err != nil {
-		return nil
-	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.damocles-manager/sector-manager.cfg")
-		if err != nil {
-			return err
-		}
-	}
+	// pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	// if err != nil {
+	// 	return nil
+	// }
+	// for _, pod := range pods {
+	// 	_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.damocles-manager/sector-manager.cfg")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
-	if err != nil {
-		return err
-	}
+	// err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 
@@ -359,7 +357,7 @@ func AddMiner(ctx context.Context, k8sEnv *env.K8sEnvDeployer, damoclesInstance 
 		return err
 	}
 
-	managerCfg, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "cat", "/root/..damocles-manager/sector-manager.cfg")
+	managerCfg, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "cat", "/root/.damocles-manager/sector-manager.cfg")
 	if err != nil {
 		return err
 	}

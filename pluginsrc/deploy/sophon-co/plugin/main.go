@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	sophonauth "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-auth"
 	chainco "github.com/ipfs-force-community/brightbird/pluginsrc/deploy/sophon-co"
 	"github.com/ipfs-force-community/brightbird/pluginsrc/deploy/venus"
-	corev1 "k8s.io/api/core/v1"
 )
 
 func main() {

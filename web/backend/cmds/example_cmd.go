@@ -1,10 +1,11 @@
 package cmds
 
 import (
+	"bytes"
 	"fmt"
 
+	"github.com/BurntSushi/toml"
 	"github.com/ipfs-force-community/brightbird/web/backend/config"
-	"github.com/pelletier/go-toml/v2"
 	"github.com/urfave/cli/v2"
 )
 
@@ -12,11 +13,12 @@ var ExampleCmd = &cli.Command{
 	Name: "config",
 	Action: func(cliCtx *cli.Context) error {
 		cfg := config.Config{}
-		data, err := toml.Marshal(cfg)
-		if err != nil {
+		buf := new(bytes.Buffer)
+		if err := toml.NewEncoder(buf).Encode(cfg); err != nil {
 			return err
 		}
-		fmt.Println(string(data))
+		tomlData := buf.String()
+		fmt.Println(string(tomlData)) //nolint
 		return nil
 	},
 }

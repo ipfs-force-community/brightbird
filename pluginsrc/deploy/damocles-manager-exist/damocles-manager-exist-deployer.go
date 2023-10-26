@@ -6,13 +6,13 @@ import (
 	"fmt"
 
 	"github.com/filecoin-project/go-address"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
-	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
@@ -307,46 +307,31 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (interface{}, error) {
-	cfgData, err := k8sEnv.GetConfigMap(ctx, configMapName, "sector-manager.cfg")
-	if err != nil {
-		return nil, err
-	}
-
-	var cfg interface{}
-	err = toml.Unmarshal(cfgData, &cfg)
-	if err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
-}
-
 func Update(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params DamoclesManagerReturn, updateCfg interface{}) error {
-	cfgData, err := toml.Marshal(updateCfg)
-	if err != nil {
-		return err
-	}
-	err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "sector-manager.cfg", cfgData)
-	if err != nil {
-		return err
-	}
+	// cfgData, err := toml.Marshal(updateCfg)
+	// if err != nil {
+	// 	return err
+	// }
+	// err = k8sEnv.SetConfigMap(ctx, params.ConfigMapName, "sector-manager.cfg", cfgData)
+	// if err != nil {
+	// 	return err
+	// }
 
-	pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
-	if err != nil {
-		return nil
-	}
-	for _, pod := range pods {
-		_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.damocles-manager/sector-manager.cfg")
-		if err != nil {
-			return err
-		}
-	}
+	// pods, err := GetPods(ctx, k8sEnv, params.InstanceName)
+	// if err != nil {
+	// 	return nil
+	// }
+	// for _, pod := range pods {
+	// 	_, err = k8sEnv.ExecRemoteCmd(ctx, pod.GetName(), "echo", "'"+string(cfgData)+"'", ">", "/root/.damocles-manager/sector-manager.cfg")
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
-	if err != nil {
-		return err
-	}
+	// err = k8sEnv.UpdateStatefulSetsByName(ctx, params.StatefulSetName)
+	// if err != nil {
+	// 	return err
+	// }
 	return nil
 }
 

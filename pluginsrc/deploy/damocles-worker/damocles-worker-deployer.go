@@ -8,12 +8,13 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
+	logging "github.com/ipfs/go-log/v2"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/utils"
 	"github.com/ipfs-force-community/brightbird/version"
-	logging "github.com/ipfs/go-log/v2"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("messager-deployer")

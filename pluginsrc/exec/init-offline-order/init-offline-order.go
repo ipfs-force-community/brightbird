@@ -114,6 +114,10 @@ func GetCidAndPieceSize(ctx context.Context, api clientapi.IMarketClient, file, 
 		return nil, err
 	}
 
+	log.Infoln("Root is: ", c.Root)
+	log.Infoln("Cid is: ", ret.Root)
+	log.Infoln("PieceSize is: ", ret.Size)
+
 	return &DataImportReturn{
 		Root:      c.Root,
 		Cid:       ret.Root,

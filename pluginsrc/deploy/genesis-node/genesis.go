@@ -8,14 +8,15 @@ import (
 	"os"
 	"strings"
 
+	logging "github.com/ipfs/go-log/v2"
+	ma "github.com/multiformats/go-multiaddr"
+	corev1 "k8s.io/api/core/v1"
+
 	"github.com/filecoin-project/go-address"
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
-	logging "github.com/ipfs/go-log/v2"
-	ma "github.com/multiformats/go-multiaddr"
-	corev1 "k8s.io/api/core/v1"
 )
 
 var log = logging.Logger("genesis-node")

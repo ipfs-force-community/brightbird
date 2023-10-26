@@ -30,7 +30,7 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	DropletMarket dropletmarket.DropletMarketDeployReturn `json:"DropletMarket" jsonschema:"DropletMarket" title:"DropletMarket" description:"droplet market return"`
 	PieceStore    pvc.PvcReturn                           `json:"PieceStore" jsonschema:"PieceStore" title:"PieceStore" require:"true" description:"piece storage"`
-	MountPath     string  `json:"MountPath" jsonschema:"MountPath" title:"MountPath" require:"true" description:"/piece/"`
+	MountPath     string                                  `json:"MountPath" jsonschema:"MountPath" title:"MountPath" require:"true" description:"/piece/"`
 }
 
 func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams) error {
@@ -43,7 +43,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	if err != nil {
 		return err
 	}
-	
+
 	pieceList, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].GetName(), "/bin/bash", "-c", "./droplet piece-storage list")
 	if err != nil {
 		return err

@@ -81,11 +81,11 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 		return nil, err
 	}
 
-	// // mount pvc in droplet
-	// err = dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	// mount pvc in droplet
+	err = dropletmarket.AddPieceStoragge(ctx, k8sEnv, params.Droplet, params.PieceStore.Name, mountPath)
+	if err != nil {
+		return nil, err
+	}
 
 	return &ClientCreateFileReturn{
 		File:    filePath,

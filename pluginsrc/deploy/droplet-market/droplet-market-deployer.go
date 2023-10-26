@@ -1,12 +1,13 @@
 package dropletmarket
 
 import (
+	"bytes"
 	"context"
 	"embed"
 	"fmt"
 
+	"github.com/BurntSushi/toml"
 	logging "github.com/ipfs/go-log/v2"
-	"github.com/pelletier/go-toml"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/ipfs-force-community/brightbird/env"
@@ -131,24 +132,6 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, cfg Confi
 	}, nil
 }
 
-// func GetConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, configMapName string) (config.MarketConfig, error) {
-// 	tomlBytes, err := k8sEnv.GetConfigMap(ctx, configMapName, "config.toml")
-// 	if err != nil {
-// 		return config.MarketConfig{}, err
-// 	}
-// 	log.Infoln("tomlBytes is: ", string(tomlBytes))
-
-// 	var cfg config.MarketConfig
-// 	err = toml.Unmarshal(tomlBytes, &cfg)
-// 	if err != nil {
-// 		log.Infoln("Unmarshal failed")
-// 		return config.MarketConfig{}, err
-// 	}
-// 	log.Infoln("Unmarshal successed")
-
-// 	return cfg, nil
-// }
-
 func GetPods(ctx context.Context, k8sEnv *env.K8sEnvDeployer, instanceName string) ([]corev1.Pod, error) {
 	return k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("droplet-market-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), instanceName)))
 }
@@ -167,9 +150,9 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 	if err != nil {
 		return err
 	}
-	log.Infoln("tomlBytes is: ", string(tomlBytes))
 
-	dropletCfg := config.DefaultMarketConfig
+	dropletCfg := *config.DefaultMarketConfig
+
 	err = toml.Unmarshal(tomlBytes, &dropletCfg)
 	if err != nil {
 		log.Infoln("Unmarshal failed")
@@ -177,23 +160,29 @@ func AddPieceStoragge(ctx context.Context, k8sEnv *env.K8sEnvDeployer, marketIns
 	}
 	log.Infoln("Unmarshal successed")
 
-	dropletCfg.AddFsPieceStorage(&config.FsPieceStorage{
+	err = dropletCfg.AddFsPieceStorage(&config.FsPieceStorage{
 		Name:     piecePvc,
 		ReadOnly: false,
 		Path:     mountPath + piecePvc,
 	})
-
-	tomlData, err := toml.Marshal(dropletCfg)
 	if err != nil {
 		return err
 	}
+
+	buf := new(bytes.Buffer)
+	if err := toml.NewEncoder(buf).Encode(dropletCfg); err != nil {
+		log.Infoln("Error encoding TOML: ", err)
+		return err
+	}
+	tomlData := buf.String()
+	log.Infoln("tomlBytes is: ", string(tomlData)) //nolint
 
 	configmap, err := k8sEnv.GetConfigMapByName(ctx, marketInstance.ConfigMapName)
 	if err != nil {
 		return err
 	}
 
-	configmap.Data["config.toml"] = string(tomlData)
+	configmap.Data["config.toml"] = string(tomlData) //nolint
 
 	err = k8sEnv.UpdateConfigMaps(ctx, configmap)
 	if err != nil {

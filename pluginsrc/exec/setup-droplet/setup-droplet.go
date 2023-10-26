@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"strings"
 	"fmt"
+	"strings"
 
 	"github.com/filecoin-project/go-address"
 	marketapi "github.com/filecoin-project/venus/venus-shared/api/market/v1"
@@ -69,7 +69,7 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	if err != nil {
 		return nil, fmt.Errorf("exec ./droplet actor set-addrs failed")
 	}
-	
+
 	log.Infoln("set-addr msg is: ", string(res))
 	setAddrMessageId := string(res)[39:]
 	log.Infoln("set-addr msg id: ", setAddrMessageId)

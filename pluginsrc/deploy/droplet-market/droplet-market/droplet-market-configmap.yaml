@@ -68,7 +68,7 @@ data:
       ConsiderOfflineRetrievalDeals = true
       ConsiderVerifiedStorageDeals = true
       ConsiderUnverifiedStorageDeals = true
-      # PieceCidBlocklist = []
+      PieceCidBlocklist = []
       ExpectedSealDuration = "24h0m0s"
       MaxDealStartDelay = "336h0m0s"
       PublishMsgPeriod = "1h0m0s"

@@ -35,7 +35,7 @@ type TestCaseParams struct {
 
 	State       storagemarket.StorageDealStatus `json:"state" jsonschema:"state" title:"state" require:"true" description:"13-CheckForAcceptance, 29-AwaitingPreCommit"`
 	ProposalCid string                          `json:"ProposalCid" jsonschema:"ProposalCid" title:"ProposalCid" require:"true" description:"ProposalCid"`
-	TimeOut     int                             `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10" description:"TimeOut"`
+	TimeOut     int                             `json:"TimeOut" jsonschema:"TimeOut" title:"TimeOut" require:"true" default:"10000" description:"TimeOut"`
 }
 
 type ClientStorageDealsList = []client.DealInfo

@@ -10,7 +10,7 @@ import (
 	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
 	"github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
-	"github.com/pelletier/go-toml"
+	"github.com/BurntSushi/toml"
 	corev1 "k8s.io/api/core/v1"
 )
 

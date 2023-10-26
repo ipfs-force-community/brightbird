@@ -5,12 +5,12 @@ import (
 	"embed"
 	"fmt"
 
-	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
-	types2 "github.com/ipfs-force-community/brightbird/types"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/ipfs-force-community/brightbird/env"
+	venusutils "github.com/ipfs-force-community/brightbird/env/venus_utils"
+	types2 "github.com/ipfs-force-community/brightbird/types"
 	"github.com/ipfs-force-community/brightbird/version"
-	corev1 "k8s.io/api/core/v1"
 )
 
 type Config struct {
