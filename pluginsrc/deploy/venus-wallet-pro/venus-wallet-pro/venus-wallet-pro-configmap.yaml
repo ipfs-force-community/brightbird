@@ -11,8 +11,9 @@ data:
     NetVersion = 20
   
     [DbCfg]
-    Conn = "./keytool_calibration.sqlite"
-    Dbg = false
+    Conn = "{{.MysqlDSN}}"
+    Type = "mysql"
+    DebugMode = false
 kind: ConfigMap
 metadata:
   name: venus-wallet-pro-cfg-{{.UniqueId}}

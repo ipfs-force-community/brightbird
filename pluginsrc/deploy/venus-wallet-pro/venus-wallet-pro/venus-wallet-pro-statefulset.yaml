@@ -19,7 +19,7 @@ spec:
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - mkdir -p /root/.venus_wallet_pro && cp /root/config.tmp /root/.venus_wallet_pro/config.toml && /app/venus_wallet_pro
+            - mkdir -p /root/.venus_wallet_pro && cp /root/config.tmp /root/.venus_wallet_pro/config.toml && /app/venus_wallet_pro daemon
           ports:
             - containerPort: 5678
               protocol: TCP
