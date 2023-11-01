@@ -87,7 +87,7 @@
     v-model="renameActive"
     class="copy-dialog"
     width="500"
-    title="重名名测试流"
+    title="重命名测试流"
     :on-close="onRenameClose"
     :center="true"
     v-loading="renameLoading"
