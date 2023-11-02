@@ -1,3 +1,18 @@
+FROM golang:1.20.7-bullseye AS build
+
+ENV GOPROXY="https://goproxy.cn,direct"
+
+WORKDIR /build/
+COPY . /build/
+
+RUN make clean
+
+RUN go clean --modcache
+
+RUN go mod download
+
+RUN make runner
+
 FROM ubuntu:20.04
 
 RUN apt-get update && \
@@ -16,6 +31,6 @@ RUN apt install -y netcat
 RUN apt install -y dnsutils
 
 # copy the app from build env
-COPY  ./dist/testrunner /root/testrunner
+COPY --from=build /build/dist/testrunner /root/testrunner
 
 ENTRYPOINT ["/root/testrunner"]

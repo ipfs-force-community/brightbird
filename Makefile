@@ -64,7 +64,7 @@ build-all: build-go ui
 
 TAG=latest
 docker-runner:
-	docker build -t testrunner  .
+	docker build -t testrunner -f Dockerfile.testrunner .
 	docker tag testrunner:latest $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 	docker push $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 
