@@ -27,6 +27,6 @@ RUN if [ -d pluginsrc/deploy ]; then \
         echo "Directory does not exist"; \
     fi
 
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 COPY --from=build /build/dist/plugins /plugins

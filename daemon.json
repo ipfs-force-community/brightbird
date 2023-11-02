@@ -1,0 +1,10 @@
+{
+  "insecure-registries": [
+	  "192.168.200.124:30080"
+  ],
+"debug":true,
+  "registry-mirrors": [
+	  "http://192.168.200.124:30080",
+	  "https://docker.mirrors.ustc.edu.cn"
+  ]
+}
