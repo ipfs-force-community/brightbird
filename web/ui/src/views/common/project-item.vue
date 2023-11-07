@@ -25,6 +25,9 @@
           <jm-tooltip content="编辑" placement="bottom">
             <button class="edit" @click="edit(project.id)"></button>
           </jm-tooltip>
+          <jm-tooltip content="重命名" placement="bottom">
+            <button class="rename" @click="rename(project)"></button>
+          </jm-tooltip>
           <jm-tooltip content="复制" placement="bottom">
             <button class="copy" @click="copy(project.id)"></button>
           </jm-tooltip>
@@ -97,11 +100,15 @@ export default defineComponent({
     const copy = (id?:string)=>{
       eventBus.emit('test-flow-copy', id);
     };
+    const rename = project=>{
+      eventBus.emit('test-flow-rename', project);
+    };
     return {
       deleting,
       dslDialogFlag,
       cacheDrawerFlag,
       copy,
+      rename,
       edit: (id?: string) => {
         router.push({ name: 'update-pipeline', params: { id } });
       },
@@ -304,6 +311,10 @@ export default defineComponent({
 
           &.edit {
             background-image: url("@/assets/svgs/btn/edit.svg");
+          }
+
+          &.rename {
+            background-image: url("@/assets/svgs/btn/rename.svg");
           }
 
           &.copy {
