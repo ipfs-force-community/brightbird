@@ -31,22 +31,22 @@
               ><span>{{ datetimeFormatter(testflowGroup?.modifiedTime) }}</span>
             </div>
             <div class="operation">
-                <div
-                  class="edit op-item"
-                  @click="
-                    toEdit(
-                      testflowGroup?.id,
-                      testflowGroup?.name,
-                      testflowGroup?.isShow,
-                      testflowGroup?.description
-                    )
-                  "
-                ></div>
-                <div
-                  class="delete op-item"
-                  @click="toDelete(testflowGroup?.name, testflowGroup?.id)"
-                ></div>
-              </div>
+              <div
+                class="edit op-item"
+                @click="
+                  toEdit(
+                    testflowGroup?.id,
+                    testflowGroup?.name,
+                    testflowGroup?.isShow,
+                    testflowGroup?.description
+                  )
+                "
+              ></div>
+              <div
+                class="delete op-item"
+                @click="toDelete(testflowGroup?.name, testflowGroup?.id)"
+              ></div>
+            </div>
           </div>
         </div>
       </template>
@@ -61,7 +61,7 @@
             <project-item
               v-else
               v-for="project of testflows"
-              :key="project.id"
+              :key="project.id + project.modifiedTime"
               :project="project"
               @triggered="handleProjectTriggered"
               @synchronized="handleProjectSynchronized"
@@ -74,14 +74,40 @@
     </folding>
   </div>
   <group-editor
-        :name="groupName || ''"
-        :description="groupDescription"
-        :is-show="showInHomePage"
-        :id="groupId || ''"
-        v-if="editionActivated"
-        @closed="editionActivated = false"
-        @completed="editCompleted"
-      />
+    :name="groupName || ''"
+    :description="groupDescription"
+    :is-show="showInHomePage"
+    :id="groupId || ''"
+    v-if="editionActivated"
+    @closed="editionActivated = false"
+    @completed="editCompleted"
+  />
+
+  <ElDialog
+    v-model="renameActive"
+    class="copy-dialog"
+    width="500"
+    title="重命名测试流"
+    :on-close="onRenameClose"
+    :center="true"
+    v-loading="renameLoading"
+  >
+    <ElForm :model="renameForm" :rules="renameRules" ref="renameRuleFormRef">
+      <ElFormItem>
+        <ElInput disabled :model-value="renameValue?.name" />
+      </ElFormItem>
+      <ElFormItem prop="name">
+        <ElInput
+          size="large"
+          v-model="renameForm.name"
+          placeholder="请输入新测试流名称"
+        ></ElInput>
+      </ElFormItem>
+      <ElFormItem>
+        <el-button @click="onRenameConfirm" type="primary">确认</el-button>
+      </ElFormItem>
+    </ElForm>
+  </ElDialog>
 </template>
 
 <script lang="ts">
@@ -94,10 +120,11 @@ import {
   onUpdated,
   PropType,
   ref,
+  reactive,
 } from 'vue';
 import { ITestFlowDetail } from '@/api/dto/testflow';
 import { ITestflowGroupVo } from '@/api/dto/testflow-group';
-import { queryTestFlow } from '@/api/view-no-auth';
+import { queryTestFlow, saveTestFlow } from '@/api/view-no-auth';
 import { IQueryForm } from '@/model/modules/project';
 import ProjectItem from '@/views/common/project-item.vue';
 import { IPageVo } from '@/api/dto/common';
@@ -112,6 +139,7 @@ import { datetimeFormatter } from '@/utils/formatter';
 import GroupEditor from '@/views/project-group/project-group-editor.vue';
 import { eventBus } from '@/main';
 import { deleteProjectGroup } from '@/api/testflow-group';
+import { FormInstance } from 'element-plus';
 
 export default defineComponent({
   components: { ProjectItem, Folding, GroupEditor },
@@ -129,9 +157,9 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    projectName:{
-      type:String,
-      require:true,
+    projectName: {
+      type: String,
+      require: true,
     },
   },
   setup(props: any) {
@@ -160,12 +188,14 @@ export default defineComponent({
       list: [],
       pageNum: START_PAGE_NUM,
     });
-    const testflows = computed<ITestFlowDetail[]>(() => projectPage.value.list.filter(value=>{
-      if (props?.projectName !== '') {
-        return value.name.includes(props?.projectName);
-      }
-      return true;
-    }));
+    const testflows = computed<ITestFlowDetail[]>(() =>
+      projectPage.value.list.filter(value => {
+        if (props?.projectName !== '') {
+          return value.name.includes(props?.projectName);
+        }
+        return true;
+      }),
+    );
 
     const queryForm = ref<IQueryForm>({
       pageNum: START_PAGE_NUM,
@@ -173,6 +203,72 @@ export default defineComponent({
       groupId: props.testflowGroup?.id,
       name: props.name,
     });
+
+    const renameActive = ref<boolean>(false);
+    const renameValue = ref<ITestFlowDetail>();
+    const renameLoading = ref<boolean>(false);
+    const renameRuleFormRef = ref<FormInstance>();
+    const renameForm = reactive({
+      name: '',
+    });
+    const renameRules = reactive({
+      name: [{ required: true, message: '请输入测试流名称' }],
+    });
+
+    eventBus.on('test-flow-rename', (val: any) => {
+      if (val.groupId === props.testflowGroup?.id) {
+        renameValue.value = val;
+        renameActive.value = true;
+      }
+    });
+
+    const onRenameClose = () => {
+      renameLoading.value = false;
+      renameActive.value = false;
+    };
+
+    const onRenameConfirm = () => {
+      if (!renameRuleFormRef.value) {
+        return;
+      }
+
+      renameRuleFormRef.value.validate(async (valid, fields) => {
+        if (valid && renameValue.value) {
+          try {
+            renameLoading.value = true;
+            await saveTestFlow({
+              groupId: renameValue.value.groupId,
+              name: renameForm.name,
+              createTime: renameValue.value.createTime,
+              modifiedTime: (Date.now() * 1000000).toString(),
+              graph: renameValue.value.graph,
+              id: renameValue.value.id,
+              description: renameValue.value.description,
+              globalProperties: renameValue.value.globalProperties,
+            });
+            if (renameValue.value) {
+              projectPage.value.list = projectPage.value.list.map(value => {
+                if (value.groupId === renameValue.value?.groupId) {
+                  value = {
+                    ...renameValue.value,
+                    name: renameForm.name,
+                  };
+                }
+                return value;
+              });
+            }
+
+            proxy.$success('修改成功');
+          } catch (error) {
+            // @ts-check
+          } finally {
+            renameLoading.value = false;
+            renameActive.value = false;
+          }
+        }
+      });
+    };
+
     // 保存单个测试流组的展开折叠状态
     const saveFoldStatus = (status: boolean, id?: string) => {
       // 改变状态
@@ -218,7 +314,7 @@ export default defineComponent({
       groupDescription.value = description;
       groupId.value = id;
       showInHomePage.value = isShow ?? false;
-      editionActivated.value = true;      
+      editionActivated.value = true;
     };
     const toDelete = async (name?: string, groupId?: string) => {
       let msg = '<div>确定要删除分组吗?</div>';
@@ -232,9 +328,11 @@ export default defineComponent({
           dangerouslyUseHTMLString: true,
         })
         .then(async () => {
-          if (!groupId) { return; }
+          if (!groupId) {
+            return;
+          }
           try {
-            await deleteProjectGroup(groupId);            
+            await deleteProjectGroup(groupId);
             proxy.$success('测试流分组删除成功');
             eventBus.emit('newGroup');
           } catch (err) {
@@ -242,8 +340,7 @@ export default defineComponent({
           }
         })
         // eslint-disable-next-line @typescript-eslint/no-empty-function
-        .catch(() => {
-        });
+        .catch(() => {});
     };
     const editCompleted = () => {
       eventBus.emit('newGroup');
@@ -287,7 +384,7 @@ export default defineComponent({
       },
       handleProjectDeleted: (id: string) => {
         // const index = testflows.value.findIndex(item => item.id === id);
-        loadProject();        
+        loadProject();
       },
       handleProjectTriggered: async (id: string) => {
         await sleep(400);
@@ -305,6 +402,14 @@ export default defineComponent({
       groupId,
       groupDescription,
       showInHomePage,
+      renameActive,
+      renameValue,
+      renameLoading,
+      renameRuleFormRef,
+      renameForm,
+      renameRules,
+      onRenameClose,
+      onRenameConfirm,
     };
   },
 });
@@ -414,30 +519,30 @@ export default defineComponent({
       opacity: 0.46;
 
       .operation {
-            display: flex;
-            margin-left: 5px;
+        display: flex;
+        margin-left: 5px;
 
-            .op-item {
-              width: 22px;
-              height: 22px;
-              background-size: contain;
-              cursor: pointer;
+        .op-item {
+          width: 22px;
+          height: 22px;
+          background-size: contain;
+          cursor: pointer;
 
-              &:active {
-                border-radius: 4px;
-                background-color: #eff7ff;
-              }
-
-              &.edit {
-                background-image: url('@/assets/svgs/btn/edit.svg');
-              }
-
-              &.delete {
-                margin-left: 15px;
-                background-image: url('@/assets/svgs/btn/del.svg');
-              }
-            }
+          &:active {
+            border-radius: 4px;
+            background-color: #eff7ff;
           }
+
+          &.edit {
+            background-image: url("@/assets/svgs/btn/edit.svg");
+          }
+
+          &.delete {
+            margin-left: 15px;
+            background-image: url("@/assets/svgs/btn/del.svg");
+          }
+        }
+      }
     }
   }
 
