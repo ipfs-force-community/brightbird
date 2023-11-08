@@ -8,8 +8,8 @@ require (
 	github.com/docker/go-units v0.5.0
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-fil-markets v1.28.4-0.20230816163331-bd08f1651b1d
-	github.com/filecoin-project/go-state-types v0.12.4
-	github.com/filecoin-project/venus v1.14.0-rc2
+	github.com/filecoin-project/go-state-types v0.12.5
+	github.com/filecoin-project/venus v1.14.0-rc4
 	github.com/filecoin-project/venus-wallet v1.14.0-rc1
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
 	github.com/gin-contrib/gzip v0.0.6
@@ -31,7 +31,7 @@ require (
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
 	github.com/ipfs-force-community/damocles/damocles-manager v0.0.0-20231011095342-ee08b0545cff
-	github.com/ipfs-force-community/droplet/v2 v2.9.0
+	github.com/ipfs-force-community/droplet/v2 v2.10.0-rc5
 	github.com/ipfs-force-community/sophon-auth v1.14.0-rc1
 	github.com/ipfs-force-community/sophon-gateway v1.14.0-rc1
 	github.com/ipfs-force-community/sophon-miner v1.14.0-rc1
