@@ -94,7 +94,7 @@ export default defineComponent({
     const selectedPod = ref<string>('');
     const podLog = ref<LogResp>();
     const loading = ref<boolean>(false);
-    const testId  = ref<string>("");
+    const testId  = ref<string>('');
     const latestRetry = ref<number>(0);
     const curRetry = ref<number>(props.retryTime);
     const router = useRouter();
@@ -186,15 +186,15 @@ export default defineComponent({
       } catch (err) {
         proxy.$throw(err, proxy);
       }
-    }
+    };
     const timer = setInterval(refresh, 10000);
 
     const changeRetry = async (retryNum: number) => {
       curRetry.value = retryNum;
       refresh();
-    }
+    };
     onMounted(async () => {
-      let task = await getTask({ID: props.id});
+      let task = await getTask({ ID: props.id });
       latestRetry.value = task.retryTime;
       testId.value = task.testId;
       curRetry.value  = task.retryTime;
@@ -265,6 +265,7 @@ export default defineComponent({
 .task-detail {
   padding-top: 74px;
   display: flex;
+  height: 100vh;
   justify-content: space-between;
   background-color: #ffffff;
   /* 设置背景色为白色 */
@@ -275,21 +276,8 @@ export default defineComponent({
     background-color: #f5f5f5;
     padding: 10px;
     overflow: auto;
-
-    &::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-      background-color: #f5f5f5;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background-color: #ccc;
-      border-radius: 4px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background-color: #f5f5f5;
-    }
+    display: flex;
+    flex-direction: column;
   }
 
   .task-item {
@@ -299,7 +287,6 @@ export default defineComponent({
     background-color: #fff;
     border-radius: 4px;
     box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
-
     &:hover {
       background-color: #f5f5f5;
     }
