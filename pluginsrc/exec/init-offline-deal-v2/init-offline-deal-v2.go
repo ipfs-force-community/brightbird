@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"path/filepath"
+	"strings"
 	"text/template"
 
 	"github.com/filecoin-project/go-address"
@@ -115,10 +116,10 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	var dealUUID, proposalCid string
 	for i, line := range bytes.Split(res, []byte("\n")) {
 		if i == 0 {
-			dealUUID = string(line[len("deal uuid:  "):])
+			dealUUID = strings.TrimSuffix(string(line[len("deal uuid:  "):]), "\r")
 		}
 		if i == 1 {
-			proposalCid = string(line[len("proposal cid:  "):])
+			proposalCid = strings.TrimSuffix(string(line[len("proposal cid:  "):]), "\r")
 		}
 	}
 	fmt.Println("deal uuid: ", dealUUID, " proposal cid: ", proposalCid)
