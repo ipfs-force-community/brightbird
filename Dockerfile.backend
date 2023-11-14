@@ -30,7 +30,7 @@ RUN make ui
 FROM ubuntu:22.04
 
 RUN apt-get update && \
-    apt-get install -yq tzdata && \
+    apt-get install -yq tzdata make && \
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
 
