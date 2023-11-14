@@ -2,6 +2,9 @@
 	"auths": {
 		"192.168.200.124:30080": {
 			"auth": "YWRtaW46QWExMjM0NTY="
+		},
+		"192.168.200.175": {
+			"auth": "YWRtaW46QWExMjM0NTY="
 		}
- }
+	}
 }
