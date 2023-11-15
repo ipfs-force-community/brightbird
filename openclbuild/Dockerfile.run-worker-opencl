@@ -1,0 +1,12 @@
+FROM 192.168.200.124:30080/duan-test/opencl:devel-ubuntu22.04
+
+ENV TZ=Asia/Shanghai
+
+RUN apt-get update -y && apt-get install libssl-dev libnuma-dev libhwloc15 -y
+
+COPY libcrypto.so.1.1 /lib/x86_64-linux-gnu/
+COPY libssl.so.1.1 /lib/x86_64-linux-gnu/
+COPY libcudart.so.11.8.89 /lib/x86_64-linux-gnu/
+
+RUN ln -s /lib/x86_64-linux-gnu/libcudart.so.11.8.89 /lib/x86_64-linux-gnu/libcudart.so.11.0
+RUN ln -s /usr/lib/x86_64-linux-gnu/libhwloc.so.15.5.2 /lib/x86_64-linux-gnu/libhwloc.so.5
