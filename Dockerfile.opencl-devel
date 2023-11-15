@@ -1,6 +1,0 @@
-FROM 192.168.200.124:30080/duan-test/opencl:runtime-ubuntu22.04
-LABEL maintainer "NVIDIA CORPORATION <cudatools@nvidia.com>"
-
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        ocl-icd-opencl-dev && \
-    rm -rf /var/lib/apt/lists/*
