@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: damocles-worker-gpu-{{.UniqueId}}
+spec:
+  replicas: 1 
+  serviceName: damocles-worker-gpu-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: damocles-worker-gpu-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: damocles-worker-gpu-{{.UniqueId}}-pod
+    spec:
+      nodeSelector:
+        node: gpu
+        gpu: 2080ti
+      terminationGracePeriodSeconds: 10
+      initContainers:
+        - name: copy-worker
+          image: 192.168.200.175/filvenus/damocles-worker:v0.9.0-rc6
+          command: ["/bin/bash", "-c"]
+          args: 
+            - cp /damocles-worker /cmd
+          volumeMounts:
+            - name: cmd-pvc
+              mountPath: /cmd
+        - name: copy-force-ext-processors
+          image: 192.168.200.124:30080/duan-test/processors:v1
+          command: ["/bin/bash", "-c"]
+          args: 
+            - cp /force-ext-processors /cmd
+          volumeMounts:
+            - name: cmd-pvc
+              mountPath: /cmd
+      containers:
+        - name: damocles-worker
+          image: 192.168.200.124:30080/duan-test/run-worker-opencl:devel-ubuntu22.04
+          imagePullPolicy: Always
+          securityContext:
+            privileged: true
+          command: ["/bin/sh", "-c"]
+          args: 
+            - /cmd/damocles-worker daemon -c /damocles-worker.toml
+          ports:
+            - containerPort: 17890
+              name: worker-port
+          volumeMounts:
+            - name: nfs-storage
+              mountPath: /storage/
+              subPath: t023456
+            - name: huge
+              mountPath: /mnt/huge
+            - name: nvme
+              mountPath: /mnt/mount/nvme/
+            - name: parameters
+              mountPath: /var/tmp/filecoin-proof-parameters
+            - name: parents
+              mountPath: /var/tmp/filecoin-parents
+            - name: cmd-pvc
+              mountPath: /cmd
+            - name: workertoml
+              mountPath: /damocles-worker.toml
+              subPath: damocles-worker.toml
+            - name: dev-shm
+              mountPath: /dev/shm/
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      volumes:
+        - name: nfs-storage
+          nfs:
+            server: 192.168.200.35
+            path: /mnt/storage-nfs-4/baiyu/
+        - name: huge
+          hostPath:
+            path: /mnt/huge
+            type: Directory
+        - name: nvme
+          hostPath:
+            path: /mnt/mount/theduan/
+            type: Directory
+        - name: parameters
+          hostPath:
+            path: /mnt/mount/filecoin-proof-parameters
+            type: Directory
+        - name: parents
+          hostPath:
+            path: /mnt/mount/filecoin-parents
+            type: Directory
+        - name: workertoml
+          configMap:
+            name: workertoml
+            items:
+              - key: damocles-worker.toml
+                path: damocles-worker.toml
+        - name: dev-shm
+          hostPath:
+            path: /dev/shm/
+            type: Directory
+  volumeClaimTemplates:
+    - metadata:
+        name: cmd-pvc
+        labels:
+          app: cmd-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "storage"
+        resources:
+          requests:
+            storage: 2Gi
