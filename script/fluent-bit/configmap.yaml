@@ -1,0 +1,89 @@
+---
+apiVersion: v1
+data:
+  custom_parsers.conf: |-
+    [PARSER]
+        Name docker_no_time
+        Format json
+        Time_Keep Off
+        Time_Key time
+        Time_Format %Y-%m-%dT%H:%M:%S.%L
+  fluent-bit.conf: |-
+    [SERVICE]
+        Daemon Off
+        Flush 1
+        Log_Level debug
+        Parsers_File parsers.conf
+        Parsers_File custom_parsers.conf
+        HTTP_Server On
+        Plugins_File log_plugins.conf
+        HTTP_Listen 0.0.0.0
+        HTTP_Port 2020
+        Health_Check On
+
+    [INPUT]
+        Name tail
+        Path /var/log/containers/*.log
+        multiline.parser docker, cri
+        Tag kube.*
+        Mem_Buf_Limit 5MB
+        Refresh_Interval 3
+        Rotate_Wait 1
+        Skip_Long_Lines On
+        Buffer_Max_Size 1M
+        DB ./file_status.db
+
+    [FILTER]
+        Name kubernetes
+        Match kube.*
+        Merge_Log On
+        Keep_Log Off
+        K8S-Logging.Parser On
+        K8S-Logging.Exclude On
+
+    [OUTPUT]
+        Name mongo
+        Match *_li_*
+        Database lidb
+        Url mongodb://192.168.200.175:27017
+        
+    [OUTPUT]
+        Name mongo
+        Match *_brightbird_*
+        Database brightbird
+        Url mongodb://192.168.200.175:27017
+
+    [OUTPUT]
+        Name mongo
+        Match *_zsk_*
+        Database zsk
+        Url mongodb://192.168.200.175:27017
+
+    [OUTPUT]
+        Name mongo
+        Match *_testplatform_*
+        Database testplatform
+        Url mongodb://192.168.200.175:27017
+
+    [OUTPUT]
+        Name mongo
+        Match *_filscan_*
+        Database filscan
+        Url mongodb://192.168.200.175:27017
+  log_plugins.conf: |-
+    [PlUGINS]
+        name mongo
+        path /shared-dir/mongo/out_mongo.so
+kind: ConfigMap
+metadata:
+  annotations:
+    meta.helm.sh/release-name: fluent-bit
+    meta.helm.sh/release-namespace: default
+  labels:
+    app.kubernetes.io/instance: fluent-bit
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: fluent-bit
+    app.kubernetes.io/version: 2.2.0
+    helm.sh/chart: fluent-bit-0.40.0
+  name: fluent-bit
+  namespace: default

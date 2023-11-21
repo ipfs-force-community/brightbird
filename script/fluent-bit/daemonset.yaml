@@ -1,0 +1,82 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    k8s.kuboard.cn/name: fluent-bit
+  name: fluent-bit
+  namespace: default
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/name: fluent-bit
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2023-11-21T14:06:28+08:00'
+      creationTimestamp: null
+      labels:
+        k8s.kuboard.cn/name: fluent-bit
+    spec:
+      containers:
+        - image: '192.168.200.175/fluent/fluent-bit:2.1'
+          imagePullPolicy: IfNotPresent
+          name: fluent-bit
+          ports:
+            - containerPort: 2020
+              hostPort: 2020
+              protocol: TCP
+          resources: {}
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /etc/machine-id
+              name: etcmachineid
+              readOnly: true
+            - mountPath: /fluent-bit/etc/custom_parsers.conf
+              name: config
+              subPath: custom_parsers.conf
+            - mountPath: /fluent-bit/etc/fluent-bit.conf
+              name: config
+              subPath: fluent-bit.conf
+            - mountPath: /shared-dir
+              name: shared-dir-v
+            - mountPath: /var/lib/containerd
+              name: varlibdockercontainers
+              readOnly: true
+            - mountPath: /fluent-bit/etc/log_plugins.conf
+              name: config
+              subPath: log_plugins.conf
+            - mountPath: /var/log
+              name: varlog
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 420
+            name: fluent-bit
+          name: config
+        - hostPath:
+            path: /var/lib/containerd
+            type: ''
+          name: varlibdockercontainers
+        - hostPath:
+            path: /etc/machine-id
+            type: File
+          name: etcmachineid
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+        - hostPath:
+            path: /var/log
+            type: ''
+          name: varlog
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate
