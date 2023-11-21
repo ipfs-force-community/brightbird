@@ -62,11 +62,26 @@ build-go: exec-plugin deploy-plugin runner backend
 
 build-all: build-go ui 
 
+clean:
+	rm -rf $(DISTPATH)
+
 TAG=latest
 docker-runner:
 	docker build -t testrunner -f Dockerfile.testrunner .
-	docker tag testrunner:latest $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
+	docker tag testrunner $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 	docker push $(PRIVATE_REGISTRY)/filvenus/testrunner:$(TAG)
 
-clean:
-	rm -rf $(DISTPATH)
+docker-backend:
+	docker build -t backend -f Dockerfile.backend .
+	docker tag backend $(PRIVATE_REGISTRY)/testplatform/backend:$(TAG)
+	docker push $(PRIVATE_REGISTRY)/testplatform/testrunner:$(TAG)
+
+docker-front:
+	docker build -t front -f Dockerfile.front .
+	docker tag front $(PRIVATE_REGISTRY)/testplatform/front:$(TAG)
+	docker push $(PRIVATE_REGISTRY)/testplatform/front:$(TAG)
+
+docker-plugin:
+	docker build -t plugin -f Dockerfile.plugin .
+	docker tag plugin $(PRIVATE_REGISTRY)/testplatform/plugin:$(TAG)
+	docker push $(PRIVATE_REGISTRY)/testplatform/plugin:$(TAG)
