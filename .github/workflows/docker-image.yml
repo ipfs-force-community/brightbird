@@ -1,0 +1,57 @@
+name: docker-image
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+  workflow_call:
+    secrets:
+      HARBOR_PASSWORD:
+        required: true
+      HARBOR_HOST:
+        required: true
+  
+jobs:
+
+  build_docker_image:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create vars
+        id: vars
+        run: |
+          export github_tag=${{ github.ref_name }}
+          export is_tag_create=false
+          export harbor_user_name='admin'
+
+          export rx_tag='^refs\/tags\/.*'
+          export rx_version_tag='^v([0-9]+\.){0,2}(\*|[0-9]+)(-rc[0-9]*){0,1}$'
+          if [[ "${{github.ref}}" =~ $rx_tag ]]; then
+            export is_tag_create=true
+          fi
+
+          echo "::set-output name=github_tag::$github_tag"
+          echo "::set-output name=is_tag_create::$is_tag_create"
+          echo "::set-output name=harbor_user_name::$harbor_user_name"
+
+      - name: Show environment
+        run: |
+          echo is_tag_create = ${{ steps.vars.outputs.is_tag_create }}
+          echo github_tag = ${{ steps.vars.outputs.github_tag }}
+          echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
+
+      - name: Build the Docker image
+        if: ${{ steps.vars.outputs.is_tag_create == 'true' }}
+        run: |
+          docker login ${{ secrets.HARBOR_HOST }} --username=${{steps.vars.outputs.harbor_user_name}} --password ${{ secrets.HARBOR_PASSWORD }} 
+          make docker-backend TAG=latest
+          make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
+          make docker-front TAG=latest
+          make docker-front TAG=${{ steps.vars.outputs.github_tag }}
+          make docker-plugin TAG=latest
+          make docker-plugin TAG=${{ steps.vars.outputs.github_tag }}
+          make docker-runner TAG=latest
+          make docker-runner TAG=${{ steps.vars.outputs.github_tag }}
+      
