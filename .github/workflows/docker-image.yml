@@ -43,7 +43,6 @@ jobs:
           echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
 
       - name: Build the Docker image
-        if: ${{ steps.vars.outputs.is_tag_create == 'true' }}
         run: |
           docker login ${{ secrets.HARBOR_HOST }} --username=${{steps.vars.outputs.harbor_user_name}} --password ${{ secrets.HARBOR_PASSWORD }} 
           make docker-backend TAG=latest
