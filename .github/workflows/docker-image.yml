@@ -44,7 +44,7 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker login ${{ secrets.HARBOR_HOST }} --username=${{steps.vars.outputs.harbor_user_name}} --password ${{ secrets.HARBOR_PASSWORD }} 
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login --username=${{steps.vars.outputs.harbor_user_name}} --password-stdin 192.168.200.175
           make docker-backend TAG=latest
           make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
           make docker-front TAG=latest
