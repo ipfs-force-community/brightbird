@@ -42,9 +42,14 @@ jobs:
           echo github_tag = ${{ steps.vars.outputs.github_tag }}
           echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
 
+      - uses: docker/login-action@v1
+        with:
+          registry: 192.168.200.175
+          username: ${{ steps.vars.outputs.harbor_user_name  }}
+          password: ${{ secrets.HARBOR_PASSWORD }}
+
       - name: Build the Docker image
         run: |
-          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login --username=${{steps.vars.outputs.harbor_user_name}} --password-stdin 192.168.200.175
           make docker-backend TAG=latest
           make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
           make docker-front TAG=latest
