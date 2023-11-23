@@ -42,9 +42,6 @@ jobs:
           echo github_tag = ${{ steps.vars.outputs.github_tag }}
           echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
 
-      - name: Set up Docker
-        uses: actions/setup-docker@v2
-
       - name: Configure insecure-registries
         run: |
           echo '{ "insecure-registries": ["192.168.200.175"] }' > /etc/docker/daemon.json
