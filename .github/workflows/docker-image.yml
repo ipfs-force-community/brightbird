@@ -42,13 +42,23 @@ jobs:
           echo github_tag = ${{ steps.vars.outputs.github_tag }}
           echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
 
+      - name: Set up Docker
+        uses: actions/setup-docker@v2
+
+      - name: Configure insecure-registries
+        run: |
+          echo '{ "insecure-registries": ["192.168.200.175"] }' > /etc/docker/daemon.json
+
+      - name: Restart Docker service
+        run: sudo service docker restart
+
       - uses: docker/login-action@v1
         with:
-          registry: https://192.168.200.175
+          registry: http://192.168.200.175
           username: ${{ steps.vars.outputs.harbor_user_name  }}
           password: ${{ secrets.HARBOR_PASSWORD }}
 
-      - name: Build the Docker image
+      - name: Build and push Docker image
         run: |
           make docker-backend TAG=latest
           make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
