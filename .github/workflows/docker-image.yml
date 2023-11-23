@@ -42,12 +42,11 @@ jobs:
           echo github_tag = ${{ steps.vars.outputs.github_tag }}
           echo harbor_user_name = ${{steps.vars.outputs.harbor_user_name}}
 
-      - name: Configure insecure-registries
+      - name: Insecure Docker Repository
         run: |
-          echo '{ "insecure-registries": ["192.168.200.175"] }' > /etc/docker/daemon.json
-
-      - name: Restart Docker service
-        run: sudo service docker restart
+          sudo truncate -s-2 /etc/docker/daemon.json
+          echo ", \"insecure-registries\": [\"192.168.200.175\"]}" | sudo tee -a /etc/docker/daemon.json
+          sudo systemctl restart docker
 
       - uses: docker/login-action@v1
         with:
