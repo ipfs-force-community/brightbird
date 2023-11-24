@@ -75,7 +75,7 @@ docker-runner:
 docker-backend:
 	docker build -t backend -f Dockerfile.backend .
 	docker tag backend ${DOCKER_USER}/backend:$(TAG)
-	docker push ${DOCKER_USER}/testrunner:$(TAG)
+	docker push ${DOCKER_USER}/backend:$(TAG)
 
 docker-front:
 	docker build -t front -f Dockerfile.front .
