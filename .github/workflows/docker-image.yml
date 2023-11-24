@@ -4,7 +4,9 @@ on:
   pull_request:
     branches:
       - '**'
-
+  push:
+    tags:
+      - '*'
   workflow_call:
     secrets:
       HARBOR_PASSWORD:
