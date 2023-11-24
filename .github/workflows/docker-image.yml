@@ -46,6 +46,7 @@ jobs:
         run: |
           sudo truncate -s-2 /etc/docker/daemon.json
           echo ", \"insecure-registries\": [\"192.168.200.175\"]}" | sudo tee -a /etc/docker/daemon.json
+          cat /etc/docker/daemon.json
           sudo systemctl restart docker
           sudo systemctl status docker
 
