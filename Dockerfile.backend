@@ -22,6 +22,8 @@ RUN apt-get update && \
 
 RUN mkdir -p /etc/docker/
 COPY daemon.json /etc/docker/
+
+RUN mkdir -p /root/.docker/
 COPY config.json /root/.docker/
 COPY .bashrc /root/
 
