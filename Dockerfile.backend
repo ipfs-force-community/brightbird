@@ -21,9 +21,9 @@ RUN apt-get update && \
     dpkg-reconfigure -f noninteractive tzdata
 
 RUN mkdir -p /etc/docker/
-RUN mkdir -p /root/.docker/
+
 COPY daemon.json /etc/docker/
-COPY config.json /root/.docker/
+
 COPY .bashrc /root/
 
 # install docker
