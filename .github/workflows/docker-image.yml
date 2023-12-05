@@ -53,10 +53,9 @@ jobs:
         run: |
           make docker-backend TAG=latest
           make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
-          make docker-front TAG=latest
-          make docker-front TAG=${{ steps.vars.outputs.github_tag }}
           make docker-plugin TAG=latest
           make docker-plugin TAG=${{ steps.vars.outputs.github_tag }}
           make docker-runner TAG=latest
           make docker-runner TAG=${{ steps.vars.outputs.github_tag }}
       
+            
