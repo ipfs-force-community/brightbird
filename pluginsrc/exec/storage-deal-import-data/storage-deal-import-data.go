@@ -32,6 +32,7 @@ var Info = types.PluginInfo{
 type TestCaseParams struct {
 	Droplet dropletmarket.DropletMarketDeployReturn `json:"Droplet" jsonschema:"Droplet" title:"Droplet" description:"droplet return"`
 
+	DealUUID    string `json:"DealUUID"  jsonschema:"DealUUID"  title:"DealUUID" description:"DealUUID"`
 	ProposalCid string `json:"ProposalCid"  jsonschema:"ProposalCid"  title:"ProposalCid" require:"true" description:"ProposalCid"`
 	CarFile     string `json:"carFile"  jsonschema:"carFile"  title:"carFile" require:"true" description:"carFile"`
 }
@@ -41,17 +42,21 @@ func Exec(ctx context.Context, k8sEnv *env.K8sEnvDeployer, params TestCaseParams
 	if err != nil {
 		return err
 	}
+	target := params.ProposalCid
+	if len(params.DealUUID) > 0 {
+		target = params.DealUUID
+	}
 
-	log.Debug("proposalCid: ", proposalCid)
+	log.Debug("proposalCid: ", proposalCid, " deal uuid: ", params.DealUUID)
 
-	tmpl, err := template.New("command").Parse("./droplet storage deal import-data {{.ProposalCid}} {{.CarFile}}")
+	tmpl, err := template.New("command").Parse("./droplet storage deal import-data {{.Target}} {{.CarFile}}")
 	if err != nil {
 		return fmt.Errorf("parase template: %v", err)
 	}
 
 	data := map[string]interface{}{
-		"ProposalCid": params.ProposalCid,
-		"CarFile":     params.CarFile,
+		"Target":  target,
+		"CarFile": params.CarFile,
 	}
 
 	var importDataCmd bytes.Buffer
