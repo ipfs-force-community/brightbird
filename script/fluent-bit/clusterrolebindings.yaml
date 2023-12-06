@@ -1,19 +1,12 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  annotations:
-    meta.helm.sh/release-name: fluent-bit
-    meta.helm.sh/release-namespace: default
-  creationTimestamp: "2023-11-17T01:59:33Z"
   labels:
     app.kubernetes.io/instance: fluent-bit
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/name: fluent-bit
     app.kubernetes.io/version: 2.2.0
-    helm.sh/chart: fluent-bit-0.40.0
   name: fluent-bit
-  resourceVersion: "3416284"
-  uid: e5d27bc9-024b-4f5f-800d-00c55eab6848
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -25,3 +18,6 @@ subjects:
 - apiGroup: rbac.authorization.k8s.io
   kind: Group
   name: system:serviceaccounts
+
+
+// kubectl auth can-i list pods --as=system:serviceaccount:default:fluent-bit
