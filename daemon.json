@@ -3,6 +3,9 @@
     "192.168.25.220"
   ],
   "debug":true,
+  "features": {
+    "buildkit": false
+  },
   "registry-mirrors": [
 	  "https://docker.mirrors.ustc.edu.cn"
   ]
