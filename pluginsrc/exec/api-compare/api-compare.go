@@ -8,7 +8,7 @@ import (
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	"github.com/ipfs-force-community/brightbird/version"
-	"github.com/simlecode/api-compare/cmd"
+	"github.com/ipfs-force-community/api-compare/cmd"
 	"github.com/urfave/cli/v2"
 )
 
