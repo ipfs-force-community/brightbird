@@ -28,7 +28,7 @@ spec:
               protocol: TCP
           env:
             - name: FIL_PROOFS_PARAMETER_CACHE
-              value: "/shared-dir/filecoin-proof-parameters"
+              value: "/shared-dir/venus/filecoin-proof-parameters"
             - name: IPFS_GATEWAY
               value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
           volumeMounts:
