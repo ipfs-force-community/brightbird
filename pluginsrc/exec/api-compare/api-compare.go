@@ -3,12 +3,13 @@ package main
 import (
 	"context"
 
+	"github.com/ipfs-force-community/api-compare/cmd"
+
 	"github.com/ipfs-force-community/brightbird/types"
 
 	"github.com/ipfs-force-community/brightbird/env"
 	"github.com/ipfs-force-community/brightbird/env/plugin"
 	"github.com/ipfs-force-community/brightbird/version"
-	"github.com/ipfs-force-community/api-compare/cmd"
 	"github.com/urfave/cli/v2"
 )
 
