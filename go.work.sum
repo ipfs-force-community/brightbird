@@ -409,8 +409,6 @@ github.com/filecoin-project/go-fil-markets v1.28.3/go.mod h1:eryxo/oVgIxaR5g5CNr
 github.com/filecoin-project/go-paramfetch v0.0.4/go.mod h1:1FH85P8U+DUEmWk1Jkw3Bw7FrwTVUNHk/95PSPG+dts=
 github.com/filecoin-project/go-state-types v0.11.1/go.mod h1:SyNPwTsU7I22gL2r0OAPcImvLoTVfgRwdK/Y5rR1zz8=
 github.com/filecoin-project/go-state-types v0.12.0/go.mod h1:hm9GXjYuqB1xJs58Ei/ZKy8Nfb0532HP6bR9DI8a+kM=
-github.com/filecoin-project/go-state-types v0.12.5 h1:VQ2N2T3JeUDdIHEo/xhjnT7Q218Wl0UYIyglqT7Z9Ck=
-github.com/filecoin-project/go-state-types v0.12.5/go.mod h1:iJTqGdWDvzXhuVf64Lw0hzt4TIoitMo0VgHdxdjNDZI=
 github.com/filecoin-project/go-statemachine v0.0.0-20200925024713-05bd7c71fbfe/go.mod h1:FGwQgZAt2Gh5mjlwJUlVB62JeYdo+if0xWxSEfBD9ig=
 github.com/filecoin-project/go-statemachine v1.0.2-0.20220322104818-27f8fbb86dfd/go.mod h1:jZdXXiHa61n4NmgWFG4w8tnqgvZVHYbJ3yW7+y8bF54=
 github.com/filecoin-project/lotus v1.22.1/go.mod h1:gUAd0I0RuuA6LY9kwhid1uJeGB5sz8rRPLpSzky7Xlw=
@@ -421,8 +419,6 @@ github.com/filecoin-project/venus v1.12.1-0.20230811031541-56b36c6855f6/go.mod h
 github.com/filecoin-project/venus v1.12.1-0.20231011033007-4fcf50f3b350 h1:nW5aiVhmDPNWunZM/OzATt/Aev9rVA+rClre/Aim81g=
 github.com/filecoin-project/venus v1.12.1-0.20231011033007-4fcf50f3b350/go.mod h1:gAywzDWAyhDM593NhDHxBGiNX0War/KIlmltnYqs7t4=
 github.com/filecoin-project/venus v1.13.0-rc1/go.mod h1:zFOFOo4a2qfKXEcTYZLulp0WCIubsJM7gf/+/TZMZYk=
-github.com/filecoin-project/venus v1.14.0-rc4 h1:DN0lVKUFlNZzPPIltoiex2DtIzP4hfBTfqk/Z1V7Qwc=
-github.com/filecoin-project/venus v1.14.0-rc4/go.mod h1:nCXhYe+mtrtrF+ZAVWDNRprNfXOzRYznXkplAZTofyg=
 github.com/filecoin-project/venus-wallet v1.11.0 h1:tbSHzw8qeLmPNw/84GKcdD2ZYkVH0+bu0HAqw6jlr4Y=
 github.com/filecoin-project/venus-wallet v1.11.0/go.mod h1:J1ItyAnm5nGQ7C29JTUdI0rN/ByGZQQQeFoe5zPriZk=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
@@ -548,8 +544,6 @@ github.com/ianlancetaylor/demangle v0.0.0-20230524184225-eabc099b10ab/go.mod h1:
 github.com/influxdata/influxdb1-client v0.0.0-20191209144304-8bf82d3c094d/go.mod h1:qj24IKcXYK6Iy9ceXlo3Tc+vtHo9lIhSX5JddghvEPo=
 github.com/ipfs-force-community/droplet/v2 v2.8.0 h1:nNOW/2i7Lexrj2JPM5wcQT+d51awaWgO7sgy4887SMI=
 github.com/ipfs-force-community/droplet/v2 v2.8.0/go.mod h1:NHSdahERn63Hs33G+TL/ujeTnsbH6UDHBr08gaXmfoQ=
-github.com/ipfs-force-community/droplet/v2 v2.10.0-rc5 h1:nwDfNZ2ABoWTEfYHY/NJQnbqS/ad92HB24gmlv15ap8=
-github.com/ipfs-force-community/droplet/v2 v2.10.0-rc5/go.mod h1:yjp58u+uvKkwuBiQXWO7dvjFZWmwMcCefLPkAUiGOpk=
 github.com/ipfs-force-community/go-jsonrpc v0.1.7-0.20230214070559-dbe74781184a h1:qiOQ2/neQ5fbfBE5cPr5ncR1YsukuO5PmlIwmv4CcaU=
 github.com/ipfs-force-community/go-jsonrpc v0.1.7-0.20230214070559-dbe74781184a/go.mod h1:jBSvPTl8V1N7gSTuCR4bis8wnQnIjHbRPpROol6iQKM=
 github.com/ipfs-force-community/metrics v1.0.1-0.20230208073319-4c0e29b038e1/go.mod h1:0BcytTo1o3qkSO9dCRuwf8UlKP+N4rildYUinFLfHUE=
@@ -560,6 +554,7 @@ github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c9
 github.com/ipfs-force-community/sophon-gateway v1.12.1-0.20230630092336-6a7558c97183/go.mod h1:BEyAgworAAv1JVNKI1BA9NCcAy0OA1GrvxrtcBmn1sw=
 github.com/ipfs-force-community/sophon-messager v1.12.0 h1:bkNERt31g4Ff8Kaiuof2txkFJ3aNw/vFwxdHGIAbPXQ=
 github.com/ipfs-force-community/sophon-messager v1.12.0/go.mod h1:S8TdKPrnbxOtCB8rsA8n7izi9u1tINE4KtGoiZarhX4=
+github.com/ipfs-force-community/sophon-messager v1.14.0-rc2 h1:v0+MhuohdBUSHO/CE2FH0DgU2qa8g4gndFSb9xiX3RQ=
 github.com/ipfs-force-community/sophon-miner v1.12.0 h1:qTbaGu42yIflP6Z4XtWRLF1Xl7jQstrDWVRGFrOuovI=
 github.com/ipfs-force-community/sophon-miner v1.12.0/go.mod h1:4VUzN+b0sT7Zq2sThDSj58SIdm01lNysr2EIjHnrFU4=
 github.com/ipfs-force-community/sophon-miner v1.13.0-rc1 h1:qKNFp6UpAphzbAyq6Z8Erf89vxVmcE3XAwHU54qSwgs=
