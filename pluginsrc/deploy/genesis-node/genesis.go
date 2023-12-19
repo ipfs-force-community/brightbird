@@ -47,7 +47,7 @@ var PluginInfo = types.PluginInfo{
 
 type GenesisReturn struct { //nolint
 	Address        address.Address `json:"addr" jsonschema:"addr" title:"Blanance Account" description:"address used to get funds"`
-	BootstrapPeer  []string          `json:"bootstrapPeer" jsonschema:"bootstrapPeer" title:"Bootstrap Peer" description:"genesis node's ip endpoint"`
+	BootstrapPeer  []string        `json:"bootstrapPeer" jsonschema:"bootstrapPeer" title:"Bootstrap Peer" description:"genesis node's ip endpoint"`
 	RPCUrl         string          `json:"rpcUrl" jsonschema:"rpcUrl" title:"Rpc url" require:"true" description:"rpc url"`
 	RPCToken       string          `json:"rpcToken" jsonschema:"rpcToken" title:"Token" require:"true" description:"rpc token"`
 	GenesisStorage string          `json:"genesisStorage" jsonschema:"genesisStorage" title:"GenesisStorage" require:"true" description:"used to storeage devgen.car files"`
