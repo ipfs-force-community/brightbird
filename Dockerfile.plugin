@@ -1,5 +1,7 @@
 FROM golang:1.20.7-bullseye AS build
 
+ENV GOPROXY="https://goproxy.cn,direct"
+
 WORKDIR /build/
 COPY . /build/
 
