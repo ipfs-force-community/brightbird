@@ -20,7 +20,7 @@ spec:
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - /lotus-seed pre-seal --sector-size 8388608 --num-sectors 10 && /lotus-seed genesis new /root/localnet.json && /lotus-seed genesis add-miner /root/localnet.json ~/.genesis-sectors/pre-seal-t01000.json && /lotus daemon --config /root/config.toml --lotus-make-genesis=/shared-dir/genesisnode/devgen.car --genesis-template=/root/localnet.json --bootstrap=false;
+            - /lotus-seed pre-seal --sector-size 8388608 --num-sectors 10 && /lotus-seed genesis new /root/localnet.json && /lotus-seed genesis add-miner /root/localnet.json ~/.genesis-sectors/pre-seal-t01000.json && /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/localnet.json --bootstrap=false;
           ports:
             - containerPort: 1234
               protocol: TCP
@@ -33,14 +33,15 @@ spec:
               value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
           volumeMounts:
             - mountPath: /shared-dir
-              name: shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
             - mountPath: /root
               name: genesis-pvc
             - name: lotuscfg
               mountPath: "/root/config.toml"
               subPath: "config.toml"
       volumes:
-        - name: shared-dir
+        - name: shared-dir-v
           persistentVolumeClaim:
             claimName: shared-dir
         - name: lotuscfg
@@ -60,3 +61,4 @@ spec:
         resources:
           requests:
             storage: 10Gi
+            
