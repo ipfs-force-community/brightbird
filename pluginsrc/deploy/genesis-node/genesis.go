@@ -120,7 +120,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 
-	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=2KiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=8MiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
 	if err != nil {
 		return nil, fmt.Errorf("init genesis miner fail %w", err)
 	}
