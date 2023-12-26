@@ -8,9 +8,10 @@ require (
 	github.com/docker/go-units v0.5.0
 	github.com/filecoin-project/go-address v1.1.0
 	github.com/filecoin-project/go-fil-markets v1.28.4-0.20230816163331-bd08f1651b1d
-	github.com/filecoin-project/go-state-types v0.12.5
-	github.com/filecoin-project/venus v1.14.0-rc4
-	github.com/filecoin-project/venus-wallet v1.14.0-rc1
+	github.com/filecoin-project/go-jsonrpc v0.3.1
+	github.com/filecoin-project/go-state-types v0.12.8
+	github.com/filecoin-project/venus v1.14.2
+	github.com/filecoin-project/venus-wallet v1.14.0
 	github.com/fluent/fluent-bit-go v0.0.0-20230326030240-92ef53796642
 	github.com/gin-contrib/gzip v0.0.6
 	github.com/gin-contrib/static v0.0.1
@@ -30,11 +31,12 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/heroku/docker-registry-client v0.0.0-20211012143308-9463674c8930
 	github.com/imdario/mergo v0.3.13
+	github.com/ipfs-force-community/api-compare v0.0.0-20231113023235-d006c2033ea1
 	github.com/ipfs-force-community/damocles/damocles-manager v0.0.0-20231011095342-ee08b0545cff
-	github.com/ipfs-force-community/droplet/v2 v2.10.0-rc5
-	github.com/ipfs-force-community/sophon-auth v1.14.0-rc1
-	github.com/ipfs-force-community/sophon-gateway v1.14.0-rc1
-	github.com/ipfs-force-community/sophon-miner v1.14.0-rc1
+	github.com/ipfs-force-community/droplet/v2 v2.10.0
+	github.com/ipfs-force-community/sophon-auth v1.14.0
+	github.com/ipfs-force-community/sophon-gateway v1.14.0
+	github.com/ipfs-force-community/sophon-miner v1.14.0
 	github.com/ipfs/go-cid v0.4.1
 	github.com/ipfs/go-cidutil v0.1.0
 	github.com/ipfs/go-log/v2 v2.5.1
@@ -52,7 +54,6 @@ require (
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/saagie/fluent-bit-mongo v0.0.0-20230329131900-c984d3f02519
-	github.com/simlecode/api-compare v0.0.0-20231011081109-91fe92ae32c4
 	github.com/stretchr/testify v1.8.4
 	github.com/swaggest/jsonschema-go v0.3.52
 	github.com/tidwall/gjson v1.14.4
@@ -74,13 +75,11 @@ require (
 	nhooyr.io/websocket v1.8.7
 )
 
-require github.com/filecoin-project/go-jsonrpc v0.3.1
-
 require (
 	contrib.go.opencensus.io/exporter/graphite v0.0.0-20200424223504-26b90655e0ce // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.4.2 // indirect
 	dario.cat/mergo v1.0.0 // indirect
-	github.com/DataDog/zstd v1.4.5 // indirect
+	github.com/DataDog/zstd v1.5.2 // indirect
 	github.com/GeertJohan/go.incremental v1.0.0 // indirect
 	github.com/GeertJohan/go.rice v1.0.3 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
@@ -168,7 +167,7 @@ require (
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/golang/snappy v0.0.4 // indirect
+	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
@@ -180,7 +179,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
-	github.com/hashicorp/golang-lru/v2 v2.0.2 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/icza/backscanner v0.0.0-20210726202459-ac2ffc679f94 // indirect
 	github.com/influxdata/influxdb-client-go/v2 v2.2.2 // indirect
@@ -269,9 +268,10 @@ require (
 	github.com/rs/cors v1.7.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sergi/go-diff v1.3.1 // indirect
-	github.com/shirou/gopsutil v2.18.12+incompatible // indirect
+	github.com/shirou/gopsutil v3.21.4-0.20210419000835-c7a38de76ee5+incompatible // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/skeema/knownhosts v1.2.0 // indirect
+	github.com/smartystreets/assertions v1.13.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
@@ -282,6 +282,8 @@ require (
 	github.com/swaggest/refl v1.1.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.1 // indirect
+	github.com/tklauser/go-sysconf v0.3.5 // indirect
+	github.com/tklauser/numcpus v0.2.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
