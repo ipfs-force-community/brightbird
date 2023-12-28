@@ -5,12 +5,12 @@ import (
 	"embed"
 	"fmt"
 	"net/http"
-	// "os"
-	// "regexp"
-	// "strings"
+	"os"
+	"regexp"
+	"strings"
 
 	logging "github.com/ipfs/go-log/v2"
-	// ma "github.com/multiformats/go-multiaddr"
+	ma "github.com/multiformats/go-multiaddr"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/filecoin-project/go-address"
@@ -109,59 +109,59 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	// /lotus wallet import --as-default ~/.genesis-sectors/pre-seal-t01000.key ;
 	// /lotus-miner init --genesis-miner --actor=t01000 --sector-size=8MiB --pre-sealed-sectors=/root/.genesis-sectors --pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json --nosync ;
 	// /lotus-miner run --nosync ;
-	// importResult, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "wallet", "import", "--as-default", "/root/.genesis-sectors/pre-seal-t01000.key")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("import key fail %w", err)
-	// }
+	importResult, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "wallet", "import", "--as-default", "/root/.genesis-sectors/pre-seal-t01000.key")
+	if err != nil {
+		return nil, fmt.Errorf("import key fail %w", err)
+	}
 	// imported key t3tehwiess4l72p5rfz6rzppx42kcp25clcxhz6mvjghhy6ulqtrom24t5tkarr443lx3e2sso6j7i7d6g6poa successfully!
-	// re := regexp.MustCompile(`t3[a-z0-9]+`)
-	// addr, err := address.NewFromString(re.FindString(string(importResult)))
-	// if err != nil {
-	// 	return nil, err
-	// }
+	re := regexp.MustCompile(`t3[a-z0-9]+`)
+	addr, err := address.NewFromString(re.FindString(string(importResult)))
+	if err != nil {
+		return nil, err
+	}
 
-	// err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=8MiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("init genesis miner fail %w", err)
-	// }
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=8MiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
+	if err != nil {
+		return nil, fmt.Errorf("init genesis miner fail %w", err)
+	}
 
-	// log.Infof("run lotus-miner background")
+	log.Infof("run lotus-miner background")
 
-	// err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, false, os.Stdout, nil, "/bin/bash", "-c", "nohup /lotus-miner run --nosync > /root/lotus-miner.log 2>&1 &")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("run lotus-miner fail %w", err)
-	// }
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, false, os.Stdout, nil, "/bin/bash", "-c", "nohup /lotus-miner run --nosync > /root/lotus-miner.log 2>&1 &")
+	if err != nil {
+		return nil, fmt.Errorf("run lotus-miner fail %w", err)
+	}
 
-	// err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/bin/bash", "-c", "ps x|grep lotus-miner")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("run lotus-miner fail %w", err)
-	// }
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/bin/bash", "-c", "ps x|grep lotus-miner")
+	if err != nil {
+		return nil, fmt.Errorf("run lotus-miner fail %w", err)
+	}
 
-	// token, err := k8sEnv.ReadSmallFilelInPod(ctx, pods[0].Name, "/root/.lotus/token")
-	// if err != nil {
-	// 	return nil, err
-	// }
+	token, err := k8sEnv.ReadSmallFilelInPod(ctx, pods[0].Name, "/root/.lotus/token")
+	if err != nil {
+		return nil, err
+	}
 
-	// libP2pArr, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "net", "listen")
-	// if err != nil {
-	// 	return nil, fmt.Errorf("exec net listen fail %w", err)
-	// }
+	libP2pArr, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "net", "listen")
+	if err != nil {
+		return nil, fmt.Errorf("exec net listen fail %w", err)
+	}
 
-	// libP2p := strings.Trim(strings.Split(string(libP2pArr), "\n")[1], " \t\r")
-	// mr, err := ma.NewMultiaddr(libP2p)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("parser libp2p %s  %w", libP2p, err)
-	// }
+	libP2p := strings.Trim(strings.Split(string(libP2pArr), "\n")[1], " \t\r")
+	mr, err := ma.NewMultiaddr(libP2p)
+	if err != nil {
+		return nil, fmt.Errorf("parser libp2p %s  %w", libP2p, err)
+	}
 
-	// port, err := mr.ValueForProtocol(ma.P_TCP)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("unable to get p2p port %w", err)
-	// }
+	port, err := mr.ValueForProtocol(ma.P_TCP)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get p2p port %w", err)
+	}
 
-	// peer, err := mr.ValueForProtocol(ma.P_P2P)
-	// if err != nil {
-	// 	return nil, fmt.Errorf("unable to get p2p peer %w", err)
-	// }
+	peer, err := mr.ValueForProtocol(ma.P_P2P)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get p2p peer %w", err)
+	}
 
 	pod, err := k8sEnv.GetPod(ctx, pods[0].GetName())
 	if err != nil {
@@ -177,11 +177,11 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	log.Infof("genesis pvc name  %s", claimName)
 
 	return &GenesisReturn{
-		// Address:        addr,
+		Address:        addr,
 		GenesisStorage: claimName,
-		// BootstrapPeer:  []string{fmt.Sprintf("/dns/%s/tcp/%s/p2p/%s", svcEndpoint.IP(), port, peer)},
+		BootstrapPeer:  []string{fmt.Sprintf("/dns/%s/tcp/%s/p2p/%s", svcEndpoint.IP(), port, peer)},
 		RPCUrl:         svcEndpoint.ToMultiAddr(),
-		// RPCToken:       string(token),
+		RPCToken:       string(token),
 	}, nil
 }
 
