@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
 
 	logging "github.com/ipfs/go-log/v2"
@@ -46,7 +47,7 @@ var PluginInfo = types.PluginInfo{
 
 type GenesisReturn struct { //nolint
 	Address        address.Address `json:"addr" jsonschema:"addr" title:"Blanance Account" description:"address used to get funds"`
-	BootstrapPeer  string          `json:"bootstrapPeer" jsonschema:"bootstrapPeer" title:"Bootstrap Peer" description:"genesis node's ip endpoint"`
+	BootstrapPeer  []string        `json:"bootstrapPeer" jsonschema:"bootstrapPeer" title:"Bootstrap Peer" description:"genesis node's ip endpoint"`
 	RPCUrl         string          `json:"rpcUrl" jsonschema:"rpcUrl" title:"Rpc url" require:"true" description:"rpc url"`
 	RPCToken       string          `json:"rpcToken" jsonschema:"rpcToken" title:"Token" require:"true" description:"rpc token"`
 	GenesisStorage string          `json:"genesisStorage" jsonschema:"genesisStorage" title:"GenesisStorage" require:"true" description:"used to storeage devgen.car files"`
@@ -106,20 +107,20 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 	// /lotus wallet import --as-default ~/.genesis-sectors/pre-seal-t01000.key ;
-	// /lotus-miner init --genesis-miner --actor=t01000 --sector-size=2KiB --pre-sealed-sectors=/root/genesis/.genesis-sectors --pre-sealed-metadata=/root/genesis/.genesis-sectors/pre-seal-t01000.json --nosync ;
+	// /lotus-miner init --genesis-miner --actor=t01000 --sector-size=8MiB --pre-sealed-sectors=/root/.genesis-sectors --pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json --nosync ;
 	// /lotus-miner run --nosync ;
 	importResult, err := k8sEnv.ExecRemoteCmd(ctx, pods[0].Name, "/lotus", "wallet", "import", "--as-default", "/root/.genesis-sectors/pre-seal-t01000.key")
 	if err != nil {
 		return nil, fmt.Errorf("import key fail %w", err)
 	}
 	// imported key t3tehwiess4l72p5rfz6rzppx42kcp25clcxhz6mvjghhy6ulqtrom24t5tkarr443lx3e2sso6j7i7d6g6poa successfully!
-	seq := strings.Split(string(importResult), " ")
-	addr, err := address.NewFromString(strings.Trim(seq[2], " \t\r"))
+	re := regexp.MustCompile(`t3[a-z0-9]+`)
+	addr, err := address.NewFromString(re.FindString(string(importResult)))
 	if err != nil {
 		return nil, err
 	}
 
-	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=2KiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
+	err = k8sEnv.ExecRemoteCmdWithStream(ctx, pods[0].Name, true, os.Stdout, nil, "/lotus-miner", "init", "--genesis-miner", "--actor=t01000", "--sector-size=8MiB", "--pre-sealed-sectors=/root/.genesis-sectors", "--pre-sealed-metadata=/root/.genesis-sectors/pre-seal-t01000.json", "--nosync")
 	if err != nil {
 		return nil, fmt.Errorf("init genesis miner fail %w", err)
 	}
@@ -146,7 +147,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, fmt.Errorf("exec net listen fail %w", err)
 	}
 
-	libP2p := strings.Trim(strings.Split(string(libP2pArr), "\n")[0], " \t\r")
+	libP2p := strings.Trim(strings.Split(string(libP2pArr), "\n")[1], " \t\r")
 	mr, err := ma.NewMultiaddr(libP2p)
 	if err != nil {
 		return nil, fmt.Errorf("parser libp2p %s  %w", libP2p, err)
@@ -178,7 +179,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	return &GenesisReturn{
 		Address:        addr,
 		GenesisStorage: claimName,
-		BootstrapPeer:  fmt.Sprintf("/dns/%s/tcp/%s/p2p/%s", svcEndpoint.IP(), port, peer),
+		BootstrapPeer:  []string{fmt.Sprintf("/dns/%s/tcp/%s/p2p/%s", svcEndpoint.IP(), port, peer)},
 		RPCUrl:         svcEndpoint.ToMultiAddr(),
 		RPCToken:       string(token),
 	}, nil

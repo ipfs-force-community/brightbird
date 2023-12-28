@@ -16,9 +16,20 @@ RUN make runner
 FROM ubuntu:22.04
 
 RUN apt-get update && \
-    apt-get install -yq tzdata make && \
+    apt-get install -yq tzdata make jq && \
     ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
     dpkg-reconfigure -f noninteractive tzdata
+
+# 安装Go
+RUN apt-get update && \
+    apt-get install -y wget && \
+    wget https://dl.google.com/go/go1.20.7.linux-amd64.tar.gz && \
+    tar -xvf go1.20.7.linux-amd64.tar.gz && \
+    mv go /usr/local && \
+    rm go1.20.7.linux-amd64.tar.gz
+
+# 设置Go环境变量
+ENV PATH="/usr/local/go/bin:${PATH}"
 
 RUN mkdir -p /etc/docker/
 COPY daemon.json /etc/docker/
