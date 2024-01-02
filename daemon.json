@@ -8,5 +8,12 @@
   },
   "registry-mirrors": [
 	  "https://docker.mirrors.ustc.edu.cn"
-  ]
+  ],
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Soft": 1048576,
+      "Hard": 1048576
+    }
+  }
 }
