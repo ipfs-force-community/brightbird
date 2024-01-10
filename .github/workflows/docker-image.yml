@@ -1,12 +1,11 @@
 name: docker-image
 
 on:
-  pull_request:
-    branches:
-      - '**'
   push:
     tags:
-      - '*'
+      - 'v*'
+      - 'backend-*'
+      - 'plugin-*'
   workflow_call:
     secrets:
       DOCKER_PASSWORD:
@@ -36,10 +35,23 @@ jobs:
           echo "::set-output name=github_tag::$github_tag"
           echo "::set-output name=is_tag_create::$is_tag_create"
 
+      - name: Extract tag prefix
+        id: tag_prefix
+        run: |
+          if [[ ${{ steps.vars.outputs.github_tag }} == backend-* ]]; then
+            echo "::set-output name=tag_prefix::backend"
+          elif [[ ${{ steps.vars.outputs.github_tag }} == plugin-* ]]; then
+            echo "::set-output name=tag_prefix::plugin"
+          else
+            echo "::set-output name=tag_prefix::v"
+          fi
+  
+
       - name: Show environment
         run: |
           echo is_tag_create = ${{ steps.vars.outputs.is_tag_create }}
           echo github_tag = ${{ steps.vars.outputs.github_tag }}
+          echo tag_prefix = ${{ steps.tag_prefix.outputs.tag_prefix}}
 
       - name: Login to Docker Hub
         if: ${{ steps.vars.outputs.is_tag_create == 'true' }}
@@ -48,8 +60,8 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME}}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push Docker image
-        if: ${{ steps.vars.outputs.is_tag_create == 'true' }}
+      - name: Build and push all docker
+        if: ${{ steps.tag_prefix.outputs.tag_prefix == 'v'}}
         run: |
           make docker-backend TAG=latest
           make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
@@ -57,5 +69,17 @@ jobs:
           make docker-plugin TAG=${{ steps.vars.outputs.github_tag }}
           make docker-runner TAG=latest
           make docker-runner TAG=${{ steps.vars.outputs.github_tag }}
-      
-            
+
+      - name: Build and push docker-backend
+        if: ${{ steps.tag_prefix.outputs.tag_prefix == 'backend'}}
+        run: |
+          make docker-backend TAG=latest
+          make docker-backend TAG=${{ steps.vars.outputs.github_tag }}
+          make docker-runner TAG=latest
+          make docker-runner TAG=${{ steps.vars.outputs.github_tag }}
+  
+      - name: Build and push docker-plugin
+        if: ${{ steps.tag_prefix.outputs.tag_prefix == 'plugin'}}
+        run: |
+          make docker-plugin TAG=latest
+          make docker-plugin TAG=${{ steps.vars.outputs.github_tag }}

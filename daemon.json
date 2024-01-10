@@ -1,6 +1,6 @@
 {
   "insecure-registries": [
-    "192.168.25.220"
+    "192.168.25.28"
   ],
   "debug":true,
   "features": {
