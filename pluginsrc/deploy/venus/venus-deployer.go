@@ -75,7 +75,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 	}
 
 	if len(incomineCfg.GenesisStorage) > 0 {
-		args = append(args, "--genesisfile=/shared-dir/genesisnode/dev.gen")
+		args = append(args, "--genesisfile=/root/devgen/dev.gen")
 	}
 
 	if len(incomineCfg.SnapshotStorage) > 0 {
