@@ -20,7 +20,7 @@ spec:
           imagePullPolicy: Always
           command: ["/bin/sh", "-c"]
           args:
-            - /lotus-seed pre-seal --sector-size 8388608 --num-sectors 10 && /lotus-seed genesis new /root/localnet.json && /lotus-seed genesis add-miner /root/localnet.json ~/.genesis-sectors/pre-seal-t01000.json && /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/localnet.json --bootstrap=false;
+            -  ulimit -n 1048576; /lotus-seed pre-seal --sector-size 8388608 --num-sectors 10; /lotus-seed genesis new /root/localnet.json; /lotus-seed genesis add-miner /root/localnet.json ~/.genesis-sectors/pre-seal-t01000.json; /lotus daemon --config /root/config.toml --lotus-make-genesis=/root/devgen.car --genesis-template=/root/localnet.json --bootstrap=false;
           ports:
             - containerPort: 1234
               protocol: TCP
@@ -31,6 +31,8 @@ spec:
               value: "/shared-dir/filecoin-proof-parameters"
             - name: IPFS_GATEWAY
               value: "https://proof-parameters.s3.cn-south-1.jdcloud-oss.com/ipfs/"
+          securityContext:
+            privileged: true
           volumeMounts:
             - mountPath: /shared-dir
               name: shared-dir-v
