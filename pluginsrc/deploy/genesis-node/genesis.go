@@ -102,6 +102,8 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, err
 	}
 
+	log.Debugln("svcEndpoint is  %s", svcEndpoint.IP())
+
 	pods, err := k8sEnv.GetPodsByLabel(ctx, fmt.Sprintf("genesis-%s-pod", env.UniqueId(k8sEnv.TestID(), k8sEnv.Retry(), incomineCfg.InstanceName)))
 	if err != nil {
 		return nil, err
@@ -158,10 +160,14 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 		return nil, fmt.Errorf("unable to get p2p port %w", err)
 	}
 
+	log.Debugln("port is  %s", port)
+
 	peer, err := mr.ValueForProtocol(ma.P_P2P)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get p2p peer %w", err)
 	}
+
+	log.Debugln("peer is  %s", peer)
 
 	pod, err := k8sEnv.GetPod(ctx, pods[0].GetName())
 	if err != nil {
@@ -174,7 +180,7 @@ func DeployFromConfig(ctx context.Context, k8sEnv *env.K8sEnvDeployer, incomineC
 			claimName = vol.PersistentVolumeClaim.ClaimName
 		}
 	}
-	log.Infof("genesis pvc name  %s", claimName)
+	log.Debugln("genesis pvc name  %s", claimName)
 
 	return &GenesisReturn{
 		Address:        addr,
