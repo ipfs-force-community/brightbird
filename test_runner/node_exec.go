@@ -99,6 +99,51 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 		return err
 	}
 
+	cmd2 := exec.Command("ls", "/shared-dir/plugins")
+	cmd2.Env = os.Environ()
+	cmd2StdOut := bytes.NewBuffer(nil)
+	cmd2StdErr := bytes.NewBuffer(nil)
+	cmd2.Stdout = io.MultiWriter(os.Stdout, cmd2StdOut)
+	cmd2.Stderr = io.MultiWriter(os.Stderr, cmd2StdErr)
+
+	log.Infoln("start run cmd2")
+	err = cmd2.Run()
+	log.Info(cmd2StdOut.String())
+	if err != nil {
+		return fmt.Errorf("exec ls command fail err(%v) stderr(%s)", err, cmd2StdErr.String())
+	}
+	log.Infoln("end run cmd2")
+
+	cmd3 := exec.Command("ls", "/shared-dir")
+	cmd3.Env = os.Environ()
+	cmd3StdOut := bytes.NewBuffer(nil)
+	cmd3StdErr := bytes.NewBuffer(nil)
+	cmd3.Stdout = io.MultiWriter(os.Stdout, cmd3StdOut)
+	cmd3.Stderr = io.MultiWriter(os.Stderr, cmd3StdErr)
+
+	log.Infoln("start run cmd3")
+	err = cmd3.Run()
+	log.Info(cmd3StdOut.String())
+	if err != nil {
+		return fmt.Errorf("exec ls command fail err(%v) stderr(%s)", err, cmd3StdErr.String())
+	}
+	log.Infoln("end run cmd3")
+
+	cmd4 := exec.Command("ls", "/")
+	cmd4.Env = os.Environ()
+	cmd4StdOut := bytes.NewBuffer(nil)
+	cmd4StdErr := bytes.NewBuffer(nil)
+	cmd4.Stdout = io.MultiWriter(os.Stdout, cmd4StdOut)
+	cmd4.Stderr = io.MultiWriter(os.Stderr, cmd4StdErr)
+
+	log.Infoln("start run cmd4")
+	err = cmd4.Run()
+	log.Info(cmd4StdOut.String())
+	if err != nil {
+		return fmt.Errorf("exec ls command fail err(%v) stderr(%s)", err, cmd4StdErr.String())
+	}
+	log.Infoln("end run cmd4")
+
 	stdOut := bytes.NewBuffer(nil)
 	stdErr := bytes.NewBuffer(nil)
 	cmd := exec.Command(pluginPath)
@@ -107,11 +152,17 @@ func runNode(k8sEnvParams *env.K8sInitParams, envCtx *env.EnvContext, pluginPath
 	cmd.Stdout = io.MultiWriter(os.Stdout, stdOut)
 	cmd.Stderr = io.MultiWriter(os.Stderr, stdErr)
 
+	log.Infoln("1 Executing command: %s", cmd.String())
+	cmdString := fmt.Sprintf("%s %s", cmd.Path, strings.Join(cmd.Args[1:], " "))
+	log.Infoln("2 Executing command: %s", cmdString)
+	
 	err = cmd.Run()
 	if err != nil {
+		log.Info(stdOut.String())
 		return fmt.Errorf("exec plugin %s fail err(%v) stderr(%s)", pip.InstanceName, err, stdErr.String())
 	}
 
+	log.Info(stdOut.String())
 	result := plugin.GetLastJSON(stdOut.String())
 
 	newCtx := &env.EnvContext{}
