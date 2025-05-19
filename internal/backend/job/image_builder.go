@@ -1,0 +1,543 @@
+package job
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"os/exec"
+	"path"
+	"strings"
+	"sync"
+
+	git "github.com/go-git/go-git/v5"
+	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/transport"
+	logging "github.com/ipfs/go-log/v2"
+	giturls "github.com/whilp/git-urls"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/ipfs-force-community/brightbird/internal/backend/config"
+	"github.com/ipfs-force-community/brightbird/pkg/models"
+	"github.com/ipfs-force-community/brightbird/pkg/repo"
+	"github.com/ipfs-force-community/brightbird/pkg/types"
+)
+
+type BuildResult struct {
+	Version string
+	Err     error
+}
+type BuildTask struct {
+	Name       string
+	Version    string //Note plugin version
+	Repo       string
+	Commit     string
+	ForceBuild bool
+	Result     chan BuildResult //buffer 1 length
+}
+
+// ////////////// Builder Worker Provider  ////////////////
+type IBuilderWorkerProvider interface {
+	CreateBuildWorker(ctx context.Context, logger logging.StandardLogger, cfg config.BuildWorkerConfig) (IBuilderWorker, error)
+}
+
+type BuildWorkerProvider struct {
+	gitToken        string
+	proxy           string
+	dockerOp        IDockerOperation
+	privateRegistry types.PrivateRegistry
+	pluginRepo      repo.IPluginService
+}
+
+func NewBuildWorkerProvider(dockerOp IDockerOperation, pluginRepo repo.IPluginService, privateRegistry types.PrivateRegistry, proxy, gitToken string) *BuildWorkerProvider {
+	return &BuildWorkerProvider{
+		pluginRepo:      pluginRepo,
+		dockerOp:        dockerOp,
+		proxy:           proxy,
+		privateRegistry: privateRegistry,
+		gitToken:        gitToken,
+	}
+}
+
+func (provider *BuildWorkerProvider) CreateBuildWorker(ctx context.Context, logger logging.StandardLogger, builderCfg config.BuildWorkerConfig) (IBuilderWorker, error) {
+	return &BuildWorker{
+		gitToken:        provider.gitToken,
+		dockerOp:        provider.dockerOp,
+		cfg:             builderCfg,
+		proxy:           provider.proxy,
+		buildMap:        map[string]IIMageBuilder{},
+		privateRegistry: provider.privateRegistry,
+		logger:          logger,
+		pluginRepo:      provider.pluginRepo,
+	}, nil
+}
+
+// ////////////// Builder Manager  ////////////////
+type ImageBuilderMgr struct {
+	pluginRepo repo.IPluginService
+	workerCfgs []config.BuildWorkerConfig
+	taskCh     chan *BuildTask
+	provider   IBuilderWorkerProvider
+}
+
+func NewImageBuilderMgr(pluginRepo repo.IPluginService, provider IBuilderWorkerProvider, workerCfgs []config.BuildWorkerConfig) *ImageBuilderMgr {
+	return &ImageBuilderMgr{
+		pluginRepo: pluginRepo,
+		workerCfgs: workerCfgs,
+		provider:   provider,
+		taskCh:     make(chan *BuildTask, len(workerCfgs)*2),
+	}
+}
+
+func (mgr *ImageBuilderMgr) BuildTestFlowEnv(ctx context.Context, deployNodes []models.PipelineItem, versions map[string]string, forceBuild bool) (map[string]string, error) {
+	versionMap := make(map[string]string)
+	mapLk := sync.Mutex{}
+
+	g, _ := errgroup.WithContext(ctx)
+	for _, node := range deployNodes {
+		if node.Value.PluginType != types.Deploy {
+			continue
+		}
+
+		plugin, err := mgr.pluginRepo.GetPlugin(ctx, node.Value.Name, node.Value.Version)
+		if err != nil {
+			return nil, err
+		}
+
+		if !plugin.Buildable() {
+			continue
+		}
+
+		nodeCpy := *node.Value //copy
+		g.Go(func() error {
+			result := make(chan BuildResult, 1)
+			mgr.taskCh <- &BuildTask{
+				Name:       nodeCpy.Name,
+				Version:    nodeCpy.Version,
+				Repo:       plugin.Repo,
+				Commit:     versions[nodeCpy.Name],
+				Result:     result,
+				ForceBuild: forceBuild,
+			}
+			br := <-result
+			if br.Err != nil {
+				return fmt.Errorf("build %s failed reason: %v", nodeCpy.Name, br.Err)
+			}
+			mapLk.Lock()
+			defer mapLk.Unlock()
+			versionMap[nodeCpy.Name] = br.Version
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		return nil, err
+	}
+
+	return versionMap, nil
+}
+
+func (mgr *ImageBuilderMgr) AddBuildTask(task *BuildTask) {
+	mgr.taskCh <- task
+}
+
+func (mgr *ImageBuilderMgr) Start(ctx context.Context) error {
+	if len(mgr.workerCfgs) == 0 {
+		jobLog.Warn("[ImageBuilderMgr] build worker is 0, image build will not work...")
+	}
+	//run worker
+	for _, workerCfg := range mgr.workerCfgs {
+		builder, err := mgr.provider.CreateBuildWorker(ctx, jobLog.With("worker", workerCfg.BuildSpace), workerCfg)
+		if err != nil {
+			return err
+		}
+		go builder.Start(ctx, mgr.taskCh)
+	}
+	return nil
+}
+
+// ////////////// Builder Worker  ////////////////
+
+type IBuilderWorker interface {
+	Start(ctx context.Context, taskCh <-chan *BuildTask)
+}
+
+// BuildWorker implement for local build
+type BuildWorker struct {
+	gitToken        string
+	proxy           string
+	pluginRepo      repo.IPluginService
+	dockerOp        IDockerOperation
+	buildMap        map[string]IIMageBuilder
+	privateRegistry types.PrivateRegistry
+
+	cfg    config.BuildWorkerConfig
+	logger logging.StandardLogger
+}
+
+func (worker *BuildWorker) Start(ctx context.Context, taskCh <-chan *BuildTask) {
+	worker.logger.Info("start and wait build task ...")
+	for buildTask := range taskCh {
+		version, err := worker.do(ctx, buildTask)
+		buildTask.Result <- BuildResult{
+			Version: version,
+			Err:     err,
+		}
+	}
+}
+
+func (worker *BuildWorker) do(ctx context.Context, buildTask *BuildTask) (string, error) {
+	taskLebelInfo := fmt.Sprintf("[%s:%s]", buildTask.Name, buildTask.Commit)
+	worker.logger.Infof("%s start build task", taskLebelInfo)
+	defer worker.logger.Infof("%s end build task", taskLebelInfo)
+
+	plugin, err := worker.pluginRepo.GetPlugin(ctx, buildTask.Name, buildTask.Version)
+	if err != nil {
+		worker.logger.Errorf("%s get plugin failed: %v", taskLebelInfo, err)
+		return "", err
+	}
+	//
+	imageTag := buildTask.Commit
+	imageName := fmt.Sprintf("filvenus/%s", plugin.ImageTarget)
+	imageNameWithTag := fmt.Sprintf("%s:%s", imageName, imageTag)
+	if !buildTask.ForceBuild {
+		imageExist, err := worker.dockerOp.CheckImageExist(ctx, imageName, imageTag)
+		if err != nil {
+			worker.logger.Errorf("%s check image (%s) exist failed: %v", taskLebelInfo, imageNameWithTag, err)
+			return "", err
+		}
+		if imageExist {
+			worker.logger.Debugf("%s image (%s) exist", taskLebelInfo, imageNameWithTag)
+			return imageTag, nil
+		}
+	}
+	builder, ok := worker.buildMap[plugin.Repo]
+	if !ok {
+		worker.logger.Infof("%s init image builder", taskLebelInfo)
+		builder, err = NewDefaultImageBuilder(ctx, worker.gitToken, worker.proxy, worker.cfg.BuildSpace, string(worker.privateRegistry), plugin.Repo)
+		if err != nil {
+			worker.logger.Errorf("%s init image builder failed : %v", taskLebelInfo, err)
+			return "", err
+		}
+		worker.buildMap[plugin.Repo] = builder
+	}
+	builder.Lock()
+	defer builder.Unlock()
+
+	//get master replace back
+	//todo fetch master commit id and neve save this commitHash to database
+	if _, err := builder.FetchCommit(ctx, buildTask.Commit); err != nil {
+		return "", err
+	}
+	worker.logger.Infof("%s get fetch commit or tag [%s] success", taskLebelInfo, imageTag)
+
+	if err := builder.Build(ctx, plugin.BuildScript, imageTag); err != nil {
+		worker.logger.Errorf("%s build image (%s) failed: %v", taskLebelInfo, imageNameWithTag, err)
+		return "", err
+	}
+	worker.logger.Infof("%s building image (%s) success", taskLebelInfo, imageNameWithTag)
+
+	return imageTag, nil
+}
+
+type IIMageBuilder interface {
+	sync.Locker
+	FetchCommit(ctx context.Context, commit string) (string, error)
+	Build(ctx context.Context, script, commit string) error
+}
+
+type DefaultImageBuilder struct {
+	sync.Mutex
+	codeSpace string
+
+	proxyOpt     transport.ProxyOptions
+	repo         *git.Repository
+	scriptRunner *ExecScript
+	repoPath     string
+}
+
+// NewVenusImageBuilder create new ImageBuilder
+func NewDefaultImageBuilder(ctx context.Context, gitToken, proxy, codeSpace, registry, repoUrl string) (*DefaultImageBuilder, error) {
+	repoName, err := getRepoNameFromUrl(repoUrl)
+	if err != nil {
+		return nil, err
+	}
+	codeDir := path.Join(codeSpace, repoName)
+	builder := &DefaultImageBuilder{
+		codeSpace: codeSpace,
+		repoPath:  codeDir,
+		scriptRunner: &ExecScript{
+			GitToken: gitToken,
+			PwdDir:   codeDir,
+			Proxy:    proxy,
+			Registry: registry,
+		},
+		proxyOpt: transport.ProxyOptions{
+			URL: proxy,
+		},
+	}
+
+	if _, err = os.Stat(builder.repoPath); err != nil {
+		if !os.IsNotExist(err) {
+			return nil, err
+		}
+		// mkdir
+		if err := os.MkdirAll(builder.repoPath, os.ModeDir); err != nil {
+			return nil, err
+		}
+	}
+
+	builder.repo, err = git.PlainOpen(builder.repoPath)
+	if err == nil {
+		//check verify
+		if _, err = builder.repo.Head(); err == nil {
+			return builder, nil
+		}
+		jobLog.Warnf("repo %s not validate, remove and clone again", builder.repoPath)
+	}
+
+	jobLog.Warnf("open git repo %s fail, clean and clone (%s) again %v", repoUrl, builder.repoPath, err)
+	if err = os.RemoveAll(builder.repoPath); err != nil {
+		return nil, err
+	}
+
+	sshFormat, err := toHTTPFormat(repoUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = git.PlainCloneContext(ctx, builder.repoPath, false, &git.CloneOptions{
+		URL:             sshFormat,
+		Progress:        os.Stdout,
+		InsecureSkipTLS: false,
+		Depth:           500, //should be enough
+		ProxyOptions:    builder.proxyOpt,
+	})
+	if err != nil && err != git.ErrRepositoryAlreadyExists {
+		_ = os.RemoveAll(builder.repoPath) //clean fail repo
+		return nil, err
+	}
+
+	//check again
+	builder.repo, err = git.PlainOpen(builder.repoPath)
+	return builder, err
+}
+
+func (builder *DefaultImageBuilder) updateRepo(ctx context.Context) error {
+	// 获取当前工作树
+	workTree, err := builder.repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	// 清理工作树
+	err = workTree.Clean(&git.CleanOptions{})
+	if err != nil && err != plumbing.ErrObjectNotFound {
+		return fmt.Errorf("clean worktree  fail %w", err)
+	}
+
+	// 获取当前repo的HEAD引用
+	head, err := builder.repo.Head()
+	if err != nil {
+		return fmt.Errorf("get head hash fail %w", err)
+	}
+
+	// 重置工作树
+	err = workTree.Reset(&git.ResetOptions{Commit: head.Hash(), Mode: git.HardReset})
+	if err != nil {
+		return fmt.Errorf("reset worktree  fail %w", err)
+	}
+
+	// 获取最新的改动
+	err = builder.repo.FetchContext(ctx, &git.FetchOptions{
+		Progress:        os.Stdout,
+		InsecureSkipTLS: true,
+		Force:           true,
+		ProxyOptions:    builder.proxyOpt,
+	})
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return fmt.Errorf("fetch context  fail %w", err)
+	}
+
+	// 在主分支上执行 git pull 避免特定分支上的冲突
+	// 获取仓库的所有分支
+	branches, err := builder.repo.Branches()
+	if err != nil {
+		return fmt.Errorf("get branchs  fail %w", err)
+	}
+
+	masterBranch := "master"
+	err = branches.ForEach(func(branch *plumbing.Reference) error {
+		switch true {
+		case branch.Name().Short() == "master":
+			masterBranch = "master"
+		case branch.Name().Short() == "trunk":
+			masterBranch = "trunk"
+		default:
+			masterBranch = "main"
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+
+	// git checkout master
+	err = workTree.Checkout(&git.CheckoutOptions{Force: true, Branch: plumbing.NewBranchReferenceName(masterBranch)})
+	if err != nil {
+		return fmt.Errorf("git checkout fail %w", err)
+	}
+
+	jobLog.Debugf("update repo %s branch(%s) to latest", builder.repoPath, masterBranch)
+	// 使用PullContext方法在masterBranch上拉取最新的改动
+	err = workTree.PullContext(ctx, &git.PullOptions{
+		Progress:        os.Stdout,
+		InsecureSkipTLS: true,
+		Force:           true,
+		ProxyOptions:    builder.proxyOpt,
+	})
+	if err != nil && !(err == git.ErrNonFastForwardUpdate || err == git.NoErrAlreadyUpToDate) {
+		return fmt.Errorf("pull commit  fail %w", err)
+	}
+
+	// 首先获取所有的子模块，然后更新它们
+	modules, err := workTree.Submodules()
+	if err != nil {
+		return fmt.Errorf("get submoudle fail %w", err)
+	}
+	err = modules.UpdateContext(ctx, &git.SubmoduleUpdateOptions{
+		Init:              true,
+		RecurseSubmodules: 0,
+		NoFetch:           false,
+	})
+	if err != nil {
+		return fmt.Errorf("update submoudle fail %w", err)
+	}
+	return nil
+}
+
+func (builder *DefaultImageBuilder) FetchCommit(ctx context.Context, commit string) (string, error) {
+	err := builder.updateRepo(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	if len(commit) == 0 {
+		//use head directly
+		masterHead, err := builder.repo.Head()
+		if err != nil {
+			return "", fmt.Errorf("use repo head %w", err)
+		}
+		return masterHead.Hash().String(), nil
+	}
+
+	//resolve commit
+	hash, err := builder.repo.ResolveRevision(plumbing.Revision(commit))
+	if err == nil {
+		return hash.String(), nil
+	}
+
+	if err == plumbing.ErrReferenceNotFound {
+		//resolve branch or tag
+		remotes, err := builder.repo.Remotes()
+		if err != nil {
+			return "", fmt.Errorf("get repo remote %w", err)
+		}
+
+		//detect remote   default Origin
+		remoteName := remotes[0].Config().Name
+		hash, err = builder.repo.ResolveRevision(plumbing.Revision(fmt.Sprintf("%s/%s", remoteName, commit)))
+		if err != nil {
+			return "", fmt.Errorf("resolve (%s) to a hash %s", commit, err)
+		}
+		return hash.String(), nil
+	}
+	return "", err
+}
+
+// Build exec build image once
+func (builder *DefaultImageBuilder) Build(ctx context.Context, script string, commit string) error {
+	err := builder.updateRepo(ctx)
+	if err != nil {
+		return err
+	}
+
+	repo, err := git.PlainOpen(builder.repoPath)
+	if err != nil {
+		return fmt.Errorf("open repo  fail %w", err)
+	}
+
+	workTree, err := repo.Worktree()
+	if err != nil {
+		return err
+	}
+
+	hash, err := repo.ResolveRevision(plumbing.Revision(commit))
+	if err != nil {
+		return fmt.Errorf("get comit [%v] %w", commit, err)
+	}
+
+	err = workTree.Checkout(&git.CheckoutOptions{
+		Hash:   *hash,
+		Branch: "",
+		Force:  true,
+	})
+	if err != nil {
+		return fmt.Errorf("repo checkout %w", err)
+	}
+
+	return builder.scriptRunner.ExecScript(ctx, BuildParams{
+		Script: script,
+		Commit: commit,
+	})
+}
+
+func getRepoNameFromUrl(repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimPrefix(strings.TrimSuffix(schema.Path, ".git"), "/"), nil
+	// phase := strings.Split(strings.TrimSuffix(schema.Path, ".git"), "/")
+	// return phase[2], nil
+}
+
+func toSSHFormat(repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	if schema.Scheme == "ssh" {
+		return repoUrl, nil
+	}
+
+	//git@github.com:ipfs-force-community/damocles.git
+	return fmt.Sprintf("git@github.com:%s", schema.Path[1:]), nil
+}
+
+func toHTTPFormat(repoUrl string) (string, error) {
+	schema, err := giturls.Parse(repoUrl)
+	if err != nil {
+		return "", err
+	}
+	if schema.Scheme == "https" {
+		return repoUrl, nil
+	}
+
+	//https://github.com/ipfs-force-community/damocles.git
+	return fmt.Sprintf("https://github.com/%s", schema.Path), nil
+}
+
+func execCmd(dir string, name string, arg ...string) error {
+	cmd := exec.Command(name, arg...)
+	cmd.Dir = dir
+	cmd.Env = os.Environ()
+
+	//var out bytes.Buffer
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	err := cmd.Run()
+	if err != nil {
+		return err
+	}
+	return nil
+}

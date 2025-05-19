@@ -1,0 +1,101 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations: {}
+  labels:
+    k8s.kuboard.cn/name: backend
+  name: backend
+  namespace: brightbird
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s.kuboard.cn/name: backend
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+      labels:
+        k8s.kuboard.cn/name: backend
+    spec:
+      automountServiceAccountToken: true
+      containers:
+        - command:
+          image: '192.168.200.60/filvenus/backend:latest'
+          imagePullPolicy: Always
+          name: backend
+          ports:
+            - containerPort: 12356
+              name: backend-port
+              protocol: TCP
+          resources: {}
+          securityContext:
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /app/config
+              name: config
+            - mountPath: /shared-dir
+              name: shared-dir
+              subPath: brightbird
+            - mountPath: ~/.docker/
+              name: docker-config
+          workingDir: /
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: harbor
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+      volumes:
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: config.toml
+                path: config.toml
+              - key: testrunner-deployment-template.yaml
+                path: testrunner-deployment-template.yaml
+            name: backend
+          name: config
+        - name: shared-dir
+          persistentVolumeClaim:
+            claimName: shared-dir
+        - configMap:
+            defaultMode: 420
+            items:
+              - key: docker-config.json
+                path: config.json
+            name: backend
+          name: docker-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations: {}
+  labels:
+    k8s.kuboard.cn/name: backend
+  name: backend
+  namespace: brightbird
+spec:
+  ipFamilies:
+    - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+    - name: backend-port
+      nodePort: 31007
+      port: 31007
+      protocol: TCP
+      targetPort: 12356
+  selector:
+    k8s.kuboard.cn/name: backend
+  sessionAffinity: None
+  type: NodePort
+

@@ -1,0 +1,2816 @@
+{
+  "consumes": [
+    "application/json",
+    "application/xml"
+  ],
+  "produces": [
+    "application/json",
+    "application/xml"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "title": "BrightBird API.",
+    "contact": {
+      "email": "venus@ipfsconmmunity.com"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "http://opensource.org/licenses/MIT"
+    },
+    "version": "0.0.1"
+  },
+  "host": "192.168.200.128:12356",
+  "basePath": "/api/v1",
+  "paths": {
+    "/changegroup": {
+      "post": {
+        "description": "change testflow group id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "changeGroupRequest",
+        "parameters": [
+          {
+            "description": "update to submit",
+            "name": "Body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/changeTestflowGroupRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/count-plugins": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Counts the number of plugins.",
+        "operationId": "countPluginsReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/failed-tasks": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "failed-tasks"
+        ],
+        "summary": "Lists the failed tasks.",
+        "operationId": "listFailedTasksReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/group": {
+      "post": {
+        "description": "Save group",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "operationId": "saveCases",
+        "parameters": [
+          {
+            "description": "group json",
+            "name": "group",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "group json",
+              "type": "object",
+              "$ref": "#/definitions/group"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/group/count": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "summary": "Count group by condition.",
+        "operationId": "countGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "group id",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "group name",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/group/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "summary": "Lists all group.",
+        "operationId": "listGroup",
+        "responses": {
+          "200": {
+            "description": "listGroupResp",
+            "schema": {
+              "$ref": "#/definitions/listGroupResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/group/{id}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "summary": "Get specific group by id.",
+        "operationId": "getGroupById",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of group",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "groupResp",
+            "schema": {
+              "$ref": "#/definitions/groupResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Update group name/show/description",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "operationId": "updateGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of group",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "update group request json",
+            "name": "group",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "update group request json",
+              "type": "object",
+              "$ref": "#/definitions/updateGroupRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete group by id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "group"
+        ],
+        "operationId": "deleteGroup",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  group",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job": {
+      "post": {
+        "description": "save job entity, create if not exist",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "saveJob",
+        "parameters": [
+          {
+            "description": "job json",
+            "name": "job",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "job json",
+              "type": "object",
+              "$ref": "#/definitions/job"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job/count": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "summary": "Count all jobs by condition.",
+        "operationId": "countJobRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of job",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of job",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "listJobResp",
+            "schema": {
+              "$ref": "#/definitions/listJobResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job/detail/{id}": {
+      "get": {
+        "description": "Get job detail by id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "getJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "jobDetailResp",
+            "schema": {
+              "$ref": "#/definitions/jobDetailResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "summary": "Lists all jobs.",
+        "operationId": "listJobs",
+        "responses": {
+          "200": {
+            "description": "listJobResp",
+            "schema": {
+              "$ref": "#/definitions/listJobResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job/next": {
+      "get": {
+        "description": "Get job schedule",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "jobNextNReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "N",
+            "name": "n",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "int64Arr",
+            "schema": {
+              "$ref": "#/definitions/int64Arr"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/job/{id}": {
+      "get": {
+        "description": "Update job",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "updateJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "job update params",
+            "name": "updateJobParams",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "job update params",
+              "type": "object",
+              "$ref": "#/definitions/updateJobRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "job",
+            "schema": {
+              "$ref": "#/definitions/job"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete job by id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "deleteJob",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  job",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/logs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "log"
+        ],
+        "summary": "get all logs in pod.",
+        "operationId": "podLogReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "TestID",
+            "description": "testid of task",
+            "name": "testID",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "RetryTime",
+            "description": "retrytime of task",
+            "name": "retryTime",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "PodName",
+            "description": "pod name",
+            "name": "podLog",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "logResp",
+            "schema": {
+              "$ref": "#/definitions/logResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/logs/pods": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "log"
+        ],
+        "summary": "List all pod names in test.",
+        "operationId": "listPodsReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "TestID",
+            "description": "testid of task",
+            "name": "testID",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "RetryTime",
+            "description": "retrytime of task",
+            "name": "retryTime",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "stringArr",
+            "schema": {
+              "$ref": "#/definitions/stringArr"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/pass-rate-trends": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "summary": "Gets the pass rate trends for the last 30 days.",
+        "operationId": "passRateTrends",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Get plugin by name and version.",
+        "operationId": "getPluginParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of plugin",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "PluginType",
+            "description": "plugin type",
+            "name": "pluginType",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "pluginDetail",
+            "schema": {
+              "$ref": "#/definitions/pluginDetail"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete plugin by id and specific version",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "operationId": "deletePluginByVersionReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of plugin",
+            "name": "id",
+            "in": "query",
+            "required": true
+          },
+          {
+            "type": "string",
+            "x-go-name": "Version",
+            "description": "specific plugin version",
+            "name": "version",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/all": {
+      "delete": {
+        "description": "Delete plugin all version",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "operationId": "deletePluginReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of plugin",
+            "name": "id",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/def": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Get plugin by name and version.",
+        "operationId": "getPluginDef",
+        "responses": {
+          "200": {
+            "description": "pluginDetail",
+            "schema": {
+              "$ref": "#/definitions/pluginDetail"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/import": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "import plugin.",
+        "operationId": "importPlugin",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "directory of plugins",
+            "name": "path",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/label": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Add label in plugin.",
+        "operationId": "addLabelParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Label",
+            "description": "plugin type",
+            "name": "label",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "Delete label in plugin.",
+        "operationId": "deleteLabelParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Label",
+            "description": "plugin type",
+            "name": "label",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/label-all": {
+      "get": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json",
+          "application/text"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "list",
+          "all"
+        ],
+        "summary": "list all label.",
+        "operationId": "label",
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "summary": "List plugin by name and version.",
+        "operationId": "listPluginParams",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of plugin",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "PluginType",
+            "description": "plugin type",
+            "name": "pluginType",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "Label",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "pluginDetail",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/pluginDetail"
+              }
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/plugin/upload": {
+      "post": {
+        "description": "Upload plugin files",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "plugin"
+        ],
+        "operationId": "uploadPluginFilesParams",
+        "parameters": [
+          {
+            "type": "file",
+            "x-go-name": "PluginFile",
+            "description": "Plugin file.",
+            "name": "plugin",
+            "in": "formData"
+          },
+          {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "x-go-name": "Labels",
+            "description": "PluginLabels Plugin Labels",
+            "name": "labels",
+            "in": "formData"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/run/{jobid}": {
+      "post": {
+        "description": "run job immediately",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "job"
+        ],
+        "operationId": "runJobImmediately",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "job id",
+            "name": "jobid",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/success-quantity-trends": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "success-quantity-trends"
+        ],
+        "summary": "Retrieves the success quantity trends.",
+        "operationId": "successQuantityTrendsReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task": {
+      "get": {
+        "description": "Get task by condition",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "operationId": "getTaskReq",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "TestID",
+            "name": "testID",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "name": "ID",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "task",
+            "schema": {
+              "$ref": "#/definitions/task"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task-count": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "summary": "Retrieves the Statistics of tasks.",
+        "operationId": "getTaskCount",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task/retry": {
+      "get": {
+        "description": "Retry a fail task",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "operationId": "retryTaskReq",
+        "responses": {
+          "200": {
+            "description": "int64Arr",
+            "schema": {
+              "$ref": "#/definitions/int64Arr"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task/stop/{id}": {
+      "delete": {
+        "description": "stop task",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "operationId": "stopTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  job",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/task/{id}": {
+      "delete": {
+        "description": "Delete task by id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "operationId": "deleteTask",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of  job",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/test-data": {
+      "get": {
+        "description": "Lists the amount of tasks for a job in the last 2 weeks.",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http"
+        ],
+        "tags": [
+          "test-data"
+        ],
+        "summary": "Lists test data.",
+        "operationId": "listTestData",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/testflow": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "summary": "Get specific test case by condition.",
+        "operationId": "getTestFlowRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "ID",
+            "description": "id of testflow",
+            "name": "id",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of testflow",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "testFlow",
+            "schema": {
+              "$ref": "#/definitions/testFlow"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "save test case, create if not exist",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "saveTestFlow",
+        "parameters": [
+          {
+            "description": "test flow json",
+            "name": "testflow",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "test flow json",
+              "type": "object",
+              "$ref": "#/definitions/testFlow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/copy": {
+      "post": {
+        "description": "Copy a current testflow with new name",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "copyTestflow",
+        "parameters": [
+          {
+            "description": "parameters for copy test flow",
+            "name": "copyTestflow",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "description": "parameters for copy test flow",
+              "type": "object",
+              "$ref": "#/definitions/copyTestflow"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/count": {
+      "get": {
+        "description": "Count testflow numbers in group",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "countTestFlowRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "GroupID",
+            "description": "id of group",
+            "name": "groupId",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of testflow",
+            "name": "name",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/list": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "summary": "Lists test flows.",
+        "operationId": "listInGroupRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "x-go-name": "GroupID",
+            "description": "id of group",
+            "name": "groupId",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "x-go-name": "Name",
+            "description": "name of testflow",
+            "name": "name",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "PageNum",
+            "name": "pageNum",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "x-go-name": "PageSize",
+            "name": "pageSize",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "listTestFlowResp",
+            "schema": {
+              "$ref": "#/definitions/listTestFlowResp"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/testflow/{id}": {
+      "delete": {
+        "description": "Delete test flow by id",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "testflow"
+        ],
+        "operationId": "deleteTestFlow",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "id of test flow",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/today-pass-rate-ranking": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "task"
+        ],
+        "summary": "Retrieves the top 3 job pass rates for today.",
+        "operationId": "todayPassRateRankingReq",
+        "responses": {
+          "200": {
+            "description": "  //todo fix correctstruct",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "500": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    },
+    "/version": {
+      "get": {
+        "description": "get backend version",
+        "produces": [
+          "application/json"
+        ],
+        "schemes": [
+          "http",
+          "https"
+        ],
+        "tags": [
+          "version"
+        ],
+        "operationId": "getVersion",
+        "responses": {
+          "200": {
+            "description": "myString",
+            "schema": {
+              "$ref": "#/definitions/myString"
+            }
+          },
+          "503": {
+            "description": "apiError",
+            "schema": {
+              "$ref": "#/definitions/apiError"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BaseTime": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "CronJobParams": {
+      "type": "object",
+      "properties": {
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "DeployPluginParams": {
+      "type": "object",
+      "properties": {
+        "buildScript": {
+          "type": "string",
+          "x-go-name": "BuildScript"
+        },
+        "imageTarget": {
+          "type": "string",
+          "x-go-name": "ImageTarget"
+        },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/types"
+    },
+    "ExecNode": {
+      "type": "object",
+      "required": [
+        "name",
+        "instanceName",
+        "version"
+      ],
+      "properties": {
+        "input": {
+          "type": "object",
+          "x-go-name": "Input"
+        },
+        "instanceName": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "InstanceName"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        },
+        "output": {
+          "type": "object",
+          "x-go-name": "Output"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
+        },
+        "version": {
+          "description": "the version for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/types"
+    },
+    "GlobalProperty": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "value": {
+          "type": "string",
+          "x-go-name": "Value"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "PRMergedEventMatch": {
+      "type": "object",
+      "properties": {
+        "basePattern": {
+          "type": "string",
+          "x-go-name": "BasePattern"
+        },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
+        "sourcePattern": {
+          "type": "string",
+          "x-go-name": "SourcePattern"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "PRMergedJobParams": {
+      "type": "object",
+      "properties": {
+        "prMergedEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PRMergedEventMatch"
+          },
+          "x-go-name": "PRMergedEventMatches"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "PluginInfo": {
+      "description": "fatal error: stack overflow",
+      "type": "object",
+      "properties": {
+        "buildScript": {
+          "type": "string",
+          "x-go-name": "BuildScript"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "imageTarget": {
+          "type": "string",
+          "x-go-name": "ImageTarget"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
+        },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/types"
+    },
+    "PluginParams": {
+      "type": "object",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/types"
+    },
+    "StepState": {
+      "type": "string",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "TagCreateEventMatch": {
+      "type": "object",
+      "properties": {
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
+        "tagPattern": {
+          "type": "string",
+          "x-go-name": "TagPattern"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "TagCreateJobParams": {
+      "type": "object",
+      "properties": {
+        "tagCreateEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TagCreateEventMatch"
+          },
+          "x-go-name": "TagCreateEventMatches"
+        }
+      },
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "TestId": {
+      "type": "string",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/types"
+    },
+    "apiError": {
+      "description": "APIError",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-name": "APIError",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "changeTestflowGroupRequest": {
+      "description": "ChangeTestflowGroupRequest",
+      "type": "object",
+      "required": [
+        "groupId",
+        "testflowIds"
+      ],
+      "properties": {
+        "groupId": {
+          "description": "Group to change",
+          "type": "string",
+          "x-go-name": "GroupID"
+        },
+        "testflowIds": {
+          "description": "testflow id",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "TestflowIDs"
+        }
+      },
+      "x-go-name": "ChangeTestflowGroupRequest",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "copyTestflow": {
+      "description": "CopyTestflow",
+      "type": "object",
+      "properties": {
+        "groupId": {
+          "type": "string",
+          "x-go-name": "GroupId"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "CopyTestflow",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "countGroupRequest": {
+      "description": "CountGroupRequest",
+      "type": "object",
+      "properties": {
+        "ID": {
+          "type": "string"
+        },
+        "Name": {
+          "type": "string"
+        }
+      },
+      "x-go-name": "CountGroupRequest",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "group": {
+      "description": "Group",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "isShow": {
+          "type": "boolean",
+          "x-go-name": "IsShow"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "Group",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "groupResp": {
+      "description": "GroupResp",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "isShow": {
+          "type": "boolean",
+          "x-go-name": "IsShow"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        },
+        "testFlowCount": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "TestFlowCount"
+        }
+      },
+      "x-go-name": "GroupResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "int64Arr": {
+      "description": "Int64Array",
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "format": "int64"
+      },
+      "x-go-name": "Int64Array",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "job": {
+      "description": "Job",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "execCount": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ExecCount"
+        },
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "jobType": {
+          "type": "string",
+          "x-go-name": "JobType"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "prMergedEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PRMergedEventMatch"
+          },
+          "x-go-name": "PRMergedEventMatches"
+        },
+        "tagCreateEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TagCreateEventMatch"
+          },
+          "x-go-name": "TagCreateEventMatches"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "Job",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "jobDetailResp": {
+      "description": "JobDetailResp",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "execCount": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ExecCount"
+        },
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
+        },
+        "groupName": {
+          "type": "string",
+          "x-go-name": "GroupName"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "jobType": {
+          "type": "string",
+          "x-go-name": "JobType"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "prMergedEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PRMergedEventMatch"
+          },
+          "x-go-name": "PRMergedEventMatches"
+        },
+        "tagCreateEventMatches": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TagCreateEventMatch"
+          },
+          "x-go-name": "TagCreateEventMatches"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "testFlowName": {
+          "type": "string",
+          "x-go-name": "TestFlowName"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "JobDetailResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "listGroupResp": {
+      "description": "ListGroupResp",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/groupResp"
+      },
+      "x-go-name": "ListGroupResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "listJobResp": {
+      "description": "ListJobResp",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/job"
+      },
+      "x-go-name": "ListJobResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "listTasksResp": {
+      "description": "ListTasksResp",
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/task"
+          },
+          "x-go-name": "List"
+        },
+        "pageNum": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "PageNum"
+        },
+        "pages": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Pages"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Total"
+        }
+      },
+      "x-go-name": "ListTasksResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "listTestFlowResp": {
+      "description": "ListTestFlowResp",
+      "type": "object",
+      "properties": {
+        "list": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/testFlow"
+          },
+          "x-go-name": "List"
+        },
+        "pageNum": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "PageNum"
+        },
+        "pages": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Pages"
+        },
+        "total": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Total"
+        }
+      },
+      "x-go-name": "ListTestFlowResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "logListResp": {
+      "description": "LogListResp",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-go-name": "LogListResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "logResp": {
+      "description": "LogResp",
+      "type": "object",
+      "properties": {
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "podName": {
+          "type": "string",
+          "x-go-name": "PodName"
+        },
+        "steps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/stepLog"
+          },
+          "x-go-name": "Steps"
+        }
+      },
+      "x-go-name": "LogResp",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "myString": {
+      "description": "MyString repretation string",
+      "type": "string",
+      "x-go-name": "MyString",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "objectId": {
+      "description": "ObjectId",
+      "type": "string",
+      "x-go-name": "ObjectId",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "plugin": {
+      "description": "Plugin",
+      "type": "object",
+      "properties": {
+        "buildScript": {
+          "type": "string",
+          "x-go-name": "BuildScript"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "imageTarget": {
+          "type": "string",
+          "x-go-name": "ImageTarget"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "path": {
+          "type": "string",
+          "x-go-name": "Path"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
+        },
+        "repo": {
+          "type": "string",
+          "x-go-name": "Repo"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-name": "PluginDef",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "pluginDetail": {
+      "description": "PluginDetail",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Labels"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "pluginDefs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/plugin"
+          },
+          "x-go-name": "PluginDefs"
+        },
+        "pluginType": {
+          "type": "string",
+          "x-go-name": "PluginType"
+        }
+      },
+      "x-go-name": "PluginDetail",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "pluginLabel": {
+      "description": "PluginLabels plugin's Labels",
+      "type": "object",
+      "properties": {
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Label"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "PluginLabel",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "retryTaskReq": {
+      "description": "RetryTaskReq",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        }
+      },
+      "x-go-name": "RetryTaskReq",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "stepLog": {
+      "description": "StepLog",
+      "type": "object",
+      "properties": {
+        "instanceName": {
+          "type": "string",
+          "x-go-name": "InstanceName"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "state": {
+          "$ref": "#/definitions/StepState"
+        }
+      },
+      "x-go-name": "StepLog",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "stringArr": {
+      "description": "StringArray",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "x-go-name": "StringArray",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "task": {
+      "description": "Task",
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "inheritVersions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "InheritVersions"
+        },
+        "jobId": {
+          "type": "string",
+          "x-go-name": "JobId"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Logs"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "pipeline": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecNode"
+          },
+          "x-go-name": "Pipeline"
+        },
+        "podName": {
+          "type": "string",
+          "x-go-name": "PodName"
+        },
+        "retryTime": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RetryTime"
+        },
+        "state": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "State"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "testId": {
+          "$ref": "#/definitions/TestId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "CommitMap"
+        }
+      },
+      "x-go-name": "Task",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "testFlow": {
+      "description": "TestFlow",
+      "type": "object",
+      "required": [
+        "name"
+      ],
+      "properties": {
+        "createTime": {
+          "description": "创建时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "CreateTime"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
+        },
+        "graph": {
+          "type": "string",
+          "x-go-name": "Graph"
+        },
+        "groupId": {
+          "type": "string",
+          "x-go-name": "GroupId"
+        },
+        "id": {
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "modifiedTime": {
+          "description": "最后修改时间",
+          "type": "string",
+          "format": "int64",
+          "x-go-name": "ModifiedTime"
+        },
+        "name": {
+          "description": "the name for this test flow",
+          "type": "string",
+          "minLength": 3,
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "TestFlow",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "updateGroupRequest": {
+      "description": "UpdateGroupRequest",
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "isShow": {
+          "type": "boolean",
+          "x-go-name": "IsShow"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-name": "UpdateGroupRequest",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    },
+    "updateJobRequest": {
+      "description": "UpdateJobRequest",
+      "type": "object",
+      "properties": {
+        "cronExpression": {
+          "type": "string",
+          "x-go-name": "CronExpression"
+        },
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
+        },
+        "globalProperties": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/GlobalProperty"
+          },
+          "x-go-name": "GlobalProperties"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "testFlowId": {
+          "type": "string",
+          "x-go-name": "TestFlowId"
+        },
+        "versions": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Versions"
+        }
+      },
+      "x-go-name": "UpdateJobRequest",
+      "x-go-package": "github.com/ipfs-force-community/brightbird/pkg/models"
+    }
+  },
+  "x-meta-array": [
+    "value1",
+    "value2"
+  ],
+  "x-meta-array-obj": [
+    {
+      "name": "obj",
+      "value": "field"
+    }
+  ],
+  "x-meta-value": "value"
+}

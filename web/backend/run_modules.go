@@ -1,0 +1,156 @@
+package main
+
+import (
+	"context"
+	"net/url"
+	"os"
+
+	"github.com/cskr/pubsub"
+	"github.com/google/go-github/v51/github"
+	"github.com/robfig/cron/v3"
+	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/oauth2"
+
+	"github.com/ipfs-force-community/brightbird/internal/backend/config"
+	"github.com/ipfs-force-community/brightbird/internal/backend/job"
+	"github.com/ipfs-force-community/brightbird/internal/backend/modules"
+	"github.com/ipfs-force-community/brightbird/pkg/repo"
+	"github.com/ipfs-force-community/brightbird/pkg/types"
+	"github.com/ipfs-force-community/brightbird/pkg/webhooklisten"
+)
+
+func UseProxy(cfg config.Config) error {
+	err := os.Setenv("HTTP_PROXY", cfg.Proxy)
+	if err != nil {
+		return err
+	}
+	return os.Setenv("HTTPS_PROXY", cfg.Proxy)
+}
+
+func UseGitToken(cfg config.Config) error {
+	return os.Setenv("GITHUB_TOKEN", cfg.GitToken)
+}
+
+func NewWebHooKPubsub(cfg config.Config) func(ctx context.Context) (modules.WebHookPubsub, error) {
+	return func(ctx context.Context) (modules.WebHookPubsub, error) {
+		webhookPubsub := pubsub.New(10)
+		ch, err := webhooklisten.WaitForWebHookEvent(ctx, cfg.WebhookURL)
+		if err != nil {
+			return nil, err
+		}
+		go func() {
+			for gitEvent := range ch {
+				eventType := gitEvent.Header.Get(github.EventTypeHeader)
+				event, err := github.ParseWebHook(eventType, gitEvent.Body)
+				if err != nil {
+					runCmdLog.Infof("parse event fail drop event[%v]", eventType)
+					continue
+				}
+
+				if eventType == "release" {
+					releaseEvent := event.(*github.ReleaseEvent)
+					if releaseEvent.GetRelease().TagName != nil { //commit or tags
+						webhookPubsub.Pub(releaseEvent, modules.ReleaseTopic)
+						continue
+					}
+				}
+
+				if eventType == "pull_request" {
+					prEvent := event.(*github.PullRequestEvent)
+					if prEvent.GetPullRequest().GetMerged() && prEvent.GetPullRequest().GetState() == "closed" {
+						webhookPubsub.Pub(event, modules.PRMergeTopic)
+						continue
+					}
+				}
+			}
+		}()
+		return webhookPubsub, nil
+	}
+}
+
+func NewTestFlowRepo(ctx context.Context, db *mongo.Database) (repo.ITestFlowRepo, error) {
+	return repo.NewTestFlowRepo(ctx, db)
+}
+
+func NewGroupRepo(ctx context.Context, db *mongo.Database, testflowSvc repo.ITestFlowRepo) (repo.IGroupRepo, error) {
+	return repo.NewGroupSvc(ctx, db, testflowSvc)
+}
+
+func NewJobRepo(ctx context.Context, db *mongo.Database) (repo.IJobRepo, error) {
+	return repo.NewJobRepo(ctx, db)
+}
+
+func NewTaskRepo(ctx context.Context, db *mongo.Database) (repo.ITaskRepo, error) {
+	return repo.NewTaskRepo(ctx, db)
+}
+
+func NewLogRepo(ctx context.Context, db *mongo.Database) (repo.ILogRepo, error) {
+	return repo.NewLogRepo(ctx, db)
+}
+
+func NewPlugin(ctx context.Context, db *mongo.Database) (repo.IPluginService, error) {
+	return repo.NewPluginSvc(ctx, db)
+}
+
+func NewCron() *cron.Cron {
+	return cron.New(cron.WithLogger(job.NewCronLog()))
+}
+
+func NewPrivateRegistry(cfg config.Config) func() (types.PrivateRegistry, error) {
+	return func() (types.PrivateRegistry, error) {
+		regUrl := ""
+		if len(cfg.DockerRegistry) == 1 {
+			regUrl = cfg.DockerRegistry[0].URL
+		} else {
+			for _, reg := range cfg.DockerRegistry {
+				if reg.Push {
+					regUrl = reg.URL
+					break
+				}
+			}
+		}
+		if len(regUrl) == 0 {
+			return "", nil
+		}
+
+		url, err := url.Parse(regUrl)
+		if err != nil {
+			return "", err
+		}
+		return types.PrivateRegistry(url.Host), nil
+	}
+}
+
+func NewBuilderWorkerProvider(cfg config.Config) func(job.IDockerOperation, repo.IPluginService, types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+	return func(dockerOp job.IDockerOperation, pluginRepo repo.IPluginService, privateReg types.PrivateRegistry) (job.IBuilderWorkerProvider, error) {
+		return job.NewBuildWorkerProvider(dockerOp, pluginRepo, privateReg, cfg.Proxy, cfg.GitToken), nil
+	}
+}
+
+func NewBuilderMgr(cfg config.Config) func(repo.IPluginService, job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+	return func(pluginRepo repo.IPluginService, provider job.IBuilderWorkerProvider) (*job.ImageBuilderMgr, error) {
+		return job.NewImageBuilderMgr(pluginRepo, provider, cfg.BuildWorkers), nil
+	}
+}
+
+func NewJobManager(cron *cron.Cron, pluginRepo repo.IPluginService, bus modules.WebHookPubsub, githubClient *github.Client, taskRepo repo.ITaskRepo, jobRepo repo.IJobRepo, testflowRepo repo.ITestFlowRepo) job.IJobManager {
+	return job.NewJobManager(cron, pluginRepo, bus, githubClient, taskRepo, jobRepo, testflowRepo)
+}
+
+func NewTaskMgr(cfg config.Config) func(*cron.Cron, repo.IJobRepo, repo.ITaskRepo, repo.ITestFlowRepo, *job.TestRunnerDeployer, *job.ImageBuilderMgr, types.PrivateRegistry) *job.TaskMgr {
+	return func(c *cron.Cron, jobRepo repo.IJobRepo, taskRepo repo.ITaskRepo, testFlowRepo repo.ITestFlowRepo, testRunner *job.TestRunnerDeployer, imageBuilder *job.ImageBuilderMgr, privateReg types.PrivateRegistry) *job.TaskMgr {
+		return job.NewTaskMgr(cfg, c, jobRepo, taskRepo, testFlowRepo, testRunner, imageBuilder, cfg.RunnerConfig, privateReg)
+	}
+}
+
+func NewDockerRegistry(cfg config.Config) func() (job.IDockerOperation, error) {
+	return func() (job.IDockerOperation, error) {
+		return job.NewDockerRegistry(cfg.DockerRegistry)
+	}
+}
+
+func NewGithubClient(cfg config.Config) func(context.Context) (*github.Client, error) {
+	return func(ctx context.Context) (*github.Client, error) {
+		return github.NewClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: cfg.GitToken}))), nil
+	}
+}

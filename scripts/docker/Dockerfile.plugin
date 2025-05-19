@@ -1,0 +1,25 @@
+FROM golang:1.20.7-bullseye AS build
+
+ARG GOOS
+ARG GOARCH
+ARG GOPROXY
+
+ENV GOPROXY=${GOPROXY:-https://goproxy.cn,direct}
+
+WORKDIR /build/
+
+COPY go.* /build/
+COPY ./pluginsrc/ffi/go.* /build/pluginsrc/ffi/
+RUN go mod download
+
+COPY . /build/
+RUN  make clean && make exec-plugin deploy-plugin
+
+FROM alpine:latest
+
+COPY --from=build /build/dist/plugins /plugins
+
+COPY scripts/docker/entrypoint_plugin.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]

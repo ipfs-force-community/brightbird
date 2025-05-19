@@ -1,0 +1,5 @@
+.vscode/
+*.so
+dist
+docs
+**/node_modules

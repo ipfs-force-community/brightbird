@@ -1,0 +1,20 @@
+apiVersion: v1
+data:
+  config.toml: |
+    Version = 2
+    Network = "calibrationnet"
+    Author = "http://{{.AuthorizerIp}}:9528/rpc/v0"
+    NodeAPIs = ["https://api.calibration.node.glif.io/rpc/v0"]
+    Messenger = "https://api.calibration.node.glif.io/rpc/v0"
+    Path = "./.keytool/"
+    DustValue = "1000000000"
+    NetVersion = 20
+  
+    [DbCfg]
+    Conn = "{{.MysqlDSN}}"
+    Type = "mysql"
+    DebugMode = false
+kind: ConfigMap
+metadata:
+  name: venus-wallet-pro-cfg-{{.UniqueId}}
+  namespace: default

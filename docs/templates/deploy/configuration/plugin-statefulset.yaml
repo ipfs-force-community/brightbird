@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{plugin-name}}-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: {{plugin-name}}-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: {{plugin-name}}-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: {{plugin-name}}-{{.UniqueId}}-pod
+    spec:
+      initContainers:
+        - name: init-myservice
+          image: {{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}library/busybox:1.35
+          command: ['sh', '-c', "[ -d \".{{plugin-name}}\" ]||(mkdir -p /root/.{{plugin-name}} && cp /root/config.tmp /root/.{{plugin-name}}/{{config-file}});"]
+          volumeMounts:
+            - mountPath: /root
+              name: {{plugin-name}}-pvc
+            - name: {{plugin-name}}-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "{{config-file}}"
+      containers:
+        - name: {{plugin-name}}-{{.UniqueId}}
+          image: "{{if gt (len .PrivateRegistry) 0}}{{.PrivateRegistry}}/{{end}}filvenus/{{plugin-name}}:{{.CodeVersion}}"
+          args: ["run"]
+          ports:
+            - containerPort: {{tcp-port}}
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: {{plugin-name}}-pvc
+            - name: {{plugin-name}}-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "{{config-file}}"
+      volumes:
+        - name: {{plugin-name}}-cfg
+          configMap:
+            name: {{plugin-name}}-cfg-{{.UniqueId}}
+            items:
+              - key: {{config-file}}
+                path: {{config-file}}
+  volumeClaimTemplates:
+    - metadata:
+        name: {{plugin-name}}-pvc # name+podname
+        labels:
+          app: {{plugin-name}}-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 300Mi

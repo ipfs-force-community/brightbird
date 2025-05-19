@@ -1,0 +1,20 @@
+FROM node:18.0.0-alpine AS builder
+
+WORKDIR /app
+COPY . /app
+
+RUN mkdir -p /app/dist/front && \
+    cd /app/web/ui/ && yarn install && \
+    echo "VITE_AXIOS_BASE_URL=__VITE_AXIOS_BASE_URL__" > /app/web/ui/.env && \
+    PUBLICDIR=/app/dist/front yarn run build
+
+FROM nginx:stable
+
+COPY --from=builder /app/dist/front /usr/share/nginx/html
+COPY web/ui/nginx-http.conf /etc/nginx/conf.d/default.conf
+COPY scripts/docker/entrypoint_front.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+EXPOSE 80
+
+ENTRYPOINT ["/entrypoint.sh"]

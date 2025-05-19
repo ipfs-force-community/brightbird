@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sophon-auth-{{.UniqueId}}
+spec:
+  replicas: {{.Replicas}}
+  serviceName: sophon-auth-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: sophon-auth-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: sophon-auth-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: sophon-auth-{{.UniqueId}}
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/sophon-auth:{{.CodeVersion}}"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.sophon-auth && cp /root/config.tmp /root/.sophon-auth/config.toml && /app/sophon-auth run;
+          ports:
+            - containerPort: 8989
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: sophon-auth-pvc
+            - name: sophon-auth-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+      volumes:
+        - name: sophon-auth-cfg
+          configMap:
+            name: sophon-auth-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml            
+  volumeClaimTemplates:
+    - metadata:
+        name: sophon-auth-pvc # name+podname
+        labels:
+          app: sophon-auth-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi
+
+
+
+
+

@@ -1,0 +1,140 @@
+<template>
+  <jm-drawer title="节点配置面板" :size="410" direction="rtl" destroy-on-close @closed="save">
+    <template #title>
+      <div>
+        <span>{{ nodeData.getInstanceName() }}</span>
+      </div>
+    </template>
+    <div class="jm-workflow-editor-node-config-panel">
+      <jm-scrollbar v-if="drawerOpening" class="panel-container">
+        <async-task-panel
+          v-if="nodeData.getType() === NodeTypeEnum.ASYNC_TASK"
+          :node-data="nodeData"
+          :workflowData="workflowData"
+          @form-created="handleFormCreated"
+        />
+      </jm-scrollbar>
+    </div>
+  </jm-drawer>
+</template>
+
+<script lang="ts">
+import { defineComponent, inject, nextTick, PropType, provide, ref } from 'vue';
+import { NodeTypeEnum } from '../../model/data/enumeration';
+import AsyncTaskPanel from './async-task-panel.vue';
+import { Graph, Node } from '@antv/x6';
+import { CustomX6NodeProxy } from '../../model/data/custom-x6-node-proxy';
+import { IWorkflow, IWorkflowNode } from '../../model/data/common';
+import { cloneDeep } from 'lodash';
+export default defineComponent({
+  components: { AsyncTaskPanel },
+  props: {
+    nodeId: {
+      type: String,
+      required: true,
+    },
+    // 节点警告按钮是否被点击
+    nodeWaringClicked: {
+      type: Boolean,
+      required: true,
+    },
+    workflowData: {
+      type: Object as PropType<IWorkflow>,
+      required: true,
+    },
+  },
+  setup(props, { emit }) {
+    const getGraph = inject('getGraph') as () => Graph;
+    const graph = getGraph();
+    const drawerOpening = ref<boolean>(false);
+    const node = graph.getNodes().find(({ id }) => props.nodeId === id)!;
+    const proxy = new CustomX6NodeProxy(node);
+    // 不能为ref，否则，表单内容的变化影响数据绑定
+    const nodeData = ref<IWorkflowNode>();
+    nodeData.value = cloneDeep(proxy.getData(graph, props.workflowData));
+
+    const formRef = ref();
+    provide('getNode', (): Node => node);
+
+    nextTick(() => (drawerOpening.value = true));
+
+    return {
+      NodeTypeEnum,
+      drawerOpening,
+      nodeData,
+      handleFormCreated: (ref: any) => {
+        if (!ref) {
+          return;
+        }
+        formRef.value = ref;
+
+        if (!props.nodeWaringClicked) {
+          return;
+        }
+        // 点击节点警告按钮打开配置面板时，自动校验一次表单，实现自动展示错误信息
+        // eslint-disable-next-line @typescript-eslint/no-empty-function
+        formRef.value.validate().catch(() => {});
+      },
+      save: () => {
+        formRef.value?.validate((valid: boolean) => {
+          if (nodeData.value) {
+            proxy.setData(nodeData.value);
+          }
+          emit('closed', valid);
+        });
+      },
+    };
+  },
+  emits: ['closed'],
+});
+</script>
+<style lang="less" scoped>
+.el-drawer {
+  .jm-icon-button-help {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 20px;
+    font-size: 14px;
+    margin-left: 2px;
+
+    &:hover {
+      background: #eff7ff;
+      color: #086cd8;
+    }
+  }
+
+  .jm-workflow-editor-node-config-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+
+    .panel-container {
+      height: calc(100vh - 131px);
+    }
+
+    .footer {
+      box-sizing: border-box;
+      width: 100%;
+      height: 63px;
+      display: flex;
+      border-top: 1px solid #e6ebf2;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .cancel {
+      background: #f5f5f5;
+      color: #082340;
+      border-radius: 2px;
+      border: none;
+      box-shadow: none;
+
+      &:hover {
+        background: #d9d9d9;
+      }
+    }
+  }
+}
+</style>

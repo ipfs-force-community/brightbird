@@ -1,0 +1,37 @@
+FROM golang:1.20.7-bullseye AS builder
+
+# 设置构建参数，允许在构建时指定 GOOS 和 GOARCH
+ARG GOOS
+ARG GOARCH
+ARG GOPROXY
+
+# 设置环境变量，使用构建参数的值，并提供默认值
+ENV GOOS=${GOOS:-linux}
+ENV GOARCH=${GOARCH:-amd64}
+ENV GOPROXY=${GOPROXY:-https://goproxy.cn,direct}
+
+WORKDIR /build/
+
+COPY go.* /build/
+COPY ./pluginsrc/ffi/go.* /build/pluginsrc/ffi/
+RUN go mod download
+
+COPY . /build/
+
+RUN make clean && make runner
+
+FROM ubuntu:22.04
+
+RUN apt-get update  \
+    && apt-get install -yq tzdata \
+    && ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime \
+    && dpkg-reconfigure -f noninteractive tzdata
+
+RUN apt install openssl ca-certificates libssl-dev -y  \
+    && apt install mesa-opencl-icd ocl-icd-opencl-dev gcc git bzr jq pkg-config curl clang build-essential hwloc libhwloc-dev wget -y \
+    && apt install telnet net-tools iputils-ping netcat dnsutils -y 
+
+# copy the app from build env
+COPY --from=builder /build/dist/testrunner /root/testrunner
+
+ENTRYPOINT ["/root/testrunner"]

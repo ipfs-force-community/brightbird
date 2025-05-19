@@ -1,0 +1,1 @@
+kubectl create clusterrolebinding cluster-admin-binding --clusterrole=cluster-admin --serviceaccount=venus:default

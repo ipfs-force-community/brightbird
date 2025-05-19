@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: droplet-client-{{.UniqueId}}
+spec:
+  replicas: 1
+  serviceName: droplet-client-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: droplet-client-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: droplet-client-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: droplet-client-{{.UniqueId}}
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/droplet-client:{{.CodeVersion}}"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.droplet-client/ && cp /root/config.tmp /root/.droplet-client/config.toml && /app/droplet-client run;
+          ports:
+            - containerPort: 41231
+              protocol: TCP
+            - containerPort: 34123
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: droplet-client-pvc
+{{ range $index, $value := .PieceStores }}
+            - mountPath: /piece/{{$value}}
+              name: {{$value}}
+{{ end }}
+            - name: droplet-client-cfg-vol
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+      volumes:
+        - name: droplet-client-cfg-vol
+          configMap:
+            name: droplet-client-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+{{ range $index, $value := .PieceStores }}
+        - name: {{$value}}
+          persistentVolumeClaim:
+            claimName: {{$value}}
+{{ end }}
+
+  volumeClaimTemplates:
+    - metadata:
+        name: droplet-client-pvc # name+podname
+        labels:
+          app: droplet-client-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 1Gi

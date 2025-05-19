@@ -1,0 +1,34 @@
+apiVersion: v1
+data:
+  config.toml: |
+    # Default config:
+    SimultaneousTransfersForRetrieval = 20
+    SimultaneousTransfersForStorage = 20
+    # client 发单等使用的 wallet address
+    # ./venus state get-actor t3wma7x5c724zwb5bb5j65qd4nunb6khbsrcocf4x64oy7x4iyqt26ougkdkzzk4aehujx433yvj7rt47xh4sq
+    DefaultMarketAddress = "{{.DefaultMarketAddress}}"
+
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/41231/ws"
+      RemoteListenAddress = ""
+      Timeout = "30s"
+      PrivateKey = "25203f9bd774cd21e15a327dff9605b3c7615bbe60866f7def2a01bf96e08ff0"
+
+    [Libp2p]
+      ListenAddresses = ["/ip4/0.0.0.0/tcp/34123", "/ip6/::/tcp/0"]
+      AnnounceAddresses = []
+      NoAnnounceAddresses = []
+      PrivateKey = ""
+
+    [Node]
+      Url = "{{.NodeUrl}}"
+      Token = "{{.UserToken}}"
+
+    [Signer]
+      Type = "wallet"
+      Url = "{{.WalletUrl}}"
+      Token = "{{.WalletToken}}"
+kind: ConfigMap
+metadata:
+  name: droplet-client-cfg-{{.UniqueId}}
+  namespace: default

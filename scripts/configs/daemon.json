@@ -1,0 +1,13 @@
+{
+  "insecure-registries": [
+    "192.168.200.60"
+  ],
+  "debug": true,
+  "features": {
+    "buildkit": false
+  },
+  "registry-mirrors": [
+    "https://ps1lttcg.mirror.aliyuncs.com",
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
+}

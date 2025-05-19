@@ -1,0 +1,87 @@
+---
+apiVersion: v1
+data:
+  config.toml: >-
+    NameSpace="brightbird"
+
+    PluginStore = '/shared-dir/plugins/'
+
+    RunnerConfig = '/app/config/testrunner-deployment-template.yaml'
+
+
+    BootstrapPeers = []
+
+    MongoUrl = 'mongodb://192.168.200.60:27017'
+
+    DbName = 'lidb'
+
+    Listen = '0.0.0.0:12356'
+
+
+    WebhookUrl = 'http://47.115.77.9:14334/ws'
+
+    Proxy = 'http://8.218.109.220:8888'
+
+    GitToken = ''
+
+    Mysql =
+    "root:123456@(192.168.200.60:3306)/%s?parseTime=true&loc=Local&charset=utf8mb4&collation=utf8mb4_unicode_ci&readTimeout=10s&writeTimeout=10s"
+
+
+    [[DockerRegistry]]
+
+    URL = 'http://192.168.200.60/api'
+
+    UserName = 'admin'
+
+    Password = 'Harbor12345'
+
+    Type = 'harbor'
+
+    Push = true
+
+    [[BuildWorkers]]
+
+    BuildSpace = '/shared-dir/buildspace3'
+  docker-config.json: |-
+    {
+        "auths": {
+            "192.168.200.60": {
+                "auth": "YWRtaW46SGFyYm9yMTIzNDU="
+            }
+        }
+    }
+  testrunner-deployment-template.yaml: |-
+    apiVersion: v1
+    kind: Pod
+    metadata:
+      namespace: {{.NameSpace}}
+      name: test-runner-{{.TestID}}-{{.ReTry}}
+      labels:
+        app: venus-testrunner-pod
+        apptype: testrunner
+        testid: {{.TestID}}
+        retry: {{.ReTry}}
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: venus-testrunner
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/testrunner:latest"
+          imagePullPolicy: Always
+          args: [{{.Args}}]
+          env:
+            - name: PRODUCTION
+              value: "true"
+          volumeMounts:
+            - mountPath: /shared-dir
+              name: shared-dir-v
+              subPath: {{.NameSpace}}
+      volumes:
+        - name: shared-dir-v
+          persistentVolumeClaim:
+            claimName: shared-dir
+immutable: false
+kind: ConfigMap
+metadata:
+  name: backend
+  namespace: brightbird

@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: venus-wallet-pro-{{.UniqueId}}
+spec:
+  replicas: 1
+  serviceName: venus-wallet-pro-{{.UniqueId}}-svc
+  selector:
+    matchLabels:
+      app: venus-wallet-pro-{{.UniqueId}}-pod
+  template:
+    metadata:
+      labels:
+        app: venus-wallet-pro-{{.UniqueId}}-pod
+    spec:
+      containers:
+        - name: venus-wallet-pro-{{.UniqueId}}
+          image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/venus-wallet-pro:{{.CodeVersion}}"
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - mkdir -p /root/.venus_wallet_pro && cp /root/config.tmp /root/.venus_wallet_pro/config.toml && /app/venus_wallet_pro daemon
+          ports:
+            - containerPort: 5678
+              protocol: TCP
+          volumeMounts:
+            - mountPath: /root
+              name: venus-wallet-pro-pvc
+            - name: venus-wallet--pro-cfg
+              mountPath: "/root/config.tmp"
+              subPath: "config.toml"
+            - mountPath: /root/bls.key
+              name: venus-wallet-pro-key
+              subPath: "fbls.key"
+      volumes:
+        - name: venus-wallet-pro-cfg
+          configMap:
+            name: venus-wallet-pro-cfg-{{.UniqueId}}
+            items:
+              - key: config.toml
+                path: config.toml
+        - name: venus-wallet-pro-key
+          secret:
+            secretName: venus-wallet-pro-key-{{.UniqueId}}
+  volumeClaimTemplates:
+    - metadata:
+        name: venus-wallet-pro-pvc # name+podname
+        labels:
+          app: venus-wallet-pro-{{.UniqueId}}-pvc
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: "nfs-client"
+        resources:
+          requests:
+            storage: 100Mi

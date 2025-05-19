@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: {{.NameSpace}}
+  name: test-runner-{{.TestID}}-{{.ReTry}}
+  labels:
+    app: venus-testrunner-pod
+    apptype: testrunner
+    testid: {{.TestID}}
+    retry: {{.ReTry}}
+spec:
+  restartPolicy: Never
+  containers:
+    - name: venus-testrunner
+      image: "{{if gt (len .Registry) 0}}{{.Registry}}/{{end}}filvenus/testrunner:latest"
+      imagePullPolicy: Always
+      args: [{{.Args}}]
+      env:
+        - name: PRODUCTION
+          value: "true"
+      volumeMounts:
+        - mountPath: /shared-dir
+          name: shared-dir-v
+          subPath: {{.NameSpace}}
+  volumes:
+    - name: shared-dir-v
+      persistentVolumeClaim:
+        claimName: shared-dir

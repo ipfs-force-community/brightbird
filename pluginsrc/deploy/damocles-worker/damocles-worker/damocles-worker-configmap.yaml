@@ -1,0 +1,61 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: damocles-worker-cfg-{{.UniqueId}}
+data:
+  damocles-worker.toml: |
+    [worker]
+    name = "filedrive"
+    rpc_server.host = "0.0.0.0"
+    rpc_server.port = 17890
+    local_pieces_dirs =[{{ range $index, $value := .PieceStores }}"/piece/{{$value}}"{{ end }}]
+
+    [sector_manager]
+    rpc_client.addr = "{{.DamoclesManagerUrl}}"
+    rpc_client.headers = { User-Agent = "jsonrpc-core-client" }
+    piece_token = "{{.UserToken}}"
+    [sealing]
+    allowed_miners = []
+    allowed_sizes = []
+    enable_deals = {{.EnableDeals}}
+    disable_cc = {{.DisableCC}}
+    max_deals = 6
+    min_deal_space = "2kiB"
+    max_retries = 6
+
+{{ range $index, $value := .SealPaths }}
+    [[sealing_thread]]
+    location = "/seals/{{$value}}"
+{{ end }}
+
+{{ range $index, $value := .PersistStores }}
+    [[attached]]
+    name = "{{$value}}"
+    location = "/persist/{{$value}}"
+{{ end }}
+
+    [processors.limitation.concurrent]
+    add_pieces = 100
+    pc1 = 100
+    pc2 = 1
+    c2 = 20
+    tree_d = 1
+    snap_encode = 1
+    snap_prove = 1
+
+    [processors.static_tree_d]
+
+    [[processors.pc1]]
+    
+    [[processors.pc2]]
+    
+    [[processors.c2]]
+    
+    [[processors.tree_d]]
+    concurrent = 1
+
+    [[processors.snap_encode]]
+    concurrent = 1
+
+    [[processors.snap_prove]]
+    concurrent = 1

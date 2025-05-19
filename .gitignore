@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.log
+*.tmp
+.aider*
+
+# Build output
+dist
+fluent-bit-mongo/*.so
+
+# web 
+web/ui/node_modules/*
+web/ui/yarn.lock
+web/ui/package-lock.json
+
+# Environment variables
+.env

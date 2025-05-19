@@ -1,0 +1,57 @@
+piVersion: v1
+data:
+  config.toml: |
+    PropagationDelaySecs = 12
+    MinerOnceTimeout = "15s"
+
+    [API]
+      ListenAddress = "/ip4/0.0.0.0/tcp/12308"
+      RemoteListenAddress = ""
+      Timeout = "0s"
+      PrivateKey = ""
+
+    [FullNode]
+      Addr = "{{.NodeUrl}}"
+      Token = "{{.AuthToken}}"
+
+    [Gateway]
+      ListenAPI = ["{{.GatewayUrl}}"]
+      Token = "{{.AuthToken}}"
+
+    [Auth]
+      Addr = "{{.AuthUrl}}"
+      Token = "{{.AuthToken}}"
+
+    [SlashFilter]
+      Type = "{{if gt (len .MysqlDSN) 0}}mysql{{else}}local{{end}}"
+      [SlashFilter.MySQL]
+        Conn = "{{.MysqlDSN}}"
+        MaxOpenConn = 100
+        MaxIdleConn = 10
+        ConnMaxLifeTime = "1m0s"
+        Debug = false
+
+    [Tracing]
+      JaegerTracingEnabled = false
+      ProbabilitySampler = 1.0
+      JaegerEndpoint = "localhost:6831"
+      ServerName = ""
+
+    [Metrics]
+      Enabled = false
+      [Metrics.Exporter]
+        Type = "prometheus"
+        [Metrics.Exporter.Prometheus]
+          RegistryType = "define"
+          Namespace = ""
+          EndPoint = "/ip4/0.0.0.0/tcp/4568"
+          Path = "/debug/metrics"
+          ReportingPeriod = "10s"
+        [Metrics.Exporter.Graphite]
+          Namespace = ""
+          Host = "127.0.0.1"
+          Port = 4568
+          ReportingPeriod = "10s"
+kind: ConfigMap
+metadata:
+  name: sophon-miner-cfg-{{.UniqueId}}

@@ -1,0 +1,76 @@
+ARG GO_VERSION="1.23.7" 
+
+FROM golang:${GO_VERSION} AS builder
+
+ARG GOOS
+ARG GOARCH
+ARG GOPROXY
+
+ENV GOOS=${GOOS:-linux}
+ENV GOARCH=${GOARCH:-amd64}
+ENV GOPROXY=${GOPROXY:-https://goproxy.cn,direct}
+
+WORKDIR /build/
+
+COPY go.* /build/
+COPY ./pluginsrc/ffi/go.* /build/pluginsrc/ffi/
+RUN go mod download
+
+COPY . /build/
+RUN make clean && make backend runner
+
+FROM ubuntu:22.04
+
+RUN apt-get update && \
+    apt-get install -yq tzdata make jq && \
+    ln -fs /usr/share/zoneinfo/America/New_York /etc/localtime && \
+    dpkg-reconfigure -f noninteractive tzdata
+
+ARG GO_VERSION
+ARG GO_FILENAME="go${GO_VERSION}.linux-amd64.tar.gz"
+ARG GO_URL="https://golang.org/dl/${GO_FILENAME}"
+# 安装Go
+RUN apt-get install -y wget && \
+    wget ${GO_URL} && \
+    tar -xvf ${GO_FILENAME} && \
+    mv go /usr/local && \
+    rm ${GO_FILENAME}
+
+# 设置Go环境变量
+ENV PATH="/usr/local/go/bin:${PATH}"
+
+# install docker
+RUN apt-get update && apt-get install ca-certificates curl gnupg -y && install -m 0755 -d /etc/apt/keyrings
+
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+RUN chmod a+r /etc/apt/keyrings/docker.gpg
+
+RUN echo \
+  "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN apt-get update && apt-get install -y --no-install-recommends docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+RUN apt-get update && apt-get install openssh-client git -y
+
+RUN apt autoremove -y && \
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# docker
+RUN mkdir -p /etc/docker/ ~/.docker
+COPY scripts/configs/daemon.json /etc/docker/
+COPY scripts/configs/.bashrc /root/
+
+
+WORKDIR /app/
+# copy the binary from build
+COPY --from=builder /build/dist/backend backend
+COPY --from=builder /build/dist/testrunner testrunner
+COPY scripts/docker/entrypoint_backend.sh entrypoint.sh
+
+RUN mkdir -p /app/plugins /app/config /app/front && chmod +x backend testrunner entrypoint.sh
+
+ENTRYPOINT ["/app/entrypoint.sh"]
